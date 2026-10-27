@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Mon, 26 Oct 2026 23:12:09 +0200
+Subject: [PATCH] fix: support an isolated qt prefix for mad builds
+
+---
+ CMakeLists.txt              | 1 +
+ Telegram/cmake/mad_qt.cmake | 7 +++++++
+ 2 files changed, 8 insertions(+)
+ create mode 100644 Telegram/cmake/mad_qt.cmake
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 59477e251bbfea8d5efaf0bcda53798f92695449..69feb74de74ba722c975cabfd29ebc9da8857cd6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -57,6 +57,7 @@ include(cmake/target_prepare_qrc.cmake)
+ include(cmake/options.cmake)
+ 
+ include(cmake/external/qt/package.cmake)
++include(Telegram/cmake/mad_qt.cmake)
+ 
+ set(desktop_app_skip_libs
+     glibmm
+diff --git a/Telegram/cmake/mad_qt.cmake b/Telegram/cmake/mad_qt.cmake
+new file mode 100644
+index 0000000000000000000000000000000000000000..b27e0706f942320a2b7a6ae481150b7bae7c567a
+--- /dev/null
++++ b/Telegram/cmake/mad_qt.cmake
+@@ -0,0 +1,7 @@
++if (WIN32 AND NOT DESKTOP_APP_USE_PACKAGED AND MAD_QT_PREFIX)
++    get_filename_component(qt_loc "${MAD_QT_PREFIX}" REALPATH)
++    get_filename_component(mad_qt_found "${Qt6_DIR}/../../.." REALPATH)
++    if (NOT qt_loc STREQUAL mad_qt_found)
++        message(FATAL_ERROR "MAD_QT_PREFIX must match the selected Qt6 package")
++    endif()
++endif()

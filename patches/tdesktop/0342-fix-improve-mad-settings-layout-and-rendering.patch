@@ -1,0 +1,790 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Mon, 26 Oct 2026 22:49:38 +0200
+Subject: [PATCH] fix: improve mad settings layout and rendering
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |   8 +-
+ Telegram/SourceFiles/lang/lang_instance.cpp   |   2 +-
+ .../settings/sections/settings_main.cpp       |   3 +
+ .../SourceFiles/settings/settings_tele.cpp    | 151 ++++++-------
+ Telegram/SourceFiles/tele/tele_app_name.cpp   |  21 ++
+ Telegram/SourceFiles/tele/tele_app_name.h     |   1 +
+ Telegram/SourceFiles/tele/tele_lowercase.cpp  |   4 +
+ Telegram/SourceFiles/tele/tele_options.cpp    |  12 ++
+ Telegram/SourceFiles/tele/tele_options.h      |   3 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
+ .../tele/tele_settings_widgets.cpp            | 198 ++++++++++++++++++
+ .../SourceFiles/tele/tele_settings_widgets.h  |  34 +++
+ .../SourceFiles/tele/tele_translations.cpp    |  40 +++-
+ .../SourceFiles/window/window_main_menu.cpp   |   6 +-
+ 15 files changed, 391 insertions(+), 95 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_settings_widgets.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_settings_widgets.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 7563309e94d1632eaa9701185384da3a7ecca4ab..9f6f6ae4d7b8455b53ca40f7591e0791ca20b8cc 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2494,6 +2494,8 @@ PRIVATE
+     tele/tele_history_records.h
+     tele/tele_history_crypto.cpp
+     tele/tele_history_crypto.h
++    tele/tele_settings_widgets.cpp
++    tele/tele_settings_widgets.h
+     tele/tele_history_sync.cpp
+     tele/tele_history_sync.h
+     tele/tele_mad_registry.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 2960f9a0443603faa8710ce006234f3da5ef2134..71f44ea6b1f5376a5bfee1927ea94a820673ae43 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -1317,7 +1317,7 @@
+   "Sending %1 of %2…": "Отправка %1 из %2…",
+   "Sending gifts": "Отправка подарков",
+   "Sending is limited": "Отправка ограничена",
+-  "Sending order": "Отправка заказа",
++  "Sending order": "порядок отправки",
+   "Sending, ": "Отправка, ",
+   "Sent %1 gifts.": "Отправлено %1 подарков.",
+   "Sent %1 of %2 gifts": "Отправлено %1 из %2 подарков",
+@@ -1963,5 +1963,9 @@
+   "Show transfer code": "показать код переноса",
+   "Could not save sync state to disk": "не удалось сохранить состояние синхронизации на диск",
+   "Download history again": "скачать историю заново",
+-  "Check the connection code, account and HTTPS server address": "проверь код подключения, аккаунт и https-адрес сервера"
++  "Check the connection code, account and HTTPS server address": "проверь код подключения, аккаунт и https-адрес сервера",
++  "Hide mad settings from side menu": "скрыть настройки mad в боковом меню",
++  "The mad section remains available in Settings.": "раздел mad останется доступен в настройках.",
++  "Hide from side menu": "убрать из бокового меню",
++  "Side menu": "боковое меню"
+ }
+diff --git a/Telegram/SourceFiles/lang/lang_instance.cpp b/Telegram/SourceFiles/lang/lang_instance.cpp
+index 9de52ee1a37e686528037df0af90c80a07f1caf2..00222d4a24aaca4cb7f44fcf3010ffcfe2edec06 100644
+--- a/Telegram/SourceFiles/lang/lang_instance.cpp
++++ b/Telegram/SourceFiles/lang/lang_instance.cpp
+@@ -807,7 +807,7 @@ QString GetNonDefaultValue(const QByteArray &key) {
+ namespace details {
+ 
+ QString Current(ushort key) {
+-	return Tele::Lower(Tele::AppName(key, GetInstance().getValue(key)));
++	return Tele::InterfaceText(key, GetInstance().getValue(key));
+ }
+ 
+ rpl::producer<QString> Value(ushort key) {
+diff --git a/Telegram/SourceFiles/settings/sections/settings_main.cpp b/Telegram/SourceFiles/settings/sections/settings_main.cpp
+index 6eabd6ba0c86c058a9e53cd9644e8b0a31624f38..e231d5c525afdf4038d5eecc144327e3ed1a1fb5 100644
+--- a/Telegram/SourceFiles/settings/sections/settings_main.cpp
++++ b/Telegram/SourceFiles/settings/sections/settings_main.cpp
+@@ -378,6 +378,9 @@ void Cover::refreshQrButtonGeometry(int newWidth) {
+ 
+ void BuildSectionButtons(SectionBuilder &builder) {
+ 	AddTeleSectionButton(builder);
++	builder.addSkip();
++	builder.addDivider();
++	builder.addSkip();
+ 	const auto session = builder.session();
+ 	const auto controller = builder.controller();
+ 	const auto showOther = builder.showOther();
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 573b953ce660627b5b10a1b2b13bc7cd77419131..6297e880b81176bc5648fb3c4ab97893fa82fe6f 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -1,6 +1,7 @@
+ #include "settings/settings_tele.h"
+ #include "tele/tele_mad_badges.h"
+ #include "tele/tele_history_sync.h"
++#include "tele/tele_settings_widgets.h"
+ 
+ #include "base/event_filter.h"
+ #include "base/options.h"
+@@ -94,8 +95,6 @@
+ #include "styles/style_settings.h"
+ #include "styles/style_widgets.h"
+ 
+-#include <QtSvg/QSvgRenderer>
+-#include <QtCore/QFile>
+ #include <QtCore/QDir>
+ #include <QtCore/QRegularExpression>
+ #include <QtGui/QDesktopServices>
+@@ -312,14 +311,50 @@ Button *AddButton(
+ 		SectionBuilder &builder,
+ 		SectionBuilder::ButtonArgs &&args,
+ 		const QString &owner = QString()) {
+-	const auto button = Shown(owner.isEmpty() ? args.id : owner)
+-		? builder.addButton(std::move(args))
+-		: nullptr;
++	if (!Shown(owner.isEmpty() ? args.id : owner)) {
++		return nullptr;
++	}
++	const auto id = args.id;
++	const auto &style = args.st ? *args.st : st::settingsButton;
++	const auto icon = args.icon.icon;
++	const auto button = static_cast<Button*>(builder.addControl({
++		.factory = [&](not_null<Ui::VerticalLayout*> container) {
++			auto result = icon
++				? CreateButtonWithIcon(container, rpl::duplicate(args.title), style, std::move(args.icon))
++				: object_ptr<Button>(object_ptr<::Tele::SettingButton>(container, nullptr, style));
++			const auto button = result.data();
++			if (!icon) {
++				::Tele::SetupSettingText(button,
++					rpl::duplicate(args.title) | rpl::map([](const QString &text) {
++						return TextWithEntities::Simple(text);
++					}), std::move(args.label), style.padding.right());
++			}
++			button->setProperty("mad-setting-id", id);
++			if (args.onClick) {
++				button->setClickedCallback(std::move(args.onClick));
++			}
++			if (args.toggled) {
++				button->toggleOn(std::move(args.toggled));
++			}
++			return result;
++		},
++		.id = id,
++		.title = rpl::duplicate(args.title),
++		.highlight = std::move(args.highlight),
++		.shown = std::move(args.shown),
++		.keywords = std::move(args.keywords),
++		.searchIcon = { icon },
++	}));
+ 	if (button) {
+ 		BlockClicksWhenDisabled(button);
+ 		ApplySubRow(button, [=](std::optional<QColor> color) {
+ 			button->setDisabled(color.has_value());
+ 			button->setColorOverride(color);
++			for (const auto key : { "mad-text-title", "mad-text-label" }) {
++				if (const auto label = dynamic_cast<Ui::FlatLabel*>(button->property(key).value<QObject*>())) {
++					label->setTextColorOverride(color);
++				}
++			}
+ 		});
+ 	}
+ 	return button;
+@@ -650,61 +685,21 @@ struct OptionRow {
+ 	Ui::FlatLabel *about = nullptr;
+ };
+ 
+-Ui::AbstractButton *AddSettingHelp(
+-		not_null<Ui::RpWidget*> parent,
+-		not_null<Window::SessionController*> controller,
+-		const QString &name,
+-		const QString &description,
+-		int right) {
+-	if (description.isEmpty()) {
+-		return nullptr;
+-	}
+-	const auto help = Ui::CreateChild<Ui::AbstractButton>(parent);
+-	help->resize(st::madSettingHelpSize, st::madSettingHelpSize);
+-	help->setToolTip(description);
+-	help->setAccessibleName(::Tele::Tr(u"About this setting"_q) + u": "_q + name);
+-	help->setFocusPolicy(Qt::StrongFocus);
+-	parent->sizeValue() | rpl::on_next([=](QSize size) {
+-		help->moveToRight(right, (size.height() - help->height()) / 2);
+-	}, help->lifetime());
+-	help->paintRequest() | rpl::on_next([=] {
+-		static const auto source = [] {
+-			auto file = QFile(u":/gui/art/mad_help.svg"_q);
+-			return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+-		}();
+-		auto data = source;
+-		data.replace("currentColor", st::windowSubTextFg->c.name().toLatin1());
+-		auto svg = QSvgRenderer(data);
+-		auto painter = QPainter(help);
+-		const auto skip = st::madSettingHelpInset;
+-		svg.render(&painter, QRectF(help->rect().marginsRemoved({ skip, skip, skip, skip })));
+-	}, help->lifetime());
+-	help->setClickedCallback([=] {
+-		controller->show(Box([=](not_null<Ui::GenericBox*> box) {
+-			box->setTitle(rpl::single(name));
+-			box->addRow(object_ptr<Ui::FlatLabel>(box, description, st::boxLabel));
+-			box->addButton(rpl::single(::Tele::Tr(u"Close"_q)), [=] { box->closeBox(); });
+-		}));
+-	});
+-	help->show();
+-	return help;
+-}
++using ::Tele::AddSettingHelp;
+ 
+ [[nodiscard]] OptionRow CreateOptionRow(
+ 		not_null<QWidget*> parent,
+ 		not_null<Window::SessionController*> controller,
+ 		const QString &name,
+ 		const QString &description) {
+-	auto result = object_ptr<Button>(parent, rpl::single(name), st::settingsButtonNoIcon);
++	auto result = object_ptr<::Tele::SettingButton>(parent, nullptr, st::settingsButtonNoIcon);
+ 	const auto button = result.data();
+-	if (!description.isEmpty()) {
+-		const auto &st = st::settingsButtonNoIcon;
+-		const auto right = st::rightsButtonToggleWidth;
+-		button->setPaddingOverride({ st.padding.left(), st.padding.top(),
+-			right + st::madSettingHelpSize, st.padding.bottom() });
+-		AddSettingHelp(button, controller, name, description, right);
+-	}
+-	return { std::move(result), button };
++	const auto helpWidth = description.isEmpty() ? 0 : st::madSettingHelpSize;
++	const auto right = st::rightsButtonToggleWidth;
++	const auto title = ::Tele::SetupSettingText(button,
++		rpl::single(TextWithEntities::Simple(name)), nullptr, right + helpWidth);
++	AddSettingHelp(button, controller, name, description, right);
++	return { std::move(result), button, title };
+ }
+ 
+ [[nodiscard]] Fn<void()> OptionRestarter(
+@@ -831,10 +826,9 @@ struct GroupState {
+ 		auto title = (Ui::FlatLabel*)nullptr;
+ 		auto about = (Ui::FlatLabel*)nullptr;
+ 		const auto helpWidth = description.isEmpty() ? 0 : st::madSettingHelpSize;
+-		auto owned = object_ptr<Button>(ctx.container, std::move(text), st);
++		auto owned = object_ptr<::Tele::SettingButton>(ctx.container, nullptr, st);
+ 		button = owned.data();
+-		button->setPaddingOverride({ st.padding.left(), st.padding.top(),
+-			right + helpWidth, st.padding.bottom() });
++		title = ::Tele::SetupSettingText(button, std::move(text), nullptr, right + helpWidth);
+ 		widget = std::move(owned);
+ 		AddSettingHelp(button, controller, name, description,
+ 			st::rightsButtonToggleWidth + st::rightsButtonArrowSkip);
+@@ -908,29 +902,9 @@ struct GroupState {
+ 				line);
+ 			const auto skip = st::rightsButtonArrowSkip;
+ 			const auto limit = toggleButton->x() - skip - arrow->width() - helpWidth;
+-			if (title) {
+-				const auto font = st::settingsExperimentalTitle.style.font;
+-				arrow->moveToLeft(
+-					std::min(
+-						title->x() + title->textMaxWidth() + skip,
+-						limit),
+-					title->y() + (font->height - arrow->height()) / 2);
+-			} else {
+-				arrow->moveToLeft(
+-					std::min(
+-						st.padding.left() + button->fullTextWidth() + skip,
+-						limit),
+-					(height - arrow->height()) / 2);
+-			}
++			arrow->moveToLeft(limit, (height - arrow->height()) / 2);
+ 		};
+-		auto titleMoves = title
+-			? rpl::producer<>(title->geometryValue() | rpl::to_empty)
+-			: rpl::producer<>(rpl::never<>());
+-		rpl::merge(
+-			root->sizeValue() | rpl::to_empty,
+-			state->counter.changes() | rpl::to_empty,
+-			std::move(titleMoves)
+-		) | rpl::on_next([=] {
++		root->sizeValue() | rpl::on_next([=] {
+ 			reposition();
+ 		}, root->lifetime());
+ 
+@@ -1094,12 +1068,18 @@ void AddAbout(
+ 		return;
+ 	}
+ 	builder.add([&](const WidgetContext &ctx) {
+-		auto row = object_ptr<Button>(ctx.container,
+-			rpl::single(::Tele::Tr(u"About this setting"_q)), st::settingsButtonNoIcon);
+-		const auto help = AddSettingHelp(row.data(), ctx.controller,
+-			::Tele::Tr(u"About this setting"_q), text, st::settingsButtonNoIcon.padding.right());
+-		row->setClickedCallback([=] { help->clicked(Qt::NoModifier, Qt::LeftButton); });
+-		return SectionBuilder::WidgetToAdd{ .widget = std::move(row) };
++		for (const auto child : ctx.container->findChildren<QWidget*>()) {
++			const auto button = dynamic_cast<Button*>(child);
++			if (!button || button->property("mad-setting-id").toString() != owner
++					|| button->property("mad-help-width").toInt()) {
++				continue;
++			}
++			button->setProperty("mad-help-width", st::madSettingHelpSize);
++			AddSettingHelp(button, ctx.controller, button->accessibleName(), text,
++				button->st().padding.right());
++			break;
++		}
++		return SectionBuilder::WidgetToAdd{};
+ 	}, nullptr);
+ }
+ 
+@@ -2740,6 +2720,9 @@ void AddAppIcons(SectionBuilder &builder) {
+ 
+ void FillInterface(SectionBuilder &builder) {
+ 	AddSkip(builder);
++	AddGroupTitle(builder, u"Side menu"_q);
++	AddOptionToggle(builder, ::Tele::kOptionHideMadSettingsMenu);
++	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Title bar"_q);
+ 	AddTitle(builder);
+ 	AddGroupDivider(builder);
+diff --git a/Telegram/SourceFiles/tele/tele_app_name.cpp b/Telegram/SourceFiles/tele/tele_app_name.cpp
+index 64346dfd378d15e844774ecea85c4bf7c61d409f..01477884418d6c41dce7f6861e89c28ac6ac5cf5 100644
+--- a/Telegram/SourceFiles/tele/tele_app_name.cpp
++++ b/Telegram/SourceFiles/tele/tele_app_name.cpp
+@@ -1,6 +1,9 @@
+ #include "tele/tele_app_name.h"
+ 
+ #include "lang/lang_keys.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include <QtCore/QHash>
+ 
+ namespace Tele {
+ namespace {
+@@ -76,4 +79,22 @@ QString AppName(ushort key, QString value) {
+ 	return value;
+ }
+ 
++QString InterfaceText(ushort key, QString value) {
++	struct Entry {
++		QString source;
++		QString result;
++		bool lowercase = false;
++	};
++	thread_local auto cache = QHash<ushort, Entry>();
++	const auto lowercase = LowercaseStrings();
++	const auto found = cache.constFind(key);
++	if (found != cache.cend() && found->source == value
++		&& found->lowercase == lowercase) {
++		return found->result;
++	}
++	auto result = Lower(AppName(key, value));
++	cache.insert(key, { std::move(value), result, lowercase });
++	return result;
++}
++
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_app_name.h b/Telegram/SourceFiles/tele/tele_app_name.h
+index 837d7d3dd01a1cefe8f5fdfebf4eb0b83236e9a9..c37422546a32b78682c39ff05aa16e0a5609278e 100644
+--- a/Telegram/SourceFiles/tele/tele_app_name.h
++++ b/Telegram/SourceFiles/tele/tele_app_name.h
+@@ -3,5 +3,6 @@
+ namespace Tele {
+ 
+ [[nodiscard]] QString AppName(ushort key, QString value);
++[[nodiscard]] QString InterfaceText(ushort key, QString value);
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_lowercase.cpp b/Telegram/SourceFiles/tele/tele_lowercase.cpp
+index 3cf63fa574ab42d48b96550101289ac8858e069d..88290a599fa9b7e0517dd32840453001d8508a1e 100644
+--- a/Telegram/SourceFiles/tele/tele_lowercase.cpp
++++ b/Telegram/SourceFiles/tele/tele_lowercase.cpp
+@@ -45,6 +45,10 @@ QString Lower(QString text) {
+ 	if (!LowercaseStrings()) {
+ 		return text;
+ 	}
++	if (!text.contains(QChar(Lang::kTextCommand))
++		&& !text.contains(u"://"_q)) {
++		return text.toLower();
++	}
+ 	const auto size = int(text.size());
+ 	auto result = QString();
+ 	result.reserve(size);
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 80d020ca7f71cf6eacb1aede141fd4460835d325..4b27e1e7a48dea8fd185cd216db1c38dc2df2611 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -7,6 +7,8 @@ namespace Tele {
+ 
+ const char kOptionHistorySyncAccounts[] = "tele-history-sync-accounts";
+ 
++const char kOptionHideMadSettingsMenu[] = "tele-hide-mad-settings-menu";
++
+ const char kOptionMadBadges[] = "tele-mad-badges";
+ 
+ 
+@@ -282,6 +284,12 @@ base::options::option<QString> HistorySyncAccountsOption({
+ 	.defaultValue = QString(),
+ });
+ 
++base::options::toggle HideMadSettingsMenuOption({
++	.id = kOptionHideMadSettingsMenu,
++	.name = "Hide mad settings from side menu",
++	.description = "The mad section remains available in Settings.",
++});
++
+ base::options::toggle MadBadgesOption({
+ 	.id = kOptionMadBadges,
+ 	.name = "mad badges",
+@@ -2093,6 +2101,10 @@ rpl::producer<bool> SearchTypesValue() {
+ 	});
+ }
+ 
++bool HideMadSettingsMenu() {
++	return HideMadSettingsMenuOption.value();
++}
++
+ bool MadBadgesEnabled() {
+ 	return MadBadgesOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 5c74d1b886c4b344888dac4725e693dd92103dfb..da71b62f6ed2a626bb31e432e0fa67afa49c46ce 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -3,6 +3,9 @@
+ namespace Tele {
+ 
+ extern const char kOptionHistorySyncAccounts[];
++extern const char kOptionHideMadSettingsMenu[];
++[[nodiscard]] bool HideMadSettingsMenu();
++
+ extern const char kOptionMadBadges[];
+ [[nodiscard]] bool MadBadgesEnabled();
+ 
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index f36367d52770f54deff2c908e25ff8d94c51c257..7a4fff55a7f830ba07da4d9de8999a87646ae536 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -97,6 +97,7 @@ struct Spec {
+ 	static const auto result = std::vector<Spec>{
+ 		Internal(kOptionHistorySyncAccounts),
+ 		Toggle(kOptionMadBadges),
++		Toggle(kOptionHideMadSettingsMenu),
+ 		Toggle(kOptionHideStories),
+ 		Toggle(kOptionInvisibleStories),
+ 		Toggle(kOptionGhost),
+diff --git a/Telegram/SourceFiles/tele/tele_settings_widgets.cpp b/Telegram/SourceFiles/tele/tele_settings_widgets.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..6720f8f1ff789cd7a854520e9238118b30c5e141
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_settings_widgets.cpp
+@@ -0,0 +1,198 @@
++#include "tele/tele_settings_widgets.h"
++
++#include "base/event_filter.h"
++#include "base/options.h"
++#include "base/timer.h"
++#include "settings/settings_common.h"
++#include "settings/settings_tele.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "ui/layers/generic_box.h"
++#include "ui/widgets/popup_menu.h"
++#include "ui/widgets/shadow.h"
++#include "ui/widgets/tooltip.h"
++#include "ui/wrap/slide_wrap.h"
++#include "ui/wrap/vertical_layout.h"
++#include "window/window_session_controller.h"
++#include "styles/style_settings.h"
++#include "styles/style_layers.h"
++#include "styles/style_window.h"
++#include "styles/style_menu_icons.h"
++#include "styles/style_widgets.h"
++#include "styles/style_window_main_menu.h"
++#include <QtCore/QFile>
++#include <QtGui/QPainter>
++#include <QtSvg/QSvgRenderer>
++
++namespace Tele {
++
++Ui::FlatLabel *SetupSettingText(
++		not_null<Ui::SettingsButton*> button,
++		rpl::producer<TextWithEntities> text,
++		rpl::producer<QString> value,
++		int right) {
++	const auto title = Ui::CreateChild<Ui::FlatLabel>(button,
++		std::move(text), st::settingsExperimentalTitle);
++	title->setAttribute(Qt::WA_TransparentForMouseEvents);
++	title->show();
++	const auto label = value ? Ui::CreateChild<Ui::FlatLabel>(button,
++		std::move(value), st::settingsExperimentalAbout) : nullptr;
++	if (label) {
++		label->setAttribute(Qt::WA_TransparentForMouseEvents);
++		label->setBreakEverywhere(true);
++		label->show();
++	}
++	button->setProperty("mad-text-title", QVariant::fromValue<QObject*>(title));
++	button->setProperty("mad-text-label", QVariant::fromValue<QObject*>(label));
++	const auto busy = button->lifetime().make_state<bool>(false);
++	const auto layout = [=] {
++		if (*busy || button->width() <= 0) {
++			return;
++		}
++		*busy = true;
++		const auto &style = button->st();
++		const auto left = style.padding.left();
++		const auto reserved = right + button->property("mad-help-width").toInt();
++		const auto width = std::max(1, button->width() - left - reserved);
++		title->resizeToWidth(width);
++		title->moveToLeft(left, style.padding.top());
++		auto height = title->height();
++		if (label) {
++			label->resizeToWidth(width);
++			label->moveToLeft(left, style.padding.top() + height + st::lineWidth * 3);
++			height += label->height() + st::lineWidth * 3;
++		}
++		button->setPaddingOverride({ left, style.padding.top(), reserved,
++			style.padding.bottom() + std::max(0, height - style.height) });
++		button->setAccessibleName(title->accessibilityName());
++		*busy = false;
++	};
++	button->widthValue() | rpl::on_next([=] { layout(); }, button->lifetime());
++	title->heightValue() | rpl::on_next([=] { layout(); }, button->lifetime());
++	if (label) {
++		label->heightValue() | rpl::on_next([=] { layout(); }, button->lifetime());
++	}
++	base::install_event_filter(button, [=](not_null<QEvent*> event) {
++		if (event->type() == QEvent::DynamicPropertyChange) {
++			layout();
++		}
++		return base::EventFilterResult::Continue;
++	});
++	return title;
++}
++
++Ui::AbstractButton *AddSettingHelp(
++		not_null<Ui::RpWidget*> parent,
++		not_null<Window::SessionController*> controller,
++		const QString &name,
++		const QString &description,
++		int right) {
++	if (description.isEmpty()) {
++		return nullptr;
++	}
++	const auto help = Ui::CreateChild<Ui::AbstractButton>(parent);
++	help->resize(st::madSettingHelpSize, st::madSettingHelpSize);
++	help->setAccessibleName(name + u": "_q + description);
++	help->setFocusPolicy(Qt::StrongFocus);
++	parent->sizeValue() | rpl::on_next([=](QSize size) {
++		help->moveToRight(right, (size.height() - help->height()) / 2);
++	}, help->lifetime());
++	help->paintRequest() | rpl::on_next([=] {
++		static auto image = QImage();
++		static auto color = QColor();
++		const auto scale = help->devicePixelRatioF();
++		const auto size = help->size() * scale;
++		const auto next = st::windowSubTextFg->c;
++		if (image.size() != size || image.devicePixelRatio() != scale || color != next) {
++			auto file = QFile(u":/gui/art/mad_help.svg"_q);
++			auto data = file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
++			data.replace("currentColor", next.name().toLatin1());
++			image = QImage(size, QImage::Format_ARGB32_Premultiplied);
++			image.setDevicePixelRatio(scale);
++			image.fill(Qt::transparent);
++			auto painter = QPainter(&image);
++			auto svg = QSvgRenderer(data);
++			const auto skip = st::madSettingHelpInset;
++			svg.render(&painter, QRectF(help->rect().marginsRemoved({skip, skip, skip, skip})));
++			color = next;
++		}
++		auto painter = QPainter(help);
++		painter.drawImage(QPoint(), image);
++	}, help->lifetime());
++	struct State {
++		std::unique_ptr<Ui::ImportantTooltip> tooltip;
++		base::Timer timer;
++	};
++	const auto state = help->lifetime().make_state<State>();
++	const auto hide = [=] {
++		state->timer.cancel();
++		if (state->tooltip) {
++			state->tooltip->toggleAnimated(false);
++		}
++	};
++	state->timer.setCallback([=] {
++		if (!help->isVisible() || !help->window()->isActiveWindow()) {
++			return;
++		}
++		const auto window = help->window();
++		if (!state->tooltip) {
++			const auto preview = description.size() > 180
++				? description.left(177) + u"…"_q : description;
++			state->tooltip = std::make_unique<Ui::ImportantTooltip>(window,
++				Ui::MakeNiceTooltipLabel(window,
++					rpl::single(TextWithEntities::Simple(preview)),
++					st::boxWidth * 2 / 3, st::defaultImportantTooltipLabel),
++				st::defaultImportantTooltip);
++			state->tooltip->setAttribute(Qt::WA_TransparentForMouseEvents);
++		}
++		state->tooltip->pointAt(QRect(help->mapTo(window, QPoint()), help->size()));
++		state->tooltip->raise();
++		state->tooltip->toggleAnimated(true);
++	});
++	base::install_event_filter(help, [=](not_null<QEvent*> event) {
++		if (event->type() == QEvent::Enter || event->type() == QEvent::FocusIn) {
++			state->timer.callOnce(350);
++		} else if (event->type() == QEvent::Leave || event->type() == QEvent::FocusOut
++				|| event->type() == QEvent::Hide || event->type() == QEvent::MouseButtonPress) {
++			hide();
++		}
++		return base::EventFilterResult::Continue;
++	});
++	help->setClickedCallback([=] {
++		hide();
++		controller->show(Box([=](not_null<Ui::GenericBox*> box) {
++			box->setTitle(rpl::single(name));
++			box->addRow(object_ptr<Ui::FlatLabel>(box, description, st::boxLabel));
++			box->addButton(rpl::single(Tr(u"Close"_q)), [=] { box->closeBox(); });
++		}));
++	});
++	help->show();
++	return help;
++}
++
++void AddSettingsMenuEntry(
++		not_null<Ui::VerticalLayout*> menu,
++		not_null<Window::SessionController*> controller) {
++	auto &option = base::options::lookup<bool>(kOptionHideMadSettingsMenu);
++	const auto wrap = menu->add(object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
++		menu, object_ptr<Ui::VerticalLayout>(menu)));
++	const auto content = wrap->entity();
++	content->add(object_ptr<Ui::PlainShadow>(content),
++		{ 0, st::mainMenuSkip, 0, st::mainMenuSkip });
++	const auto button = Settings::AddButtonWithIcon(content,
++		rpl::single(Tr(u"mad settings"_q)), st::mainMenuButton, { &st::menuIconCustomize });
++	button->setClickedCallback([=] { controller->showSettings(Settings::TeleSectionId()); });
++	button->setAcceptBoth(true);
++	button->clicks() | rpl::filter([](Qt::MouseButton button) {
++		return button == Qt::RightButton;
++	}) | rpl::on_next([=, &option] {
++		const auto popup = Ui::CreateChild<Ui::PopupMenu>(button);
++		popup->addAction(Tr(u"Hide from side menu"_q), [&option] { option.set(true); });
++		popup->popup(QCursor::pos());
++	}, button->lifetime());
++	wrap->toggleOn(rpl::single(rpl::empty) | rpl::then(option.changes())
++		| rpl::map([&option] { return !option.value(); }));
++	wrap->finishAnimating();
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_settings_widgets.h b/Telegram/SourceFiles/tele/tele_settings_widgets.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..d3d2915555ffdd651ec957cff5ac5fbd9963eb2d
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_settings_widgets.h
+@@ -0,0 +1,34 @@
++#pragma once
++
++#include "ui/widgets/buttons.h"
++#include "ui/widgets/labels.h"
++
++namespace Ui { class VerticalLayout; }
++namespace Window { class SessionController; }
++
++namespace Tele {
++
++class SettingButton final : public Ui::SettingsButton {
++public:
++	using Ui::SettingsButton::SettingsButton;
++	QString accessibilityName() override {
++		return QWidget::accessibleName();
++	}
++};
++
++Ui::FlatLabel *SetupSettingText(
++	not_null<Ui::SettingsButton*> button,
++	rpl::producer<TextWithEntities> text,
++	rpl::producer<QString> value,
++	int right);
++Ui::AbstractButton *AddSettingHelp(
++	not_null<Ui::RpWidget*> parent,
++	not_null<Window::SessionController*> controller,
++	const QString &name,
++	const QString &description,
++	int right);
++void AddSettingsMenuEntry(
++	not_null<Ui::VerticalLayout*> menu,
++	not_null<Window::SessionController*> controller);
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_translations.cpp b/Telegram/SourceFiles/tele/tele_translations.cpp
+index 19984408b64de3ec364d8d01fa877c66f339d1f1..88e76037d358053599ba78cc840f69dca1d80fd5 100644
+--- a/Telegram/SourceFiles/tele/tele_translations.cpp
++++ b/Telegram/SourceFiles/tele/tele_translations.cpp
+@@ -1,6 +1,8 @@
+ #include "tele/tele_lowercase.h"
+ 
+ #include "lang/lang_instance.h"
++#include "tele/tele_options.h"
++#include <QtCore/QHash>
+ #include <QtCore/QFile>
+ #include <QtCore/QJsonDocument>
+ #include <QtCore/QJsonArray>
+@@ -13,10 +15,19 @@ namespace {
+ 
+ [[nodiscard]] bool Russian() {
+ 	const auto &language = Lang::GetInstance();
+-	return (!language.id().isEmpty()
++	thread_local auto id = QString();
++	thread_local auto base = QString();
++	thread_local auto result = false;
++	if (id == language.id() && base == language.baseId()) {
++		return result;
++	}
++	id = language.id();
++	base = language.baseId();
++	result = (!language.id().isEmpty()
+ 		&& QLocale(language.id()).language() == QLocale::Russian)
+ 		|| (!language.baseId().isEmpty()
+ 			&& QLocale(language.baseId()).language() == QLocale::Russian);
++	return result;
+ }
+ 
+ [[nodiscard]] const QJsonObject &Translations() {
+@@ -32,7 +43,21 @@ namespace {
+ }
+ 
+ QString Tr(QString text) {
+-	if (Russian()) {
++	thread_local auto cache = QHash<QString, QString>();
++	thread_local auto russian = false;
++	thread_local auto lowercase = false;
++	const auto nextRussian = Russian();
++	const auto nextLowercase = LowercaseStrings();
++	if (russian != nextRussian || lowercase != nextLowercase) {
++		cache.clear();
++		russian = nextRussian;
++		lowercase = nextLowercase;
++	}
++	if (const auto i = cache.constFind(text); i != cache.cend()) {
++		return *i;
++	}
++	const auto source = text;
++	if (russian) {
+ 		const auto translation = Translations().value(text);
+ 		if (translation.isArray()) {
+ 			text = translation.toArray().last().toString();
+@@ -41,8 +66,15 @@ QString Tr(QString text) {
+ 		}
+ 	}
+ 	static const auto brand = QRegularExpression(u"\\btele\\b"_q);
+-	text.replace(brand, u"mad"_q);
+-	return Lower(std::move(text));
++	if (text.contains(u"tele"_q)) {
++		text.replace(brand, u"mad"_q);
++	}
++	text = Lower(std::move(text));
++	if (cache.size() >= 4096) {
++		cache.clear();
++	}
++	cache.insert(source, text);
++	return text;
+ }
+ 
+ QByteArray WebTranslationsScript() {
+diff --git a/Telegram/SourceFiles/window/window_main_menu.cpp b/Telegram/SourceFiles/window/window_main_menu.cpp
+index 80ccc653822862ba98f510e85a0e87a5bb4c86c2..be7cc7cc9055b62d80ebf0b14cdae4b9d4ef4b5a 100644
+--- a/Telegram/SourceFiles/window/window_main_menu.cpp
++++ b/Telegram/SourceFiles/window/window_main_menu.cpp
+@@ -32,6 +32,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "settings/settings_common.h"
+ #include "settings/settings_tele.h"
+ #include "tele/tele_lowercase.h"
++#include "tele/tele_settings_widgets.h"
+ #include "info/profile/info_profile_emoji_status_panel.h"
+ #include "info/profile/info_profile_icon.h"
+ #include "info/stories/info_stories_widget.h"
+@@ -689,10 +690,6 @@ void MainMenu::setupMenu() {
+ 			st::mainMenuButton,
+ 			std::move(descriptor));
+ 	};
+-	addAction(rpl::single(Tele::Tr(u"mad settings"_q)),
+-		{ &st::menuIconCustomize })->setClickedCallback([=] {
+-		controller->showSettings(Settings::TeleSectionId());
+-	});
+ 	if (!_controller->session().supportMode()) {
+ 		_menu->add(
+ 			CreateButtonWithIcon(
+@@ -841,6 +838,7 @@ void MainMenu::setupMenu() {
+ 
+ 	Tele::AddMainMenuItems(_menu, controller);
+ 	Tele::Scripting::AddScriptMainMenuItems(_menu, [=] { closeLayer(); });
++	Tele::AddSettingsMenuEntry(_menu, controller);
+ }
+ 
+ void MainMenu::resizeEvent(QResizeEvent *e) {

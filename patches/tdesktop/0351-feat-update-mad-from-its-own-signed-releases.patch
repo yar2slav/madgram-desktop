@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 18:19:07 +0200
+Subject: [PATCH] feat: update mad from its own signed releases
+
+---
+ Telegram/SourceFiles/tele/tele_updater.cpp | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/Telegram/SourceFiles/tele/tele_updater.cpp b/Telegram/SourceFiles/tele/tele_updater.cpp
+index 97da9b359eaac189761abfcd6d9f3597a9a5ee44..035a7efb9d334371084a9964b421d908b02ba2cd 100644
+--- a/Telegram/SourceFiles/tele/tele_updater.cpp
++++ b/Telegram/SourceFiles/tele/tele_updater.cpp
+@@ -54,11 +54,11 @@ constexpr auto kTransferTimeout = 60 * 1000;
+ constexpr auto kMaxFeedSize = qint64(64 * 1024);
+ constexpr auto kMaxZipSize = qint64(512 * 1024 * 1024);
+ constexpr auto kMaxExeSize = 1024 * 1024 * 1024;
+-constexpr auto kPublicKeyHex = "b824f455f8a50732a1f062b7e29029a7"
+-	"7691cab1e88bc23f84187bba26d82ea7";
+-constexpr auto kFeedUrlPrefix = "https://github.com/nitreojs/tele/releases/"
+-	"latest/download/tele-update-";
+-constexpr auto kDownloadPrefix = "https://github.com/nitreojs/tele/"
++constexpr auto kPublicKeyHex = "db9d014ddbbc887691f8df113020168a"
++	"65cbc31a235a62cef3fae1a91f4649d8";
++constexpr auto kFeedUrlPrefix = "https://github.com/yar2slav/madgram-desktop/"
++	"releases/latest/download/mad-update-";
++constexpr auto kDownloadPrefix = "https://github.com/yar2slav/madgram-desktop/"
+ 	"releases/download/";
+ 
+ #if defined Q_OS_MAC
+@@ -74,7 +74,7 @@ constexpr auto kPlatform = "";
+ #endif
+ 
+ #if defined Q_OS_WIN
+-constexpr auto kExeInZip = "tele.exe";
++constexpr auto kExeInZip = "mad.exe";
+ constexpr auto kRenameAttempts = 10;
+ constexpr auto kRenameRetryDelay = 100;
+ #elif !defined Q_OS_MAC
+@@ -762,6 +762,11 @@ void Updater::install(const Release &release) {
+ 		fail(u"can't put the new exe in place"_q);
+ 		return;
+ 	}
++	auto updated = QFile(path + u".updated"_q);
++	if (updated.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
++		updated.write(release.exeSha256);
++		updated.close();
++	}
+ #else
+ 	if (!base::Platform::RenameWithOverwrite(newPath, path)) {
+ 		QFile::remove(newPath);

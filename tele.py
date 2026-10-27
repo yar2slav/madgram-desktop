@@ -239,13 +239,23 @@ def resolve_known_conflicts(repo):
     return True
 
 
+def apply_patches(repo, patches):
+    with tempfile.TemporaryDirectory(prefix='mad-patches-') as temporary:
+        mailbox = Path(temporary) / 'queue.mbox'
+        with mailbox.open('wb') as output:
+            for patch in patches:
+                with patch.open('rb') as source:
+                    shutil.copyfileobj(source, output)
+        return run_git(repo, *AM_ARGS, str(mailbox))
+
+
 def apply_pending(tdesktop, state):
     groups = patch_groups()
     while state['pending']:
         group = state['pending'][0]
         patches = groups[group]
         repo = repo_path(tdesktop, group)
-        result = run_git(repo, *AM_ARGS, *map(str, patches))
+        result = apply_patches(repo, patches)
         while result.returncode != 0 and resolve_known_conflicts(repo):
             result = run_git(repo, 'am', '--continue')
         if result.returncode != 0:
@@ -289,7 +299,7 @@ def prime_patch_blobs(tdesktop):
         worktree = scratch / 'repo'
         git(repo, 'worktree', 'add', '--quiet', '--detach', str(worktree), base)
         try:
-            if run_git(worktree, *AM_ARGS, *map(str, patches)).returncode != 0:
+            if apply_patches(worktree, patches).returncode != 0:
                 run_git(worktree, 'am', '--abort')
         finally:
             git(repo, 'worktree', 'remove', '--force', str(worktree))

@@ -1,0 +1,511 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 17:00:18 +0200
+Subject: [PATCH] feat: open mad settings from welcome links and deep links
+
+---
+ Telegram/CMakeLists.txt                       |   3 +
+ Telegram/Resources/langs/mad_ru.json          |   5 +-
+ Telegram/SourceFiles/core/application.cpp     |   5 +
+ .../SourceFiles/core/local_url_handlers.cpp   |   4 +
+ Telegram/SourceFiles/core/ui_integration.cpp  |   5 +
+ .../SourceFiles/settings/settings_tele.cpp    |   5 +-
+ .../SourceFiles/tele/tele_mad_link_parser.cpp | 116 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_mad_links.cpp  |  51 ++++++++
+ Telegram/SourceFiles/tele/tele_mad_links.h    |  17 +++
+ Telegram/SourceFiles/tele/tele_welcome.cpp    |  30 +++--
+ .../tele/tests/mad_links_tests.cpp            |  74 +++++++++++
+ Telegram/cmake/mad_tests.cmake                |  13 ++
+ 12 files changed, 316 insertions(+), 12 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_link_parser.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_links.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_links.h
+ create mode 100644 Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 484081ce65ad466c6b7256e3ad1844033e0012e8..a3e4b3384f117d032f8100160852fa129f6e78f9 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3016,6 +3016,9 @@ PRIVATE
+     tele/tele_tgs_rules.h
+     tele/tele_quick_modes.cpp
+     tele/tele_quick_modes.h
++    tele/tele_mad_links.h
++    tele/tele_mad_links.cpp
++    tele/tele_mad_link_parser.cpp
+     tele/tele_welcome.cpp
+     tele/tele_welcome.h
+     tele/tele_streamer_mode.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 46967d0182073bff52945a16cacbe7d8ba8d42cf..f2d71c1d7d7fe59297e119db359fdca28079ebb8 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2050,5 +2050,8 @@
+   "App and tray icons, Apple emoji and badges from b.mad.tg.": "значки приложения и трея, эмодзи apple и бейджи b.mad.tg.",
+   "Encrypted history sync is optional and off by default. Enable it in mad settings → Server and keep a backup of your transfer code. Media files are not uploaded.": "зашифрованная синхронизация истории включается отдельно и по умолчанию выключена. включить её можно в настройках mad → сервер. сохрани резервную копию кода переноса. медиафайлы не загружаются.",
+   "This is a local service chat. It stays on this device and is not sent through Telegram.": "это локальный служебный чат. он хранится на этом устройстве и не передаётся через telegram.",
+-  "Message history": "история сообщений"
++  "Message history": "история сообщений",
++  "This mad link is invalid or unsupported.": "эта ссылка mad неверная или пока не поддерживается.",
++  "Open mad settings": "открыть настройки mad",
++  "Telegram Desktop with extra privacy, chat and appearance options.": "telegram desktop с дополнительными настройками приватности, чатов и оформления."
+ }
+diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
+index b43f53b96065bc7d178a7988116d2a91f5d509f3..60cf40354441cb2c6acb220ff3a4a7de1658bc23 100644
+--- a/Telegram/SourceFiles/core/application.cpp
++++ b/Telegram/SourceFiles/core/application.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "core/application.h"
++#include "tele/tele_mad_links.h"
+ #include "tele/tele_quick_modes.h"
+ #include "tele/tele_mad_badges.h"
+ 
+@@ -330,6 +331,7 @@ void Application::run() {
+ 
+ 	startLocalStorage();
+ 	Tele::ApplyQuickModesAtStartup();
++	Tele::RegisterMadUrlScheme();
+ 
+ 	style::SetCustomFont(settings().customFontFamily());
+ 	style::SetCustomFontFix(Tele::FontFix());
+@@ -1332,6 +1334,9 @@ void Application::registerWindowActivation(not_null<QWidget*> window) {
+ }
+ 
+ bool Application::openLocalUrl(const QString &url, QVariant context) {
++	if (Tele::IsMadLink(url)) {
++		return Tele::OpenMadLink(url, context);
++	}
+ 	const auto urlTrimmed = url.trimmed();
+ 	const auto protocol = u"tg://"_q;
+ 	if (urlTrimmed.startsWith(protocol, Qt::CaseInsensitive)
+diff --git a/Telegram/SourceFiles/core/local_url_handlers.cpp b/Telegram/SourceFiles/core/local_url_handlers.cpp
+index 91c6db2446f6fbacb1bc427df22efd0363501e62..3d7c10c2679b1cfb56b89bff5e04ec63ebdc5ecd 100644
+--- a/Telegram/SourceFiles/core/local_url_handlers.cpp
++++ b/Telegram/SourceFiles/core/local_url_handlers.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "core/local_url_handlers.h"
++#include "tele/tele_mad_links.h"
+ 
+ #include "core/deep_links/deep_links_router.h"
+ #include "api/api_confirm_phone.h"
+@@ -2082,6 +2083,9 @@ const std::vector<LocalUrlHandler> &InternalUrlHandlers() {
+ }
+ 
+ QString TryConvertUrlToLocal(QString url) {
++	if (const auto local = Tele::LocalMadLink(url); !local.isEmpty()) {
++		return local;
++	}
+ 	if (url.size() > 8192) {
+ 		url = url.mid(0, 8192);
+ 	}
+diff --git a/Telegram/SourceFiles/core/ui_integration.cpp b/Telegram/SourceFiles/core/ui_integration.cpp
+index 9666846adc803b621cdcbf0da773e4216560df2d..b1403d55729f920df34993f9cc12087f7ff5b6ee 100644
+--- a/Telegram/SourceFiles/core/ui_integration.cpp
++++ b/Telegram/SourceFiles/core/ui_integration.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "core/ui_integration.h"
++#include "tele/tele_mad_links.h"
+ #include "tele/tele_mad_badges.h"
+ 
+ #include "api/api_text_entities.h"
+@@ -426,6 +427,10 @@ std::shared_ptr<ClickHandler> UiIntegration::createLinkHandler(
+ bool UiIntegration::handleUrlClick(
+ 		const QString &original,
+ 		const QVariant &context) {
++	if (Tele::IsMadLink(original)) {
++		Tele::OpenMadLink(original, context);
++		return true;
++	}
+ 	if (Tele::Scripting::InterceptLink(original, context)) {
+ 		return true;
+ 	}
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 5ab0f1a041f02b07ad192f00a8a3c02cee63a9da..bab1689c13e0fa8c03d30d27ae596796b33e10a7 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -1,4 +1,5 @@
+ #include "settings/settings_tele.h"
++#include "tele/tele_mad_links.h"
+ #include "tele/tele_mad_badges.h"
+ #include "tele/tele_history_sync.h"
+ #include "tele/tele_settings_widgets.h"
+@@ -268,9 +269,9 @@ void SetupCopyLink(
+ 		}
+ 		const auto owner = FindSection(widget);
+ 		const auto link = owner
+-			? Core::DeepLinks::SettingsDeepLink(
++			? ::Tele::PublicMadLink(Core::DeepLinks::SettingsDeepLink(
+ 				section ? section : owner->id(),
+-				id)
++				id))
+ 			: QString();
+ 		if (link.isEmpty()) {
+ 			return base::EventFilterResult::Continue;
+diff --git a/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp b/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..1e5abcfead3d4085988b60ba7ef83a54158d34e8
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp
+@@ -0,0 +1,116 @@
++#include "tele/tele_mad_links.h"
++
++#include <QtCore/QRegularExpression>
++#include <QtCore/QStringList>
++#include <QtCore/QUrl>
++#include <QtCore/QUrlQuery>
++
++namespace Tele {
++namespace {
++
++using namespace Qt::StringLiterals;
++
++bool ValidControl(const QString &control) {
++	static const auto pattern = QRegularExpression(
++		QRegularExpression::anchoredPattern(u"[a-zA-Z0-9][a-zA-Z0-9._/-]{0,159}"_s));
++	return control.isEmpty() || pattern.match(control).hasMatch();
++}
++
++bool ValidCategory(const QString &category) {
++	static const auto categories = QStringList{
++		u""_s, u"badges"_s, u"server"_s, u"backup"_s,
++		u"interface"_s, u"chats"_s, u"messages"_s, u"sending"_s,
++		u"notifications"_s, u"menus"_s, u"privacy"_s,
++		u"profiles"_s, u"bots"_s, u"debug"_s, u"new"_s,
++	};
++	return categories.contains(category);
++}
++
++QString Query(const QString &control) {
++	return control.isEmpty() ? QString()
++		: u"?highlight="_s + QString::fromLatin1(QUrl::toPercentEncoding(control));
++}
++
++}
++
++bool IsMadLink(const QString &url) {
++	return url.trimmed().startsWith(u"mad:"_s, Qt::CaseInsensitive);
++}
++
++QString LocalMadLink(const QString &value) {
++	const auto input = value.trimmed();
++	if (input.size() > 2048 || !IsMadLink(input)) {
++		return {};
++	}
++	const auto url = QUrl(input, QUrl::StrictMode);
++	if (!url.isValid() || url.userInfo().size() || url.port() != -1
++		|| url.authority().contains('@') || url.authority().contains(':')) {
++		return {};
++	}
++	auto category = url.path().toLower();
++	if (category.startsWith('/')) {
++		category.remove(0, 1);
++	}
++	if (category.endsWith('/')) {
++		category.chop(1);
++	}
++	auto control = QString();
++	const auto params = QUrlQuery(url).queryItems(QUrl::FullyDecoded);
++	if (params.size() > 1 || (!params.empty() && params.front().first != u"highlight"_s)) {
++		return {};
++	}
++	if (!params.empty()) {
++		control = params.front().second;
++	}
++	if (url.hasFragment()) {
++		if (url.hasQuery()) {
++			return {};
++		}
++		control = url.fragment(QUrl::FullyDecoded);
++	}
++	const auto host = url.host().toLower();
++	if (host == u"ghost"_s || host == u"streamer"_s || host == u"sync"_s) {
++		if (!category.isEmpty() || url.hasQuery() || url.hasFragment()) {
++			return {};
++		}
++		category = (host == u"sync"_s) ? u"server"_s : u"privacy"_s;
++		control = (host == u"ghost"_s) ? u"tele-ghost"_s
++			: (host == u"streamer"_s) ? u"tele-streamer-mode"_s
++			: u"tele-history-sync-accounts"_s;
++	} else if (host != u"settings"_s) {
++		return {};
++	}
++	if (!ValidCategory(category) || !ValidControl(control)) {
++		return {};
++	}
++	return u"tg://settings/tele"_s
++		+ (category.isEmpty() ? QString() : '/' + category)
++		+ Query(control);
++}
++
++QString MadSettingsLink(const QString &category, const QString &control) {
++	if (!ValidCategory(category) || !ValidControl(control)) {
++		return {};
++	}
++	return u"mad://settings"_s
++		+ (category.isEmpty() ? QString() : '/' + category)
++		+ Query(control);
++}
++
++QString PublicMadLink(const QString &value) {
++	const auto url = QUrl(value, QUrl::StrictMode);
++	if (url.scheme() != u"tg"_s || url.host() != u"settings"_s) {
++		return value;
++	}
++	const auto path = url.path();
++	if (path != u"/tele"_s && path != u"/mad"_s && !path.startsWith(u"/tele/"_s)) {
++		return value;
++	}
++	auto result = QUrl(url);
++	result.setScheme(u"mad"_s);
++	result.setPath(path.startsWith(u"/tele/"_s) ? path.mid(5) : QString());
++	const auto candidate = result.toString(QUrl::FullyEncoded);
++	return LocalMadLink(candidate).isEmpty() ? value : candidate;
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_links.cpp b/Telegram/SourceFiles/tele/tele_mad_links.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..64fcaf05ec4b6d4869b2e7d33ceb971529f83ebd
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_links.cpp
+@@ -0,0 +1,51 @@
++#include "tele/tele_mad_links.h"
++
++#include "base/options.h"
++#include "base/platform/base_platform_url_scheme.h"
++#include "core/application.h"
++#include "core/click_handler_types.h"
++#include "tele/tele_lowercase.h"
++#include "window/window_controller.h"
++#include "window/window_session_controller.h"
++#include <QtCore/QCoreApplication>
++#include <QtCore/QDir>
++
++namespace Tele {
++
++bool OpenMadLink(const QString &url, const QVariant &context) {
++	const auto local = LocalMadLink(url);
++	if (!local.isEmpty()) {
++		return Core::App().openLocalUrl(local, context);
++	}
++	const auto clicked = context.value<ClickHandlerContext>().sessionWindow.get();
++	const auto window = Core::App().activeWindow();
++	const auto controller = clicked ? clicked
++		: window ? window->sessionController() : nullptr;
++	if (controller && !Core::App().passcodeLocked()) {
++		controller->showToast(Tr(u"This mad link is invalid or unsupported."_q));
++	}
++	return true;
++}
++
++void RegisterMadUrlScheme() {
++#ifdef Q_OS_WIN
++	if (base::options::lookup<bool>(Core::kOptionSkipUrlSchemeRegister).value()) {
++		return;
++	}
++	const auto descriptor = base::Platform::UrlSchemeDescriptor{
++		.executable = QCoreApplication::applicationFilePath(),
++		.arguments = u"-workdir \"%1\""_q.arg(QDir::cleanPath(cWorkingDir())),
++		.protocol = u"mad"_q,
++		.protocolName = u"mad link"_q,
++		.shortAppName = u"mad"_q,
++		.longAppName = u"mad"_q,
++		.displayAppName = u"mad"_q,
++		.displayAppDescription = u"mad desktop"_q,
++	};
++	if (!base::Platform::CheckUrlScheme(descriptor)) {
++		base::Platform::RegisterUrlScheme(descriptor);
++	}
++#endif
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_links.h b/Telegram/SourceFiles/tele/tele_mad_links.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..e97512bf8b2a7619b6cc23949ffca1941b83488a
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_links.h
+@@ -0,0 +1,17 @@
++#pragma once
++
++#include <QtCore/QString>
++#include <QtCore/QVariant>
++
++namespace Tele {
++
++[[nodiscard]] bool IsMadLink(const QString &url);
++[[nodiscard]] QString LocalMadLink(const QString &url);
++[[nodiscard]] QString PublicMadLink(const QString &url);
++[[nodiscard]] QString MadSettingsLink(
++	const QString &category = {},
++	const QString &control = {});
++bool OpenMadLink(const QString &url, const QVariant &context);
++void RegisterMadUrlScheme();
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_welcome.cpp b/Telegram/SourceFiles/tele/tele_welcome.cpp
+index 01e4a77ff56a5afc4ba36d111387dca7c22cced8..764d8670d3e9cb17a90d5db229a8f6c006a972c6 100644
+--- a/Telegram/SourceFiles/tele/tele_welcome.cpp
++++ b/Telegram/SourceFiles/tele/tele_welcome.cpp
+@@ -1,4 +1,5 @@
+ #include "tele/tele_welcome.h"
++#include "tele/tele_mad_links.h"
+ 
+ #include "base/unixtime.h"
+ #include "core/application.h"
+@@ -50,13 +51,19 @@ ChangelogMessage WelcomeMessage(not_null<Main::Session*> session) {
+ 		plain.append(text);
+ 	};
+ 	paragraph(tr::bold(Tr(u"Welcome to mad!"_q)), true);
+-	paragraph({ Tr(u"Telegram Desktop with extra privacy, chat and appearance options. "
+-		"Open Settings → mad settings to configure them."_q) });
++	paragraph({ Tr(u"Telegram Desktop with extra privacy, chat and appearance options."_q) });
++	paragraph(tr::url(MadSettingsLink())(Tr(u"Open mad settings"_q)));
+ 	auto list = Iv::RichPage::Block();
+ 	list.kind = Kind::List;
+ 	list.listKind = Iv::RichPage::ListKind::Bullet;
+-	const auto feature = [&](const QString &title, const QString &description) {
++	const auto feature = [&](
++			const QString &title,
++			const QString &description,
++			const QString &category,
++			const QString &control = QString()) {
+ 		auto text = tr::bold(title);
++		text.entities.push_back(EntityInText(EntityType::CustomUrl, 0,
++			text.text.size(), MadSettingsLink(category, control)));
+ 		text.append(u" — "_q).append(description);
+ 		auto item = Iv::RichPage::ListItem();
+ 		item.text.text = text;
+@@ -64,14 +71,19 @@ ChangelogMessage WelcomeMessage(not_null<Main::Session*> session) {
+ 		plain.append(u"\n\n• "_q).append(text);
+ 	};
+ 	feature(Tr(u"Privacy"_q), Tr(u"Ghost mode, streamer mode and hidden messages. "
+-		"Quick switches are in the side menu and tray."_q));
++		"Quick switches are in the side menu and tray."_q), u"privacy"_q);
+ 	feature(Tr(u"Message history"_q), Tr(u"Keep deleted messages and earlier versions of edited messages "
+-		"when saving history is enabled."_q));
+-	feature(Tr(u"Sending"_q), Tr(u"Scheduled messages, multiple drafts and translation before sending."_q));
+-	feature(Tr(u"Chats"_q), Tr(u"Extra local folders and pins, local names and aliases."_q));
+-	feature(Tr(u"Tools"_q), Tr(u"Message snapshots, bookmarks, regex search and scripts."_q));
+-	feature(Tr(u"Appearance"_q), Tr(u"App and tray icons, Apple emoji and badges from b.mad.tg."_q));
++		"when saving history is enabled."_q), u"messages"_q, u"tele-keep-deleted"_q);
++	feature(Tr(u"Sending"_q), Tr(u"Scheduled messages, multiple drafts and translation before sending."_q), u"sending"_q);
++	feature(Tr(u"Chats"_q), Tr(u"Extra local folders and pins, local names and aliases."_q), u"chats"_q);
++	feature(Tr(u"Tools"_q), Tr(u"Message snapshots, bookmarks, regex search and scripts."_q), u"menus"_q, u"tele-shot"_q);
++	feature(Tr(u"Appearance"_q), Tr(u"App and tray icons, Apple emoji and badges from b.mad.tg."_q), u"interface"_q, u"tele-app-icon"_q);
+ 	page->blocks.push_back(std::move(list));
++	paragraph(tr::url(u"mad://ghost"_q)(Tr(u"Ghost mode"_q))
++		.append(u" · "_q)
++		.append(tr::url(u"mad://streamer"_q)(Tr(u"Streamer mode"_q))));
++	paragraph(tr::url(MadSettingsLink(u"server"_q, u"tele-history-sync-accounts"_q))(
++		Tr(u"Encrypted history sync"_q)));
+ 	paragraph({ Tr(u"Encrypted history sync is optional and off by default. "
+ 		"Enable it in mad settings → Server and keep a backup of your transfer code. "
+ 		"Media files are not uploaded."_q) });
+diff --git a/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp b/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..f3a2f35e341de27dc6ac6acc392cfe99158efbef
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
+@@ -0,0 +1,74 @@
++#include "tele/tele_mad_links.h"
++
++#include <QtCore/QCoreApplication>
++#include <QtCore/QStringList>
++#include <cstdio>
++#include <cstdlib>
++#include <utility>
++#include <vector>
++
++namespace {
++
++using namespace Qt::StringLiterals;
++
++void Require(bool condition, const char *name) {
++	if (!condition) {
++		std::fprintf(stderr, "failed: %s\n", name);
++		std::exit(1);
++	}
++}
++
++}
++
++int main(int argc, char *argv[]) {
++	QCoreApplication app(argc, argv);
++	using namespace Qt::StringLiterals;
++	const auto cases = std::vector<std::pair<QString, QString>>{
++		{ u"mad://settings"_s, u"tg://settings/tele"_s },
++		{ u" MAD://SETTINGS/PRIVACY/ "_s, u"tg://settings/tele/privacy"_s },
++		{ u"mad://settings/privacy?highlight=tele-ghost"_s, u"tg://settings/tele/privacy?highlight=tele-ghost"_s },
++		{ u"mad://settings/privacy#tele-ghost"_s, u"tg://settings/tele/privacy?highlight=tele-ghost"_s },
++		{ u"mad://ghost"_s, u"tg://settings/tele/privacy?highlight=tele-ghost"_s },
++		{ u"mad://streamer"_s, u"tg://settings/tele/privacy?highlight=tele-streamer-mode"_s },
++		{ u"mad://sync"_s, u"tg://settings/tele/server?highlight=tele-history-sync-accounts"_s },
++		{ u"mad://settings?highlight=tele%2Ftest"_s, u"tg://settings/tele?highlight=tele%2Ftest"_s },
++	};
++	for (const auto &[input, output] : cases) {
++		Require(Tele::LocalMadLink(input) == output, "route");
++		const auto publicLink = Tele::PublicMadLink(output);
++		Require(publicLink.startsWith(u"mad://settings"_s), "public scheme");
++		Require(Tele::LocalMadLink(publicLink) == output, "round trip");
++	}
++	for (const auto &category : QStringList{
++		u""_s, u"badges"_s, u"server"_s, u"backup"_s, u"interface"_s,
++		u"chats"_s, u"messages"_s, u"sending"_s, u"notifications"_s,
++		u"menus"_s, u"privacy"_s, u"profiles"_s, u"bots"_s, u"debug"_s, u"new"_s,
++	}) {
++		Require(!Tele::LocalMadLink(Tele::MadSettingsLink(category)).isEmpty(), "category");
++	}
++	for (const auto &input : QStringList{
++		u"https://settings/privacy"_s, u"tg://settings/tele"_s,
++		u"mad://settings.evil/privacy"_s, u"mad://user@settings/privacy"_s,
++		u"mad://@settings/privacy"_s, u"mad://settings:443/privacy"_s,
++		u"mad://settings/../privacy"_s, u"mad://settings/privacy/extra"_s,
++		u"mad://resolve?domain=example"_s, u"mad://settings/privacy?enabled=1"_s,
++		u"mad://settings/privacy?highlight=one&highlight=two"_s,
++		u"mad://settings/privacy?highlight=one#two"_s,
++		u"mad://settings/privacy?highlight=%ZZ"_s,
++		u"mad://settings/privacy?highlight=test%0A"_s,
++		u"mad://settings/privacy?highlight=%22%20-workdir"_s,
++		u"mad://ghost?enabled=1"_s, u"mad://sync/anything"_s,
++		u"mad://settings/unknown"_s, u"mad:settings/privacy"_s,
++		u"mad://settings?highlight="_s + QString(161, 'a'),
++		u"mad://settings?"_s + QString(2048, 'a'),
++	}) {
++		Require(Tele::LocalMadLink(input).isEmpty(), "reject unsupported input");
++	}
++	Require(Tele::IsMadLink(u"mad:invalid"_s), "consume invalid mad scheme");
++	Require(!Tele::IsMadLink(u"madness://settings"_s), "preserve unrelated scheme");
++	Require(Tele::PublicMadLink(u"tg://settings/privacy"_s) == u"tg://settings/privacy"_s, "preserve official settings link");
++	Require(Tele::PublicMadLink(u"https://t.me/maadgram"_s) == u"https://t.me/maadgram"_s, "preserve web link");
++	Require(Tele::MadSettingsLink(u"bad/path"_s).isEmpty(), "reject invalid generated category");
++	Require(Tele::MadSettingsLink(u"privacy"_s, u"unsafe&action=1"_s).isEmpty(), "reject invalid generated control");
++	std::puts("mad links tests passed");
++}
+diff --git a/Telegram/cmake/mad_tests.cmake b/Telegram/cmake/mad_tests.cmake
+index 3de2902d141d5dce701822ae3b8dc347cadcb15e..7010bb509fc235fa3ad589d7adac14fa4086fcf5 100644
+--- a/Telegram/cmake/mad_tests.cmake
++++ b/Telegram/cmake/mad_tests.cmake
+@@ -26,3 +26,16 @@ target_link_libraries(mad_history_crypto_tests PRIVATE
+     desktop-app::external_openssl
+ )
+ set_target_properties(mad_history_crypto_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
++
++add_executable(mad_links_tests)
++init_target(mad_links_tests "(tests)")
++target_include_directories(mad_links_tests PRIVATE ${src_loc})
++target_sources(mad_links_tests PRIVATE
++    ${src_loc}/tele/tele_mad_link_parser.cpp
++    ${src_loc}/tele/tests/mad_links_tests.cpp
++)
++target_link_libraries(mad_links_tests PRIVATE
++    desktop-app::external_qt
++    desktop-app::external_qt_static_plugins
++)
++set_target_properties(mad_links_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

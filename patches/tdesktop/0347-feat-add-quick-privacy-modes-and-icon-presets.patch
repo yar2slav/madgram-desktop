@@ -1,0 +1,868 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 11:57:43 +0200
+Subject: [PATCH] feat: add quick privacy modes and icon presets
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/art/mad_white.png          | Bin 0 -> 7011 bytes
+ Telegram/Resources/langs/mad_ru.json          |  15 ++-
+ Telegram/Resources/qrc/telegram/telegram.qrc  |   1 +
+ Telegram/SourceFiles/core/application.cpp     |   2 +
+ .../SourceFiles/settings/settings_tele.cpp    |  73 +++++-------
+ Telegram/SourceFiles/tele/tele_app_icons.cpp  |  63 +++++++++-
+ Telegram/SourceFiles/tele/tele_app_icons.h    |   2 +
+ Telegram/SourceFiles/tele/tele_ghost.cpp      |  18 +--
+ .../tele/tele_gift_studio_menu.cpp            |   6 +-
+ Telegram/SourceFiles/tele/tele_options.cpp    |  26 +++-
+ Telegram/SourceFiles/tele/tele_options.h      |   4 +
+ .../SourceFiles/tele/tele_quick_modes.cpp     | 112 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_quick_modes.h  |  20 ++++
+ .../SourceFiles/tele/tele_settings_io.cpp     |  22 ++--
+ .../SourceFiles/tele/tele_streamer_mode.cpp   |  18 +--
+ Telegram/SourceFiles/tray.cpp                 |   2 +
+ 17 files changed, 286 insertions(+), 100 deletions(-)
+ create mode 100644 Telegram/Resources/art/mad_white.png
+ create mode 100644 Telegram/SourceFiles/tele/tele_quick_modes.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_quick_modes.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index fa0ac9540e4a8bf620c650f0402f06c685226dc9..87eda5923d557c6c2f58a121d91125dc5e58b2de 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3014,6 +3014,8 @@ PRIVATE
+     tele/tele_table_selection.h
+     tele/tele_tgs_rules.cpp
+     tele/tele_tgs_rules.h
++    tele/tele_quick_modes.cpp
++    tele/tele_quick_modes.h
+     tele/tele_streamer_mode.cpp
+     tele/tele_streamer_mode.h
+     tele/tele_streaming_audio.cpp
+diff --git a/Telegram/Resources/art/mad_white.png b/Telegram/Resources/art/mad_white.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..82e7451a977b78e11e556ee3bf770f4234b126ff
+GIT binary patch
+literal 7011
+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
+a0Qal><Bf_(-V@0)Ku_C9t5(B4>c0S8X7#fG
+
+literal 0
+HcmV?d00001
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 791681240ea0621644b20d4a30cd206948ba877b..ded150db3455df3aa376ae5af03f83871c8d1ca3 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -1469,7 +1469,6 @@
+   "The mad settings this device has seen, to show the new ones after an update.": "известные этому устройству настройки mad; нужны для выделения новых после обновления.",
+   "The message menu keeps showing when a private chat read your message.": "В меню сообщения сохраняется время его прочтения собеседником в личном чате.",
+   "The model doesn't load.": "Модель не загружается.",
+-  "The monochrome tray icon setting takes priority.": "Настройка монохромного значка в области уведомлений имеет приоритет.",
+   "The old words stop working and the network takes a small fee.": "Старая фраза перестанет работать, сеть возьмёт небольшую комиссию.",
+   "The parts are still loading.": "Детали все еще загружаются.",
+   "The price is set for each of %1.": "Цена указана за каждый подарок. Выбрано: %1.",
+@@ -2024,5 +2023,17 @@
+     "Будет изменена %1 настройка.",
+     "Будут изменены %1 настройки.",
+     "Будет изменено %1 настроек."
+-  ]
++  ],
++  "Enable ghost mode at startup": "Включать режим призрака при запуске",
++  "Enable streamer mode at startup": "Включать режим стримера при запуске",
++  "Turns it on at every launch; you can turn it off afterwards.": "Включает режим при каждом запуске. Затем его можно выключить вручную.",
++  "Turns it on before the app window opens; you can turn it off afterwards.": "Включает режим до открытия окна приложения. Затем его можно выключить вручную.",
++  "Enable ghost mode": "Включить режим призрака",
++  "Disable ghost mode": "Выключить режим призрака",
++  "Enable streamer mode": "Включить режим стримера",
++  "Disable streamer mode": "Выключить режим стримера",
++  "mad red": "mad — красная",
++  "mad white": "mad — белая",
++  "Telegram": "Telegram",
++  "A selected preset or custom image overrides the monochrome tray setting.": "Выбранный значок или своя картинка имеют приоритет над монохромным режимом трея."
+ }
+diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
+index e4b4c4020da77856167f71816ae920d509062602..fb4e3891cf85354e4240533a8181ca944c84e28c 100644
+--- a/Telegram/Resources/qrc/telegram/telegram.qrc
++++ b/Telegram/Resources/qrc/telegram/telegram.qrc
+@@ -8,6 +8,7 @@
+     <file alias="art/affiliate_logo.png">../../art/affiliate_logo.png</file>
+     <file alias="art/mad_help.svg">../../art/mad_help.svg</file>
+     <file alias="art/mad.png">../../art/mad.png</file>
++    <file alias="art/mad_white.png">../../art/mad_white.png</file>
+     <file alias="art/logo_256.png">../../art/logo_256.png</file>
+     <file alias="art/logo_256_no_margin.png">../../art/logo_256_no_margin.png</file>
+     <file alias="art/themeimage.jpg">../../art/themeimage.jpg</file>
+diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
+index 9952f6c1155668c544fbb68c6b8a32fdb6b67401..b43f53b96065bc7d178a7988116d2a91f5d509f3 100644
+--- a/Telegram/SourceFiles/core/application.cpp
++++ b/Telegram/SourceFiles/core/application.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "core/application.h"
++#include "tele/tele_quick_modes.h"
+ #include "tele/tele_mad_badges.h"
+ 
+ #include "data/data_abstract_structure.h"
+@@ -328,6 +329,7 @@ void Application::run() {
+ 	_notifications = std::make_unique<Window::Notifications::System>();
+ 
+ 	startLocalStorage();
++	Tele::ApplyQuickModesAtStartup();
+ 
+ 	style::SetCustomFont(settings().customFontFamily());
+ 	style::SetCustomFontFix(Tele::FontFix());
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 6297e880b81176bc5648fb3c4ab97893fa82fe6f..5ab0f1a041f02b07ad192f00a8a3c02cee63a9da 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -2670,52 +2670,33 @@ void AddIconButton(
+ void AddAppIcons(SectionBuilder &builder) {
+ 	using Slot = ::Tele::IconSlot;
+ 	const auto controller = builder.controller();
+-	const auto custom = u"custom"_q;
+-	AddIconButton(
+-		builder,
+-		::Tele::kOptionAppIcon,
+-		::Tele::AppIconValue() | rpl::map([=](const QString &value) {
+-			return ::Tele::Tr((value == custom)
+-				? u"Custom"_q
+-				: u"Default"_q);
+-		}),
+-		[=](not_null<Ui::PopupMenu*> menu) {
+-			menu->addAction(::Tele::Tr(u"Choose an image..."_q), [=] {
+-				ChooseIconFile(controller, Slot::App);
+-			}, &st::menuIconPhoto);
+-			if (::Tele::AppIcon() == custom) {
+-				menu->addAction(::Tele::Tr(u"Reset to default"_q), [] {
+-					::Tele::ResetIcon(Slot::App);
+-				}, &st::menuIconRestore);
+-			}
+-		});
+-	AddIconButton(
+-		builder,
+-		::Tele::kOptionTrayIcon,
+-		::Tele::TrayIconValue() | rpl::map([=](const QString &value) {
+-			return ::Tele::Tr((value == custom)
+-				? u"Custom"_q
+-				: (value == u"default"_q)
+-				? u"Default"_q
+-				: u"Same as app"_q);
+-		}),
+-		[=](not_null<Ui::PopupMenu*> menu) {
+-			const auto tray = ::Tele::TrayIcon();
+-			menu->addAction(::Tele::Tr(u"Choose an image..."_q), [=] {
+-				ChooseIconFile(controller, Slot::Tray);
+-			}, &st::menuIconPhoto);
+-			if (!tray.isEmpty()) {
+-				menu->addAction(
+-					::Tele::Tr(u"Same as the app icon"_q),
+-					[] { ::Tele::SetTraySameAsApp(); },
+-					&st::menuIconPhotoSet);
+-			}
+-			if (tray != u"default"_q && ::Tele::AppIcon() == custom) {
+-				menu->addAction(::Tele::Tr(u"Reset to default"_q), [] {
+-					::Tele::ResetIcon(Slot::Tray);
++	for (const auto slot : { Slot::App, Slot::Tray }) {
++		const auto app = slot == Slot::App;
++		AddIconButton(builder,
++			app ? ::Tele::kOptionAppIcon : ::Tele::kOptionTrayIcon,
++			(app ? ::Tele::AppIconValue() : ::Tele::TrayIconValue())
++				| rpl::map([=](const QString &value) {
++					return ::Tele::IconPresetName(value, slot);
++				}),
++			[=](not_null<Ui::PopupMenu*> menu) {
++				for (const auto &value : { u"red"_q, u"white"_q, u"telegram"_q }) {
++					menu->addAction(::Tele::IconPresetName(value, slot), [=] {
++						::Tele::SetIconPreset(slot, value);
++					}, &st::menuIconPhoto);
++				}
++				menu->addAction(::Tele::Tr(u"Choose an image..."_q), [=] {
++					ChooseIconFile(controller, slot);
++				}, &st::menuIconPhoto);
++				if (!app) {
++					menu->addAction(::Tele::Tr(u"Same as the app icon"_q), [] {
++						::Tele::SetTraySameAsApp();
++					}, &st::menuIconPhotoSet);
++				}
++				menu->addAction(::Tele::Tr(u"Reset to default"_q), [=] {
++					::Tele::ResetIcon(slot);
+ 				}, &st::menuIconRestore);
+-			}
+-		});
++			});
++	}
+ }
+ 
+ void FillInterface(SectionBuilder &builder) {
+@@ -3623,6 +3604,7 @@ void FillPrivacy(SectionBuilder &builder) {
+ 		Off(::Tele::kOptionInvisibleStories),
+ 	});
+ 	AddOptionToggle(builder, ::Tele::kOptionGhostInMenu);
++	AddOptionToggle(builder, ::Tele::kOptionGhostAtStartup);
+ 	AddGhostChats(builder);
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Stories"_q);
+@@ -3673,6 +3655,7 @@ void FillPrivacy(SectionBuilder &builder) {
+ 			::Tele::Tr(u"Screen capture can't be blocked on this system."_q));
+ 	}
+ 	AddOptionToggle(builder, ::Tele::kOptionStreamerModeInMenu);
++	AddOptionToggle(builder, ::Tele::kOptionStreamerAtStartup);
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Local password"_q);
+ 	AddLocalPassword(builder);
+diff --git a/Telegram/SourceFiles/tele/tele_app_icons.cpp b/Telegram/SourceFiles/tele/tele_app_icons.cpp
+index b3971fd5eb48522a9ef5264397d7aaac35dc6d5c..29123a43f8fa0bab48b700dbd11e063d877e059c 100644
+--- a/Telegram/SourceFiles/tele/tele_app_icons.cpp
++++ b/Telegram/SourceFiles/tele/tele_app_icons.cpp
+@@ -3,6 +3,7 @@
+ #include "core/application.h"
+ #include "mainwindow.h"
+ #include "tele/tele_options.h"
++#include "tele/tele_lowercase.h"
+ #include "tray.h"
+ #include "ui/image/image_prepare.h"
+ #include "ui/ui_utility.h"
+@@ -55,6 +56,24 @@ int Generation = 0;
+ 	return image;
+ }
+ 
++[[nodiscard]] const QImage &PresetLogo(const QString &value) {
++	if (value == u"white"_q) {
++		static const auto image = QImage(u":/gui/art/mad_white.png"_q);
++		return image;
++	} else if (value == u"telegram"_q) {
++		static const auto image = QImage(u":/gui/art/tele_telegram_logo.png"_q);
++		return image;
++	}
++	return DefaultLogo();
++}
++
++[[nodiscard]] bool ExplicitTrayChoice() {
++	const auto tray = TrayIcon();
++	const auto value = tray.isEmpty() ? AppIcon() : tray;
++	return value == u"red"_q || value == u"white"_q
++		|| value == u"telegram"_q || value == u"custom"_q;
++}
++
+ void Forget(IconSlot slot) {
+ 	QFile::remove(IconPath(slot));
+ 	Loaded(slot) = LoadedIcon();
+@@ -76,17 +95,18 @@ void Apply() {
+ 
+ const QImage *CustomAppLogo() {
+ 	const auto custom = (AppIcon() == u"custom"_q) ? Load(IconSlot::App) : nullptr;
+-	return custom ? custom : &DefaultLogo();
++	return custom ? custom : &PresetLogo(AppIcon());
+ }
+ 
+ const QImage *CustomTrayLogo() {
+ 	const auto tray = TrayIcon();
+ 	if (tray == u"custom"_q) {
+-		return Load(IconSlot::Tray);
+-	} else if (tray == u"default"_q) {
+-		return &DefaultLogo();
++		const auto custom = Load(IconSlot::Tray);
++		return custom ? custom : &DefaultLogo();
++	} else if (!tray.isEmpty()) {
++		return &PresetLogo(tray);
+ 	}
+-	return nullptr;
++	return ExplicitTrayChoice() ? CustomAppLogo() : nullptr;
+ }
+ 
+ bool HasCustomTrayIcon() {
+@@ -116,7 +136,8 @@ QPixmap TrayIconWithCounter(
+ 		bool monochrome,
+ 		bool supportMode) {
+ 	const auto custom = CustomTrayLogo();
+-	if (!custom || (monochrome && Platform::IsDarkTaskbar().has_value())) {
++	if (!custom || (monochrome && !ExplicitTrayChoice()
++		&& Platform::IsDarkTaskbar().has_value())) {
+ 		return Platform::Tray::IconWithCounter(
+ 			std::move(args),
+ 			smallIcon,
+@@ -192,6 +213,36 @@ void SetTraySameAsApp() {
+ 	Apply();
+ }
+ 
++QString IconPresetName(const QString &value, IconSlot slot) {
++	if (value == u"red"_q) {
++		return Tr(u"mad red"_q);
++	} else if (value == u"white"_q) {
++		return Tr(u"mad white"_q);
++	} else if (value == u"telegram"_q) {
++		return Tr(u"Telegram"_q);
++	} else if (value == u"custom"_q) {
++		return Tr(u"Custom"_q);
++	} else if (value.isEmpty() && slot == IconSlot::Tray) {
++		return Tr(u"Same as app"_q);
++	}
++	return Tr(u"Default"_q);
++}
++
++void SetIconPreset(IconSlot slot, const QString &value) {
++	if (value != u"red"_q && value != u"white"_q
++		&& value != u"telegram"_q && !value.isEmpty()
++		&& !(slot == IconSlot::Tray && value == u"default"_q)) {
++		return;
++	}
++	Forget(slot);
++	if (slot == IconSlot::App) {
++		SetAppIcon(value);
++	} else {
++		SetTrayIcon(value);
++	}
++	Apply();
++}
++
+ void ResetIcon(IconSlot slot) {
+ 	Forget(slot);
+ 	if (slot == IconSlot::App) {
+diff --git a/Telegram/SourceFiles/tele/tele_app_icons.h b/Telegram/SourceFiles/tele/tele_app_icons.h
+index 80dc02e79c9b218b902f08050700c79d59a02103..2dc36ab15bb12146fdf66c7ef4f8bd380e8bab4e 100644
+--- a/Telegram/SourceFiles/tele/tele_app_icons.h
++++ b/Telegram/SourceFiles/tele/tele_app_icons.h
+@@ -32,6 +32,8 @@ void ValidateLogoCaches(
+ 	const QByteArray &content);
+ void SetTraySameAsApp();
+ void ResetIcon(IconSlot slot);
++void SetIconPreset(IconSlot slot, const QString &value);
++[[nodiscard]] QString IconPresetName(const QString &value, IconSlot slot);
+ [[nodiscard]] QByteArray CustomIconContent(IconSlot slot);
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_ghost.cpp b/Telegram/SourceFiles/tele/tele_ghost.cpp
+index a9062b3cf6842c8bb6972fe29554289c7a2757c6..77bd2b0e125d9527a1f42755efc8b9a1a2b680ad 100644
+--- a/Telegram/SourceFiles/tele/tele_ghost.cpp
++++ b/Telegram/SourceFiles/tele/tele_ghost.cpp
+@@ -26,6 +26,7 @@
+ #include "tele/tele_lowercase.h"
+ #include "tele/tele_menu_apply.h"
+ #include "tele/tele_options.h"
++#include "tele/tele_quick_modes.h"
+ #include "ui/chat/attach/attach_prepare.h"
+ #include "ui/widgets/buttons.h"
+ #include "ui/widgets/menu/menu_add_action_callback.h"
+@@ -526,21 +527,8 @@ void AddMarkReadAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item) {
+ }
+ 
+ void AddGhostMenuToggle(not_null<Ui::VerticalLayout*> container) {
+-	if (!GhostInMenu()) {
+-		return;
+-	}
+-	const auto button = Settings::AddButtonWithIcon(
+-		container,
+-		rpl::single(Tr(u"Ghost mode"_q)),
+-		st::mainMenuButton,
+-		{ &st::menuIconStealth });
+-	button->toggleOn(GhostValue());
+-	button->toggledChanges(
+-	) | rpl::filter([](bool enabled) {
+-		return (enabled != Ghost());
+-	}) | rpl::on_next([](bool enabled) {
+-		SetGhost(enabled);
+-	}, button->lifetime());
++	AddQuickModeButton(container, kOptionGhost, kOptionGhostInMenu,
++		Tr(u"Ghost mode"_q), st::menuIconStealth);
+ }
+ 
+ GhostOverride ChatGhostOverride(not_null<PeerData*> peer) {
+diff --git a/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp b/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp
+index 0317da0946a0a2d649533f04209f51f8c9f77199..2ef4df5aff73981143484700738ea22a66ae88cd 100644
+--- a/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp
++++ b/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp
+@@ -11,6 +11,7 @@
+ #include "tele/tele_notices.h"
+ #include "tele/tele_notices_section.h"
+ #include "tele/tele_options.h"
++#include "tele/tele_quick_modes.h"
+ #include "tele/tele_streamer_mode.h"
+ #include "ui/widgets/buttons.h"
+ #include "ui/widgets/shadow.h"
+@@ -44,9 +45,10 @@ void AddGiftStudioAction(
+ void AddMainMenuItems(
+ 		not_null<Ui::VerticalLayout*> menu,
+ 		not_null<Window::SessionController*> controller) {
++	AddQuickModesMenu(menu);
+ 	const auto studio = GiftStudioMainMenu() && !OfflineForLaunch();
+ 	const auto notices = NoticesCentre();
+-	if (!GhostInMenu() && !StreamerModeInMenu() && !studio && !notices) {
++	if (!studio && !notices) {
+ 		return;
+ 	}
+ 	menu->add(
+@@ -69,8 +71,6 @@ void AddMainMenuItems(
+ 				return Settings::Badge::UnreadBadge{ .count = count };
+ 			}));
+ 	}
+-	AddGhostMenuToggle(menu);
+-	AddStreamerMenuToggle(menu);
+ 	if (studio) {
+ 		Settings::AddButtonWithIcon(
+ 			menu,
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 6f60e46911e26acdf76b5ef12250e342a5648ead..d9ead71da69200b3a38e41d9751fd8bb48407d53 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -16,6 +16,8 @@ const char kOptionHideStories[] = "tele-hide-stories";
+ const char kOptionInvisibleStories[] = "tele-invisible-stories";
+ const char kOptionGhost[] = "tele-ghost";
+ const char kOptionGhostInMenu[] = "tele-ghost-in-menu";
++const char kOptionGhostAtStartup[] = "tele-ghost-at-startup";
++const char kOptionStreamerAtStartup[] = "tele-streamer-at-startup";
+ const char kOptionGhostRead[] = "tele-ghost-read";
+ const char kOptionGhostReadOnReply[] = "tele-ghost-read-on-reply";
+ const char kOptionGhostTyping[] = "tele-ghost-typing";
+@@ -318,6 +320,19 @@ base::options::toggle GhostOption({
+ base::options::toggle GhostInMenuOption({
+ 	.id = kOptionGhostInMenu,
+ 	.name = "Ghost mode in the main menu",
++	.defaultValue = true,
++});
++
++base::options::toggle GhostAtStartupOption({
++	.id = kOptionGhostAtStartup,
++	.name = "Enable ghost mode at startup",
++	.description = "Turns it on at every launch; you can turn it off afterwards.",
++});
++
++base::options::toggle StreamerAtStartupOption({
++	.id = kOptionStreamerAtStartup,
++	.name = "Enable streamer mode at startup",
++	.description = "Turns it on before the app window opens; you can turn it off afterwards.",
+ });
+ 
+ base::options::toggle GhostReadOption({
+@@ -1101,6 +1116,7 @@ base::options::toggle StreamerModeOption({
+ base::options::toggle StreamerModeInMenuOption({
+ 	.id = kOptionStreamerModeInMenu,
+ 	.name = "Streamer mode in the main menu",
++	.defaultValue = true,
+ });
+ 
+ base::options::toggle ViewAsTlOption({
+@@ -1595,7 +1611,7 @@ base::options::option<QString> AppIconOption({
+ base::options::option<QString> TrayIconOption({
+ 	.id = kOptionTrayIcon,
+ 	.name = "Tray icon",
+-	.description = "The monochrome tray icon setting takes priority.",
++	.description = "A selected preset or custom image overrides the monochrome tray setting.",
+ });
+ 
+ base::options::toggle LocalDraftsOption({
+@@ -2362,6 +2378,14 @@ bool JumpToFirst() {
+ 	return JumpToFirstOption.value();
+ }
+ 
++bool GhostAtStartup() {
++	return GhostAtStartupOption.value();
++}
++
++bool StreamerAtStartup() {
++	return StreamerAtStartupOption.value();
++}
++
+ bool GhostInMenu() {
+ 	return GhostInMenuOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index da71b62f6ed2a626bb31e432e0fa67afa49c46ce..9662dcbc97772adbf24a2c9002ab2d7a2791fa2b 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -71,6 +71,8 @@ extern const char kOptionScrollStats[];
+ extern const char kOptionScrollZoom[];
+ extern const char kOptionViewerMouseBack[];
+ extern const char kOptionGhostInMenu[];
++extern const char kOptionGhostAtStartup[];
++extern const char kOptionStreamerAtStartup[];
+ extern const char kOptionStaticUserpicsChats[];
+ extern const char kOptionHideMentionsButton[];
+ extern const char kOptionHideReactionsButton[];
+@@ -351,6 +353,8 @@ void SetLinkPreviews(const QString &value);
+ [[nodiscard]] bool HideSimilarInProfiles();
+ [[nodiscard]] bool JumpToFirst();
+ [[nodiscard]] bool GhostInMenu();
++[[nodiscard]] bool GhostAtStartup();
++[[nodiscard]] bool StreamerAtStartup();
+ [[nodiscard]] bool StaticUserpicsList();
+ [[nodiscard]] rpl::producer<> StaticUserpicsListChanges();
+ [[nodiscard]] bool HideListPreviews();
+diff --git a/Telegram/SourceFiles/tele/tele_quick_modes.cpp b/Telegram/SourceFiles/tele/tele_quick_modes.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..658c026a588aecdd57d0c4f68fff1a2298382dcb
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_quick_modes.cpp
+@@ -0,0 +1,112 @@
++#include "tele/tele_quick_modes.h"
++
++#include "base/event_filter.h"
++#include "base/options.h"
++#include "core/application.h"
++#include "lang/lang_instance.h"
++#include "platform/platform_tray.h"
++#include "settings/settings_common.h"
++#include "tele/tele_ghost.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "tele/tele_streamer_mode.h"
++#include "ui/widgets/buttons.h"
++#include "ui/widgets/popup_menu.h"
++#include "ui/widgets/shadow.h"
++#include "ui/wrap/slide_wrap.h"
++#include "ui/wrap/vertical_layout.h"
++#include "styles/style_window.h"
++#include "styles/style_window_main_menu.h"
++#include <QtGui/QCursor>
++
++namespace Tele {
++namespace {
++
++rpl::producer<bool> OptionValue(const char *id) {
++	auto &option = base::options::lookup<bool>(id);
++	return rpl::single(rpl::empty)
++		| rpl::then(option.changes())
++		| rpl::map([&option] { return option.value(); });
++}
++
++}
++
++void ApplyQuickModesAtStartup() {
++	if (GhostAtStartup()) {
++		SetGhost(true);
++	}
++	if (StreamerAtStartup()) {
++		SetStreamerMode(true);
++	}
++}
++
++void AddQuickModeButton(
++		not_null<Ui::VerticalLayout*> menu,
++		const char *modeId,
++		const char *visibilityId,
++		const QString &title,
++		const style::icon &icon) {
++	const auto wrap = menu->add(object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
++		menu, object_ptr<Ui::VerticalLayout>(menu)));
++	const auto button = Settings::AddButtonWithIcon(wrap->entity(),
++		rpl::single(title), st::mainMenuButton, { &icon });
++	auto &mode = base::options::lookup<bool>(modeId);
++	button->toggleOn(OptionValue(modeId));
++	button->toggledChanges(
++	) | rpl::filter([&mode](bool enabled) {
++		return enabled != mode.value();
++	}) | rpl::on_next([&mode](bool enabled) {
++		mode.set(enabled);
++	}, button->lifetime());
++	base::install_event_filter(button, [=](not_null<QEvent*> event) {
++		if (event->type() != QEvent::ContextMenu) {
++			return base::EventFilterResult::Continue;
++		}
++		const auto popup = Ui::CreateChild<Ui::PopupMenu>(button);
++		popup->addAction(Tr(u"Hide from side menu"_q), [=] {
++			base::options::lookup<bool>(visibilityId).set(false);
++		});
++		popup->popup(QCursor::pos());
++		return base::EventFilterResult::Cancel;
++	});
++	wrap->toggleOn(OptionValue(visibilityId));
++	wrap->finishAnimating();
++}
++
++void AddQuickModesMenu(not_null<Ui::VerticalLayout*> menu) {
++	const auto wrap = menu->add(object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
++		menu, object_ptr<Ui::VerticalLayout>(menu)));
++	const auto content = wrap->entity();
++	content->add(object_ptr<Ui::PlainShadow>(content),
++		{ 0, st::mainMenuSkip, 0, st::mainMenuSkip });
++	AddGhostMenuToggle(content);
++	AddStreamerMenuToggle(content);
++	wrap->toggleOn(rpl::combine(
++		OptionValue(kOptionGhostInMenu),
++		OptionValue(kOptionStreamerModeInMenu)
++	) | rpl::map([](bool ghost, bool streamer) { return ghost || streamer; }));
++	wrap->finishAnimating();
++}
++
++void FillQuickModesTray(Platform::Tray &tray) {
++	if (Core::App().passcodeLocked()) {
++		return;
++	}
++	const auto add = [&](const char *id, QString enable, QString disable) {
++		tray.addAction(rpl::combine(
++			OptionValue(id),
++			rpl::single(rpl::empty) | rpl::then(Lang::GetInstance().updated())
++		) | rpl::map([=](bool active, auto) {
++			return Tr(active ? disable : enable);
++		}), [=] {
++			auto &option = base::options::lookup<bool>(id);
++			option.set(!option.value());
++		});
++	};
++	add(kOptionGhost,
++		u"Enable ghost mode"_q, u"Disable ghost mode"_q);
++	add(kOptionStreamerMode,
++		u"Enable streamer mode"_q, u"Disable streamer mode"_q);
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_quick_modes.h b/Telegram/SourceFiles/tele/tele_quick_modes.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e2c69efb00aef1fc89934b8a5f4dad17da4b1c6
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_quick_modes.h
+@@ -0,0 +1,20 @@
++#pragma once
++
++#include "ui/style/style_core_types.h"
++
++namespace Ui { class VerticalLayout; }
++namespace Platform { class Tray; }
++
++namespace Tele {
++
++void ApplyQuickModesAtStartup();
++void AddQuickModeButton(
++	not_null<Ui::VerticalLayout*> menu,
++	const char *modeId,
++	const char *visibilityId,
++	const QString &title,
++	const style::icon &icon);
++void AddQuickModesMenu(not_null<Ui::VerticalLayout*> menu);
++void FillQuickModesTray(Platform::Tray &tray);
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index d654cc2374a25a8fb51be42d61d4cd9aba555a6d..cf66733a6e9a3846f5812a876326e7430a55204c 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -102,6 +102,8 @@ struct Spec {
+ 		Toggle(kOptionInvisibleStories),
+ 		Toggle(kOptionGhost),
+ 		Toggle(kOptionGhostInMenu),
++		Toggle(kOptionGhostAtStartup),
++		Toggle(kOptionStreamerAtStartup),
+ 		Toggle(kOptionGhostRead),
+ 		Toggle(kOptionGhostReadOnReply),
+ 		Toggle(kOptionGhostTyping),
+@@ -588,19 +590,12 @@ void SetText(const Spec &spec, const QString &value) {
+ 
+ void ApplyIcon(const Spec &spec, const SettingsImportEntry &entry) {
+ 	const auto slot = Slot(spec);
+-	const auto current = CurrentText(spec);
+ 	if (entry.text == u"custom"_q) {
+-		SetCustomIcon(slot, QString(), entry.image);
+-	} else if (slot == IconSlot::App) {
+-		if (!current.isEmpty()) {
+-			ResetIcon(slot);
+-		}
+-	} else if (entry.text.isEmpty()) {
+-		if (!current.isEmpty()) {
+-			SetTraySameAsApp();
++		if (!SetCustomIcon(slot, QString(), entry.image)) {
++			return;
+ 		}
+-	} else if (current != entry.text) {
+-		ResetIcon(slot);
++	} else if (CurrentText(spec) != entry.text) {
++		SetIconPreset(slot, entry.text);
+ 	}
+ }
+ 
+@@ -868,8 +863,9 @@ void Parser::parseAppLinks(const Spec &spec, const QString &value) {
+ void Parser::parseIcon(const Spec &spec, const QString &value) {
+ 	const auto custom = u"custom"_q;
+ 	const auto allowed = (spec.kind == Kind::AppIcon)
+-		? QStringList{ QString(), custom }
+-		: QStringList{ QString(), custom, u"default"_q };
++		? QStringList{ QString(), custom, u"red"_q, u"white"_q, u"telegram"_q }
++		: QStringList{ QString(), custom, u"default"_q,
++			u"red"_q, u"white"_q, u"telegram"_q };
+ 	if (!allowed.contains(value)) {
+ 		skip(spec, Tr(u"Unknown value \"%1\"."_q).arg(value));
+ 		return;
+diff --git a/Telegram/SourceFiles/tele/tele_streamer_mode.cpp b/Telegram/SourceFiles/tele/tele_streamer_mode.cpp
+index 06b968b7c44072a46d76b207a06f53ba10d3bf15..5020056d629dc5ff0c0cdfc8889c167930646fb7 100644
+--- a/Telegram/SourceFiles/tele/tele_streamer_mode.cpp
++++ b/Telegram/SourceFiles/tele/tele_streamer_mode.cpp
+@@ -4,6 +4,7 @@
+ #include "settings/settings_common.h"
+ #include "tele/tele_lowercase.h"
+ #include "tele/tele_options.h"
++#include "tele/tele_quick_modes.h"
+ #include "ui/widgets/buttons.h"
+ #include "ui/wrap/vertical_layout.h"
+ #include "styles/style_menu_icons.h"
+@@ -37,21 +38,8 @@ QString StreamerPhone(const QString &phone) {
+ }
+ 
+ void AddStreamerMenuToggle(not_null<Ui::VerticalLayout*> container) {
+-	if (!StreamerModeInMenu()) {
+-		return;
+-	}
+-	const auto button = Settings::AddButtonWithIcon(
+-		container,
+-		rpl::single(Tr(u"Streamer mode"_q)),
+-		st::mainMenuButton,
+-		{ &st::menuIconStartStream });
+-	button->toggleOn(StreamerModeValue());
+-	button->toggledChanges(
+-	) | rpl::filter([](bool enabled) {
+-		return (enabled != StreamerMode());
+-	}) | rpl::on_next([](bool enabled) {
+-		SetStreamerMode(enabled);
+-	}, button->lifetime());
++	AddQuickModeButton(container, kOptionStreamerMode, kOptionStreamerModeInMenu,
++		Tr(u"Streamer mode"_q), st::menuIconStartStream);
+ }
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tray.cpp b/Telegram/SourceFiles/tray.cpp
+index 6df4c3502bb9db8ef7b688e52cee2f81ed9894c5..b751672a795c39a55e3848bd893bb6c1b3dedb79 100644
+--- a/Telegram/SourceFiles/tray.cpp
++++ b/Telegram/SourceFiles/tray.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "tray.h"
++#include "tele/tele_quick_modes.h"
+ #include "tray_accounts_menu.h"
+ 
+ #include "core/application.h"
+@@ -114,6 +115,7 @@ void Tray::rebuildMenu() {
+ 			[=] { toggleSoundNotifications(); });
+ 	}
+ 
++	Tele::FillQuickModesTray(_tray);
+ 	Tele::Scripting::FillScriptTrayMenu(_tray);
+ 
+ 	_tray.addAction(tr::lng_quit_from_tray(), [] { Core::Quit(); });
