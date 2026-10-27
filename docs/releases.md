@@ -2,7 +2,28 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 343 patches, newest release first.
+all 359 patches, newest release first.
+
+### [mad dev](mad.md)
+
+| # | what it does | where to toggle |
+|---|---|---|
+| [337](../patches/tdesktop/0337-feat-use-apple-images-for-standard-emoji.patch) | renders standard emoji with apple image atlases; custom telegram emoji keep their appearance | always on |
+| [338](../patches/tdesktop/0338-feat-add-mad-branding-russian-interface-and-signed-b.patch) | adds mad identity, isolated data, russian interface strings and independent signed badges from b.mad.tg; badges and lowercase interface start enabled | settings → mad → mad badges, on |
+| [339](../patches/tdesktop/0339-fix-clarify-russian-settings-and-tool-labels.patch) | clarifies russian settings, privacy controls, message tools and media labels | always on |
+| [340](../patches/tdesktop/0340-fix-separate-badges-and-organize-mad-settings.patch) | separates mad badges from premium icons, avoids repeated image disk reads, moves mad settings to the top, adds categories and paperclip explanations, and starts a fresh mad changelog | always on |
+| [341](../patches/tdesktop/0341-feat-sync-encrypted-message-history-across-devices.patch) | adds optional account-bound encrypted sync for saved deleted messages and edit versions, a local master key and transfer code, bounded background batches and conflict merging; media files stay local | settings → mad → server, off |
+| [342](../patches/tdesktop/0342-fix-improve-mad-settings-layout-and-rendering.patch) | separates mad settings into their own sections, adds animated hover explanations and wrapping option names, allows hiding the side-menu shortcut, and caches interface text and help icons | settings → mad → interface → side menu, off |
+| [343](../patches/tdesktop/0343-fix-support-an-isolated-qt-prefix-for-mad-builds.patch) | keeps release qt headers and libraries separate from the existing debug installation | build configuration |
+| [344](../patches/tdesktop/0344-feat-simplify-message-actions-and-hide-users-from-pr.patch) | flattens tele message actions, adds a shot button beside forward in selection mode, and lets profiles hide or show a user’s messages without changing the global ignore mode | message selection with shot enabled; profile → hide messages |
+| [345](../patches/tdesktop/0345-feat-simplify-sync-setup-and-chat-selection.patch) | fills the sync server automatically, guides connection and transfer file setup, counts selected messages on the shot button, clarifies local naming and adds chat selection to the context menu | settings → mad → server; chat list menu with select several chats enabled |
+| [346](../patches/tdesktop/0346-fix-clarify-russian-translations-and-remove-joke-lab.patch) | rewrites russian labels, explanations, permissions and errors for their actual meaning, replaces joke link-cleaning names in both languages, and fixes translated settings import summaries and plural forms | always on |
+| [347](../patches/tdesktop/0347-feat-add-quick-privacy-modes-and-icon-presets.patch) | adds ghost and streamer controls to the side menu and tray, hiding by right click, optional activation at startup, and red mad, white mad, telegram or custom icons for the app and tray | side menu and tray; settings → mad → privacy / interface |
+| [348](../patches/tdesktop/0348-fix-refresh-windows-taskbar-icons-and-welcome-new-ac.patch) | refreshes the windows taskbar group icon and adds a local mad welcome message once per account on this device, independently of the updater build number | app icon selection; first account activation |
+| [349](../patches/tdesktop/0349-fix-keep-localized-mad-welcome-in-chat-history.patch) | restores the localized welcome in chat history without repeat notifications, adds a rich feature summary and uses the mad logo and project links | local mad service chat |
+| [350](../patches/tdesktop/0350-feat-open-mad-settings-from-welcome-links-and-deep-l.patch) | links the welcome feature summary to settings, adds mad:// navigation with control highlighting and windows registration, and copies mad links from settings menus | welcome message; settings context menu |
+| [351](../patches/tdesktop/0351-feat-update-mad-from-its-own-signed-releases.patch) | updates mad from this repository's signed releases with its own key; the single-file launcher keeps an updated client instead of restoring the packed one | settings → mad → updates, on |
+| [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 
 ### [tele 23](https://github.com/nitreojs/tele/releases/tag/v7.3.3-tele.23)
 

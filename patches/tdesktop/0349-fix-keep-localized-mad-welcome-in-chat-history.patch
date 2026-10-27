@@ -1,0 +1,402 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 15:28:48 +0200
+Subject: [PATCH] fix: keep localized mad welcome in chat history
+
+---
+ Telegram/Resources/langs/mad_ru.json          |  16 +-
+ .../SourceFiles/tele/tele_changelog_chat.cpp  |  41 ++--
+ .../SourceFiles/tele/tele_changelog_chat.h    |   7 +-
+ Telegram/SourceFiles/tele/tele_welcome.cpp    | 183 +++++++++++++++---
+ 4 files changed, 198 insertions(+), 49 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 0aa84970e8aa5345556f0c14e9b4a2f379c16e3b..46967d0182073bff52945a16cacbe7d8ba8d42cf 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2036,5 +2036,19 @@
+   "mad white": "mad — белая",
+   "Telegram": "Telegram",
+   "A selected preset or custom image overrides the monochrome tray setting.": "Выбранный значок или своя картинка имеют приоритет над монохромным режимом трея.",
+-  "Welcome to mad!\n\nClient options are in Settings → mad settings. Ghost mode and streamer mode are also available in the side menu and tray.\n\nEncrypted history sync is off by default. Enable it separately if you want to use it.\n\nThis is a local message from mad, visible only on this device.": "добро пожаловать в mad!\n\nфункции клиента находятся в настройках → настройки mad. гостмод и режим стримера также доступны в боковом меню и трее.\n\nзашифрованная синхронизация истории по умолчанию выключена. при необходимости включи её отдельно.\n\nэто локальное сообщение от mad, которое видно только на этом устройстве."
++  "mad service messages": "служебные сообщения mad",
++  "Welcome and client news, stored only on this device.": "приветствие и новости клиента. история хранится только на этом устройстве.",
++  "mad on GitHub": "mad на github",
++  "mad channel": "канал mad",
++  "Welcome to mad!": "добро пожаловать в mad!",
++  "Telegram Desktop with extra privacy, chat and appearance options. Open Settings → mad settings to configure them.": "telegram desktop с дополнительными настройками приватности, чатов и оформления. всё находится в настройках → настройки mad.",
++  "Ghost mode, streamer mode and hidden messages. Quick switches are in the side menu and tray.": "гостмод, режим стримера и скрытие сообщений. быстрые переключатели — в боковом меню и трее.",
++  "Keep deleted messages and earlier versions of edited messages when saving history is enabled.": "сохранение удалённых сообщений и предыдущих версий после правок. для этого нужно включить сохранение истории.",
++  "Scheduled messages, multiple drafts and translation before sending.": "отложенные сообщения, несколько черновиков и перевод перед отправкой.",
++  "Extra local folders and pins, local names and aliases.": "дополнительные локальные папки и закрепы, свои имена и псевдонимы.",
++  "Message snapshots, bookmarks, regex search and scripts.": "снимки сообщений, закладки, поиск по регулярным выражениям и скрипты.",
++  "App and tray icons, Apple emoji and badges from b.mad.tg.": "значки приложения и трея, эмодзи apple и бейджи b.mad.tg.",
++  "Encrypted history sync is optional and off by default. Enable it in mad settings → Server and keep a backup of your transfer code. Media files are not uploaded.": "зашифрованная синхронизация истории включается отдельно и по умолчанию выключена. включить её можно в настройках mad → сервер. сохрани резервную копию кода переноса. медиафайлы не загружаются.",
++  "This is a local service chat. It stays on this device and is not sent through Telegram.": "это локальный служебный чат. он хранится на этом устройстве и не передаётся через telegram.",
++  "Message history": "история сообщений"
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_changelog_chat.cpp b/Telegram/SourceFiles/tele/tele_changelog_chat.cpp
+index ed78885053089ea23ff214f0cbf5687970061104..3181b054ef39277e2fbdf57be15917baf1e0516e 100644
+--- a/Telegram/SourceFiles/tele/tele_changelog_chat.cpp
++++ b/Telegram/SourceFiles/tele/tele_changelog_chat.cpp
+@@ -47,7 +47,7 @@ constexpr auto kUserpicSize = 320;
+ }
+ 
+ [[nodiscard]] QString StatusText() {
+-	return Tr(u"What's new in tele"_q);
++	return Tr(u"mad service messages"_q);
+ }
+ 
+ [[nodiscard]] not_null<UserData*> EnsureUser(
+@@ -123,10 +123,11 @@ void ProfileBox(not_null<Ui::GenericBox*> box, not_null<UserData*> user) {
+ 	cover->paintRequest(
+ 	) | rpl::on_next([=] {
+ 		auto p = QPainter(cover);
+-		const auto skip = (st.photo.size.width() - st.photo.photoSize) / 2;
++		const auto &style = st::infoProfileCover;
++		const auto skip = (style.photo.size.width() - style.photo.photoSize) / 2;
+ 		user->paintUserpic(p, *view, {
+-			.position = QPoint(st.photoLeft + skip, st.photoTop + skip),
+-			.size = st.photo.photoSize,
++			.position = QPoint(style.photoLeft + skip, style.photoTop + skip),
++			.size = style.photo.photoSize,
+ 		});
+ 	}, cover->lifetime());
+ 	const auto name = Ui::CreateChild<Ui::FlatLabel>(
+@@ -156,7 +157,7 @@ void ProfileBox(not_null<Ui::GenericBox*> box, not_null<UserData*> user) {
+ 	status->moveToLeft(st.statusLeft, st.statusTop);
+ 	box->addRow(object_ptr<Ui::FlatLabel>(
+ 		box,
+-		Tr(u"Release notes of tele, only on this device."_q),
++		Tr(u"Welcome and client news, stored only on this device."_q),
+ 		st::boxDividerLabel));
+ 	Ui::AddSkip(box->verticalLayout());
+ 	const auto link = [=](
+@@ -165,7 +166,7 @@ void ProfileBox(not_null<Ui::GenericBox*> box, not_null<UserData*> user) {
+ 			const QString &url) {
+ 		Settings::AddButtonWithIcon(
+ 			box->verticalLayout(),
+-			rpl::single(Lower(text)),
++			rpl::single(text),
+ 			st::settingsButton,
+ 			{ &icon }
+ 		)->addClickHandler([=] {
+@@ -174,13 +175,13 @@ void ProfileBox(not_null<Ui::GenericBox*> box, not_null<UserData*> user) {
+ 		});
+ 	};
+ 	link(
+-		u"tele on GitHub"_q,
++		Tr(u"mad on GitHub"_q),
+ 		st::menuIconLink,
+-		u"https://github.com/nitreojs/tele"_q);
++		u"https://github.com/yar2slav/madgram-desktop"_q);
+ 	link(
+-		u"Updates channel"_q,
++		Tr(u"mad channel"_q),
+ 		st::menuIconChannel,
+-		u"https://t.me/teleAppUpdates"_q);
++		u"https://t.me/maadgram"_q);
+ 	box->addButton(tr::lng_close(), [=] {
+ 		box->closeBox();
+ 	});
+@@ -221,7 +222,7 @@ QImage *ChangelogUserpic(not_null<const PeerData*> peer) {
+ 	} else if (!IsChangelogPeer(peer)) {
+ 		return nullptr;
+ 	}
+-	static auto result = QImage(u":/gui/art/tele_userpic.jpg"_q).scaled(
++	static auto result = QImage(u":/gui/art/mad.png"_q).scaled(
+ 		kUserpicSize,
+ 		kUserpicSize,
+ 		Qt::IgnoreAspectRatio,
+@@ -264,17 +265,24 @@ bool HasChangelog(not_null<Main::Session*> session) {
+ 	return history && !history->clientSideMessages().empty();
+ }
+ 
+-void PostChangelog(
++std::vector<not_null<HistoryItem*>> PostChangelog(
+ 		not_null<Main::Session*> session,
+-		const std::vector<ChangelogMessage> &messages) {
++		const std::vector<ChangelogMessage> &messages,
++		TimeId date,
++		bool unread) {
+ 	const auto user = EnsureUser(session);
+ 	const auto history = EnsureHistory(user);
+ 	const auto owner = &session->data();
+-	const auto date = base::unixtime::now();
++	auto result = std::vector<not_null<HistoryItem*>>();
++	result.reserve(messages.size());
++	if (!date) {
++		date = base::unixtime::now();
++	}
+ 	for (const auto &message : messages) {
+ 		const auto item = history->makeMessage({
+ 			.id = owner->nextLocalMessageId(),
+-			.flags = MessageFlag::ClientSideUnread | MessageFlag::Local,
++			.flags = MessageFlag::Local
++				| (unread ? MessageFlag::ClientSideUnread : MessageFlag()),
+ 			.from = user->id,
+ 			.date = date,
+ 			.markup = UrlButtons(message),
+@@ -283,8 +291,11 @@ void PostChangelog(
+ 			item->applyLocalRichPage(message.rich);
+ 		}
+ 		history->addNewLocalMessage(item);
++		result.push_back(item);
+ 	}
++	history->updateChatListExistence();
+ 	owner->sendHistoryChangeNotifications();
++	return result;
+ }
+ 
+ bool ShowChangelogChat(
+diff --git a/Telegram/SourceFiles/tele/tele_changelog_chat.h b/Telegram/SourceFiles/tele/tele_changelog_chat.h
+index 20c1b2bca5d811c28b219352c9b0aeb50e77f1f5..e285329f24fa896e0edd69421e9c716ac2b1f3b7 100644
+--- a/Telegram/SourceFiles/tele/tele_changelog_chat.h
++++ b/Telegram/SourceFiles/tele/tele_changelog_chat.h
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ class History;
++class HistoryItem;
+ class PeerData;
+ class UserData;
+ 
+@@ -53,9 +54,11 @@ struct ChangelogMessage {
+ 	not_null<const UserData*> user);
+ 
+ [[nodiscard]] bool HasChangelog(not_null<Main::Session*> session);
+-void PostChangelog(
++std::vector<not_null<HistoryItem*>> PostChangelog(
+ 	not_null<Main::Session*> session,
+-	const std::vector<ChangelogMessage> &messages);
++	const std::vector<ChangelogMessage> &messages,
++	TimeId date = 0,
++	bool unread = true);
+ void ShowChangelogHistory(
+ 	not_null<Window::SessionController*> controller,
+ 	const Window::SectionShow &params);
+diff --git a/Telegram/SourceFiles/tele/tele_welcome.cpp b/Telegram/SourceFiles/tele/tele_welcome.cpp
+index 3b33e2303e0543dbcac435946fcfe7c684722069..01e4a77ff56a5afc4ba36d111387dca7c22cced8 100644
+--- a/Telegram/SourceFiles/tele/tele_welcome.cpp
++++ b/Telegram/SourceFiles/tele/tele_welcome.cpp
+@@ -1,15 +1,25 @@
+ #include "tele/tele_welcome.h"
+ 
++#include "base/unixtime.h"
+ #include "core/application.h"
+ #include "data/data_session.h"
++#include "history/history.h"
++#include "history/history_item.h"
++#include "iv/iv_rich_page.h"
++#include "lang/lang_instance.h"
++#include "lang/lang_keys.h"
+ #include "main/main_domain.h"
+ #include "main/main_session.h"
+ #include "tele/tele_changelog_chat.h"
+ #include "tele/tele_lowercase.h"
+ #include <QtCore/QCoreApplication>
+ #include <QtCore/QCryptographicHash>
++#include <QtCore/QDateTime>
+ #include <QtCore/QDir>
++#include <QtCore/QFile>
+ #include <QtCore/QFileInfo>
++#include <QtCore/QJsonDocument>
++#include <QtCore/QJsonObject>
+ #include <QtCore/QSaveFile>
+ 
+ namespace Tele {
+@@ -24,52 +34,163 @@ QString WelcomePath(not_null<Main::Session*> session) {
+ 		+ QString::fromLatin1(key);
+ }
+ 
+-void Welcome(not_null<Main::Session*> session) {
+-	const auto path = WelcomePath(session);
+-	if (QFileInfo::exists(path)) {
+-		return;
+-	}
+-	const auto post = [=] {
+-		if (QFileInfo::exists(path)) {
+-			return;
++ChangelogMessage WelcomeMessage(not_null<Main::Session*> session) {
++	using Kind = Iv::RichPage::BlockKind;
++	auto page = std::make_shared<Iv::RichPage>();
++	auto plain = TextWithEntities();
++	const auto paragraph = [&](TextWithEntities text, bool heading = false) {
++		auto block = Iv::RichPage::Block();
++		block.kind = heading ? Kind::Heading : Kind::Paragraph;
++		block.headingLevel = heading ? 2 : 0;
++		block.text.text = text;
++		page->blocks.push_back(std::move(block));
++		if (!plain.text.isEmpty()) {
++			plain.append(u"\n\n"_q);
+ 		}
+-		const auto text = Tr(u"Welcome to mad!\n\n"
+-			"Client options are in Settings → mad settings. "
+-			"Ghost mode and streamer mode are also available in the side menu "
+-			"and tray.\n\nEncrypted history sync is off by default. "
+-			"Enable it separately if you want to use it.\n\n"
+-			"This is a local message from mad, visible only on this device."_q);
+-		PostChangelog(session, { { .text = { text } } });
+-		QDir().mkpath(QFileInfo(path).absolutePath());
+-		auto marker = QSaveFile(path);
+-		if (marker.open(QIODevice::WriteOnly) && marker.write("1") == 1) {
+-			if (!marker.commit()) {
+-				LOG(("Mad Welcome: could not save state."));
++		plain.append(text);
++	};
++	paragraph(tr::bold(Tr(u"Welcome to mad!"_q)), true);
++	paragraph({ Tr(u"Telegram Desktop with extra privacy, chat and appearance options. "
++		"Open Settings → mad settings to configure them."_q) });
++	auto list = Iv::RichPage::Block();
++	list.kind = Kind::List;
++	list.listKind = Iv::RichPage::ListKind::Bullet;
++	const auto feature = [&](const QString &title, const QString &description) {
++		auto text = tr::bold(title);
++		text.append(u" — "_q).append(description);
++		auto item = Iv::RichPage::ListItem();
++		item.text.text = text;
++		list.listItems.push_back(std::move(item));
++		plain.append(u"\n\n• "_q).append(text);
++	};
++	feature(Tr(u"Privacy"_q), Tr(u"Ghost mode, streamer mode and hidden messages. "
++		"Quick switches are in the side menu and tray."_q));
++	feature(Tr(u"Message history"_q), Tr(u"Keep deleted messages and earlier versions of edited messages "
++		"when saving history is enabled."_q));
++	feature(Tr(u"Sending"_q), Tr(u"Scheduled messages, multiple drafts and translation before sending."_q));
++	feature(Tr(u"Chats"_q), Tr(u"Extra local folders and pins, local names and aliases."_q));
++	feature(Tr(u"Tools"_q), Tr(u"Message snapshots, bookmarks, regex search and scripts."_q));
++	feature(Tr(u"Appearance"_q), Tr(u"App and tray icons, Apple emoji and badges from b.mad.tg."_q));
++	page->blocks.push_back(std::move(list));
++	paragraph({ Tr(u"Encrypted history sync is optional and off by default. "
++		"Enable it in mad settings → Server and keep a backup of your transfer code. "
++		"Media files are not uploaded."_q) });
++	paragraph(tr::italic(Tr(u"This is a local service chat. It stays on this device "
++		"and is not sent through Telegram."_q)));
++	const auto limits = Iv::ResolveRichMessageLimits(session);
++	return {
++		.text = std::move(plain),
++		.rich = Iv::ValidateRichMessage(*page, limits) ? nullptr : page,
++		.buttons = {
++			{ u"github"_q, u"https://github.com/yar2slav/madgram-desktop"_q },
++			{ u"@maadgram"_q, u"https://t.me/maadgram"_q },
++		},
++	};
++}
++
++class SessionWelcome final {
++public:
++	explicit SessionWelcome(not_null<Main::Session*> session)
++	: _session(session)
++	, _path(WelcomePath(session)) {
++		const auto info = QFileInfo(_path);
++		_existing = info.exists();
++		const auto now = base::unixtime::now();
++		_date = _existing ? TimeId(std::clamp<qint64>(
++			info.lastModified().toSecsSinceEpoch(), 1, now)) : now;
++		auto file = QFile(_path);
++		if (file.open(QIODevice::ReadOnly) && file.size() <= 4096) {
++			const auto state = QJsonDocument::fromJson(file.readAll()).object();
++			if (state.value(u"version"_q).toInt() == 2) {
++				const auto date = state.value(u"date"_q).toInteger();
++				if (date > 0 && date <= now) {
++					_date = TimeId(date);
++				}
++				_dismissed = state.value(u"dismissed"_q).toBool();
+ 			}
+ 		}
+-	};
+-	if (session->data().chatsListLoaded()) {
+-		crl::on_main(session, post);
+-	} else {
++		crl::on_main(session, [=] { restore(); });
+ 		session->data().chatsListLoadedEvents(
+-		) | rpl::filter([](Data::Folder *folder) {
+-			return !folder;
+-		}) | rpl::take(1) | rpl::on_next(post, session->lifetime());
++		) | rpl::on_next([=](Data::Folder *folder) {
++			if (!folder) {
++				restore();
++				if (const auto item = message()) {
++					item->history()->updateChatListExistence();
++					session->data().sendHistoryChangeNotifications();
++				}
++			}
++		}, _lifetime);
++		Lang::GetInstance().updated(
++		) | rpl::on_next([=] {
++			if (const auto item = message()) {
++				const auto welcome = WelcomeMessage(session);
++				item->applyLocalRichPage(welcome.rich, welcome.text);
++			}
++		}, _lifetime);
++		session->data().itemRemoved(
++		) | rpl::on_next([=](not_null<const HistoryItem*> item) {
++			if (_id && item->fullId() == *_id) {
++				crl::on_main(session, [=] {
++					_dismissed = true;
++					save();
++				});
++			}
++		}, _lifetime);
+ 	}
+-}
++
++private:
++	HistoryItem *message() const {
++		return _id ? _session->data().message(*_id) : nullptr;
++	}
++
++	void restore() {
++		if (_dismissed || _id) {
++			return;
++		}
++		const auto items = PostChangelog(
++			_session, { WelcomeMessage(_session) }, _date, !_existing);
++		_id = items.front()->fullId();
++		save();
++	}
++
++	void save() const {
++		QDir().mkpath(QFileInfo(_path).absolutePath());
++		const auto data = QJsonDocument(QJsonObject{
++			{ u"version"_q, 2 },
++			{ u"date"_q, qint64(_date) },
++			{ u"dismissed"_q, _dismissed },
++		}).toJson(QJsonDocument::Compact);
++		auto file = QSaveFile(_path);
++		if (!file.open(QIODevice::WriteOnly)
++			|| file.write(data) != data.size()
++			|| !file.commit()) {
++			LOG(("Mad Welcome: could not save state."));
++		}
++	}
++
++	const not_null<Main::Session*> _session;
++	const QString _path;
++	TimeId _date = 0;
++	std::optional<FullMsgId> _id;
++	bool _existing = false;
++	bool _dismissed = false;
++	rpl::lifetime _lifetime;
++};
+ 
+ class WelcomeState final : public QObject {
+ public:
+ 	WelcomeState() : QObject(QCoreApplication::instance()) {
+ 		Core::App().domain().activeSessionValue(
+-		) | rpl::on_next([](Main::Session *session) {
+-			if (session) {
+-				Welcome(session);
++		) | rpl::on_next([=](Main::Session *session) {
++			if (session && _sessions.emplace(session).second) {
++				session->lifetime().make_state<SessionWelcome>(session);
++				session->lifetime().add([=] { _sessions.remove(session); });
+ 			}
+ 		}, _lifetime);
+ 	}
+ 
+ private:
++	base::flat_set<Main::Session*> _sessions;
+ 	rpl::lifetime _lifetime;
+ };
+ 

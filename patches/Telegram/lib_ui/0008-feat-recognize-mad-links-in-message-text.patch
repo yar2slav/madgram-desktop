@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 17:00:17 +0200
+Subject: [PATCH] feat: recognize mad links in message text
+
+---
+ ui/text/text_entity.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/ui/text/text_entity.cpp b/ui/text/text_entity.cpp
+index aa9c1b309458592322d079ed99fbaad7e0217a97..c590a30777d4e61902fab39a510d846b760d12cd 100644
+--- a/ui/text/text_entity.cpp
++++ b/ui/text/text_entity.cpp
+@@ -181,6 +181,7 @@ base::flat_set<int32> CreateValidProtocols() {
+ 	addOne(QString::fromLatin1("itmss")); // itunes
+ 	addOne(QString::fromLatin1("http"));
+ 	addOne(QString::fromLatin1("https"));
++	addOne(QString::fromLatin1("mad"));
+ 	addOne(QString::fromLatin1("ftp"));
+ 	addOne(QString::fromLatin1("tg")); // local urls
+ 	return result;

@@ -1,0 +1,641 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 10:26:36 +0200
+Subject: [PATCH] feat: simplify message actions and hide users from profiles
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  5 +-
+ .../SourceFiles/history/history_widget.cpp    |  8 ++
+ .../view/history_view_chat_section.cpp        |  7 ++
+ .../view/history_view_pinned_section.cpp      |  7 ++
+ .../view/history_view_top_bar_widget.cpp      |  7 +-
+ Telegram/SourceFiles/tele/tele_ignored.cpp    | 79 +++++++++++++++----
+ Telegram/SourceFiles/tele/tele_ignored.h      |  3 +
+ Telegram/SourceFiles/tele/tele_menu_apply.cpp |  8 +-
+ .../SourceFiles/tele/tele_menu_registry.cpp   | 10 ++-
+ .../SourceFiles/tele/tele_selection_shot.cpp  | 66 ++++++++++++++++
+ .../SourceFiles/tele/tele_selection_shot.h    | 15 ++++
+ Telegram/SourceFiles/tele/tele_shot.cpp       | 72 +++++++++++++----
+ Telegram/SourceFiles/tele/tele_shot.h         |  6 ++
+ .../SourceFiles/window/window_peer_menu.cpp   |  1 +
+ 15 files changed, 259 insertions(+), 37 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_selection_shot.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_selection_shot.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 9f6f6ae4d7b8455b53ca40f7591e0791ca20b8cc..fa0ac9540e4a8bf620c650f0402f06c685226dc9 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2985,6 +2985,8 @@ PRIVATE
+     tele/tele_shortcuts.cpp
+     tele/tele_shortcuts.h
+     tele/tele_shot.cpp
++    tele/tele_selection_shot.cpp
++    tele/tele_selection_shot.h
+     tele/tele_shot.h
+     tele/tele_shot_sharp.cpp
+     tele/tele_shot_sharp.h
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 71f44ea6b1f5376a5bfee1927ea94a820673ae43..eca464f7e3fe2287a1f3541aedf01d3281ee54fa 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -1332,7 +1332,10 @@
+   "Set a name for me": "Назови мне имя",
+   "Set update link": "Установить ссылку на обновление",
+   "Settings": "настройки",
+-  "Shot": "Выстрел",
++  "For me": "Для меня",
++  "Hide messages from this user": "Скрыть сообщения пользователя",
++  "Show messages from this user": "Показать сообщения пользователя",
++  "Shot": "Снимок",
+   "Shot copied to clipboard.": "Кадр скопирован в буфер обмена.",
+   "Shot in the message menu": "Снимок в меню сообщения",
+   "Shot view": "Вид снимка",
+diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
+index 8e553b9acc42c0564c43a85e93ad608000427db1..8077562a3856a417449c0bc86a834c0d134eccf6 100644
+--- a/Telegram/SourceFiles/history/history_widget.cpp
++++ b/Telegram/SourceFiles/history/history_widget.cpp
+@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
+ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
++#include "tele/tele_shot.h"
++#include "tele/tele_selection_shot.h"
+ #include "history/history_widget.h"
+ 
+ #include "api/api_compose_with_ai.h"
+@@ -1316,6 +1318,12 @@ HistoryWidget::HistoryWidget(
+ 	) | rpl::on_next([=](bool active) {
+ 		setMembersShowAreaActive(active);
+ 	}, _topBar->lifetime());
++	Tele::SetupSelectionShot(_topBar, [=] {
++		if (_list) {
++			Tele::ShowSelectionShot(this->controller(), _list->getSelectedItems(),
++				_list->width(), crl::guard(this, [=] { clearSelected(); }));
++		}
++	});
+ 	_topBar->forwardSelectionRequest(
+ 	) | rpl::on_next([=] {
+ 		forwardSelected();
+diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
+index 078a7d2653a32f88a3ea8ec0f311dd15a729172b..7d10f734cdd759f9e8b715b278f27adbd3ede352 100644
+--- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
+@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
+ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
++#include "tele/tele_shot.h"
++#include "tele/tele_selection_shot.h"
+ #include "history/view/history_view_chat_section.h"
+ 
+ #include "history/admin_log/history_admin_log_section.h"
+@@ -513,6 +515,11 @@ ChatWidget::ChatWidget(
+ 	) | rpl::on_next([=] {
+ 		confirmDeleteSelected();
+ 	}, _topBar->lifetime());
++	Tele::SetupSelectionShot(_topBar, [=] {
++		if (_inner) {
++			Tele::ShowSelectionShot(_inner);
++		}
++	});
+ 	_topBar->forwardSelectionRequest(
+ 	) | rpl::on_next([=] {
+ 		confirmForwardSelected();
+diff --git a/Telegram/SourceFiles/history/view/history_view_pinned_section.cpp b/Telegram/SourceFiles/history/view/history_view_pinned_section.cpp
+index 860d993b13e80b99dfa03b915a4626c2e13d199f..f52d83b266c55b19f707cf88660caac102b64acd 100644
+--- a/Telegram/SourceFiles/history/view/history_view_pinned_section.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_pinned_section.cpp
+@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
+ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
++#include "tele/tele_shot.h"
++#include "tele/tele_selection_shot.h"
+ #include "history/view/history_view_pinned_section.h"
+ 
+ #include "history/view/history_view_top_bar_widget.h"
+@@ -152,6 +154,11 @@ PinnedWidget::PinnedWidget(
+ 	) | rpl::on_next([=] {
+ 		confirmDeleteSelected();
+ 	}, _topBar->lifetime());
++	Tele::SetupSelectionShot(_topBar, [=] {
++		if (_inner) {
++			Tele::ShowSelectionShot(_inner);
++		}
++	});
+ 	_topBar->forwardSelectionRequest(
+ 	) | rpl::on_next([=] {
+ 		confirmForwardSelected();
+diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
+index cca129771b4651544551cc6777e05d74450be08e..e4c5932e654d7572eb399e75406bc4c62f9d5a58 100644
+--- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
+@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
+ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
++#include "tele/tele_selection_shot.h"
+ #include "history/view/history_view_top_bar_widget.h"
+ 
+ #include "history/history.h"
+@@ -1187,7 +1188,10 @@ void TopBarWidget::updateControlsGeometry() {
+ 	const auto backButtonTop = selectedButtonsTop + st::topBarHeight;
+ 	auto buttonsLeft = st::topBarActionSkip
+ 		+ (_controller->adaptive().isOneColumn() ? 0 : st::lineWidth);
+-	auto buttonsWidth = (_forward->isHidden() ? 0 : _forward->contentWidth())
++	const auto shotWidth = Tele::SelectionShotWidth(this,
++		!_animatingMode && !_chooseForReportReason
++		&& (hasSelected || _selectedShown.animating()));
++	auto buttonsWidth = shotWidth + (_forward->isHidden() ? 0 : _forward->contentWidth())
+ 		+ (_sendNow->isHidden() ? 0 : _sendNow->contentWidth())
+ 		+ (_delete->isHidden() ? 0 : _delete->contentWidth())
+ 		+ _clear->width();
+@@ -1208,6 +1212,7 @@ void TopBarWidget::updateControlsGeometry() {
+ 		buttonsLeft += _forward->width() + st::topBarActionSkip;
+ 	}
+ 
++	buttonsLeft += Tele::PositionSelectionShot(this, buttonsLeft, selectedButtonsTop);
+ 	_sendNow->moveToLeft(buttonsLeft, selectedButtonsTop);
+ 	if (!_sendNow->isHidden()) {
+ 		buttonsLeft += _sendNow->width() + st::topBarActionSkip;
+diff --git a/Telegram/SourceFiles/tele/tele_ignored.cpp b/Telegram/SourceFiles/tele/tele_ignored.cpp
+index e61c7a6ecb8e9f1ce0e58a9bf42e1455174e24bf..aea4c18b4ca8e3e630240922361907e6ba5506fc 100644
+--- a/Telegram/SourceFiles/tele/tele_ignored.cpp
++++ b/Telegram/SourceFiles/tele/tele_ignored.cpp
+@@ -26,6 +26,7 @@ namespace {
+ constexpr auto kFadeOpacity = 0.35;
+ constexpr auto kMaxPreviewWalk = 512;
+ constexpr auto kTestBit = BareId(1) << 63;
++constexpr auto kHiddenBit = BareId(1) << 62;
+ 
+ using Key = BareId;
+ using HistoryView::Context;
+@@ -54,21 +55,31 @@ struct State {
+ }
+ 
+ [[nodiscard]] UserId KeyUser(Key key) {
+-	return peerToUser(PeerId(key & ~kTestBit));
++	return peerToUser(PeerId(key & ~(kTestBit | kHiddenBit)));
+ }
+ 
+ [[nodiscard]] base::flat_set<Key> Parse(const QString &value) {
+ 	auto result = base::flat_set<Key>();
+ 	for (const auto &part : value.split(QChar(','), Qt::SkipEmptyParts)) {
+ 		auto entry = part.trimmed();
++		const auto hidden = entry.startsWith(u"hidden:"_q);
++		if (hidden) {
++			entry = entry.mid(7);
++		}
+ 		const auto test = entry.startsWith(u"test:"_q);
+ 		if (test) {
+ 			entry = entry.mid(5);
+ 		}
+ 		auto ok = false;
+ 		const auto id = entry.toULongLong(&ok);
+-		if (ok && id) {
+-			result.emplace(MakeKey(UserId(id), test));
++		if (ok && id && !(id & (kTestBit | kHiddenBit))) {
++			result.emplace(MakeKey(UserId(id), test) | (hidden ? kHiddenBit : 0));
++		}
++	}
++	const auto copy = result;
++	for (const auto key : copy) {
++		if (key & kHiddenBit) {
++			result.remove(key & ~kHiddenBit);
+ 		}
+ 	}
+ 	return result;
+@@ -79,7 +90,8 @@ struct State {
+ 	list.reserve(int(keys.size()));
+ 	for (const auto key : keys) {
+ 		const auto id = QString::number(KeyUser(key).bare);
+-		list.push_back((key & kTestBit) ? (u"test:"_q + id) : id);
++		list.push_back(((key & kHiddenBit) ? u"hidden:"_q : QString())
++			+ ((key & kTestBit) ? u"test:"_q : QString()) + id);
+ 	}
+ 	return list.join(QChar(','));
+ }
+@@ -95,7 +107,8 @@ void Refresh(
+ 	for (const auto &view : state.views) {
+ 		const auto item = view->data();
+ 		const auto from = item->from();
+-		if ((from->isUser() && changed.contains(PeerKey(from)))
++		if ((from->isUser() && (changed.contains(PeerKey(from))
++				|| changed.contains(PeerKey(from) | kHiddenBit)))
+ 			|| (words && HiddenByWords(item))) {
+ 			items.emplace(item);
+ 		}
+@@ -183,10 +196,17 @@ State::State() {
+ 	return (user && !user->isSelf()) ? user : nullptr;
+ }
+ 
++[[nodiscard]] bool HiddenFromProfile(const HistoryItem *item) {
++	return item && !item->isService() && !item->isSponsored()
++		&& item->from()->isUser()
++		&& Get().keys.contains(PeerKey(item->from()) | kHiddenBit);
++}
++
+ } // namespace
+ 
+ bool IsIgnored(not_null<PeerData*> peer) {
+-	return peer->isUser() && Get().keys.contains(PeerKey(peer));
++	return peer->isUser() && (Get().keys.contains(PeerKey(peer))
++		|| Get().keys.contains(PeerKey(peer) | kHiddenBit));
+ }
+ 
+ void SetIgnored(not_null<PeerData*> peer, bool ignored) {
+@@ -195,9 +215,13 @@ void SetIgnored(not_null<PeerData*> peer, bool ignored) {
+ 	}
+ 	auto keys = Get().keys;
+ 	const auto key = PeerKey(peer);
+-	const auto changed = ignored
+-		? keys.emplace(key).second
+-		: keys.remove(key);
++	auto changed = false;
++	if (ignored) {
++		changed = !keys.contains(key | kHiddenBit) && keys.emplace(key).second;
++	} else {
++		changed = keys.remove(key);
++		changed = keys.remove(key | kHiddenBit) || changed;
++	}
+ 	if (changed) {
+ 		SetIgnoredList(Serialize(keys));
+ 	}
+@@ -217,7 +241,8 @@ void SetIgnoredUsers(
+ 	}
+ 	for (const auto &peer : peers) {
+ 		if (Ignorable(peer)) {
+-			keys.emplace(PeerKey(peer));
++			const auto key = PeerKey(peer);
++			keys.emplace(Get().keys.contains(key | kHiddenBit) ? (key | kHiddenBit) : key);
+ 		}
+ 	}
+ 	if (keys != Get().keys) {
+@@ -265,13 +290,14 @@ void EnumerateViews(Fn<void(not_null<HistoryView::Element*>)> callback) {
+ }
+ 
+ bool IgnoredHidden(not_null<const HistoryView::Element*> view) {
+-	return HideIgnored() && IgnoredView(view);
++	return Applies(view->context()) && (HiddenFromProfile(view->data())
++		|| (HideIgnored() && IgnoredItem(view->data())));
+ }
+ 
+ bool IgnoredItem(const HistoryItem *item) {
+ 	if (!item || item->isService() || item->isSponsored()) {
+ 		return false;
+-	} else if (HiddenByWords(item)) {
++	} else if (HiddenFromProfile(item) || HiddenByWords(item)) {
+ 		return true;
+ 	}
+ 	const auto &state = Get();
+@@ -315,7 +341,7 @@ HistoryItem *ShownChatListMessage(
+ MsgId FirstShownUnread(
+ 		not_null<Data::Thread*> thread,
+ 		const base::flat_set<MsgId> &ids) {
+-	if (ids.empty() || !HideIgnored()) {
++	if (ids.empty() || (!HideIgnored() && Get().keys.empty())) {
+ 		return ids.empty() ? MsgId() : ids.front();
+ 	}
+ 	const auto peer = thread->owningHistory()->peer;
+@@ -323,7 +349,7 @@ MsgId FirstShownUnread(
+ 	auto result = MsgId();
+ 	for (const auto id : ids) {
+ 		const auto item = thread->owner().message(peer, id);
+-		if (!item || !IgnoredItem(item)) {
++		if (!item || (!HiddenFromProfile(item) && (!HideIgnored() || !IgnoredItem(item)))) {
+ 			result = id;
+ 			break;
+ 		} else if (!item->isUnreadMedia()) {
+@@ -339,7 +365,7 @@ MsgId FirstShownUnread(
+ IgnoredFade::IgnoredFade(
+ 		QPainter &p,
+ 		not_null<const HistoryView::Element*> view) {
+-	if (!HideIgnored() && IgnoredView(view)) {
++	if (!IgnoredHidden(view) && IgnoredView(view)) {
+ 		_painter = &p;
+ 		_opacity = p.opacity();
+ 		p.setOpacity(_opacity * kFadeOpacity);
+@@ -368,6 +394,29 @@ void AddIgnoreAction(
+ 		ignored ? &st::menuIconUnmute : &st::menuIconMute);
+ }
+ 
++void AddProfileHideAction(
++		not_null<PeerData*> peer,
++		const Ui::Menu::MenuCallback &addAction) {
++	const auto user = Ignorable(peer);
++	if (!user) {
++		return;
++	}
++	const auto key = PeerKey(user);
++	const auto hidden = Get().keys.contains(key | kHiddenBit);
++	addAction(hidden
++		? Tr(u"Show messages from this user"_q)
++		: Tr(u"Hide messages from this user"_q), [=] {
++		auto keys = Get().keys;
++		keys.remove(key);
++		if (hidden) {
++			keys.remove(key | kHiddenBit);
++		} else {
++			keys.emplace(key | kHiddenBit);
++		}
++		SetIgnoredList(Serialize(keys));
++	}, hidden ? &st::menuIconUnmute : &st::menuIconMute);
++}
++
+ base::unique_qptr<Ui::PopupMenu> IgnoreMenu(
+ 		not_null<QWidget*> parent,
+ 		not_null<PeerData*> peer) {
+diff --git a/Telegram/SourceFiles/tele/tele_ignored.h b/Telegram/SourceFiles/tele/tele_ignored.h
+index 0ba27ec963cb1fd33cf09caa5b9de273d272a223..e3987c887103875ca126ea66381b98f66a921114 100644
+--- a/Telegram/SourceFiles/tele/tele_ignored.h
++++ b/Telegram/SourceFiles/tele/tele_ignored.h
+@@ -71,6 +71,9 @@ private:
+ void AddIgnoreAction(
+ 	not_null<PeerData*> peer,
+ 	const Ui::Menu::MenuCallback &addAction);
++void AddProfileHideAction(
++	not_null<PeerData*> peer,
++	const Ui::Menu::MenuCallback &addAction);
+ [[nodiscard]] base::unique_qptr<Ui::PopupMenu> IgnoreMenu(
+ 	not_null<QWidget*> parent,
+ 	not_null<PeerData*> peer);
+diff --git a/Telegram/SourceFiles/tele/tele_menu_apply.cpp b/Telegram/SourceFiles/tele/tele_menu_apply.cpp
+index 483c5f42a86838e92424e18bfa081bb852fa6bab..c1c478ef35dffff1038603d831357b6562f208b9 100644
+--- a/Telegram/SourceFiles/tele/tele_menu_apply.cpp
++++ b/Telegram/SourceFiles/tele/tele_menu_apply.cpp
+@@ -302,9 +302,15 @@ void Emit(
+ 				HideAll(entry.entries, context);
+ 				continue;
+ 			}
++			if (context.info.kind == MenuKind::Message
++				&& entry.icon == u"tele"_q) {
++				Emit(entry.entries, out, context);
++				continue;
++			}
+ 			auto node = Node{
+ 				.type = Node::Type::Submenu,
+-				.title = entry.title,
++				.title = (entry.icon == u"forme"_q && entry.title == u"For me"_q)
++					? Tr(u"For me"_q) : entry.title,
+ 				.icon = MenuSubmenuIcon(entry.icon),
+ 			};
+ 			Emit(entry.entries, node.children, context);
+diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+index 165de707b6a33efd8614c5cf880410f401a73bcb..cc388dae848f8d16d62a29b842f3066c2a9c1c7b 100644
+--- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
++++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+@@ -816,8 +816,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"copy_button_data,copy_filename,copy_file_path,copy_phone],"
+ 		"translate_selected,"
+ 		"translate,open_uncleaned,open_username,alias_open,alias_delete,|,"
+-		"[tele#tele:[Bookmark#bookmark:bookmark,rename_bookmark],mark_read,"
+-		"edit_history,shot,mark_viewed,html_send_tgw,html_script_log],|,"
++		"[Bookmark#bookmark:bookmark,rename_bookmark],mark_read,"
++		"edit_history,shot,mark_viewed,html_send_tgw,html_script_log,|,"
+ 		"select,select_up_to,clear_selection,|,"
+ 		"delete,report,block_user,restrict,|,"
+ 		"[Tools#tools:view_as_tl,mtp_inspector],|,"
+@@ -1212,6 +1212,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		.contexts = PeerContexts(),
+ 	};
+ 	result.items = {
++		{ .key = u"hide_user"_q, .phrases = {
++			P([](int) { return Tr(u"Hide messages from this user"_q); }, st::menuIconMute),
++			P([](int) { return Tr(u"Show messages from this user"_q); }, st::menuIconUnmute),
++		}, .contexts = kUsers },
+ 		{ .key = u"ttl"_q, .phrases = {
+ 			Prefix([](int) {
+ 				return tr::lng_manage_messages_ttl_menu(tr::now);
+@@ -1334,7 +1338,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"ttl,|,"
+ 		"add_contact,share_contact,edit_contact,secret_start,send_gift,"
+ 		"send_money,bot_to_group,add_members,|,"
+-		"online_notify,peek_last_seen,pinned_bar,[For me#forme:alias,"
++		"hide_user,online_notify,peek_last_seen,pinned_bar,[For me#forme:alias,"
+ 		"local_name,"
+ 		"hidden_words,background,download_folder],|,"
+ 		"manage,statistics,boosts,earn,story_archive,personal_channel,"
+diff --git a/Telegram/SourceFiles/tele/tele_selection_shot.cpp b/Telegram/SourceFiles/tele/tele_selection_shot.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..31ef662ff642eb8a9cf73443d70863bae5c1a340
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_selection_shot.cpp
+@@ -0,0 +1,66 @@
++#include "tele/tele_selection_shot.h"
++
++#include "base/options.h"
++#include "history/view/history_view_top_bar_widget.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "ui/widgets/buttons.h"
++#include "styles/style_info.h"
++#include "styles/style_widgets.h"
++
++namespace Tele {
++namespace {
++
++class SelectionShot final : public Ui::RoundButton {
++public:
++
++	SelectionShot(not_null<QWidget*> parent, Fn<void()> callback)
++	: RoundButton(parent, rpl::single(Tr(u"Shot"_q)), st::defaultActiveButton) {
++		setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
++		setFullWidth(-2 * st::topBarActionSkip);
++		setClickedCallback(std::move(callback));
++		hide();
++	}
++
++};
++
++SelectionShot *Find(not_null<QWidget*> bar) {
++	for (const auto child : bar->children()) {
++		if (const auto button = dynamic_cast<SelectionShot*>(child)) {
++			return button;
++		}
++	}
++	return nullptr;
++}
++
++}
++
++void SetupSelectionShot(
++		not_null<HistoryView::TopBarWidget*> bar,
++		Fn<void()> callback) {
++	new SelectionShot(bar, std::move(callback));
++	base::options::lookup<bool>(kOptionShot).changes(
++	) | rpl::on_next([=] {
++		bar->updateControlsVisibility();
++	}, bar->lifetime());
++}
++
++int SelectionShotWidth(not_null<QWidget*> bar, bool shown) {
++	const auto button = Find(bar);
++	if (!button) {
++		return 0;
++	}
++	button->setVisible(shown && ShotInMenu());
++	return button->isHidden() ? 0 : button->width() + st::topBarActionSkip;
++}
++
++int PositionSelectionShot(not_null<QWidget*> bar, int left, int top) {
++	const auto button = Find(bar);
++	if (!button || button->isHidden()) {
++		return 0;
++	}
++	button->moveToLeft(left, top);
++	return button->width() + st::topBarActionSkip;
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_selection_shot.h b/Telegram/SourceFiles/tele/tele_selection_shot.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..cfb371c045dc0e0dcbb714232146b6c043ecc7c6
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_selection_shot.h
+@@ -0,0 +1,15 @@
++#pragma once
++
++namespace HistoryView {
++class TopBarWidget;
++}
++
++namespace Tele {
++
++void SetupSelectionShot(
++	not_null<HistoryView::TopBarWidget*> bar,
++	Fn<void()> callback);
++int SelectionShotWidth(not_null<QWidget*> bar, bool shown);
++int PositionSelectionShot(not_null<QWidget*> bar, int left, int top);
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_shot.cpp b/Telegram/SourceFiles/tele/tele_shot.cpp
+index 72ab1a6c0a9e6e46a9366d5bd0622a694031ffa8..d4d0ea423c71f4fb0dbda11b817c4a0799b479a3 100644
+--- a/Telegram/SourceFiles/tele/tele_shot.cpp
++++ b/Telegram/SourceFiles/tele/tele_shot.cpp
+@@ -1908,6 +1908,31 @@ void InsertShotAction(
+ 		icon));
+ }
+ 
++void ShowShot(
++		not_null<Window::SessionController*> controller,
++		std::vector<FullMsgId> ids,
++		Context context,
++		int chatWidth,
++		Fn<void()> clearSelection,
++		Fn<bool(not_null<HistoryItem*>)> displayed) {
++	const auto session = &controller->session();
++	auto items = CollectItems(session, ids);
++	if (items.empty() || ranges::any_of(items, Restricted)) {
++		return;
++	}
++	auto skipped = CountSkipped(items, displayed);
++	if (clearSelection) {
++		clearSelection();
++	}
++	controller->show(Box(
++		ShotBox,
++		controller,
++		std::move(items),
++		std::move(skipped),
++		context,
++		chatWidth));
++}
++
+ void AddShot(
+ 		not_null<Ui::PopupMenu*> menu,
+ 		not_null<Window::SessionController*> controller,
+@@ -1916,26 +1941,12 @@ void AddShot(
+ 		int chatWidth,
+ 		Fn<void()> clearSelection,
+ 		Fn<bool(not_null<HistoryItem*>)> displayed) {
+-	const auto session = &controller->session();
+-	const auto items = CollectItems(session, ids);
++	const auto items = CollectItems(&controller->session(), ids);
+ 	if (items.empty() || ranges::any_of(items, Restricted)) {
+ 		return;
+ 	}
+ 	InsertShotAction(menu, [=] {
+-		auto items = CollectItems(session, ids);
+-		auto skipped = CountSkipped(items, displayed);
+-		if (clearSelection) {
+-			clearSelection();
+-		}
+-		if (!items.empty()) {
+-			controller->show(Box(
+-				ShotBox,
+-				controller,
+-				std::move(items),
+-				std::move(skipped),
+-				context,
+-				chatWidth));
+-		}
++		ShowShot(controller, ids, context, chatWidth, clearSelection, displayed);
+ 	});
+ }
+ 
+@@ -1947,6 +1958,35 @@ bool ShotHides(
+ 	return FlagsFor(view).hidden & uint16(part);
+ }
+ 
++void ShowSelectionShot(
++		not_null<Window::SessionController*> controller,
++		std::vector<FullMsgId> selected,
++		int chatWidth,
++		Fn<void()> clearSelection) {
++	if (!ShotInMenu()) {
++		return;
++	}
++	ShowShot(controller, std::move(selected), Context::History, chatWidth,
++		std::move(clearSelection), [](not_null<HistoryItem*> item) {
++			const auto view = item->mainView();
++			return view && !view->isHidden();
++		});
++}
++
++void ShowSelectionShot(not_null<HistoryView::ListWidget*> list) {
++	if (!ShotInMenu()) {
++		return;
++	}
++	ShowShot(list->controller(), list->getSelectedIds(),
++		list->delegate()->listContext(), list->width(),
++		crl::guard(list, [=] { list->cancelSelection(); }),
++		[weak = QPointer<HistoryView::ListWidget>(list.get())](
++				not_null<HistoryItem*> item) {
++			const auto view = weak ? weak->viewByPosition(item->position()) : nullptr;
++			return view && !view->isHidden();
++		});
++}
++
+ bool ShotHidesInlineButtons() {
+ 	return HidingButtons();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_shot.h b/Telegram/SourceFiles/tele/tele_shot.h
+index 2b698124b0556167188e1dea854d298f58575186..3ec473542ad1222e46f6c32855307d0b93939134 100644
+--- a/Telegram/SourceFiles/tele/tele_shot.h
++++ b/Telegram/SourceFiles/tele/tele_shot.h
+@@ -49,5 +49,11 @@ void AddShotAction(
+ 	not_null<Ui::PopupMenu*> menu,
+ 	not_null<HistoryView::ListWidget*> list,
+ 	const HistoryView::ContextMenuRequest &request);
++void ShowSelectionShot(
++	not_null<Window::SessionController*> controller,
++	std::vector<FullMsgId> selected,
++	int chatWidth,
++	Fn<void()> clearSelection);
++void ShowSelectionShot(not_null<HistoryView::ListWidget*> list);
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
+index 6ff2fb7663605350ee717c2efcc5c0fe2f67c353..dcd741687b12afb24931174738eabd7741d86647 100644
+--- a/Telegram/SourceFiles/window/window_peer_menu.cpp
++++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
+@@ -2005,6 +2005,7 @@ void Filler::fillHistoryActions() {
+ }
+ 
+ void Filler::fillProfileActions() {
++	Tele::AddProfileHideAction(_peer, _addAction);
+ 	addTTLSubmenu(true);
+ 	addSupportInfo();
+ 	addNewContact();

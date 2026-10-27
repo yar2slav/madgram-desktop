@@ -1,0 +1,1167 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Mon, 26 Oct 2026 21:34:34 +0200
+Subject: [PATCH] fix: separate badges and organize mad settings
+
+---
+ Telegram/Resources/art/mad_help.svg           |   1 +
+ Telegram/Resources/langs/mad_ru.json          |  35 +-
+ Telegram/Resources/qrc/telegram/telegram.qrc  |   2 +-
+ .../info/profile/info_profile_top_bar.cpp     |   7 +-
+ .../settings/sections/settings_main.cpp       |   2 +-
+ Telegram/SourceFiles/settings/settings.style  |   3 +
+ .../SourceFiles/settings/settings_tele.cpp    | 227 +++++----
+ Telegram/SourceFiles/settings/settings_tele.h |   1 +
+ .../tele/tele_changelog_history.cpp           | 461 +-----------------
+ Telegram/SourceFiles/tele/tele_mad_badges.cpp |  25 +-
+ Telegram/SourceFiles/ui/unread_badge.cpp      |   2 +-
+ .../SourceFiles/window/window_main_menu.cpp   |   5 +
+ 12 files changed, 187 insertions(+), 584 deletions(-)
+ create mode 100644 Telegram/Resources/art/mad_help.svg
+
+diff --git a/Telegram/Resources/art/mad_help.svg b/Telegram/Resources/art/mad_help.svg
+new file mode 100644
+index 0000000000000000000000000000000000000000..d36ce6ab37d963a6b301312319f9968e4d64e307
+--- /dev/null
++++ b/Telegram/Resources/art/mad_help.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="m12.33 12.15-2.47 2.47a3.495 3.495 0 0 0 0 4.95 3.495 3.495 0 0 0 4.95 0l3.89-3.89a7.007 7.007 0 0 0 0-9.9 7.007 7.007 0 0 0-9.9 0l-4.24 4.24c-2.34 2.34-2.34 6.14 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 822cbbe6218d0814b0915d50cfd188334479eee0..b2bc5788d721896d1533aba840dbabe03b94f9b1 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -276,7 +276,7 @@
+   "Chats": "чаты",
+   "Chats and messages is now Chats, Messages, Sending, Notifications and Menus. Chat and profile options moved from Interface to Chats, unread counters to Notifications.": "Чаты и сообщения теперь называются «Чаты, сообщения, отправка, уведомления и меню». Параметры чата и профиля перенесены из «Интерфейса» в «Чаты», а счетчики непрочитанных сообщений — в «Уведомления».",
+   "Chats and profiles": "Чаты и профили",
+-  "Chats look read only in mad, right-click a message to read for real.": "Чаты выглядят только для чтения в Mad, щелкните сообщение правой кнопкой мыши, чтобы прочитать его по-настоящему.",
++  "Chats look read only in mad, right-click a message to read for real.": "чаты выглядят прочитанными только в mad; отметить их прочитанными можно через меню сообщения.",
+   "Chats that forbid saving stay protected.": "Чаты, запрещающие сохранения, остаются защищенными.",
+   "Chats with a background only you see, set in a chat's menu.": "Чаты, фон которых виден только вам, устанавливается в меню чата.",
+   "Check for updates": "Проверьте наличие обновлений",
+@@ -305,7 +305,7 @@
+   "Clear all notifications?": "Удалить все уведомления?",
+   "Clear badge cache": "очистить кеш бейджей",
+   "Clear cached data": "Очистить кэшированные данные",
+-  "Clear deleted messages and edit history saved for this account? Ones already shown stay until mad restarts.": "Очистить удаленные сообщения и изменить историю, сохраненную для этой учетной записи? Те, что уже показаны, остаются до перезапуска Mad.",
++  "Clear deleted messages and edit history saved for this account? Ones already shown stay until mad restarts.": "очистить сохранённые удалённые сообщения и историю правок этого аккаунта? уже показанные сообщения останутся до перезапуска mad.",
+   "Clear drafts in the cloud": "Удаление черновиков в облаке",
+   "Clear everything this script saved on this account, including its saved ghost messages?": "Удалить все, что этот скрипт сохранил в этой учетной записи, включая сохраненные сообщения-призраки?",
+   "Clear grid": "Очистить сетку",
+@@ -573,7 +573,7 @@
+   "Exported from ": "Экспортировано из ",
+   "Exported from tele": "Экспортировано из теле",
+   "Exports show up here.": "Экспорт отображается здесь.",
+-  "Extra @usernames from the mad server, usable like real ones.": "Дополнительные @usernames с безумного сервера, которые можно использовать как настоящие.",
++  "Extra @usernames from the mad server, usable like real ones.": "дополнительные @юзернеймы с сервера mad; работают как обычные.",
+   "Extra ones stay on this device.": "Дополнительные остаются на этом устройстве.",
+   "Extra pins stay on this device.": "Дополнительные контакты остаются на этом устройстве.",
+   "Failed": "Не удалось",
+@@ -931,7 +931,7 @@
+   "Nothing to clear": "Нечего очищать",
+   "Nothing to import.": "Нечего импортировать.",
+   "Nothing will change.": "Ничего не изменится.",
+-  "Notices from the mad server in the notification centre.": "Уведомления от бешеного сервера в центре уведомлений.",
++  "Notices from the mad server in the notification centre.": "сообщения сервера mad в центре уведомлений.",
+   "Notification centre": "Центр уведомлений",
+   "Notifications": "Уведомления",
+   "Notifications from the server": "Уведомления с сервера",
+@@ -977,7 +977,7 @@
+   "Open the emoji panel by click only": "Открывать панель эмодзи только по нажатию",
+   "Open the file": "Открыть файл",
+   "Open the logs folder": "Откройте папку журналов",
+-  "Open the mad folder": "Откройте безумную папку",
++  "Open the mad folder": "открыть папку mad",
+   "Open the main window to enter the local password.": "Откройте главное окно, чтобы ввести локальный пароль.",
+   "Open the real ": "Откройте настоящую ",
+   "Open the real @username": "Откройте настоящее имя @username",
+@@ -1029,7 +1029,7 @@
+   "Pinned": "Закреплено",
+   "Pinned reactions keep their place in every message menu.": "Закрепленные реакции сохраняют свое место в каждом меню сообщений.",
+   "Play": "Играть",
+-  "Posted to a local mad chat when you open each account, gone after a restart.": "Написал в местный безумный чат при открытии каждого аккаунта, пропал после перезагрузки.",
++  "Posted to a local mad chat when you open each account, gone after a restart.": "появляется в локальном чате mad при открытии аккаунта и исчезает после перезапуска.",
+   "Power user": "Опытный пользователь",
+   "Preparing the gifts…": "Готовим подарки…",
+   "Presets": "Пресеты",
+@@ -1099,7 +1099,7 @@
+   "Release notes of tele, only on this device.": "Примечания к выпуску телека только на этом устройстве.",
+   "Reload": "Перезагрузить",
+   "Remember read times": "Запоминать время прочтения",
+-  "Remembered from the messages, typing, reads and reactions mad sees.": "Запоминается по сообщениям, набору текста, прочтению и безумным реакциям.",
++  "Remembered from the messages, typing, reads and reactions mad sees.": "запоминается по сообщениям, набору текста, прочтениям и реакциям, которые видит mad.",
+   "Remove": "Удалить",
+   "Remove %1 from sale?": "Убрать %1 с продажи?",
+   "Remove %1 of your messages from %2 for both of you? This can't be undone.": "Удалить %1 ваших сообщений из %2 для вас обоих? Это невозможно отменить.",
+@@ -1242,7 +1242,7 @@
+   "Secret chats were deleted because the local passcode was removed.": "Секретные чаты были удалены, поскольку был удален локальный пароль.",
+   "Secret chats β": "Секретные чаты β",
+   "Secret message": "Секретное сообщение",
+-  "See everything tele shows in its windows: texts, buttons and layout.": "Смотрите все madи в его окнах: тексты, кнопки и макет.",
++  "See everything tele shows in its windows: texts, buttons and layout.": "просмотр содержимого окон mad: текстов, кнопок и расположения элементов.",
+   "See everything this account receives.": "Посмотрите все, что получает этот аккаунт.",
+   "See or hide your notifications.": "Просматривайте или скрывайте свои уведомления.",
+   "See the files and text you drop or paste into chats and handle them instead of tele.": "Просматривайте файлы и текст, которые вы перетаскиваете или вставляете в чаты, и обрабатывайте их вместо телесвязи.",
+@@ -1434,7 +1434,7 @@
+   "Talk to your other scripts: send them messages and call what they offer.": "Поговорите с другими вашими скриптами: отправьте им сообщения и позвоните по тому, что они предлагают.",
+   "Taskbar and tray": "Панель задач и трей",
+   "Tele sends them itself while it's running.": "Теле сам их отправляет во время работы.",
+-  "Telegram Desktop %1 with mad patches, build %2.": "Telegram Desktop %1 с безумными патчами, сборка %2.",
++  "Telegram Desktop %1 with mad patches, build %2.": "telegram desktop %1 с дополнениями mad, сборка %2.",
+   "Telegram backup keeps only secret words; save your key yourself.": "Резервная копия Telegram сохраняет только секретные слова; сохраните ключ самостоятельно.",
+   "Telegram didn't accept this TGS file": "Telegram не принял этот файл TGS",
+   "Telegram didn't accept this WebM file": "Telegram не принял этот файл WebM",
+@@ -1465,9 +1465,9 @@
+   "The grid has no gifts yet.": "В сетке пока нет подарков.",
+   "The grid is full.": "Сетка заполнена.",
+   "The long key stops working. Your address and the 12 new words restore the wallet.": "Длинный ключ перестает работать. Ваш адрес и 12 новых слов восстанавливают кошелек.",
+-  "The mad build whose changes each account was shown.": "Сумасшедшая сборка, изменения которой показывались на каждом аккаунте.",
+-  "The mad build whose changes were shown last, before they were tracked per account.": "Безумная сборка, изменения которой отображались последними, прежде чем они отслеживались для каждой учетной записи.",
+-  "The mad settings this device has seen, to show the new ones after an update.": "Сумасшедшие настройки, которые видело это устройство, чтобы показать новые после обновления.",
++  "The mad build whose changes each account was shown.": "сборка mad, изменения которой показаны каждому аккаунту.",
++  "The mad build whose changes were shown last, before they were tracked per account.": "последняя сборка mad с просмотренными изменениями до раздельного учёта по аккаунтам.",
++  "The mad settings this device has seen, to show the new ones after an update.": "известные этому устройству настройки mad; нужны для выделения новых после обновления.",
+   "The message menu keeps showing when a private chat read your message.": "Меню сообщений продолжает отображаться, когда ваше сообщение прочитано в приватном чате.",
+   "The model doesn't load.": "Модель не загружается.",
+   "The monochrome tray icon setting takes priority.": "Настройка монохромного значка в области уведомлений имеет приоритет.",
+@@ -1714,9 +1714,9 @@
+   "kept %1 pattern symbols": "сохранено %1 символов шаблона",
+   "left out %1 pattern symbols that crossed the edge, TGS has no clipping": "опущены символы шаблона %1, выходящие за край, TGS не имеет обрезки",
+   "left out the text": "пропустил текст",
+-  "mad %1": "безумный %1",
++  "mad %1": "mad %1",
+   "mad badges": "бейджи mad",
+-  "mad server": "безумный сервер",
++  "mad server": "сервер mad",
+   "model": "модель",
+   "model %1, zoom %2": "модель %1, масштаб %2",
+   "no \"tgs\": 1 key": "нет \"tgs\": 1 ключ",
+@@ -1938,5 +1938,10 @@
+   "Nothing matches the filter.": "Нет совпадений с фильтром.",
+   "Entries: %1 of %2 · files: %3 · limit: %4 entries, %5 MB": "Записей: %1 из %2 · файлов: %3 · лимит: %4 записей, %5 МБ",
+   ", older ones were dropped": ", старые записи удалены",
+-  " · reading...": " · чтение..."
++  " · reading...": " · чтение...",
++  "mad settings": "настройки mad",
++  "Categories": "категории",
++  "Badges": "бейджи",
++  "Backup and updates": "резервные копии и обновления",
++  "About this setting": "об этой настройке"
+ }
+diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
+index 0496ed259e250af7ddaf48a2003e844214fed323..e4b4c4020da77856167f71816ae920d509062602 100644
+--- a/Telegram/Resources/qrc/telegram/telegram.qrc
++++ b/Telegram/Resources/qrc/telegram/telegram.qrc
+@@ -6,6 +6,7 @@
+     <file alias="art/bg_initial.jpg">../../art/bg_initial.jpg</file>
+     <file alias="art/business_logo.png">../../art/business_logo.png</file>
+     <file alias="art/affiliate_logo.png">../../art/affiliate_logo.png</file>
++    <file alias="art/mad_help.svg">../../art/mad_help.svg</file>
+     <file alias="art/mad.png">../../art/mad.png</file>
+     <file alias="art/logo_256.png">../../art/logo_256.png</file>
+     <file alias="art/logo_256_no_margin.png">../../art/logo_256_no_margin.png</file>
+@@ -101,7 +102,6 @@
+   <qresource prefix="/tele">
+     <file alias="api.tl">../../../SourceFiles/mtproto/scheme/api.tl</file>
+     <file alias="mtproto.tl">../../../SourceFiles/mtproto/scheme/mtproto.tl</file>
+-    <file alias="changelog_history.json">../../tele/changelog_history.json</file>
+     <file alias="scripting/strip.js">../../tele/scripting/strip.js</file>
+     <file alias="scripting/runtime.js">../../tele/scripting/runtime.js</file>
+     <file alias="scripting/inline.js">../../tele/scripting/inline.js</file>
+diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
+index d419d94c0e54d87f708c5c6fc8f5f3f968c28ecb..f16ffeee73d42b03757641f6fb533d65b23384d2 100644
+--- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
++++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
+@@ -2029,7 +2029,8 @@ void TopBar::updateTitlePosition(float64 progressCurrent) {
+ 	const auto badgeWidget = _badge ? _badge->widget() : nullptr;
+ 	const auto botVerifyWidget = _botVerify ? _botVerify->widget() : nullptr;
+ 	const auto madWidth = _madBadgeWidget ? _madBadgeWidget->width() : 0;
+-	auto badgesWidth = madWidth;
++	const auto madSkip = madWidth ? st::infoVerifiedCheckPosition.x() + st::semiboldFont->spacew : 0;
++	auto badgesWidth = madWidth + madSkip;
+ 	if (verifiedWidget) {
+ 		badgesWidth += verifiedWidget->width();
+ 	}
+@@ -2060,7 +2061,7 @@ void TopBar::updateTitlePosition(float64 progressCurrent) {
+ 	const auto badgeBottom = titleTop + _title->height();
+ 	const auto margins = LargeCustomEmojiMargins();
+ 
+-	auto totalElementsWidth = _title->width() + madWidth;
++	auto totalElementsWidth = _title->width() + madWidth + madSkip;
+ 	const auto botVerifySkip = botVerifyWidget
+ 		? botVerifyWidget->width() + st::infoVerifiedCheckPosition.x()
+ 		: 0;
+@@ -2091,7 +2092,7 @@ void TopBar::updateTitlePosition(float64 progressCurrent) {
+ 	_title->moveToLeft(titleLeft, titleTop);
+ 	const auto badgeLeft = titleLeft + _title->width();
+ 	if (_madBadgeWidget) {
+-		_madBadgeWidget->moveToLeft(badgeLeft
++		_madBadgeWidget->moveToLeft(badgeLeft + madSkip
+ 			+ (badgeWidget ? badgeWidget->width() : 0)
+ 			+ (verifiedWidget ? verifiedWidget->width() : 0),
+ 			badgeTop + (badgeBottom - badgeTop - _madBadgeWidget->height()) / 2);
+diff --git a/Telegram/SourceFiles/settings/sections/settings_main.cpp b/Telegram/SourceFiles/settings/sections/settings_main.cpp
+index a43a1bfa1433518125dcc56049a04777664960d3..6eabd6ba0c86c058a9e53cd9644e8b0a31624f38 100644
+--- a/Telegram/SourceFiles/settings/sections/settings_main.cpp
++++ b/Telegram/SourceFiles/settings/sections/settings_main.cpp
+@@ -377,6 +377,7 @@ void Cover::refreshQrButtonGeometry(int newWidth) {
+ }
+ 
+ void BuildSectionButtons(SectionBuilder &builder) {
++	AddTeleSectionButton(builder);
+ 	const auto session = builder.session();
+ 	const auto controller = builder.controller();
+ 	const auto showOther = builder.showOther();
+@@ -488,7 +489,6 @@ void BuildSectionButtons(SectionBuilder &builder) {
+ 		.keywords = { u"translate"_q, u"localization"_q, u"language"_q },
+ 	});
+ 
+-	AddTeleSectionButton(builder);
+ 	AddScriptSettingsButtons(builder);
+ }
+ 
+diff --git a/Telegram/SourceFiles/settings/settings.style b/Telegram/SourceFiles/settings/settings.style
+index f9622d1854e1f16ce02c3d47fe254860e535ad3f..3fd7ae9d1d8e1d1e72945a36a4e8eea4ee206559 100644
+--- a/Telegram/SourceFiles/settings/settings.style
++++ b/Telegram/SourceFiles/settings/settings.style
+@@ -770,3 +770,6 @@ detailedSettingsButtonStyle: DetailedSettingsButtonStyle {
+ }
+ 
+ settingsToastStarIcon: icon {{ "toast/star", toastFg }};
++
++madSettingHelpSize: 28px;
++madSettingHelpInset: 2px;
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index e5e37da6d852f0c1d4be596ccf05691f46e2d8d4..d89f3a1b45e69d0dadf056b9e4da3a1d994bb93c 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -93,6 +93,8 @@
+ #include "styles/style_settings.h"
+ #include "styles/style_widgets.h"
+ 
++#include <QtSvg/QSvgRenderer>
++#include <QtCore/QFile>
+ #include <QtCore/QDir>
+ #include <QtCore/QRegularExpression>
+ #include <QtGui/QDesktopServices>
+@@ -647,44 +649,61 @@ struct OptionRow {
+ 	Ui::FlatLabel *about = nullptr;
+ };
+ 
++[[nodiscard]] Ui::AbstractButton *AddSettingHelp(
++		not_null<Ui::RpWidget*> parent,
++		not_null<Window::SessionController*> controller,
++		const QString &name,
++		const QString &description,
++		int right) {
++	if (description.isEmpty()) {
++		return nullptr;
++	}
++	const auto help = Ui::CreateChild<Ui::AbstractButton>(parent);
++	help->resize(st::madSettingHelpSize, st::madSettingHelpSize);
++	help->setToolTip(description);
++	help->setAccessibleName(::Tele::Tr(u"About this setting"_q) + u": "_q + name);
++	help->setFocusPolicy(Qt::StrongFocus);
++	parent->sizeValue() | rpl::on_next([=](QSize size) {
++		help->moveToRight(right, (size.height() - help->height()) / 2);
++	}, help->lifetime());
++	help->paintRequest() | rpl::on_next([=] {
++		static const auto source = [] {
++			auto file = QFile(u":/gui/art/mad_help.svg"_q);
++			return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
++		}();
++		auto data = source;
++		data.replace("currentColor", st::windowSubTextFg->c.name().toLatin1());
++		auto svg = QSvgRenderer(data);
++		auto painter = QPainter(help);
++		const auto skip = st::madSettingHelpInset;
++		svg.render(&painter, QRectF(help->rect().marginsRemoved({ skip, skip, skip, skip })));
++	}, help->lifetime());
++	help->setClickedCallback([=] {
++		controller->show(Box([=](not_null<Ui::GenericBox*> box) {
++			box->setTitle(rpl::single(name));
++			box->addRow(object_ptr<Ui::FlatLabel>(box, description, st::boxLabel));
++			box->addButton(rpl::single(::Tele::Tr(u"Close"_q)), [=] { box->closeBox(); });
++		}));
++	});
++	help->show();
++	return help;
++}
++
+ [[nodiscard]] OptionRow CreateOptionRow(
+ 		not_null<QWidget*> parent,
++		not_null<Window::SessionController*> controller,
+ 		const QString &name,
+ 		const QString &description) {
+-	if (description.isEmpty()) {
+-		auto result = object_ptr<Button>(
+-			parent,
+-			rpl::single(name),
+-			st::settingsButtonNoIcon);
+-		const auto button = result.data();
+-		return { std::move(result), button };
+-	}
+-	auto result = object_ptr<Ui::VerticalLayout>(parent);
+-	const auto raw = result.data();
+-	const auto button = Ui::CreateChild<Button>(
+-		raw,
+-		rpl::single(QString()),
+-		st::settingsButtonNoIcon);
+-	const auto title = raw->add(
+-		object_ptr<Ui::FlatLabel>(
+-			raw,
+-			name,
+-			st::settingsExperimentalTitle),
+-		st::settingsExperimentalTitlePadding);
+-	const auto about = raw->add(
+-		object_ptr<Ui::FlatLabel>(
+-			raw,
+-			description,
+-			st::settingsExperimentalAbout),
+-		st::settingsExperimentalAboutPadding);
+-	title->setAttribute(Qt::WA_TransparentForMouseEvents);
+-	about->setAttribute(Qt::WA_TransparentForMouseEvents);
+-	raw->sizeValue(
+-	) | rpl::on_next([=](QSize size) {
+-		button->resize(size);
+-	}, button->lifetime());
+-	button->show();
+-	return { std::move(result), button, title, about };
++	auto result = object_ptr<Button>(parent, rpl::single(name), st::settingsButtonNoIcon);
++	const auto button = result.data();
++	if (!description.isEmpty()) {
++		const auto &st = st::settingsButtonNoIcon;
++		const auto right = st::rightsButtonToggleWidth;
++		button->setPaddingOverride({ st.padding.left(), st.padding.top(),
++			right + st::madSettingHelpSize, st.padding.bottom() });
++		AddSettingHelp(button, controller, name, description, right);
++	}
++	return { std::move(result), button };
+ }
+ 
+ [[nodiscard]] Fn<void()> OptionRestarter(
+@@ -718,7 +737,7 @@ void AddOptionToggleRow(
+ 	const auto description = ::Tele::Tr(option.description());
+ 	builder.add([&](const WidgetContext &ctx) {
+ 		const auto controller = ctx.controller;
+-		auto row = CreateOptionRow(ctx.container, name, description);
++		auto row = CreateOptionRow(ctx.container, controller, name, description);
+ 		const auto button = row.button;
+ 		const auto title = row.title;
+ 		const auto about = row.about;
+@@ -810,48 +829,13 @@ struct GroupState {
+ 		auto button = (Button*)nullptr;
+ 		auto title = (Ui::FlatLabel*)nullptr;
+ 		auto about = (Ui::FlatLabel*)nullptr;
+-		if (description.isEmpty()) {
+-			auto owned = object_ptr<Button>(
+-				ctx.container,
+-				std::move(text),
+-				st);
+-			button = owned.data();
+-			button->setPaddingOverride({
+-				st.padding.left(),
+-				st.padding.top(),
+-				right,
+-				st.padding.bottom(),
+-			});
+-			widget = std::move(owned);
+-		} else {
+-			auto owned = object_ptr<Ui::VerticalLayout>(ctx.container);
+-			const auto raw = owned.data();
+-			button = Ui::CreateChild<Button>(
+-				raw,
+-				rpl::single(QString()),
+-				st);
+-			const auto &padding = st::settingsExperimentalTitlePadding;
+-			title = raw->add(
+-				object_ptr<Ui::FlatLabel>(
+-					raw,
+-					std::move(text),
+-					st::settingsExperimentalTitle),
+-				{ padding.left(), padding.top(), right, padding.bottom() });
+-			about = raw->add(
+-				object_ptr<Ui::FlatLabel>(
+-					raw,
+-					description,
+-					st::settingsExperimentalAbout),
+-				st::settingsExperimentalAboutPadding);
+-			title->setAttribute(Qt::WA_TransparentForMouseEvents);
+-			about->setAttribute(Qt::WA_TransparentForMouseEvents);
+-			raw->sizeValue(
+-			) | rpl::on_next([=](QSize size) {
+-				button->resize(size);
+-			}, button->lifetime());
+-			button->show();
+-			widget = std::move(owned);
+-		}
++		const auto helpWidth = description.isEmpty() ? 0 : st::madSettingHelpSize;
++		auto owned = object_ptr<Button>(ctx.container, std::move(text), st);
++		button = owned.data();
++		button->setPaddingOverride({ st.padding.left(), st.padding.top(),
++			right + helpWidth, st.padding.bottom() });
++		widget = std::move(owned);
++		AddSettingHelp(button, controller, name, description, right);
+ 		const auto root = widget.data();
+ 		root->lifetime().add([state] {});
+ 
+@@ -921,7 +905,7 @@ struct GroupState {
+ 				st::lineWidth,
+ 				line);
+ 			const auto skip = st::rightsButtonArrowSkip;
+-			const auto limit = toggleButton->x() - skip - arrow->width();
++			const auto limit = toggleButton->x() - skip - arrow->width() - helpWidth;
+ 			if (title) {
+ 				const auto font = st::settingsExperimentalTitle.style.font;
+ 				arrow->moveToLeft(
+@@ -1104,22 +1088,16 @@ void AddAbout(
+ 		SectionBuilder &builder,
+ 		const QString &owner,
+ 		const QString &text) {
+-	if (!Shown(owner)) {
++	if (!Shown(owner) || text.isEmpty()) {
+ 		return;
+ 	}
+ 	builder.add([&](const WidgetContext &ctx) {
+-		auto label = object_ptr<Ui::FlatLabel>(
+-			ctx.container,
+-			text,
+-			st::settingsExperimentalAbout);
+-		const auto raw = label.data();
+-		ApplySubRow(raw, [=](std::optional<QColor> color) {
+-			raw->setTextColorOverride(AboutColor(color));
+-		});
+-		return SectionBuilder::WidgetToAdd{
+-			.widget = std::move(label),
+-			.margin = st::settingsExperimentalAboutPadding,
+-		};
++		auto row = object_ptr<Button>(ctx.container,
++			rpl::single(::Tele::Tr(u"About this setting"_q)), st::settingsButtonNoIcon);
++		const auto help = AddSettingHelp(row.data(), ctx.controller,
++			::Tele::Tr(u"About this setting"_q), text, st::settingsButtonNoIcon.padding.right());
++		row->setClickedCallback([=] { help->clicked(Qt::NoModifier, Qt::LeftButton); });
++		return SectionBuilder::WidgetToAdd{ .widget = std::move(row) };
+ 	}, nullptr);
+ }
+ 
+@@ -3923,7 +3901,7 @@ void AddDebugLogs(SectionBuilder &builder) {
+ 	const auto description = ::Tele::Tr(u"Turning them off restarts the app."_q);
+ 	builder.add([&](const WidgetContext &ctx) {
+ 		const auto controller = ctx.controller;
+-		auto row = CreateOptionRow(ctx.container, name, description);
++		auto row = CreateOptionRow(ctx.container, controller, name, description);
+ 		const auto button = row.button;
+ 		const auto state = button->lifetime().make_state<
+ 			rpl::variable<bool>>(Logs::DebugEnabled());
+@@ -4308,7 +4286,7 @@ void AddNewEntry(SectionBuilder &builder) {
+ 	AddGroupDivider(builder);
+ }
+ 
+-void FillRoot(SectionBuilder &builder) {
++void FillMadBadges(SectionBuilder &builder) {
+ 	AddGroupTitle(builder, u"mad badges"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionMadBadges, { u"бейджи"_q, u"значки"_q });
+ 	AddButton(builder, {
+@@ -4328,23 +4306,9 @@ void FillRoot(SectionBuilder &builder) {
+ 		.onClick = [] { ::Tele::ClearMadBadges(); },
+ 	});
+ 	AddGroupDivider(builder);
+-	if (!Picked) {
+-		builder.addSkip();
+-		AddNewEntry(builder);
+-		for (const auto &category : Categories()) {
+-			const auto button = builder.addSectionButton({
+-				.title = rpl::single(::Tele::Tr(category.title)),
+-				.targetSection = category.id,
+-				.icon = { category.icon },
+-				.keywords = category.keywords,
+-			});
+-			if (button) {
+-				SetupCopyLink(button, category.id, QString());
+-			}
+-		}
+-		AddScripts(builder);
+-	}
+-	AddGroupDivider(builder);
++}
++
++void FillMadServer(SectionBuilder &builder) {
+ 	AddGroupTitle(builder, u"Server"_q);
+ 	AddServer(builder);
+ 	AddOptionToggle(
+@@ -4358,6 +4322,9 @@ void FillRoot(SectionBuilder &builder) {
+ 		{},
+ 		::Tele::kOptionServerUrl);
+ 	AddGroupDivider(builder);
++}
++
++void FillMadBackup(SectionBuilder &builder) {
+ 	AddGroupTitle(builder, u"Backup"_q);
+ 	AddBackup(builder);
+ 	AddOptionToggle(
+@@ -4369,6 +4336,29 @@ void FillRoot(SectionBuilder &builder) {
+ 	AddUpdates(builder);
+ }
+ 
++void FillRoot(SectionBuilder &builder) {
++	if (Picked) {
++		return;
++	}
++	builder.addSkip();
++	builder.addDividerText(BuildText());
++	AddGroupTitle(builder, u"Categories"_q);
++	for (const auto &category : Categories()) {
++		const auto button = builder.addSectionButton({
++			.title = rpl::single(::Tele::Tr(category.title)),
++			.targetSection = category.id,
++			.icon = { category.icon },
++			.keywords = category.keywords,
++		});
++		if (button) {
++			SetupCopyLink(button, category.id, QString());
++		}
++	}
++	AddScripts(builder);
++	AddGroupDivider(builder);
++	AddNewEntry(builder);
++}
++
+ [[nodiscard]] std::vector<Category> MakeCategories() {
+ 	auto result = std::vector<Category>();
+ 	const auto add = [&](
+@@ -4395,6 +4385,12 @@ void FillRoot(SectionBuilder &builder) {
+ 			.helper = std::make_unique<BuildHelper>(std::move(meta), fill),
+ 		});
+ 	};
++	add(u"badges"_q, u"Badges"_q, st::menuIconStar,
++		{ u"mad"_q, u"бейджи"_q, u"значки"_q }, FillMadBadges);
++	add(u"server"_q, u"Server"_q, st::menuIconLink,
++		{ u"aliases"_q, u"синхронизация"_q, u"алиасы"_q }, FillMadServer);
++	add(u"backup"_q, u"Backup and updates"_q, st::menuIconManage,
++		{ u"export"_q, u"import"_q, u"обновления"_q }, FillMadBackup);
+ 	add(
+ 		u"interface"_q,
+ 		u"Interface"_q,
+@@ -5045,7 +5041,7 @@ void NewSection::refreshTabs() {
+ 	for (const auto &release : ::Tele::ChangelogHistory()) {
+ 		tabs.push_back({
+ 			.id = QString::number(release.version),
+-			.text = { ::Tele::Tr(u"mad %1"_q).arg(release.version) },
++			.text = { u"mad %1"_q.arg(release.version) },
+ 		});
+ 	}
+ 	_tabs->setTabs(std::move(tabs));
+@@ -5331,12 +5327,13 @@ std::vector<QString> TeleCategoryIds() {
+ 	return result;
+ }
+ 
++Type TeleSectionId() {
++	return TeleSection::Id();
++}
++
+ void AddTeleSectionButton(Builder::SectionBuilder &builder) {
+-	builder.addSkip();
+-	builder.addDivider();
+-	builder.addSkip();
+ 	const auto button = builder.addSectionButton({
+-		.title = rpl::single(u"mad"_q),
++		.title = rpl::single(::Tele::Tr(u"mad settings"_q)),
+ 		.targetSection = TeleSection::Id(),
+ 		.icon = { &st::menuIconCustomize },
+ 		.keywords = { u"mad"_q, u"fork"_q },
+diff --git a/Telegram/SourceFiles/settings/settings_tele.h b/Telegram/SourceFiles/settings/settings_tele.h
+index 34ec8ce866a7e23de36ee4a4e5c2edc38ab4dc45..8329853d4bd034b9912a8746da398c5b53774cca 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.h
++++ b/Telegram/SourceFiles/settings/settings_tele.h
+@@ -11,6 +11,7 @@ namespace Settings {
+ [[nodiscard]] std::vector<std::pair<QString, Type>> TeleSettingsPaths();
+ [[nodiscard]] std::vector<QString> TeleCategoryIds();
+ [[nodiscard]] Type TeleNewSectionId();
++[[nodiscard]] Type TeleSectionId();
+ void AddTeleSectionButton(Builder::SectionBuilder &builder);
+ void AddScriptSettingsButtons(Builder::SectionBuilder &builder);
+ 
+diff --git a/Telegram/SourceFiles/tele/tele_changelog_history.cpp b/Telegram/SourceFiles/tele/tele_changelog_history.cpp
+index 4b25ebaf3dfdc91225906f4dd6f7409872775ad9..d43c6a16420c96215c36402d8d44a5cb13130455 100644
+--- a/Telegram/SourceFiles/tele/tele_changelog_history.cpp
++++ b/Telegram/SourceFiles/tele/tele_changelog_history.cpp
+@@ -1,464 +1,33 @@
+ #include "tele/tele_changelog_history.h"
+ 
+-#include "settings.h"
+-#include "tele/tele_launch_flags.h"
+-#include "tele/tele_updater.h"
+-
+-#include <QtCore/QCoreApplication>
+-#include <QtCore/QDir>
+-#include <QtCore/QFile>
+-#include <QtCore/QJsonArray>
+-#include <QtCore/QJsonDocument>
+-#include <QtCore/QJsonObject>
+-#include <QtCore/QPointer>
+-#include <QtCore/QRegularExpression>
+-#include <QtCore/QSaveFile>
+-#include <QtNetwork/QNetworkAccessManager>
+-#include <QtNetwork/QNetworkReply>
+-#include <QtNetwork/QNetworkRequest>
+-
+ namespace Tele {
+-namespace {
+-
+-constexpr auto kTransferTimeout = 60 * 1000;
+-constexpr auto kMaxListSize = qint64(4 * 1024 * 1024);
+-constexpr auto kMaxChangelogSize = qint64(256 * 1024);
+-constexpr auto kMaxCacheSize = qint64(4 * 1024 * 1024);
+-constexpr auto kMaxItems = 256;
+-constexpr auto kMaxOptions = 16;
+-constexpr auto kMaxTitleLength = 64;
+-constexpr auto kMaxItemLength = 1024;
+-constexpr auto kListUrl = "https://api.github.com/repos/nitreojs/tele/"
+-	"releases?per_page=30";
+-constexpr auto kDownloadPrefix = "https://github.com/nitreojs/tele/"
+-	"releases/download/";
+-constexpr auto kReleasesPrefix = "https://github.com/nitreojs/tele/releases/";
+-constexpr auto kRepoPrefix = "https://github.com/nitreojs/tele/";
+-constexpr auto kAssetName = "tele-changelog.json";
+-constexpr auto kBundledPath = ":/tele/changelog_history.json";
+-
+-using Item = ChangelogHistoryItem;
+-using Release = ChangelogHistoryRelease;
+-
+-[[nodiscard]] bool NetworkOff() {
+-	return UpdatesOffForLaunch() || OfflineForLaunch();
+-}
+-
+-[[nodiscard]] QString CachePath() {
+-	return cWorkingDir() + u"tdata/tele_changelogs.json"_q;
+-}
+-
+-[[nodiscard]] int VersionFromTag(const QString &tag) {
+-	static const auto regex = QRegularExpression(
+-		u"^v\\d+(?:\\.\\d+)*-tele\\.(\\d+)$"_q);
+-	const auto match = regex.match(tag);
+-	return match.hasMatch() ? match.captured(1).toInt() : 0;
+-}
+-
+-[[nodiscard]] int NumberFromUrl(const QString &url) {
+-	static const auto regex = QRegularExpression(
+-		u"/(\\d+)-[^/]*\\.patch$"_q);
+-	const auto match = regex.match(url);
+-	return match.hasMatch() ? match.captured(1).toInt() : 0;
+-}
+-
+-[[nodiscard]] QString Field(const QJsonObject &object, const QString &key) {
+-	return object.value(key).toString().trimmed().left(kMaxItemLength);
+-}
+-
+-[[nodiscard]] std::optional<Item> ParseItem(const QJsonObject &object) {
+-	auto result = Item{
+-		.number = object.value(u"number"_q).toInt(),
+-		.text = Field(object, u"text"_q),
+-		.where = Field(object, u"where"_q),
+-		.category = Field(object, u"category"_q).left(kMaxTitleLength),
+-		.url = object.value(u"url"_q).toString(),
+-	};
+-	if (result.text.isEmpty()) {
+-		return std::nullopt;
+-	} else if (!result.url.startsWith(QString::fromLatin1(kRepoPrefix))) {
+-		result.url = QString();
+-	}
+-	if (result.number <= 0) {
+-		result.number = NumberFromUrl(result.url);
+-	}
+-	for (const auto &value : object.value(u"options"_q).toArray()) {
+-		const auto option = value.toString();
+-		if (int(result.options.size()) >= kMaxOptions) {
+-			break;
+-		} else if (!option.isEmpty()) {
+-			result.options.push_back(option);
+-		}
+-	}
+-	return result;
+-}
+-
+-[[nodiscard]] std::optional<Release> ParseRelease(const QJsonObject &object) {
+-	auto result = Release{
+-		.version = object.value(u"version"_q).toInt(),
+-		.tag = object.value(u"tag"_q).toString(),
+-		.title = object.value(u"title"_q).toString().trimmed(),
+-		.url = object.value(u"url"_q).toString(),
+-	};
+-	if (result.version <= 0) {
+-		result.version = VersionFromTag(result.tag);
+-	}
+-	if (result.version <= 0) {
+-		return std::nullopt;
+-	} else if (result.title.isEmpty()
+-		|| result.title.size() > kMaxTitleLength) {
+-		result.title = u"tele %1"_q.arg(result.version);
+-	}
+-	if (!result.url.startsWith(QString::fromLatin1(kReleasesPrefix))) {
+-		result.url = result.tag.isEmpty()
+-			? QString()
+-			: (QString::fromLatin1(kReleasesPrefix)
+-				+ u"tag/"_q
+-				+ result.tag);
+-	}
+-	for (const auto &value : object.value(u"items"_q).toArray()) {
+-		if (int(result.items.size()) >= kMaxItems) {
+-			break;
+-		} else if (auto item = ParseItem(value.toObject())) {
+-			result.items.push_back(std::move(*item));
+-		}
+-	}
+-	if (result.items.empty()) {
+-		return std::nullopt;
+-	}
+-	return result;
+-}
+-
+-[[nodiscard]] std::vector<Release> ParseReleases(const QByteArray &data) {
+-	auto result = std::vector<Release>();
+-	const auto object = QJsonDocument::fromJson(data).object();
+-	for (const auto &value : object.value(u"releases"_q).toArray()) {
+-		if (auto release = ParseRelease(value.toObject())) {
+-			result.push_back(std::move(*release));
+-		}
+-	}
+-	return result;
+-}
+-
+-[[nodiscard]] QJsonObject Serialize(const Release &release) {
+-	auto items = QJsonArray();
+-	for (const auto &item : release.items) {
+-		auto options = QJsonArray();
+-		for (const auto &option : item.options) {
+-			options.push_back(option);
+-		}
+-		items.push_back(QJsonObject{
+-			{ u"number"_q, item.number },
+-			{ u"text"_q, item.text },
+-			{ u"where"_q, item.where },
+-			{ u"category"_q, item.category },
+-			{ u"options"_q, options },
+-			{ u"url"_q, item.url },
+-		});
+-	}
+-	return QJsonObject{
+-		{ u"version"_q, release.version },
+-		{ u"tag"_q, release.tag },
+-		{ u"title"_q, release.title },
+-		{ u"url"_q, release.url },
+-		{ u"items"_q, items },
+-	};
+-}
+-
+-class Archive final : public QObject {
+-public:
+-	Archive();
+-
+-	[[nodiscard]] const std::vector<Release> &list();
+-	[[nodiscard]] rpl::producer<> changes() const;
+-
+-	void refresh();
+-	void remember(const QByteArray &data);
+-	void seen(const QString &tag);
+-
+-private:
+-	void load();
+-	void merge();
+-	void writeCache() const;
+-	void add(Release release);
+-	void listed(const QByteArray &data);
+-	void fetch(const QString &tag);
+-	void get(
+-		const QString &url,
+-		qint64 limit,
+-		Fn<void(QByteArray)> done,
+-		Fn<void()> failed);
+-	[[nodiscard]] bool wanted(int version) const;
+-
+-	QNetworkAccessManager _manager;
+-	std::vector<Release> _bundled;
+-	std::vector<Release> _fetched;
+-	std::vector<Release> _all;
+-	base::flat_set<QString> _inflight;
+-	base::flat_set<QString> _failed;
+-	rpl::event_stream<> _changes;
+-	int _bundledMax = 0;
+-	bool _loaded = false;
+-	bool _listing = false;
+-	bool _listed = false;
+-	rpl::lifetime _lifetime;
+-
+-};
+-
+-QPointer<Archive> Instance;
+-
+-[[nodiscard]] not_null<Archive*> Current() {
+-	if (!Instance) {
+-		Instance = new Archive();
+-	}
+-	return Instance.data();
+-}
+-
+-Archive::Archive()
+-: QObject(QCoreApplication::instance()) {
+-	UpdateStatusValue(
+-	) | rpl::on_next([=](const UpdateStatus &status) {
+-		if (!status.tag.isEmpty()) {
+-			seen(status.tag);
+-		}
+-	}, _lifetime);
+-}
+-
+-const std::vector<Release> &Archive::list() {
+-	load();
+-	return _all;
+-}
+-
+-rpl::producer<> Archive::changes() const {
+-	return _changes.events();
+-}
+-
+-void Archive::load() {
+-	if (_loaded) {
+-		return;
+-	}
+-	_loaded = true;
+-	auto bundled = QFile(QString::fromLatin1(kBundledPath));
+-	if (bundled.open(QIODevice::ReadOnly)) {
+-		_bundled = ParseReleases(bundled.readAll());
+-	}
+-	for (const auto &release : _bundled) {
+-		_bundledMax = std::max(_bundledMax, release.version);
+-	}
+-	auto cache = QFile(CachePath());
+-	if (cache.open(QIODevice::ReadOnly) && cache.size() <= kMaxCacheSize) {
+-		for (auto &release : ParseReleases(cache.readAll())) {
+-			const auto version = release.version;
+-			if (version > _bundledMax
+-				&& !ranges::contains(_fetched, version, &Release::version)) {
+-				_fetched.push_back(std::move(release));
+-			}
+-		}
+-	}
+-	merge();
+-}
+-
+-void Archive::merge() {
+-	_all = _bundled;
+-	_all.insert(end(_all), begin(_fetched), end(_fetched));
+-	ranges::sort(_all, ranges::greater(), &Release::version);
+-}
+-
+-void Archive::writeCache() const {
+-	auto releases = QJsonArray();
+-	for (const auto &release : _fetched) {
+-		releases.push_back(Serialize(release));
+-	}
+-	QDir().mkpath(cWorkingDir() + u"tdata"_q);
+-	auto file = QSaveFile(CachePath());
+-	if (!file.open(QIODevice::WriteOnly)
+-		|| file.write(QJsonDocument(QJsonObject{
+-			{ u"releases"_q, releases },
+-		}).toJson(QJsonDocument::Compact)) < 0
+-		|| !file.commit()) {
+-		LOG(("Tele Changelog History Error: can't write %1"
+-			).arg(CachePath()));
+-	}
+-}
+-
+-bool Archive::wanted(int version) const {
+-	return (version > _bundledMax)
+-		&& !ranges::contains(_fetched, version, &Release::version);
+-}
+-
+-void Archive::add(Release release) {
+-	load();
+-	if (release.version <= _bundledMax
+-		|| ranges::contains(_fetched, release.version, &Release::version)) {
+-		return;
+-	}
+-	for (auto &item : release.items) {
+-		if (!item.options.empty() || item.number <= 0) {
+-			continue;
+-		}
+-		for (const auto &known : _bundled) {
+-			const auto i = ranges::find(
+-				known.items,
+-				item.number,
+-				&Item::number);
+-			if (i != end(known.items) && !i->options.empty()) {
+-				item.options = i->options;
+-				break;
+-			}
+-		}
+-	}
+-	_fetched.push_back(std::move(release));
+-	merge();
+-	writeCache();
+-	_changes.fire({});
+-}
+-
+-void Archive::remember(const QByteArray &data) {
+-	const auto object = QJsonDocument::fromJson(data).object();
+-	if (auto release = ParseRelease(object)) {
+-		add(std::move(*release));
+-	}
+-}
+-
+-void Archive::refresh() {
+-	load();
+-	if (_listed || _listing || NetworkOff()) {
+-		return;
+-	}
+-	_listing = true;
+-	get(QString::fromLatin1(kListUrl), kMaxListSize, [=](QByteArray data) {
+-		_listing = false;
+-		_listed = true;
+-		listed(data);
+-	}, [=] {
+-		_listing = false;
+-	});
+-}
+-
+-void Archive::listed(const QByteArray &data) {
+-	const auto name = QString::fromLatin1(kAssetName);
+-	for (const auto &value : QJsonDocument::fromJson(data).array()) {
+-		const auto object = value.toObject();
+-		const auto tag = object.value(u"tag_name"_q).toString();
+-		const auto version = VersionFromTag(tag);
+-		if (object.value(u"draft"_q).toBool()
+-			|| !version
+-			|| !wanted(version)) {
+-			continue;
+-		}
+-		const auto assets = object.value(u"assets"_q).toArray();
+-		const auto published = ranges::any_of(assets, [&](
+-				const QJsonValue &asset) {
+-			return asset.toObject().value(u"name"_q).toString() == name;
+-		});
+-		if (published) {
+-			fetch(tag);
+-		}
+-	}
+-}
+-
+-void Archive::seen(const QString &tag) {
+-	load();
+-	const auto version = VersionFromTag(tag);
+-	if (version
+-		&& wanted(version)
+-		&& !_failed.contains(tag)
+-		&& !NetworkOff()) {
+-		fetch(tag);
+-	}
+-}
+-
+-void Archive::fetch(const QString &tag) {
+-	if (!_inflight.emplace(tag).second) {
+-		return;
+-	}
+-	const auto url = QString::fromLatin1(kDownloadPrefix)
+-		+ tag
+-		+ '/'
+-		+ QString::fromLatin1(kAssetName);
+-	get(url, kMaxChangelogSize, [=](QByteArray data) {
+-		_inflight.remove(tag);
+-		const auto object = QJsonDocument::fromJson(data).object();
+-		auto release = ParseRelease(object);
+-		if (!release || release->tag != tag) {
+-			LOG(("Tele Changelog History Error: malformed %1").arg(tag));
+-			_failed.emplace(tag);
+-			return;
+-		}
+-		add(std::move(*release));
+-	}, [=] {
+-		_inflight.remove(tag);
+-		_failed.emplace(tag);
+-		_listed = false;
+-	});
+-}
+-
+-void Archive::get(
+-		const QString &url,
+-		qint64 limit,
+-		Fn<void(QByteArray)> done,
+-		Fn<void()> failed) {
+-	if (NetworkOff()) {
+-		failed();
+-		return;
+-	}
+-	auto request = QNetworkRequest(QUrl(url));
+-	request.setAttribute(
+-		QNetworkRequest::RedirectPolicyAttribute,
+-		QNetworkRequest::NoLessSafeRedirectPolicy);
+-	request.setTransferTimeout(std::chrono::milliseconds(kTransferTimeout));
+-	request.setHeader(QNetworkRequest::UserAgentHeader, u"tele"_q);
+-	request.setRawHeader("Accept", "application/vnd.github+json");
+-	const auto reply = _manager.get(request);
+-	const auto tooLarge = std::make_shared<bool>(false);
+-	connect(reply, &QNetworkReply::downloadProgress, this, [=](
+-			qint64 ready,
+-			qint64 total) {
+-		if (ready > limit || total > limit) {
+-			*tooLarge = true;
+-			reply->abort();
+-		}
+-	});
+-	connect(reply, &QNetworkReply::finished, this, [=] {
+-		reply->deleteLater();
+-		const auto code = reply->attribute(
+-			QNetworkRequest::HttpStatusCodeAttribute).toInt();
+-		if (*tooLarge) {
+-			LOG(("Tele Changelog History Error: %1 is too large").arg(url));
+-			failed();
+-		} else if (reply->error() != QNetworkReply::NoError
+-			|| code != 200) {
+-			LOG(("Tele Changelog History Error: %1, %2, http %3"
+-				).arg(url
+-				).arg(reply->errorString()
+-				).arg(code));
+-			failed();
+-		} else {
+-			done(reply->readAll());
+-		}
+-	});
+-}
+-
+-} // namespace
+ 
+ void StartChangelogHistory() {
+-	Current();
+ }
+ 
+ void RefreshChangelogHistory() {
+-	Current()->refresh();
+ }
+ 
+-void RememberChangelogRelease(const QByteArray &data) {
+-	Current()->remember(data);
++void RememberChangelogRelease(const QByteArray &) {
+ }
+ 
+ const std::vector<ChangelogHistoryRelease> &ChangelogHistory() {
+-	return Current()->list();
++	static const auto releases = std::vector<ChangelogHistoryRelease>{ {
++		.version = 1,
++		.tag = u"mad-1"_q,
++		.title = u"mad 1"_q,
++		.items = {
++			{ .text = u"mad: telegram desktop 7.3.3 with the full tele feature set."_q },
++			{ .text = u"Independent app data, apple emoji and badges from b.mad.tg."_q },
++			{ .text = u"Russian settings, categories and explanations beside options."_q },
++			{ .text = u"Badge spacing and image cache improvements."_q },
++		},
++	} };
++	return releases;
+ }
+ 
+ rpl::producer<> ChangelogHistoryChanges() {
+-	return Current()->changes();
++	return rpl::never<>();
+ }
+ 
+-} // namespace Tele
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.cpp b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+index ba71cbeea98cb920520a81011d6ca22c90586933..e04c99ce7b728eeffec121782878953f2104c90d 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+@@ -100,6 +100,8 @@ private:
+ 	QTimer _timer;
+ 	QSet<QNetworkReply*> _requests;
+ 	QSet<QString> _imagesInFlight;
++	QSet<QString> _diskChecked;
++	QSet<QString> _activeTargets;
+ 	QMap<QString, QImage> _images;
+ 	QMap<QString, qint64> _imageRetryAt;
+ 	QSet<QString> _targets;
+@@ -130,7 +132,16 @@ RegistryStore::RegistryStore() : QObject(QCoreApplication::instance()) {
+ 		}
+ 	}
+ 	QObject::connect(&_timer, &QTimer::timeout, this, [=] {
+-		notify();
++		auto active = QSet<QString>();
++		const auto now = QDateTime::currentSecsSinceEpoch();
++		for (auto i = _registry.assignments.cbegin(); i != _registry.assignments.cend(); ++i) {
++			if (FindMadBadge(_registry, i.key(), now)) {
++				active.insert(i.key());
++			}
++		}
++		if (active != _activeTargets) {
++			notify();
++		}
+ 		fetch();
+ 	});
+ 	_timer.start(60000);
+@@ -251,6 +262,13 @@ void RegistryStore::notifyLater() {
+ }
+ 
+ void RegistryStore::notify() {
++	_activeTargets.clear();
++	const auto now = QDateTime::currentSecsSinceEpoch();
++	for (auto i = _registry.assignments.cbegin(); i != _registry.assignments.cend(); ++i) {
++		if (FindMadBadge(_registry, i.key(), now)) {
++			_activeTargets.insert(i.key());
++		}
++	}
+ 	auto targets = std::exchange(_targets, {});
+ 	for (auto i = _registry.assignments.cbegin(); i != _registry.assignments.cend(); ++i) {
+ 		_targets.insert(i.key());
+@@ -288,7 +306,9 @@ QImage RegistryStore::image(const MadBadge &badge, int size) {
+ 	}
+ 	const auto path = CacheDirectory() + key;
+ 	auto cached = QFile(path);
+-	if (cached.open(QIODevice::ReadOnly) && cached.size() <= kMaxBytes) {
++	const auto checked = _diskChecked.contains(key);
++	_diskChecked.insert(key);
++	if (!checked && cached.open(QIODevice::ReadOnly) && cached.size() <= kMaxBytes) {
+ 		const auto image = DecodeMadBadgeImage(cached.readAll(), hash, size);
+ 		if (!image.isNull()) {
+ 			_images.insert(key, image);
+@@ -347,6 +367,7 @@ void RegistryStore::clear() {
+ 	_registry = {};
+ 	_etag.clear();
+ 	_images.clear();
++	_diskChecked.clear();
+ 	_imageRetryAt.clear();
+ 	const auto directory = QDir(CacheDirectory());
+ 	for (const auto &file : directory.entryInfoList(QDir::Files)) {
+diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
+index 4747a71464985869c3752e3485e233022c1924ec..3be3ec05362558554bee0b385ddf7aa16fe2d6cf 100644
+--- a/Telegram/SourceFiles/ui/unread_badge.cpp
++++ b/Telegram/SourceFiles/ui/unread_badge.cpp
+@@ -244,7 +244,7 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
+ 		return drawTelegramBadges(p, std::move(descriptor));
+ 	}
+ 	const auto size = descriptor.rectForName.height();
+-	const auto skip = st::semiboldFont->spacew;
++	const auto skip = 2 * st::semiboldFont->spacew;
+ 	const auto available = descriptor.rectForName.width();
+ 	if (available < size + skip) {
+ 		return drawTelegramBadges(p, std::move(descriptor));
+diff --git a/Telegram/SourceFiles/window/window_main_menu.cpp b/Telegram/SourceFiles/window/window_main_menu.cpp
+index d02f10676e8ee08afaa1ca517bdcf9c9cb8215ed..2faf537dd34e132adda7908d95858fae053d7b23 100644
+--- a/Telegram/SourceFiles/window/window_main_menu.cpp
++++ b/Telegram/SourceFiles/window/window_main_menu.cpp
+@@ -30,6 +30,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "info/profile/info_profile_badge.h"
+ #include "tele/tele_account_badges.h"
+ #include "settings/settings_common.h"
++#include "settings/settings_tele.h"
+ #include "info/profile/info_profile_emoji_status_panel.h"
+ #include "info/profile/info_profile_icon.h"
+ #include "info/stories/info_stories_widget.h"
+@@ -687,6 +688,10 @@ void MainMenu::setupMenu() {
+ 			st::mainMenuButton,
+ 			std::move(descriptor));
+ 	};
++	addAction(rpl::single(Tele::Tr(u"mad settings"_q)),
++		{ &st::menuIconCustomize })->setClickedCallback([=] {
++		controller->showSettings(Settings::TeleSectionId());
++	});
+ 	if (!_controller->session().supportMode()) {
+ 		_menu->add(
+ 			CreateButtonWithIcon(

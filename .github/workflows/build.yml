@@ -1,266 +1,102 @@
-name: Build
+name: mad windows release
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - UPSTREAM
-      - 'patches/**'
-      - tele.py
-      - 'ci/**'
-      - .github/workflows/build.yml
   workflow_dispatch:
     inputs:
-      platforms:
-        description: platforms to build
-        default: windows linux macos
       publish:
-        description: publish a release (only from main, and only when every platform built)
+        description: publish the release and its signed update feed after successful checks
         type: boolean
         default: true
-      from_run:
-        description: publish the builds of this finished run instead of building again (its patches must match)
-        default: ''
-      number:
-        description: release number to build as (must be above every existing one), empty for the next free one
+      tag:
+        description: release tag, empty for automatic version
+        type: string
         default: ''
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: mad-windows-release
+  cancel-in-progress: false
 
 jobs:
-  number:
-    name: Release number
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: read
-    outputs:
-      tag: ${{ steps.number.outputs.tag || steps.finished.outputs.tag }}
-      base: ${{ steps.number.outputs.base || steps.finished.outputs.base }}
-      counter: ${{ steps.number.outputs.counter || steps.finished.outputs.counter }}
-      upstream: ${{ steps.number.outputs.upstream || steps.finished.outputs.upstream }}
-      previous: ${{ steps.release.outputs.previous }}
-      publish: ${{ steps.release.outputs.publish }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          # a finished run's commit is compared with this one
-          fetch-depth: ${{ inputs.from_run && '0' || '1' }}
-          persist-credentials: false
-
-      - name: Check secrets
-        env:
-          API_ID: ${{ secrets.TDESKTOP_API_ID }}
-          API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
-          UPDATE_KEY: ${{ secrets.TELE_UPDATE_KEY }}
-        run: |
-          if [ -z "$API_ID" ] || [ -z "$API_HASH" ]; then
-            echo "::error::set the TDESKTOP_API_ID and TDESKTOP_API_HASH repository secrets"
-            exit 1
-          elif [ -z "$UPDATE_KEY" ]; then
-            echo "::error::set the TELE_UPDATE_KEY repository secret"
-            exit 1
-          fi
-
-      - name: Pick the release number
-        id: number
-        if: ${{ !inputs.from_run }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          NUMBER: ${{ inputs.number }}
-        run: |
-          upstream=$(tr -d '[:space:]' < UPSTREAM)
-          base="$upstream-tele"
-          # numbers go on across upstream bumps: the app compares build numbers (what's new, its history)
-          pattern="^v[0-9.]*-tele\.\([0-9][0-9]*\)$"
-          last=$( {
-            gh release list --limit 1000 --json tagName --jq '.[].tagName'
-            git ls-remote --tags "$GITHUB_SERVER_URL/$GH_REPO.git" | sed -n 's|^[0-9a-f]*\trefs/tags/||p'
-          } | sed -n "s/$pattern/\1/p" | sort -n | tail -n1)
-          number=$(( ${last:-0} + 1 ))
-          if [ -n "$NUMBER" ]; then
-            if ! [[ "$NUMBER" =~ ^[1-9][0-9]*$ ]] || [ "$NUMBER" -le "${last:-0}" ]; then
-              echo "::error::the release number has to be above ${last:-0}, got '$NUMBER'"
-              exit 1
-            fi
-            number=$NUMBER
-          fi
-          version=$(curl -fsSL "https://raw.githubusercontent.com/telegramdesktop/tdesktop/$upstream/Telegram/build/version" \
-            | tr -d '\r' | sed -n 's/^AppVersion *\([0-9][0-9]*\)$/\1/p')
-          if [ -z "$version" ]; then
-            echo "::error::no AppVersion in Telegram/build/version of $upstream"
-            exit 1
-          fi
-          {
-            echo "tag=$base.$number"
-            echo "base=$version"
-            echo "counter=$number"
-            echo "upstream=$upstream"
-          } | tee -a "$GITHUB_OUTPUT" > number.env
-          echo "building $base.$number"
-
-      - name: Notify
-        if: ${{ !inputs.from_run }}
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          TAG: ${{ steps.number.outputs.tag }}
-        run: |
-          bash ci/notify.sh "🚀 tele ${TAG##*.}: build started · $(git log -1 --format=%s)"
-
-      - name: Keep the release number
-        if: ${{ !inputs.from_run }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: tele-number
-          path: number.env
-          if-no-files-found: error
-          retention-days: 1
-
-      # before anything is published: a run that can't be published in full isn't published at all
-      - name: Check the finished run
-        if: inputs.from_run
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RUN: ${{ inputs.from_run }}
-        run: |
-          read -r conclusion sha < <(gh api "repos/$GH_REPO/actions/runs/$RUN" --jq '"\(.conclusion) \(.head_sha)"')
-          if [ "$conclusion" != success ]; then
-            echo "::error::run $RUN finished with '$conclusion'"
-            exit 1
-          fi
-          if ! git diff --quiet "$sha" HEAD -- UPSTREAM patches tele.py; then
-            echo "::error::run $RUN built other patches than $GITHUB_SHA"
-            exit 1
-          fi
-          artifacts=$(gh api "repos/$GH_REPO/actions/runs/$RUN/artifacts?per_page=100" --jq '.artifacts[] | select(.expired | not) | .name')
-          for name in release-win64 release-linux64 release-macos; do
-            if ! grep -qxF "$name" <<< "$artifacts"; then
-              echo "::error::run $RUN has no $name (artifacts expire after a day, and a run that built some platforms only has theirs)"
-              exit 1
-            fi
-          done
-          echo "publishing the builds of run $RUN ($sha)"
-
-      - name: Take the release number of the finished run
-        if: inputs.from_run
-        uses: actions/download-artifact@v8
-        with:
-          name: tele-number
-          run-id: ${{ inputs.from_run }}
-          github-token: ${{ github.token }}
-
-      - name: Read the release number
-        id: finished
-        if: inputs.from_run
-        run: |
-          cat number.env >> "$GITHUB_OUTPUT"
-          echo "publishing $(sed -n 's/^tag=//p' number.env) from run ${{ inputs.from_run }}"
-
-      - name: Pick the previous release
-        id: release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          TAG: ${{ steps.number.outputs.tag || steps.finished.outputs.tag }}
-          FROM_RUN: ${{ inputs.from_run }}
-          PLATFORMS: ${{ inputs.platforms || 'windows linux macos' }}
-          PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
-        run: |
-          # picked before this run creates its release, every later job (and re-run) compares with this one
-          previous=$(gh release list --limit 100 --exclude-drafts --json tagName --jq '[.[] | select(.tagName != env.TAG)][0].tagName // empty')
-          echo "previous=$previous" >> "$GITHUB_OUTPUT"
-          echo "previous release: ${previous:-none}"
-          publish=false
-          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$PUBLISH" = true ]; then
-            publish=true
-            for platform in windows linux macos; do
-              if [ -z "$FROM_RUN" ] && [[ "$PLATFORMS" != *"$platform"* ]]; then
-                echo "::warning::not publishing: a release needs every platform, this run builds $PLATFORMS"
-                publish=false
-                break
-              fi
-            done
-          fi
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
-
   windows:
-    name: Windows x64
-    needs: number
-    if: ${{ !inputs.from_run && contains(inputs.platforms || 'windows linux macos', 'windows') }}
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 360
     permissions:
       contents: read
       actions: write
-      issues: write
-      id-token: write
-      attestations: write
-      artifact-metadata: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      counter: ${{ steps.version.outputs.counter }}
+      base: ${{ steps.version.outputs.base }}
     env:
-      TELE_BUILD: ${{ needs.number.outputs.counter }}
-      RELEASE_TAG: ${{ needs.number.outputs.tag }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      SDK: '10.0.26100.0'
+      VCVARS_VER: '14.44'
     defaults:
       run:
-        shell: cmd
-
+        shell: pwsh
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: checkout mad
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          path: tele
+          path: mad
           persist-credentials: false
 
-      # C: has about 18 GB free, less than qt 6 needs to build in debug and release, so everything lives on D:
-      - name: Prepare directories
+      - name: validate inputs and credentials
+        env:
+          TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
+          TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
+          REQUESTED_TAG: ${{ inputs.tag }}
         run: |
-          mkdir %GITHUB_WORKSPACE:~0,2%\TBuild\Libraries
-          mklink /d %GITHUB_WORKSPACE%\TBuild %GITHUB_WORKSPACE:~0,2%\TBuild
-          echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
+          if ($env:TDESKTOP_API_ID -notmatch '^[1-9][0-9]*$' -or $env:TDESKTOP_API_HASH -notmatch '^[a-fA-F0-9]{32}$') {
+            throw 'set repository secrets TDESKTOP_API_ID and TDESKTOP_API_HASH'
+          }
+          $upstream = (Get-Content mad/UPSTREAM -Raw).Trim()
+          if ($upstream -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') { throw 'invalid upstream tag' }
+          $tag = if ($env:REQUESTED_TAG) { $env:REQUESTED_TAG } else { "$upstream-mad.$env:GITHUB_RUN_NUMBER" }
+          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+-mad\.([1-9][0-9]*)$') { throw 'tag must look like v7.3.3-mad.1' }
+          "UPSTREAM_TAG=$upstream" >> $env:GITHUB_ENV
+          "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+          "MAD_BUILD=$($Matches[1])" >> $env:GITHUB_ENV
+          "TBUILD=$env:GITHUB_WORKSPACE" >> $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\link" | Out-Null
+          "TEMP=$env:RUNNER_TEMP\link" >> $env:GITHUB_ENV
+          "TMP=$env:RUNNER_TEMP\link" >> $env:GITHUB_ENV
+          Get-PSDrive C, D -ErrorAction SilentlyContinue | Format-Table Name, @{n='free GB';e={[math]::Round($_.Free / 1GB, 1)}}
 
-      - name: Clone tdesktop
+      - name: clone and apply the exact patch queue
+        run: |
+          git config --global core.longpaths true
+          git config --global core.autocrlf true
+          git config --global user.name mad-ci
+          git config --global user.email ci@mad.invalid
+          git clone --quiet --branch $env:UPSTREAM_TAG --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python mad/tele.py --tdesktop tdesktop apply
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python mad/ci/check-translations.py --tdesktop tdesktop
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: read versions and cache key
+        id: version
         shell: bash
         run: |
-          git -c advice.detachedHead=false clone --quiet --recurse-submodules --branch "$UPSTREAM_TAG" \
-            https://github.com/telegramdesktop/tdesktop.git "$TBUILD/tdesktop"
-
-      - name: Apply patches
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python tele\tele.py --tdesktop %TBUILD%\tdesktop apply
-
-      - name: Read toolchain versions
-        shell: bash
-        run: |
-          doc="$TBUILD/tdesktop/docs/building-win.md"
-          sdk=$(grep -oE '\*\*[0-9.]+\*\* SDK version' "$doc" | grep -oE '[0-9][0-9.]+' | head -n1 || true)
-          # docs before feb 2026 don't pin a toolset
-          toolset=$(grep -oE 'vcvars_ver=[0-9.]+' "$doc" | head -n1 | cut -d= -f2 || true)
-          if [ -z "$sdk" ]; then
-            echo "::error::no windows sdk version in docs/building-win.md"
+          base=$(grep -oE 'constexpr auto AppVersion = [0-9]+' tdesktop/Telegram/SourceFiles/core/version.h | grep -oE '[0-9]+$')
+          if [ -z "$base" ]; then
+            echo "::error::no AppVersion in core/version.h"
             exit 1
           fi
-          echo "SDK=$sdk" >> "$GITHUB_ENV"
-          echo "VCVARS_VER=$toolset" >> "$GITHUB_ENV"
-          # through stdin: a backslash in the path makes sha256sum prefix its output with \
-          prepare_hash=$(sha256sum < "$TBUILD/tdesktop/Telegram/build/prepare/prepare.py" | cut -c1-16)
-          # win64d: built in D:\TBuild. prepare.py keys embed absolute paths, so caches from C: can't be reused
-          echo "CACHE_KEY=win64d-$sdk-$prepare_hash" >> "$GITHUB_ENV"
-          # same as upstream ci: no /Zi in the libraries' debug builds, keeps the cache small
-          sed -i '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/${_Zi}//' "$PROGRAMFILES"/CMake/share/cmake*/Modules/Platform/Windows-MSVC.cmake
+          prepare_hash=$(sha256sum < tdesktop/Telegram/build/prepare/prepare.py | cut -c1-16)
+          echo "CACHE_KEY=mad-win64d-$SDK-$VCVARS_VER-$prepare_hash" >> "$GITHUB_ENV"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "counter=$MAD_BUILD" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          sed -i '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/${_Zi}//' "$PROGRAMFILES"/CMake/share/cmake*/Modules/Platform/Windows-MSVC.cmake || true
 
-      - name: Restore libraries
-        uses: actions/cache/restore@v6
+      - name: restore libraries
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             ${{ env.TBUILD }}\ThirdParty
@@ -268,53 +104,46 @@ jobs:
           key: ${{ env.CACHE_KEY }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             ${{ env.CACHE_KEY }}-
-            win64d-
+            mad-win64d-
 
-      - name: Remember library state
+      - name: remember library state
         shell: bash
         run: |
           state=$( { find "$TBUILD/ThirdParty/cache_keys" "$TBUILD/Libraries/win64/cache_keys" -type f -exec sha256sum {} + 2>/dev/null || true; } | sort | sha256sum)
           echo "LIBS_STATE=$state" >> "$GITHUB_ENV"
 
-      - name: NuGet sources
+      - name: configure nuget source
         run: |
-          nuget sources Disable -Name "Microsoft Visual Studio Offline Packages"
-          nuget sources Add -Source https://api.nuget.org/v3/index.json & exit 0
+          $config = '<configuration><packageSources><clear/><add key="nuget.org" value="https://api.nuget.org/v3/index.json"/></packageSources></configuration>'
+          $directory = Join-Path $env:APPDATA NuGet
+          New-Item -ItemType Directory -Force $directory | Out-Null
+          Set-Content -LiteralPath (Join-Path $directory NuGet.Config) -Value $config -Encoding utf8
 
-      # the image has the 14.44 toolset without its atl, and breakpad's dump_syms (release libs only) needs it
-      - name: Install ATL for the MSVC toolset
-        if: env.VCVARS_VER != ''
+      - name: install atl for the pinned toolset
         timeout-minutes: 20
-        shell: pwsh
         run: |
-          $prepared = "$env:TBUILD\Libraries\win64\cache_keys\tele-prepared"
+          $prepared = "$env:TBUILD\Libraries\win64\cache_keys\mad-prepared"
           if ((Test-Path $prepared) -and (Get-Content $prepared -Raw).Trim() -eq $env:CACHE_KEY) {
             "libraries were fully prepared for this prepare.py, atl is not needed"; exit 0
           }
-          $components = @{ '14.44' = 'Microsoft.VisualStudio.Component.VC.14.44.17.14.ATL' }
           $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
           $vs = & "$installer\vswhere.exe" -latest -products * -property installationPath
-          $atl = "$vs\VC\Tools\MSVC\$env:VCVARS_VER.*\atlmfc\include\atlbase.h"
-          if (Test-Path $atl) { "atl for $env:VCVARS_VER is installed"; exit 0 }
-          $component = $components[$env:VCVARS_VER]
-          if (-not $component) { "::error::no known atl component for toolset $env:VCVARS_VER"; exit 1 }
-          $process = Start-Process -Wait -PassThru "$installer\vs_installer.exe" -ArgumentList `
-            'modify', '--installPath', "`"$vs`"", '--add', $component, '--quiet', '--norestart', '--nocache'
-          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) { exit $process.ExitCode }
-          if (-not (Test-Path $atl)) { "::error::$component did not install $atl"; exit 1 }
-          "installed $component"
+          $atl = "$vs\VC\Tools\MSVC\14.44.*\atlmfc\include\atlbase.h"
+          if (Test-Path $atl) { exit 0 }
+          $process = Start-Process -Wait -PassThru -WindowStyle Hidden "$installer\vs_installer.exe" -ArgumentList 'modify', '--installPath', "`"$vs`"", '--add', 'Microsoft.VisualStudio.Component.VC.14.44.17.14.ATL', '--quiet', '--norestart', '--nocache'
+          if ($process.ExitCode -notin @(0, 3010)) { exit $process.ExitCode }
+          if (-not (Test-Path $atl)) { throw 'required atl component missing' }
 
-      - name: Prepare libraries
+      - name: prepare libraries
         id: prepare
+        shell: cmd
         run: |
-          call tele\ci\msvc.cmd || exit /b 1
-          rem a cache trimmed before the trim kept the wallet binding source holds tdesktop_rust without it and its
-          rem source stages without their sources, so all three build again
+          call mad\ci\msvc.cmd || exit /b 1
           set "keys=%TBUILD%\Libraries\win64\cache_keys"
           if exist "%keys%\tdesktop_rust" if not exist "%TBUILD%\Libraries\win64\tdesktop_rust\out\src\wallet_engine\wallet_engine.cpp" del "%keys%\tdesktop_rust" "%keys%\tlottie" "%keys%\wallet-engine"
-          %TBUILD%\tdesktop\Telegram\build\prepare\win.bat silent
+          tdesktop\Telegram\build\prepare\win.bat silent
 
-      - name: Trim libraries
+      - name: trim libraries
         id: trim
         if: always() && steps.prepare.outcome != 'skipped'
         shell: bash
@@ -326,39 +155,39 @@ jobs:
           if [ ! -d "$libs" ]; then
             exit 0
           fi
-          # upstream ci's filter: keep what linking needs, drop sources and intermediates
           find "$libs" '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/nv-codec-headers/*' -o -path '*/src/wallet_engine/*' ')' -type f ')' -o -empty ')' -delete
-          # the atl step only trusts a prepare that fully finished for this CACHE_KEY
           if [ "$PREPARE_OUTCOME" = success ]; then
-            echo "$CACHE_KEY" > "$libs/cache_keys/tele-prepared"
+            echo "$CACHE_KEY" > "$libs/cache_keys/mad-prepared"
           else
-            rm -f "$libs/cache_keys/tele-prepared"
+            rm -f "$libs/cache_keys/mad-prepared"
           fi
           state=$( { find "$TBUILD/ThirdParty/cache_keys" "$libs/cache_keys" -type f -exec sha256sum {} + 2>/dev/null || true; } | sort | sha256sum)
           if [ "$state" != "$LIBS_STATE" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Save libraries
+      - name: save libraries
+        id: save
         if: always() && steps.trim.outputs.changed == 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             ${{ env.TBUILD }}\ThirdParty
             ${{ env.TBUILD }}\Libraries
           key: ${{ env.CACHE_KEY }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # the linker's temporary files would go to C:, which has little room
-      - name: Temporary files on D
-        shell: pwsh
+      - name: drop older library caches
+        if: always() && steps.save.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\link" | Out-Null
-          "TMP=$env:RUNNER_TEMP\link" >> $env:GITHUB_ENV
-          "TEMP=$env:RUNNER_TEMP\link" >> $env:GITHUB_ENV
-          Get-PSDrive C, D -ErrorAction SilentlyContinue | Format-Table Name, @{n='free GB';e={[math]::Round($_.Free / 1GB, 1)}}
+          current="$CACHE_KEY-${{ github.run_id }}-${{ github.run_attempt }}"
+          gh cache list --key mad-win64d- --limit 100 --json id,key --jq ".[] | select(.key != \"$current\") | .id" \
+            | xargs -r -n1 gh cache delete
 
-      # the release build has no debug info (no /Zi), which ccache needs. the cache lives on D: next to the build
-      - name: Set up ccache
+      - name: set up ccache
         shell: bash
         env:
           CCACHE_VERSION: 4.14.1
@@ -377,36 +206,42 @@ jobs:
             echo "CCACHE_DIR=$temp/ccache-cache"
             echo "CCACHE_MAXSIZE=3G"
             echo "CCACHE_SLOPPINESS=pch_defines,time_macros,include_file_mtime,include_file_ctime"
-            # depend mode takes the includes from msvc's /showIncludes instead of running the preprocessor first,
-            # which made a cold cache build half again as long
             echo "CCACHE_DEPEND=true"
           } >> "$GITHUB_ENV"
 
-      - name: Restore ccache
-        uses: actions/cache/restore@v6
+      - name: restore ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: win64-ccache-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: win64-ccache-
+          key: mad-ccache-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mad-ccache-
 
-      - name: Reset ccache statistics
+      - name: reset ccache statistics
         shell: bash
         run: |
-          "$CCACHE_EXE" --version
+          "$CCACHE_EXE" --version | head -1
           "$CCACHE_EXE" -z
 
-      - name: Build Telegram
+      - name: build and run tests
         env:
-          API_ID: ${{ secrets.TDESKTOP_API_ID }}
-          API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
+          TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
+          TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
         run: |
-          call tele\ci\msvc.cmd || exit /b 1
-          cd /d %TBUILD%\tdesktop\Telegram
-          call configure.bat -G "Ninja Multi-Config" -D CMAKE_CONFIGURATION_TYPES=Release -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT= -D CMAKE_C_COMPILER_LAUNCHER=%CCACHE_EXE% -D CMAKE_CXX_COMPILER_LAUNCHER=%CCACHE_EXE% -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF -D TDESKTOP_API_ID=%API_ID% -D TDESKTOP_API_HASH=%API_HASH% -D TELE_BUILD=%TELE_BUILD% || exit /b 1
-          cmake --build ..\out --config Release --parallel --target Telegram || exit /b 1
-          python %GITHUB_WORKSPACE%\tele\ci\ccache-dated.py ..\out Release Telegram
+          python mad/build-mad.py --config Release --qt-prefix Libraries/win64/Qt-6.11.2 --build-number $env:MAD_BUILD --launcher $env:CCACHE_EXE --tests --jobs $env:NUMBER_OF_PROCESSORS
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          node --test mad/server/server.test.mjs
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
-      - name: Save ccache
+      - name: build mad
+        run: |
+          foreach ($jobs in @($env:NUMBER_OF_PROCESSORS, 2, 1)) {
+            python mad/build-mad.py --config Release --qt-prefix Libraries/win64/Qt-6.11.2 --build-number $env:MAD_BUILD --launcher $env:CCACHE_EXE --jobs $jobs
+            if (-not $LASTEXITCODE) { exit 0 }
+            "build with $jobs jobs failed, continuing with fewer"
+          }
+          exit 1
+
+      - name: save ccache
         id: ccache
         if: always() && env.CCACHE_EXE != ''
         shell: bash
@@ -414,880 +249,96 @@ jobs:
           "$CCACHE_EXE" -s
           misses=$("$CCACHE_EXE" --print-stats | awk '$1 == "cache_miss" { print $2 }')
           echo "ccache misses: ${misses:-0}"
-          # a run that compiled next to nothing has nothing new to keep
           if [ "${misses:-0}" -gt 100 ]; then
             echo "save=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload ccache
+      - name: upload ccache
         id: upload-ccache
         if: always() && steps.ccache.outputs.save == 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: win64-ccache-${{ github.run_id }}-${{ github.run_attempt }}
+          key: mad-ccache-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Drop older ccaches
+      - name: drop older ccaches
         if: always() && steps.upload-ccache.outcome == 'success'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh cache list --key win64-ccache- --ref "$GITHUB_REF" --json id,key --jq '.[] | select(.key != "win64-ccache-${{ github.run_id }}-${{ github.run_attempt }}") | .id' \
+          gh cache list --key mad-ccache- --limit 100 --json id,key --jq '.[] | select(.key != "mad-ccache-${{ github.run_id }}-${{ github.run_attempt }}") | .id' \
             | xargs -r -n1 gh cache delete
 
-      - name: Package
-        shell: bash
-        run: 7z a -tzip "tele-$RELEASE_TAG-win64.zip" "$TBUILD/tdesktop/out/Release/tele.exe" > /dev/null
+      - name: package and verify the standalone executable
+        run: |
+          python mad/package-mad.py --output "$env:GITHUB_WORKSPACE/dist/mad.exe"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python mad/ci/release-mad.py --tag $env:RELEASE_TAG --output dist
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
-      - name: Attest the build
-        uses: actions/attest@v4
-        with:
-          subject-path: tele-${{ env.RELEASE_TAG }}-win64.zip
-
-      - name: Upload the build
-        uses: actions/upload-artifact@v7
+      - name: save verified build artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: release-win64
-          path: tele-${{ env.RELEASE_TAG }}-win64.zip
+          path: dist/*
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
-      - name: Report failure
-        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
-        shell: bash
+  publish:
+    needs: windows
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.windows.outputs.tag }}
+      BASE: ${{ needs.windows.outputs.base }}
+      COUNTER: ${{ needs.windows.outputs.counter }}
+    steps:
+      - name: checkout mad
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: mad
+          persist-credentials: false
+
+      - name: download the build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: release-win64
+          path: dist
+
+      - name: sign the update feed
+        env:
+          UPDATE_KEY: ${{ secrets.MAD_UPDATE_KEY }}
+        working-directory: dist
+        run: |
+          if [ -z "$UPDATE_KEY" ]; then
+            echo "::error::set the repository secret MAD_UPDATE_KEY"
+            exit 1
+          fi
+          zip="mad-$TAG-win64.zip"
+          [ -n "$(unzip -Z1 "$zip" mad.exe)" ]
+          printf '{"tag":"%s","base":%s,"counter":%s,"url":"%s","zip_sha256":"%s","exe_sha256":"%s"}' \
+            "$TAG" "$BASE" "$COUNTER" \
+            "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TAG/$zip" \
+            "$(sha256sum < "$zip" | cut -c1-64)" \
+            "$(unzip -p "$zip" mad.exe | sha256sum | cut -c1-64)" > feed.json
+          openssl pkeyutl -sign -rawin -inkey <(printf '%s\n' "$UPDATE_KEY") -in feed.json -out feed.sig
+          openssl pkeyutl -verify -rawin -pubin -inkey ../mad/ci/update-public-key.pem -in feed.json -sigfile feed.sig
+          printf '{"feed":"%s","signature":"%s"}\n' "$(base64 -w0 feed.json)" "$(base64 -w0 feed.sig)" > mad-update-win64.json
+          rm feed.json feed.sig
+
+      - name: publish the release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+        working-directory: dist
         run: |
-          echo "Building ${UPSTREAM_TAG:-UPSTREAM} for Windows failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Build failed: ${UPSTREAM_TAG:-UPSTREAM}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        shell: bash
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-          TAG: ${{ needs.number.outputs.tag }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: windows built" "tele ${TAG##*.}: windows build failed"
-
-  linux-env:
-    name: Linux libraries
-    needs: number
-    if: ${{ !inputs.from_run && contains(inputs.platforms || 'windows linux macos', 'linux') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-      packages: write
-      issues: write
-    outputs:
-      image: ${{ steps.image.outputs.image }}
-    env:
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          persist-credentials: false
-
-      # patches can change the recipe (0341 takes the wallet engine from gettele/money)
-      - name: Clone tdesktop and apply patches
-        run: |
-          git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
-            --branch "$UPSTREAM_TAG" https://github.com/telegramdesktop/tdesktop.git tdesktop
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python3 tele/tele.py --tdesktop "$GITHUB_WORKSPACE/tdesktop" apply
-
-      # the image holds every library built from the patched recipe, keyed by the recipe itself
-      - name: Pick the image
-        id: image
-        run: |
-          cd tdesktop/Telegram/build/docker/centos_env
-          hash=$( { find . -type f -print0 | sort -z | xargs -0 sha256sum; echo 'DEBUG= LTO='; } | sha256sum | cut -c1-16)
-          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/tele-linux-env"
-          echo "IMAGE=$image:$hash" >> "$GITHUB_ENV"
-          echo "IMAGE_CACHE=$image:buildcache" >> "$GITHUB_ENV"
-          echo "image=$image:$hash" >> "$GITHUB_OUTPUT"
-          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          if docker manifest inspect "$image:$hash" > /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "$image:$hash is already built"
-          fi
-
-      - name: Free disk space
-        if: steps.image.outputs.exists != 'true'
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
-        with:
-          tool-cache: true
-
-      - name: Render the Dockerfile
-        if: steps.image.outputs.exists != 'true'
-        run: |
-          sudo apt-get install -y -qq python3-jinja2 > /dev/null
-          cd tdesktop/Telegram/build/docker/centos_env
-          # read the template fully before overwriting it
-          DOCKERFILE=$(DEBUG= LTO= python3 gen_dockerfile.py)
-          echo "$DOCKERFILE" > Dockerfile
-
-      - name: Set up buildx
-        if: steps.image.outputs.exists != 'true'
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push the image
-        if: steps.image.outputs.exists != 'true'
-        uses: docker/build-push-action@v7
-        with:
-          context: tdesktop/Telegram/build/docker/centos_env
-          push: true
-          tags: ${{ env.IMAGE }}
-          cache-from: type=registry,ref=${{ env.IMAGE_CACHE }}
-          cache-to: type=registry,ref=${{ env.IMAGE_CACHE }},mode=max
-
-      - name: Report failure
-        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
-        run: |
-          echo "Building the Linux libraries for ${UPSTREAM_TAG:-UPSTREAM} failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Build failed: ${UPSTREAM_TAG:-UPSTREAM}" issue.md
-
-      - name: Notify
-        if: failure() || cancelled()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-          TAG: ${{ needs.number.outputs.tag }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: linux libraries built" "tele ${TAG##*.}: linux libraries failed"
-
-  linux:
-    name: Linux x64
-    needs: [number, linux-env]
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-      packages: read
-      actions: write
-      issues: write
-      id-token: write
-      attestations: write
-      artifact-metadata: write
-    env:
-      TELE_BUILD: ${{ needs.number.outputs.counter }}
-      RELEASE_TAG: ${{ needs.number.outputs.tag }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      IMAGE: ${{ needs.linux-env.outputs.image }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          persist-credentials: false
-
-      - name: Clone tdesktop and apply patches
-        run: |
-          git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
-            --branch "$UPSTREAM_TAG" https://github.com/telegramdesktop/tdesktop.git tdesktop
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python3 tele/tele.py --tdesktop "$GITHUB_WORKSPACE/tdesktop" apply
-
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
-        with:
-          tool-cache: true
-
-      - name: Pull the image
-        run: |
-          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker pull --quiet "$IMAGE"
-          echo "CCACHE_DIR=$RUNNER_TEMP/ccache" >> "$GITHUB_ENV"
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v6
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: linux-ccache-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: linux-ccache-
-
-      - name: Build
-        env:
-          API_ID: ${{ secrets.TDESKTOP_API_ID }}
-          API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
-        run: |
-          mkdir -p "$CCACHE_DIR"
-          docker run --rm -u "$(id -u)" -v "$CCACHE_DIR:/var/cache/ccache" "$IMAGE" ccache -z > /dev/null
-          docker run --rm -u "$(id -u)" \
-            -v "$GITHUB_WORKSPACE/tdesktop:/usr/src/tdesktop" -v "$CCACHE_DIR:/var/cache/ccache" \
-            -e CONFIG=Release -e KEEP_GOING=1 -e CCACHE_MAXSIZE=3G -e CCACHE_SLOPPINESS=pch_defines,time_macros \
-            "$IMAGE" env -u CCACHE_DISABLE /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
-            -D CMAKE_CONFIGURATION_TYPES=Release \
-            -D CMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -fpch-preprocess" \
-            -D CMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -fpch-preprocess" \
-            -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
-            -D TDESKTOP_API_ID="$API_ID" -D TDESKTOP_API_HASH="$API_HASH" -D TELE_BUILD="$TELE_BUILD"
-
-      # the image's ccache is epel's 3.7: no --print-stats or --evict-older-than, CCACHE_MAXSIZE bounds it instead
-      - name: Save ccache
-        if: always() && github.ref == 'refs/heads/main'
-        run: |
-          misses=$(docker run --rm -u "$(id -u)" -v "$CCACHE_DIR:/var/cache/ccache" "$IMAGE" ccache -s \
-            | awk '/^cache miss/ { print $NF; exit }')
-          echo "ccache misses: ${misses:-0}"
-          if [ "${misses:-0}" -gt 100 ]; then
-            echo "SAVE_CCACHE=true" >> "$GITHUB_ENV"
-          fi
-
-      - name: Upload ccache
-        id: upload-ccache
-        if: always() && env.SAVE_CCACHE == 'true'
-        uses: actions/cache/save@v6
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: linux-ccache-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Drop older ccaches
-        if: always() && steps.upload-ccache.outcome == 'success'
-        run: |
-          gh cache list --key linux-ccache- --ref "$GITHUB_REF" --json id,key --jq '.[] | select(.key != "linux-ccache-${{ github.run_id }}-${{ github.run_attempt }}") | .id' \
-            | xargs -r -n1 gh cache delete
-
-      - name: Package
-        run: |
-          binary=tdesktop/out/Release/tele
-          test -x "$binary"
-          objcopy --only-keep-debug "$binary" tele.debug
-          zip -9 -X -q "$GITHUB_WORKSPACE/tele-$RELEASE_TAG-linux64-symbols.zip" tele.debug
-          strip --strip-all "$binary"
-          (cd tdesktop/out/Release && zip -9 -X -q "$GITHUB_WORKSPACE/tele-$RELEASE_TAG-linux64.zip" tele)
-          [ "$(stat -c%s "tele-$RELEASE_TAG-linux64.zip")" -lt $((512 * 1024 * 1024)) ]
-          [ "$(unzip -Z1 "tele-$RELEASE_TAG-linux64.zip")" = tele ]
-
-      - name: Attest the build
-        uses: actions/attest@v4
-        with:
-          subject-path: tele-${{ env.RELEASE_TAG }}-linux64.zip
-
-      - name: Upload the build
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-linux64
-          path: |
-            tele-${{ env.RELEASE_TAG }}-linux64.zip
-            tele-${{ env.RELEASE_TAG }}-linux64-symbols.zip
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Report failure
-        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
-        run: |
-          echo "Building ${UPSTREAM_TAG:-UPSTREAM} for Linux failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Build failed: ${UPSTREAM_TAG:-UPSTREAM}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-          TAG: ${{ needs.number.outputs.tag }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: linux built" "tele ${TAG##*.}: linux build failed"
-
-  macos-libs:
-    name: macOS libraries
-    needs: number
-    if: ${{ !inputs.from_run && contains(inputs.platforms || 'windows linux macos', 'macos') }}
-    # prepare.py keys every stage on the cpu count and absolute paths, keep the runner and layout stable
-    runs-on: macos-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-      packages: write
-      issues: write
-    outputs:
-      key: ${{ steps.key.outputs.key }}
-    env:
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          persist-credentials: false
-
-      - name: Set up
-        run: bash tele/ci/macos-setup.sh
-
-      # patches can change prepare.py (0341 takes the wallet engine from gettele/money)
-      - name: Clone tdesktop and apply patches
-        run: |
-          git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
-            --branch "$UPSTREAM_TAG" https://github.com/telegramdesktop/tdesktop.git tdesktop
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python3 tele/tele.py --tdesktop "$GITHUB_WORKSPACE/tdesktop" apply
-
-      - name: Pick the libraries
-        id: key
-        run: |
-          key=macos-$(shasum -a 256 < tdesktop/Telegram/build/prepare/prepare.py | cut -c1-16)
-          echo "LIBS_KEY=$key" >> "$GITHUB_ENV"
-          echo "key=$key" >> "$GITHUB_OUTPUT"
-
-      - name: Restore libraries
-        run: |
-          bash tele/ci/macos-libs.sh pull "$LIBS_KEY" latest || true
-          # libraries trimmed before the trim kept the wallet binding source hold tdesktop_rust without it
-          # and its source stages without their sources, so all three build again
-          if [ -f Libraries/cache_keys/tdesktop_rust ] && [ ! -f Libraries/local/src/wallet_engine/wallet_engine.cpp ]; then
-            rm -f Libraries/cache_keys/tdesktop_rust Libraries/cache_keys/tlottie Libraries/cache_keys/wallet-engine Libraries/cache_keys/tele-prepared
-          fi
-          state=$( { find ThirdParty/cache_keys Libraries/cache_keys -type f -exec shasum -a 256 {} + 2>/dev/null || true; } | sort | shasum -a 256)
-          echo "LIBS_STATE=$state" >> "$GITHUB_ENV"
-          # the trim keeps only the headers of the rust source stages, so their keys still match;
-          # clone them again so tdesktop_rust can rebuild when its own key changes. after the state
-          # above, so cloning the same revisions again doesn't push a new copy of the libraries
-          for s in tlottie wallet-engine; do
-            if [ -f "Libraries/cache_keys/$s" ] && [ ! -f "Libraries/$s/Cargo.toml" ]; then
-              rm -f "Libraries/cache_keys/$s"
-            fi
-          done
-          if [ "$(cat Libraries/cache_keys/tele-prepared 2>/dev/null)" = "$LIBS_KEY" ]; then
-            echo "READY=true" >> "$GITHUB_ENV"
-          fi
-
-      - name: Prepare libraries
-        id: prepare
-        if: env.READY != 'true'
-        timeout-minutes: 300
-        run: ./tdesktop/Telegram/build/prepare/mac.sh silent
-
-      - name: Trim and save libraries
-        if: always() && steps.prepare.outcome != 'skipped'
-        env:
-          PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
-        run: |
-          [ -d Libraries ] || exit 0
-          # upstream ci's filter: keep what linking needs, drop sources and intermediates
-          find Libraries '(' '(' ! '(' -name '*.a' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/src/wallet_engine/*' -o -perm +111 ')' -type f ')' -o -empty ')' -delete
-          if [ "$PREPARE_OUTCOME" = success ]; then
-            echo "$LIBS_KEY" > Libraries/cache_keys/tele-prepared
-          fi
-          du -sh Libraries ThirdParty || true
-          state=$( { find ThirdParty/cache_keys Libraries/cache_keys -type f -exec shasum -a 256 {} + 2>/dev/null || true; } | sort | shasum -a 256)
-          if [ "$state" != "$LIBS_STATE" ]; then
-            bash tele/ci/macos-libs.sh push "$LIBS_KEY"
-          fi
-
-      - name: Report failure
-        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
-        env:
-          GH_REPO: ${{ github.repository }}
-        run: |
-          echo "Building the macOS libraries for ${UPSTREAM_TAG:-UPSTREAM} failed, a re-run continues where it stopped: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Build failed: ${UPSTREAM_TAG:-UPSTREAM}" issue.md
-
-      - name: Notify
-        if: failure() || cancelled()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-          TAG: ${{ needs.number.outputs.tag }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: macos libraries built" "tele ${TAG##*.}: macos libraries failed"
-
-  macos-build:
-    name: macOS ${{ matrix.arch }}
-    needs: [number, macos-libs]
-    runs-on: macos-latest
-    timeout-minutes: 360
-    strategy:
-      # the other architecture keeps building, so a re-run only rebuilds the failed one
-      fail-fast: false
-      matrix:
-        arch: [arm64, x86_64]
-    permissions:
-      contents: read
-      packages: read
-      issues: write
-    env:
-      TELE_BUILD: ${{ needs.number.outputs.counter }}
-      RELEASE_TAG: ${{ needs.number.outputs.tag }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      LIBS_KEY: ${{ needs.macos-libs.outputs.key }}
-      ARCH: ${{ matrix.arch }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          persist-credentials: false
-
-      - name: Set up
-        run: bash tele/ci/macos-setup.sh
-
-      - name: Clone tdesktop and apply patches
-        run: |
-          git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
-            --branch "$UPSTREAM_TAG" https://github.com/telegramdesktop/tdesktop.git tdesktop
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python3 tele/tele.py --tdesktop "$GITHUB_WORKSPACE/tdesktop" apply
-
-      - name: Restore libraries
-        run: |
-          bash tele/ci/macos-libs.sh pull "$LIBS_KEY"
-          if [ "$(cat Libraries/cache_keys/tele-prepared 2>/dev/null)" != "$LIBS_KEY" ]; then
-            echo "::error::the macos libraries for $LIBS_KEY aren't fully prepared yet, re-run once 'macOS libraries' finishes"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::error::release $TAG already exists, choose a new tag"
             exit 1
           fi
-
-      # the libraries are universal, the app is built once per architecture and joined by the macos job
-      - name: Build
-        env:
-          API_ID: ${{ secrets.TDESKTOP_API_ID }}
-          API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
-        run: |
-          # the code generators are built for the target architecture as well and run during the build
-          if [ "$ARCH" != "$(uname -m)" ] && ! arch "-$ARCH" /usr/bin/true 2> /dev/null; then
-            sudo softwareupdate --install-rosetta --agree-to-license
-          fi
-          cd tdesktop/Telegram
-          ./configure.sh -D CMAKE_CONFIGURATION_TYPES=Release -D CMAKE_OSX_ARCHITECTURES="$ARCH" \
-            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
-            -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
-            -D TDESKTOP_API_ID="$API_ID" -D TDESKTOP_API_HASH="$API_HASH" -D TELE_BUILD="$TELE_BUILD"
-          cmake --build ../out --config Release --parallel --target Telegram -- -quiet
-
-      # a tar keeps the modes and symlinks an artifact would drop. the entitlements come along for signing
-      - name: Pack
-        run: |
-          release="$GITHUB_WORKSPACE/tdesktop/out/Release"
-          test -x "$release/tele.app/Contents/MacOS/tele"
-          archs=$(lipo -archs "$release/tele.app/Contents/MacOS/tele")
-          if [ "$archs" != "$ARCH" ]; then
-            echo "::error::the $ARCH build holds $archs"
-            exit 1
-          fi
-          items=(tele.app)
-          if [ -d "$release/tele.app.dSYM" ]; then
-            items+=(tele.app.dSYM)
-          fi
-          COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --no-acls -cf "tele-macos-$ARCH.tar" \
-            -C "$release" "${items[@]}" -C "$GITHUB_WORKSPACE/tdesktop/Telegram/Telegram" Telegram.entitlements
-
-      - name: Upload the build
-        uses: actions/upload-artifact@v7
-        with:
-          name: macos-app-${{ matrix.arch }}
-          path: tele-macos-${{ matrix.arch }}.tar
-          if-no-files-found: error
-          retention-days: 1
-          overwrite: true
-
-      - name: Report failure
-        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
-        run: |
-          echo "Building ${UPSTREAM_TAG:-UPSTREAM} for macOS $ARCH failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Build failed: ${UPSTREAM_TAG:-UPSTREAM}" issue.md
-
-      - name: Notify
-        if: failure() || cancelled()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-          TAG: ${{ needs.number.outputs.tag }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: macos $ARCH built" "tele ${TAG##*.}: macos $ARCH build failed"
-
-  macos:
-    name: macOS universal
-    needs: [number, macos-build]
-    runs-on: macos-latest
-    timeout-minutes: 60
-    permissions:
-      contents: read
-      issues: write
-      id-token: write
-      attestations: write
-      artifact-metadata: write
-    env:
-      RELEASE_TAG: ${{ needs.number.outputs.tag }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          persist-credentials: false
-
-      # strip comes from the selected xcode, the same one the builds used
-      - name: Set up
-        run: |
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-          xcodebuild -version
-
-      - name: Download the builds
-        uses: actions/download-artifact@v8
-        with:
-          pattern: macos-app-*
-          path: ${{ runner.temp }}/parts
-
-      - name: Join the architectures
-        run: |
-          parts="$RUNNER_TEMP/parts"
-          for arch in x86_64 arm64; do
-            mkdir -p "$parts/$arch"
-            tar -xf "$parts/macos-app-$arch/tele-macos-$arch.tar" -C "$parts/$arch"
-          done
-          bash tele/ci/macos-merge.sh "$parts/x86_64" "$parts/arm64" tdesktop/out/Release
-          mkdir -p tdesktop/Telegram/Telegram
-          mv tdesktop/out/Release/Telegram.entitlements tdesktop/Telegram/Telegram/Telegram.entitlements
-
-      - name: Sign and package
-        run: |
-          app=tdesktop/out/Release/tele.app
-          test -x "$app/Contents/MacOS/tele"
-          lipo -archs "$app/Contents/MacOS/tele"
-          rm -rf "$RUNNER_TEMP/symbols" && mkdir "$RUNNER_TEMP/symbols"
-          cp "$app/Contents/MacOS/tele" "$RUNNER_TEMP/symbols/tele"
-          (cd "$RUNNER_TEMP/symbols" && zip -9 -X -q "$GITHUB_WORKSPACE/tele-$RELEASE_TAG-macos-symbols.zip" tele)
-          strip "$app/Contents/MacOS/tele"
-          find "$app/Contents/Helpers" -type f -perm -u+x -print0 2>/dev/null \
-            | xargs -0 -I{} codesign --force --sign - --timestamp=none "{}"
-          codesign --force --sign - --timestamp=none --entitlements tdesktop/Telegram/Telegram/Telegram.entitlements "$app"
-          codesign --verify --strict --deep --verbose=2 "$app"
-          zip="$GITHUB_WORKSPACE/tele-$RELEASE_TAG-macos.zip"
-          (cd tdesktop/out/Release && zip -qry -X "$zip" tele.app)
-          [ "$(stat -f%z "$zip")" -lt $((512 * 1024 * 1024)) ]
-          [ -z "$(unzip -Z1 "$zip" | grep -v '^tele\.app/')" ]
-          rm -rf "$RUNNER_TEMP/unzipped" && mkdir "$RUNNER_TEMP/unzipped"
-          unzip -q "$zip" -d "$RUNNER_TEMP/unzipped"
-          codesign --verify --strict --deep "$RUNNER_TEMP/unzipped/tele.app"
-          dmg="$GITHUB_WORKSPACE/tele-$RELEASE_TAG-macos.dmg"
-          rm -rf "$RUNNER_TEMP/dmg" "$RUNNER_TEMP/mounted" && mkdir "$RUNNER_TEMP/dmg" "$RUNNER_TEMP/mounted"
-          ditto "$app" "$RUNNER_TEMP/dmg/tele.app"
-          ln -s /Applications "$RUNNER_TEMP/dmg/Applications"
-          hdiutil create -quiet -volname tele -srcfolder "$RUNNER_TEMP/dmg" -fs HFS+ -format UDZO -ov "$dmg"
-          [ "$(stat -f%z "$dmg")" -lt $((512 * 1024 * 1024)) ]
-          hdiutil attach -quiet -nobrowse -readonly -mountpoint "$RUNNER_TEMP/mounted" "$dmg"
-          codesign --verify --strict --deep "$RUNNER_TEMP/mounted/tele.app"
-          [ -L "$RUNNER_TEMP/mounted/Applications" ]
-          hdiutil detach -quiet "$RUNNER_TEMP/mounted"
-
-      - name: Attest the build
-        uses: actions/attest@v4
-        with:
-          subject-path: |
-            tele-${{ env.RELEASE_TAG }}-macos.zip
-            tele-${{ env.RELEASE_TAG }}-macos.dmg
-
-      - name: Upload the build
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-macos
-          path: |
-            tele-${{ env.RELEASE_TAG }}-macos.zip
-            tele-${{ env.RELEASE_TAG }}-macos.dmg
-            tele-${{ env.RELEASE_TAG }}-macos-symbols.zip
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Report failure
-        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
-        run: |
-          echo "Building ${UPSTREAM_TAG:-UPSTREAM} for macOS failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Build failed: ${UPSTREAM_TAG:-UPSTREAM}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-          TAG: ${{ needs.number.outputs.tag }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: macos built" "tele ${TAG##*.}: macos build failed"
-
-  # one publish job per platform: each signs its own feed and goes out as soon as its build is done. the signing
-  # key only reaches these fresh runners, never a build job
-  publish-windows:
-    name: Publish Windows
-    needs: [number, windows]
-    if: >-
-      !cancelled()
-      && needs.number.result == 'success'
-      && needs.number.outputs.publish == 'true'
-      && (inputs.from_run || needs.windows.result == 'success')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      actions: read
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      TAG: ${{ needs.number.outputs.tag }}
-      BASE: ${{ needs.number.outputs.base }}
-      COUNTER: ${{ needs.number.outputs.counter }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      PREVIOUS_TAG: ${{ needs.number.outputs.previous }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Download the build
-        if: ${{ !inputs.from_run }}
-        uses: actions/download-artifact@v8
-        with:
-          name: release-win64
-
-      - name: Download the build of the finished run
-        if: inputs.from_run
-        uses: actions/download-artifact@v8
-        with:
-          name: release-win64
-          run-id: ${{ inputs.from_run }}
-          github-token: ${{ github.token }}
-
-      - name: Sign the feed and publish
-        env:
-          UPDATE_KEY: ${{ secrets.TELE_UPDATE_KEY }}
-        run: bash tele/ci/publish.sh win64
-
-      - name: Report failure
-        if: failure() || cancelled()
-        run: |
-          echo "Publishing Windows for ${TAG:-the build} failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Publish failed: ${TAG:-unknown}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: windows is out" "tele ${TAG##*.}: publishing windows failed"
-
-  publish-linux:
-    name: Publish Linux
-    needs: [number, linux]
-    if: >-
-      !cancelled()
-      && needs.number.result == 'success'
-      && needs.number.outputs.publish == 'true'
-      && (inputs.from_run || needs.linux.result == 'success')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      actions: read
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      TAG: ${{ needs.number.outputs.tag }}
-      BASE: ${{ needs.number.outputs.base }}
-      COUNTER: ${{ needs.number.outputs.counter }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      PREVIOUS_TAG: ${{ needs.number.outputs.previous }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Download the build
-        if: ${{ !inputs.from_run }}
-        uses: actions/download-artifact@v8
-        with:
-          name: release-linux64
-
-      - name: Download the build of the finished run
-        if: inputs.from_run
-        uses: actions/download-artifact@v8
-        with:
-          name: release-linux64
-          run-id: ${{ inputs.from_run }}
-          github-token: ${{ github.token }}
-
-      - name: Sign the feed and publish
-        env:
-          UPDATE_KEY: ${{ secrets.TELE_UPDATE_KEY }}
-        run: bash tele/ci/publish.sh linux64
-
-      - name: Report failure
-        if: failure() || cancelled()
-        run: |
-          echo "Publishing Linux for ${TAG:-the build} failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Publish failed: ${TAG:-unknown}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: linux is out" "tele ${TAG##*.}: publishing linux failed"
-
-  publish-macos:
-    name: Publish macOS
-    needs: [number, macos]
-    if: >-
-      !cancelled()
-      && needs.number.result == 'success'
-      && needs.number.outputs.publish == 'true'
-      && (inputs.from_run || needs.macos.result == 'success')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      actions: read
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      TAG: ${{ needs.number.outputs.tag }}
-      BASE: ${{ needs.number.outputs.base }}
-      COUNTER: ${{ needs.number.outputs.counter }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      PREVIOUS_TAG: ${{ needs.number.outputs.previous }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Download the build
-        if: ${{ !inputs.from_run }}
-        uses: actions/download-artifact@v8
-        with:
-          name: release-macos
-
-      - name: Download the build of the finished run
-        if: inputs.from_run
-        uses: actions/download-artifact@v8
-        with:
-          name: release-macos
-          run-id: ${{ inputs.from_run }}
-          github-token: ${{ github.token }}
-
-      - name: Sign the feed and publish
-        env:
-          UPDATE_KEY: ${{ secrets.TELE_UPDATE_KEY }}
-        run: bash tele/ci/publish.sh macos
-
-      - name: Report failure
-        if: failure() || cancelled()
-        run: |
-          echo "Publishing macOS for ${TAG:-the build} failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Publish failed: ${TAG:-unknown}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.}: macos is out" "tele ${TAG##*.}: publishing macos failed"
-
-  # needs all three platforms published: a run that doesn't publish every platform never gets here
-  announce:
-    name: Announce
-    needs: [number, publish-windows, publish-linux, publish-macos]
-    if: >-
-      !cancelled()
-      && needs.publish-windows.result == 'success'
-      && needs.publish-linux.result == 'success'
-      && needs.publish-macos.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      TAG: ${{ needs.number.outputs.tag }}
-      UPSTREAM_TAG: ${{ needs.number.outputs.upstream }}
-      PREVIOUS_TAG: ${{ needs.number.outputs.previous }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          path: tele
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Write the release notes
-        run: |
-          python3 tele/ci/notes.py --repo tele --tag "$TAG" --previous "$PREVIOUS_TAG" --upstream "$UPSTREAM_TAG" \
-            --url "$GITHUB_SERVER_URL/$GH_REPO" --rev "$GITHUB_SHA" --out notes.md
-          gh release edit "$TAG" --notes-file notes.md > /dev/null
-          bash tele/ci/issue.sh close build-failure "Built $TAG."
-          bash tele/ci/issue.sh close new-upstream "Released $TAG."
-
-      - name: Announce
-        continue-on-error: true
-        env:
-          BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          CHANNEL: ${{ secrets.TELE_CHANNEL }}
-        run: |
-          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL" ]; then
-            echo "no TELE_BOT_TOKEN / TELE_CHANNEL secrets, not announcing"
-            exit 0
-          fi
-          python3 tele/ci/announce.py --repo tele --tag "$TAG" --previous "$PREVIOUS_TAG" --upstream "$UPSTREAM_TAG" \
-            --url "$GITHUB_SERVER_URL/$GH_REPO"
-
-      - name: Report failure
-        if: failure() || cancelled()
-        run: |
-          echo "Announcing ${TAG:-the build} failed: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID" > issue.md
-          bash tele/ci/issue.sh open build-failure "Publish failed: ${TAG:-unknown}" issue.md
-
-      - name: Notify
-        if: always()
-        continue-on-error: true
-        env:
-          NOTIFY_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
-          NOTIFY_CHAT: ${{ secrets.TELE_NOTIFY_CHAT }}
-          STATUS: ${{ job.status }}
-        run: |
-          bash tele/ci/notify.sh "tele ${TAG##*.} published: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG" "tele ${TAG##*.}: announcing failed"
+          gh release create "$TAG" mad.exe "mad-$TAG-win64.zip" mad-update-win64.json SHA256SUMS source-manifest.json \
+            --target "$GITHUB_SHA" --title "mad $TAG" --notes-file release-notes.md --latest

@@ -1,0 +1,290 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 15:08:48 +0200
+Subject: [PATCH] fix: refresh windows taskbar icons and welcome new accounts
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  3 +-
+ .../platform/win/main_window_win.cpp          |  2 +
+ Telegram/SourceFiles/tele/tele_app_icons.cpp  | 67 +++++++++++++++
+ Telegram/SourceFiles/tele/tele_app_icons.h    |  3 +
+ Telegram/SourceFiles/tele/tele_changelog.cpp  |  2 +
+ Telegram/SourceFiles/tele/tele_welcome.cpp    | 85 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_welcome.h      |  7 ++
+ 8 files changed, 170 insertions(+), 1 deletion(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_welcome.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_welcome.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 87eda5923d557c6c2f58a121d91125dc5e58b2de..484081ce65ad466c6b7256e3ad1844033e0012e8 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3016,6 +3016,8 @@ PRIVATE
+     tele/tele_tgs_rules.h
+     tele/tele_quick_modes.cpp
+     tele/tele_quick_modes.h
++    tele/tele_welcome.cpp
++    tele/tele_welcome.h
+     tele/tele_streamer_mode.cpp
+     tele/tele_streamer_mode.h
+     tele/tele_streaming_audio.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index ded150db3455df3aa376ae5af03f83871c8d1ca3..0aa84970e8aa5345556f0c14e9b4a2f379c16e3b 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2035,5 +2035,6 @@
+   "mad red": "mad — красная",
+   "mad white": "mad — белая",
+   "Telegram": "Telegram",
+-  "A selected preset or custom image overrides the monochrome tray setting.": "Выбранный значок или своя картинка имеют приоритет над монохромным режимом трея."
++  "A selected preset or custom image overrides the monochrome tray setting.": "Выбранный значок или своя картинка имеют приоритет над монохромным режимом трея.",
++  "Welcome to mad!\n\nClient options are in Settings → mad settings. Ghost mode and streamer mode are also available in the side menu and tray.\n\nEncrypted history sync is off by default. Enable it separately if you want to use it.\n\nThis is a local message from mad, visible only on this device.": "добро пожаловать в mad!\n\nфункции клиента находятся в настройках → настройки mad. гостмод и режим стримера также доступны в боковом меню и трее.\n\nзашифрованная синхронизация истории по умолчанию выключена. при необходимости включи её отдельно.\n\nэто локальное сообщение от mad, которое видно только на этом устройстве."
+ }
+diff --git a/Telegram/SourceFiles/platform/win/main_window_win.cpp b/Telegram/SourceFiles/platform/win/main_window_win.cpp
+index baceb0e57d55c434997b77e9c0472c5e86641631..a014d1ec9f14d5d3bab9c0718ff5dd22f19ba900 100644
+--- a/Telegram/SourceFiles/platform/win/main_window_win.cpp
++++ b/Telegram/SourceFiles/platform/win/main_window_win.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "platform/win/main_window_win.h"
++#include "tele/tele_app_icons.h"
+ 
+ #include "platform/platform_specific.h"
+ #include "platform/platform_notifications_manager.h"
+@@ -585,6 +586,7 @@ bool MainWindow::nativeEvent(
+ 
+ void MainWindow::updateWindowIcon() {
+ 	updateTaskbarAndIconCounters();
++	Tele::RefreshWindowsAppIcon(this);
+ }
+ 
+ bool MainWindow::isActiveForTrayMenu() {
+diff --git a/Telegram/SourceFiles/tele/tele_app_icons.cpp b/Telegram/SourceFiles/tele/tele_app_icons.cpp
+index 29123a43f8fa0bab48b700dbd11e063d877e059c..677949f660d4919010fe029a83ac26826613ad87 100644
+--- a/Telegram/SourceFiles/tele/tele_app_icons.cpp
++++ b/Telegram/SourceFiles/tele/tele_app_icons.cpp
+@@ -12,6 +12,14 @@
+ 
+ #ifdef Q_OS_WIN
+ #include "platform/win/tray_win.h"
++#include "platform/win/windows_app_user_model_id.h"
++#include <propkey.h>
++#include <propvarutil.h>
++#include <shobjidl.h>
++#include <shellapi.h>
++#include <QtCore/QBuffer>
++#include <QtCore/QCryptographicHash>
++#include <QtCore/QSaveFile>
+ #endif // Q_OS_WIN
+ 
+ namespace Tele {
+@@ -130,6 +138,65 @@ void ValidateLogoCaches(
+ }
+ 
+ #ifdef Q_OS_WIN
++void RefreshWindowsAppIcon(not_null<QWidget*> window) {
++	const auto logo = CustomAppLogo();
++	if (!logo || logo->isNull()) {
++		return;
++	}
++	auto png = QByteArray();
++	auto buffer = QBuffer(&png);
++	if (!logo->scaled(256, 256, Qt::KeepAspectRatio,
++		Qt::SmoothTransformation).save(&buffer, "PNG")) {
++		return;
++	}
++	const auto digest = QCryptographicHash::hash(png,
++		QCryptographicHash::Sha256).toHex();
++	const auto path = cWorkingDir() + u"tdata/mad_icons/app-"_q
++		+ QString::fromLatin1(digest) + u".ico"_q;
++	if (!QFileInfo::exists(path)) {
++		QDir().mkpath(QFileInfo(path).absolutePath());
++		auto file = QSaveFile(path);
++		if (!file.open(QIODevice::WriteOnly)) {
++			return;
++		}
++		auto stream = QDataStream(&file);
++		stream.setByteOrder(QDataStream::LittleEndian);
++		stream << quint16(0) << quint16(1) << quint16(1)
++			<< quint8(0) << quint8(0) << quint8(0) << quint8(0)
++			<< quint16(1) << quint16(32) << quint32(png.size()) << quint32(22);
++		if (file.write(png) != png.size() || !file.commit()) {
++			return;
++		}
++	}
++	auto store = static_cast<IPropertyStore*>(nullptr);
++	if (FAILED(SHGetPropertyStoreForWindow(
++		reinterpret_cast<HWND>(window->winId()), IID_PPV_ARGS(&store)))) {
++		return;
++	}
++	const auto guard = gsl::finally([&] { store->Release(); });
++	const auto set = [&](const PROPERTYKEY &key, const QString &text) {
++		auto value = PROPVARIANT();
++		if (FAILED(InitPropVariantFromString(text.toStdWString().c_str(), &value))) {
++			return false;
++		}
++		const auto result = store->SetValue(key, value);
++		PropVariantClear(&value);
++		return SUCCEEDED(result);
++	};
++	const auto command = u"\"%1\" -workdir \"%2\""_q.arg(
++		QDir::toNativeSeparators(cExeDir() + cExeName()),
++		QDir::toNativeSeparators(QDir(cWorkingDir()).absolutePath()));
++	if (!set(PKEY_AppUserModel_RelaunchCommand, command)
++		|| !set(PKEY_AppUserModel_RelaunchDisplayNameResource, u"mad"_q)
++		|| !set(PKEY_AppUserModel_RelaunchIconResource,
++			QDir::toNativeSeparators(path) + u",0"_q)
++		|| !set(Platform::AppUserModelId::Key(),
++			QString::fromStdWString(Platform::AppUserModelId::Id()))) {
++		return;
++	}
++	store->Commit();
++}
++
+ QPixmap TrayIconWithCounter(
+ 		Window::CounterLayerArgs &&args,
+ 		bool smallIcon,
+diff --git a/Telegram/SourceFiles/tele/tele_app_icons.h b/Telegram/SourceFiles/tele/tele_app_icons.h
+index 2dc36ab15bb12146fdf66c7ef4f8bd380e8bab4e..aed91194769814465d2f09fdf427808577f0bcc2 100644
+--- a/Telegram/SourceFiles/tele/tele_app_icons.h
++++ b/Telegram/SourceFiles/tele/tele_app_icons.h
+@@ -1,5 +1,7 @@
+ #pragma once
+ 
++class QWidget;
++
+ namespace Window {
+ struct CounterLayerArgs;
+ } // namespace Window
+@@ -19,6 +21,7 @@ void ValidateLogoCaches(
+ 	base::flat_map<int, QImage> &logo,
+ 	base::flat_map<int, QImage> &noMargin);
+ #ifdef Q_OS_WIN
++void RefreshWindowsAppIcon(not_null<QWidget*> window);
+ [[nodiscard]] QPixmap TrayIconWithCounter(
+ 	Window::CounterLayerArgs &&args,
+ 	bool smallIcon,
+diff --git a/Telegram/SourceFiles/tele/tele_changelog.cpp b/Telegram/SourceFiles/tele/tele_changelog.cpp
+index e3753149adf476c9fdf13402827753b6c7826391..1948c6bc446455c5971fd6c048540fe6d0d3b8d9 100644
+--- a/Telegram/SourceFiles/tele/tele_changelog.cpp
++++ b/Telegram/SourceFiles/tele/tele_changelog.cpp
+@@ -1,4 +1,5 @@
+ #include "tele/tele_changelog.h"
++#include "tele/tele_welcome.h"
+ 
+ #include "base/weak_ptr.h"
+ #include "core/application.h"
+@@ -631,6 +632,7 @@ void Changelog::post(not_null<Main::Session*> session) {
+ } // namespace
+ 
+ void StartChangelog() {
++	StartWelcome();
+ 	StartNewSettings();
+ 	StartChangelogHistory();
+ 	if (BuildNumber() <= 0 || Instance) {
+diff --git a/Telegram/SourceFiles/tele/tele_welcome.cpp b/Telegram/SourceFiles/tele/tele_welcome.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..3b33e2303e0543dbcac435946fcfe7c684722069
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_welcome.cpp
+@@ -0,0 +1,85 @@
++#include "tele/tele_welcome.h"
++
++#include "core/application.h"
++#include "data/data_session.h"
++#include "main/main_domain.h"
++#include "main/main_session.h"
++#include "tele/tele_changelog_chat.h"
++#include "tele/tele_lowercase.h"
++#include <QtCore/QCoreApplication>
++#include <QtCore/QCryptographicHash>
++#include <QtCore/QDir>
++#include <QtCore/QFileInfo>
++#include <QtCore/QSaveFile>
++
++namespace Tele {
++namespace {
++
++QString WelcomePath(not_null<Main::Session*> session) {
++	const auto identity = QByteArray::number(session->userId().bare)
++		+ (session->isTestMode() ? ":test" : ":production");
++	const auto key = QCryptographicHash::hash(identity,
++		QCryptographicHash::Sha256).toHex();
++	return cWorkingDir() + u"tdata/mad_welcome/"_q
++		+ QString::fromLatin1(key);
++}
++
++void Welcome(not_null<Main::Session*> session) {
++	const auto path = WelcomePath(session);
++	if (QFileInfo::exists(path)) {
++		return;
++	}
++	const auto post = [=] {
++		if (QFileInfo::exists(path)) {
++			return;
++		}
++		const auto text = Tr(u"Welcome to mad!\n\n"
++			"Client options are in Settings → mad settings. "
++			"Ghost mode and streamer mode are also available in the side menu "
++			"and tray.\n\nEncrypted history sync is off by default. "
++			"Enable it separately if you want to use it.\n\n"
++			"This is a local message from mad, visible only on this device."_q);
++		PostChangelog(session, { { .text = { text } } });
++		QDir().mkpath(QFileInfo(path).absolutePath());
++		auto marker = QSaveFile(path);
++		if (marker.open(QIODevice::WriteOnly) && marker.write("1") == 1) {
++			if (!marker.commit()) {
++				LOG(("Mad Welcome: could not save state."));
++			}
++		}
++	};
++	if (session->data().chatsListLoaded()) {
++		crl::on_main(session, post);
++	} else {
++		session->data().chatsListLoadedEvents(
++		) | rpl::filter([](Data::Folder *folder) {
++			return !folder;
++		}) | rpl::take(1) | rpl::on_next(post, session->lifetime());
++	}
++}
++
++class WelcomeState final : public QObject {
++public:
++	WelcomeState() : QObject(QCoreApplication::instance()) {
++		Core::App().domain().activeSessionValue(
++		) | rpl::on_next([](Main::Session *session) {
++			if (session) {
++				Welcome(session);
++			}
++		}, _lifetime);
++	}
++
++private:
++	rpl::lifetime _lifetime;
++};
++
++}
++
++void StartWelcome() {
++	static auto started = false;
++	if (!std::exchange(started, true)) {
++		new WelcomeState();
++	}
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_welcome.h b/Telegram/SourceFiles/tele/tele_welcome.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..76c019432bb8843f74dc1873a49e483d5604d720
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_welcome.h
+@@ -0,0 +1,7 @@
++#pragma once
++
++namespace Tele {
++
++void StartWelcome();
++
++}

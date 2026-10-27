@@ -1,0 +1,441 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 10:45:01 +0200
+Subject: [PATCH] feat: simplify sync setup and chat selection
+
+---
+ Telegram/Resources/langs/mad_ru.json          |  25 ++++-
+ .../dialogs/dialogs_inner_widget.cpp          |   2 +
+ .../view/history_view_top_bar_widget.cpp      |   1 +
+ .../SourceFiles/tele/tele_chats_selection.cpp |  22 +++-
+ .../SourceFiles/tele/tele_chats_selection.h   |   7 ++
+ .../SourceFiles/tele/tele_history_sync.cpp    | 105 +++++++++++++++---
+ .../SourceFiles/tele/tele_menu_registry.cpp   |  12 +-
+ Telegram/SourceFiles/tele/tele_options.cpp    |   3 +-
+ .../SourceFiles/tele/tele_selection_shot.cpp  |  12 +-
+ .../SourceFiles/tele/tele_selection_shot.h    |   1 +
+ 10 files changed, 162 insertions(+), 28 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index eca464f7e3fe2287a1f3541aedf01d3281ee54fa..06fe90150f11fa792a91d843d9c32568961cec68 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -892,7 +892,7 @@
+   "No bookmarks": "Нет закладок",
+   "No chats yet. Pick Background for me in a chat's menu.": "Чатов пока нет. Выберите «Фон для меня» в меню чата.",
+   "No collections yet": "Коллекций пока нет",
+-  "No custom names yet. Pick Set a name for me in a user's menu.": "Пользовательских имен пока нет. Выберите «Установить мне имя» в меню пользователя.",
++  "No custom names yet. Pick Set a name for me in a user's menu.": "Локальных имён пока нет. Выбери «Изменить имя для себя» в меню пользователя.",
+   "No drafts here yet. Type below and press Enter to save one.": "Здесь пока нет черновиков. Введите ниже и нажмите Enter, чтобы сохранить его.",
+   "No edited mark on bot messages": "Скрывать отметку изменения у сообщений ботов",
+   "No gift chosen yet.": "Подарок еще не выбран.",
+@@ -1329,7 +1329,7 @@
+   "Service": "Сервис",
+   "Service messages show their time too.": "Служебные сообщения тоже показывают свое время.",
+   "Set a gift": "Установить подарок",
+-  "Set a name for me": "Назови мне имя",
++  "Set a name for me": "Изменить имя для себя",
+   "Set update link": "Установить ссылку на обновление",
+   "Settings": "настройки",
+   "For me": "Для меня",
+@@ -1970,5 +1970,24 @@
+   "Hide mad settings from side menu": "скрыть настройки mad в боковом меню",
+   "The mad section remains available in Settings.": "раздел mad останется доступен в настройках.",
+   "Hide from side menu": "убрать из бокового меню",
+-  "Side menu": "боковое меню"
++  "Side menu": "боковое меню",
++  "History sync": "Синхронизация истории",
++  "Deleted messages and edit history are encrypted on this device before upload. Media files are not uploaded.": "Удалённые сообщения и история правок шифруются на этом устройстве перед отправкой. Файлы медиа не загружаются.",
++  "Server: %1": "Сервер: %1",
++  "Open connection file...": "Открыть файл подключения…",
++  "Open connection file": "Открыть файл подключения",
++  "Or paste a connection or transfer code": "Или вставь код подключения / переноса",
++  "Save transfer file...": "Сохранить файл переноса…",
++  "Save transfer file": "Сохранить файл переноса",
++  "2. Save the transfer file: it contains your decryption key. Use it on another PC with the same Telegram account.\n3. Turn on sync below. The toggle saves immediately.": "2. Сохрани файл переноса — в нём ключ расшифровки. Он понадобится на другом пк с тем же аккаунтом telegram.\n3. Включи синхронизацию ниже. Тумблер сохраняется сразу.",
++  "1. Open connection.json to connect this PC. On another PC, open the transfer file saved by your first PC. The server address is filled in automatically.": "1. Открой connection.json для подключения этого пк. На другом пк открой файл переноса, сохранённый на первом. Адрес сервера подставится автоматически.",
++  "Couldn't connect. Choose connection.json or a transfer file for this Telegram account.": "Не удалось подключить. Выбери connection.json или файл переноса для этого аккаунта telegram.",
++  "Couldn't read the connection file. Choose a JSON file smaller than 8 KB.": "Не удалось прочитать файл подключения. Выбери json-файл размером не больше 8 кб.",
++  "Couldn't save the transfer file. Choose another location.": "Не удалось сохранить файл переноса. Выбери другую папку.",
++  "Transfer file saved. Keep it private: it contains your decryption key. You can now enable sync.": "Файл переноса сохранён. Не передавай его другим: в нём ключ расшифровки. Теперь можно включить синхронизацию.",
++  "Connect": "Подключить",
++  "Connection saved. Save the transfer file, then enable sync.": "Подключение сохранено. Сохрани файл переноса, затем включи синхронизацию.",
++  "Select chat": "Выбрать чат",
++  "Deselect chat": "Снять выделение чата",
++  "Right-click a chat to start selecting; click more chats to add them, or Shift+click for a range.": "Нажми пкм на чат → «Выбрать чат». Добавляй другие чаты кликом, а целый диапазон — shift + клик."
+ }
+diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
+index 288d2059154a8737a1386c584a3c8532e3fcada8..53a22818b4f741d37246f84af63263ade52dce11 100644
+--- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
++++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
+@@ -4135,6 +4135,8 @@ void InnerWidget::contextMenuEvent(QContextMenuEvent *e) {
+ 		}
+ 	} else {
+ 		const auto addAction = Ui::Menu::CreateAddActionCallback(_menu);
++		::Tele::AddChatsSelectionAction(this, _menu,
++			(_state == WidgetState::Default) ? row.key.history() : nullptr);
+ 		Window::FillDialogsEntryMenu(
+ 			_controller,
+ 			Dialogs::EntryState{
+diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
+index e4c5932e654d7572eb399e75406bc4c62f9d5a58..180d53c483a2dc92a8b6e66d2ec815f4c8c0f43b 100644
+--- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
+@@ -1561,6 +1561,7 @@ void TopBarWidget::showSelected(SelectedState state) {
+ 	_canSendNow = canSendNow;
+ 	const auto nowSelectedState = showSelectedState();
+ 	if (nowSelectedState) {
++		Tele::SetSelectionShotCount(this, _selectedCount, wasSelectedState);
+ 		_forward->setNumbersText(_selectedCount);
+ 		_sendNow->setNumbersText(_selectedCount);
+ 		_delete->setNumbersText(_selectedCount);
+diff --git a/Telegram/SourceFiles/tele/tele_chats_selection.cpp b/Telegram/SourceFiles/tele/tele_chats_selection.cpp
+index 162c232aaa474f3511c0f576e0c9b1d4616aa826..d4d440cfde421e8c3c1689113cf4e6033716e2a6 100644
+--- a/Telegram/SourceFiles/tele/tele_chats_selection.cpp
++++ b/Telegram/SourceFiles/tele/tele_chats_selection.cpp
+@@ -21,6 +21,7 @@
+ #include "menu/menu_mute.h"
+ #include "tele/tele_local_folders.h"
+ #include "tele/tele_lowercase.h"
++#include "tele/tele_menu_apply.h"
+ #include "tele/tele_notices.h"
+ #include "tele/tele_options.h"
+ #include "ui/boxes/confirm_box.h"
+@@ -597,6 +598,25 @@ void SetupChatsSelection(
+ 	}, raw->lifetime());
+ }
+ 
++void AddChatsSelectionAction(
++		not_null<Ui::RpWidget*> list,
++		not_null<Ui::PopupMenu*> menu,
++		History *history) {
++	const auto state = Find(list);
++	if (!state || !history || !SelectChats()) {
++		return;
++	}
++	const auto selected = ranges::contains(state->chats, not_null(history));
++	TagMenuAction(menu->addAction(selected
++		? Tr(u"Deselect chat"_q) : Tr(u"Select chat"_q), crl::guard(list, [=] {
++		if (const auto current = Find(list); current && SelectChats()) {
++			Toggle(current, history);
++			current->anchor = history;
++			Changed(current);
++		}
++	}), &st::menuIconSelect), u"select_chat"_q, &st::menuIconSelect);
++}
++
+ bool ChatsSelectionClick(
+ 		not_null<Ui::RpWidget*> list,
+ 		not_null<Dialogs::IndexedList*> rows,
+@@ -613,7 +633,7 @@ bool ChatsSelectionClick(
+ 		return false;
+ 	}
+ 	const auto range = modifiers.testFlag(Qt::ShiftModifier);
+-	if (!range && !modifiers.testFlag(Qt::AltModifier)) {
++	if (!range && !modifiers.testFlag(Qt::AltModifier) && state->chats.empty()) {
+ 		return false;
+ 	}
+ 	if (range) {
+diff --git a/Telegram/SourceFiles/tele/tele_chats_selection.h b/Telegram/SourceFiles/tele/tele_chats_selection.h
+index 8ba86ea1916aa40e9e247b7f392d43a58fa3af64..6ee4de5c5fb11a9196ce3ac9dc35f9f68d132754 100644
+--- a/Telegram/SourceFiles/tele/tele_chats_selection.h
++++ b/Telegram/SourceFiles/tele/tele_chats_selection.h
+@@ -1,5 +1,7 @@
+ #pragma once
+ 
++class History;
++
+ namespace Dialogs {
+ class IndexedList;
+ class Row;
+@@ -7,6 +9,7 @@ class Row;
+ 
+ namespace Ui {
+ class RpWidget;
++class PopupMenu;
+ } // namespace Ui
+ 
+ namespace Window {
+@@ -19,6 +22,10 @@ void SetupChatsSelection(
+ 	not_null<Window::SessionController*> controller,
+ 	not_null<Ui::RpWidget*> list,
+ 	not_null<Ui::RpWidget*> area);
++void AddChatsSelectionAction(
++	not_null<Ui::RpWidget*> list,
++	not_null<Ui::PopupMenu*> menu,
++	History *history);
+ [[nodiscard]] bool ChatsSelectionClick(
+ 	not_null<Ui::RpWidget*> list,
+ 	not_null<Dialogs::IndexedList*> rows,
+diff --git a/Telegram/SourceFiles/tele/tele_history_sync.cpp b/Telegram/SourceFiles/tele/tele_history_sync.cpp
+index d1a3f8f621e1d6e43de6fd9febc453165664ce26..ead791468234d1070fae9c4802a73995a379821f 100644
+--- a/Telegram/SourceFiles/tele/tele_history_sync.cpp
++++ b/Telegram/SourceFiles/tele/tele_history_sync.cpp
+@@ -1,10 +1,12 @@
+ #include "tele/tele_history_sync.h"
+ 
+ #include "base/options.h"
++#include "core/file_utilities.h"
+ #include "main/main_session.h"
+ #include "storage/storage_account.h"
+ #include "storage/details/storage_file_utilities.h"
+ #include "tele/tele_history_crypto.h"
++#include "tele/tele_badges.h"
+ #include "tele/tele_kept_store.h"
+ #include "tele/tele_launch_flags.h"
+ #include "tele/tele_lowercase.h"
+@@ -20,6 +22,7 @@
+ #include <QtCore/QCryptographicHash>
+ #include <QtCore/QFileInfo>
+ #include <QtCore/QFile>
++#include <QtCore/QSaveFile>
+ #include <QtCore/QMessageAuthenticationCode>
+ #include <QtCore/QJsonArray>
+ #include <QtCore/QJsonDocument>
+@@ -204,7 +207,9 @@ bool Sync::configure(const QString &text) {
+ 	const auto owner = value.value(u"owner"_q).toString();
+ 	const auto vault = value.value(u"vault"_q).toString();
+ 	const auto token = value.value(u"token"_q).toString();
+-	const auto server = QUrl(ServerUrl());
++	const auto address = NormalizeServerUrl(value.value(u"server"_q).toString(ServerUrl()));
++	if (!address || address->isEmpty()) return false;
++	const auto server = QUrl(*address);
+ 	if (value.value(u"version"_q).toInt() != 1 || !Hex(vault, 32) || !Hex(token, 64)
+ 		|| (!owner.isEmpty() && owner != Owner(_session))
+ 		|| server.scheme() != u"https"_q || !server.userInfo().isEmpty()
+@@ -221,6 +226,7 @@ bool Sync::configure(const QString &text) {
+ 	accounts.removeAll(Owner(_session));
+ 	enabled.set(accounts.join(','));
+ 	stop();
++	SetServerUrl(*address);
+ 	_sent.clear();
+ 	_pendingDigests.clear();
+ 	_ledgerLoaded = false;
+@@ -230,7 +236,7 @@ bool Sync::configure(const QString &text) {
+ 		{ u"key"_q, QString::fromLatin1(key.toBase64()) }, { u"cursor"_q, u"0"_q },
+ 	};
+ 	if (!save()) { config = {}; return false; }
+-	status = Tr(u"Connection saved. Back up the transfer code before enabling sync."_q);
++	status = Tr(u"Connection saved. Save the transfer file, then enable sync."_q);
+ 	return true;
+ }
+ 
+@@ -394,14 +400,86 @@ void HistorySyncChanged(not_null<Main::Session*> session) {
+ 
+ void HistorySyncBox(not_null<Ui::GenericBox*> box, not_null<Main::Session*> session) {
+ 	const auto sync = QPointer<Sync>(Instances.value(session));
+-	box->setTitle(rpl::single(Tr(u"Encrypted history sync"_q)));
++	box->setTitle(rpl::single(Tr(u"History sync"_q)));
+ 	if (!sync) return;
+-	box->addRow(object_ptr<Ui::FlatLabel>(box, Tr(u"Sync saved deleted messages and edit history for this account. Media files are not uploaded. Keep a backup of your master key."_q), st::boxLabel));
+-	const auto check = box->addRow(object_ptr<Ui::Checkbox>(box,
+-		Tr(u"Enable for this account"_q), base::options::lookup<QString>(kOptionHistorySyncAccounts).value().split(',').contains(Owner(session)), st::defaultCheckbox, st::defaultToggle));
++	if (ServerUrl().isEmpty()) {
++		SetServerUrl(base::options::lookup<QString>(kOptionServerUrl).defaultValue());
++	}
++	box->addRow(object_ptr<Ui::FlatLabel>(box,
++		Tr(u"Deleted messages and edit history are encrypted on this device before upload. Media files are not uploaded."_q), st::boxLabel));
++	box->addRow(object_ptr<Ui::FlatLabel>(box,
++		ServerUrlValue() | rpl::map([](const QString &url) {
++			return Tr(u"Server: %1"_q).arg(url);
++		}), st::boxLabel));
++	const auto steps = box->addRow(object_ptr<Ui::FlatLabel>(box, QString(), st::boxLabel));
++	const auto load = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Open connection file..."_q)));
+ 	const auto field = box->addRow(object_ptr<Ui::InputField>(box, st::defaultInputField,
+-		rpl::single(Tr(u"Connection or transfer code"_q))));
++		rpl::single(Tr(u"Or paste a connection or transfer code"_q))));
++	field->setInputMethodHints(Qt::ImhSensitiveData | Qt::ImhNoPredictiveText | Qt::ImhNoAutoUppercase);
+ 	box->addRow(object_ptr<Ui::FlatLabel>(box, sync->status.value(), st::boxLabel));
++	const auto transfer = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Save transfer file..."_q)));
++	const auto check = box->addRow(object_ptr<Ui::Checkbox>(box,
++		Tr(u"Enable for this account"_q), base::options::lookup<QString>(kOptionHistorySyncAccounts).value().split(',').contains(Owner(session)), st::defaultCheckbox, st::defaultToggle));
++	const auto rescan = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Download history again"_q)));
++	const auto refresh = [=] {
++		if (!sync) return;
++		const auto ready = sync->config.contains(u"key"_q) && !session->isTestMode();
++		check->setEnabled(ready);
++		transfer->setEnabled(ready);
++		rescan->setEnabled(ready);
++		steps->setText(ready
++			? Tr(u"2. Save the transfer file: it contains your decryption key. Use it on another PC with the same Telegram account.\n3. Turn on sync below. The toggle saves immediately."_q)
++			: Tr(u"1. Open connection.json to connect this PC. On another PC, open the transfer file saved by your first PC. The server address is filled in automatically."_q));
++	};
++	const auto connectCode = [=](const QString &text) {
++		if (!sync) return;
++		if (!sync->configure(text)) {
++			field->showError();
++			sync->status = Tr(u"Couldn't connect. Choose connection.json or a transfer file for this Telegram account."_q);
++			return;
++		}
++		check->setChecked(false);
++		field->setText(QString());
++		refresh();
++	};
++	load->setClickedCallback([=] {
++		FileDialog::GetOpenPath(box.get(), Tr(u"Open connection file"_q),
++			u"JSON (*.json);;"_q + FileDialog::AllFilesFilter(),
++			crl::guard(box, [=](FileDialog::OpenResult &&result) {
++				if (!sync) return;
++				auto bytes = result.remoteContent;
++				if (!result.paths.isEmpty()) {
++					auto file = QFile(result.paths.front());
++					if (!file.open(QIODevice::ReadOnly) || file.size() > 8192) {
++						sync->status = Tr(u"Couldn't read the connection file. Choose a JSON file smaller than 8 KB."_q);
++						return;
++					}
++					bytes = file.read(8193);
++				}
++				if (!bytes.isEmpty() && bytes.size() <= 8192) {
++					connectCode(QString::fromUtf8(bytes));
++				} else if (!result.paths.isEmpty() || !bytes.isEmpty()) {
++					sync->status = Tr(u"Couldn't read the connection file. Choose a JSON file smaller than 8 KB."_q);
++				}
++			}));
++	});
++	transfer->setClickedCallback([=] {
++		if (!sync || !sync->config.contains(u"key"_q)) return;
++		const auto data = sync->transfer().toUtf8();
++		FileDialog::GetWritePath(box.get(), Tr(u"Save transfer file"_q),
++			u"JSON (*.json)"_q, u"mad-transfer.json"_q,
++			crl::guard(box, [=](QString &&path) {
++				if (!sync || path.isEmpty()) return;
++				auto file = QSaveFile(path);
++				if (!file.open(QIODevice::WriteOnly)
++					|| !file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner)
++					|| file.write(data) != data.size() || !file.commit()) {
++					sync->status = Tr(u"Couldn't save the transfer file. Choose another location."_q);
++					return;
++				}
++				sync->status = Tr(u"Transfer file saved. Keep it private: it contains your decryption key. You can now enable sync."_q);
++			}));
++	});
+ 	check->checkedChanges() | rpl::on_next([=](bool enabled) {
+ 		if (!sync) return;
+ 		auto &option = base::options::lookup<QString>(kOptionHistorySyncAccounts);
+@@ -417,19 +495,10 @@ void HistorySyncBox(not_null<Ui::GenericBox*> box, not_null<Main::Session*> sess
+ 		option.set(accounts.join(','));
+ 		if (enabled && !accounts.contains(Owner(session))) { check->setChecked(false); field->showError(); }
+ 	}, box->lifetime());
+-	box->addButton(rpl::single(Tr(u"Save"_q)), [=] {
+-		if (!sync) return;
+-		if (!sync->configure(field->getLastText())) {
+-			field->showError();
+-			sync->status = Tr(u"Check the connection code, account and HTTPS server address"_q);
+-		}
+-		else { check->setChecked(false); field->setText(QString()); }
+-	});
+-	const auto transfer = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Show transfer code"_q)));
+-	transfer->setClickedCallback([=] { if (sync) field->setText(sync->transfer()); });
+-	const auto rescan = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Download history again"_q)));
++	box->addButton(rpl::single(Tr(u"Connect"_q)), [=] { connectCode(field->getLastText()); });
+ 	rescan->setClickedCallback([=] { if (sync) sync->rescan(); });
+ 	box->addButton(rpl::single(Tr(u"Close"_q)), [=] { box->closeBox(); });
++	refresh();
+ }
+ 
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+index cc388dae848f8d16d62a29b842f3066c2a9c1c7b..e4fea0473d497b6d51fc77da7198b8fa1da912fb 100644
+--- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
++++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+@@ -1062,6 +1062,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		.contexts = PeerContexts(),
+ 	};
+ 	result.items = {
++		{ .key = u"select_chat"_q, .phrases = {
++			P([](int) { return Tr(u"Select chat"_q); }, st::menuIconSelect),
++			P([](int) { return Tr(u"Deselect chat"_q); }, st::menuIconSelect),
++		}, .contexts = kUsers | kChats, .gate = kOptionSelectChats },
+ 		{ .key = u"new_window"_q, .phrases = {
+ 			P([](int) { return tr::lng_context_new_window(tr::now); },
+ 				st::menuIconNewWindow),
+@@ -1126,23 +1130,23 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		InspectorItem(),
+ 	};
+ 	result.upstream = u""
+-		"new_window,|,"
++		"select_chat,new_window,|,"
+ 		"ungroup,hide_promotion,archive,pin,info,mute,mark_read,"
+ 		"close_topic,add_to_folder,block,ban,remove_mine,clear_history,"
+ 		"delete_chat,leave,delete_topic,kept_delete_chat,kept_delete_topic,"
+ 		"view_as_tl,mtp_inspector"_q;
+ 	result.defaults = u""
+-		"new_window,|,"
++		"select_chat,new_window,|,"
+ 		"ungroup,hide_promotion,archive,pin,info,mute,mark_read,"
+ 		"close_topic,add_to_folder,block,ban,remove_mine,clear_history,"
+ 		"delete_chat,leave,kept_delete_chat,delete_topic,kept_delete_topic,|,"
+ 		"[Tools#tools:view_as_tl,mtp_inspector]"_q;
+ 	result.minimal = u""
+-		"pin,mute,mark_read,|,"
++		"select_chat,pin,mute,mark_read,|,"
+ 		"archive,delete_chat,leave,kept_delete_chat,delete_topic,"
+ 		"kept_delete_topic"_q;
+ 	result.power = u""
+-		"new_window,|,"
++		"select_chat,new_window,|,"
+ 		"pin,mark_read,mute,archive,add_to_folder,info,|,"
+ 		"ungroup,hide_promotion,close_topic,|,"
+ 		"block,ban,remove_mine,clear_history,delete_chat,leave,"
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 4b27e1e7a48dea8fd185cd216db1c38dc2df2611..6f623b820a54b10f1c71e67ff0a4cb4faa6d7962 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -1189,7 +1189,7 @@ base::options::option<QString> ServerUrlOption({
+ 	.name = "Additional server",
+ 	.description = "Source of checkmarks and custom verification, empty turns "
+ 		"it off.",
+-	.defaultValue = QString(),
++	.defaultValue = u"https://sync.mad.tg"_q,
+ });
+ 
+ base::options::toggle ServerUsernamesOption({
+@@ -1664,6 +1664,7 @@ base::options::toggle CompactFoldersOption({
+ base::options::toggle SelectChatsOption({
+ 	.id = kOptionSelectChats,
+ 	.name = "Select several chats",
++	.description = "Right-click a chat to start selecting; click more chats to add them, or Shift+click for a range.",
+ });
+ 
+ base::options::toggle FullChatPreviewOption({
+diff --git a/Telegram/SourceFiles/tele/tele_selection_shot.cpp b/Telegram/SourceFiles/tele/tele_selection_shot.cpp
+index 31ef662ff642eb8a9cf73443d70863bae5c1a340..101417cadfb22b2f3ab34697f2e6098e3e1a6e71 100644
+--- a/Telegram/SourceFiles/tele/tele_selection_shot.cpp
++++ b/Telegram/SourceFiles/tele/tele_selection_shot.cpp
+@@ -38,13 +38,23 @@ SelectionShot *Find(not_null<QWidget*> bar) {
+ void SetupSelectionShot(
+ 		not_null<HistoryView::TopBarWidget*> bar,
+ 		Fn<void()> callback) {
+-	new SelectionShot(bar, std::move(callback));
++	const auto button = new SelectionShot(bar, std::move(callback));
++	button->setWidthChangedCallback([=] { bar->updateControlsVisibility(); });
+ 	base::options::lookup<bool>(kOptionShot).changes(
+ 	) | rpl::on_next([=] {
+ 		bar->updateControlsVisibility();
+ 	}, bar->lifetime());
+ }
+ 
++void SetSelectionShotCount(not_null<QWidget*> bar, int count, bool animate) {
++	if (const auto button = Find(bar)) {
++		button->setNumbersText(count);
++		if (!animate) {
++			button->finishNumbersAnimation();
++		}
++	}
++}
++
+ int SelectionShotWidth(not_null<QWidget*> bar, bool shown) {
+ 	const auto button = Find(bar);
+ 	if (!button) {
+diff --git a/Telegram/SourceFiles/tele/tele_selection_shot.h b/Telegram/SourceFiles/tele/tele_selection_shot.h
+index cfb371c045dc0e0dcbb714232146b6c043ecc7c6..0455eb14090f192a688b6d402aa5761b611145fa 100644
+--- a/Telegram/SourceFiles/tele/tele_selection_shot.h
++++ b/Telegram/SourceFiles/tele/tele_selection_shot.h
+@@ -9,6 +9,7 @@ namespace Tele {
+ void SetupSelectionShot(
+ 	not_null<HistoryView::TopBarWidget*> bar,
+ 	Fn<void()> callback);
++void SetSelectionShotCount(not_null<QWidget*> bar, int count, bool animate);
+ int SelectionShotWidth(not_null<QWidget*> bar, bool shown);
+ int PositionSelectionShot(not_null<QWidget*> bar, int left, int top);
+ 
