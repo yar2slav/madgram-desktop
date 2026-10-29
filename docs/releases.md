@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 359 patches, newest release first.
+all 360 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -23,6 +23,7 @@ all 359 patches, newest release first.
 | [349](../patches/tdesktop/0349-fix-keep-localized-mad-welcome-in-chat-history.patch) | restores the localized welcome in chat history without repeat notifications, adds a rich feature summary and uses the mad logo and project links | local mad service chat |
 | [350](../patches/tdesktop/0350-feat-open-mad-settings-from-welcome-links-and-deep-l.patch) | links the welcome feature summary to settings, adds mad:// navigation with control highlighting and windows registration, and copies mad links from settings menus | welcome message; settings context menu |
 | [351](../patches/tdesktop/0351-feat-update-mad-from-its-own-signed-releases.patch) | updates mad from this repository's signed releases with its own key; the single-file launcher keeps an updated client instead of restoring the packed one | settings → mad → updates, on |
+| [352](../patches/tdesktop/0352-feat-remove-the-notification-centre.patch) | removes tele's notification centre: no main menu entry, no settings group and no stored notice history | always on |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 
 ### [tele 23](https://github.com/nitreojs/tele/releases/tag/v7.3.3-tele.23)
