@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 361 patches, newest release first.
+all 362 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -25,6 +25,7 @@ all 361 patches, newest release first.
 | [351](../patches/tdesktop/0351-feat-update-mad-from-its-own-signed-releases.patch) | updates mad from this repository's signed releases with its own key; the single-file launcher keeps an updated client instead of restoring the packed one | settings → mad → updates, on |
 | [352](../patches/tdesktop/0352-feat-remove-the-notification-centre.patch) | removes tele's notification centre: no main menu entry, no settings group and no stored notice history | always on |
 | [353](../patches/tdesktop/0353-feat-open-mad-links-from-message-text-and-switch-mod.patch) | mad:// links in any message become clickable, mad://ghost/on|off and mad://streamer/on|off switch the modes, and copied setting links use mad- ids | always on |
+| [354](../patches/tdesktop/0354-feat-guide-history-sync-setup-step-by-step.patch) | the history sync window explains where connection.json comes from and walks through the first pc and every next pc step by step | settings → mad → server |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 
 ### [tele 23](https://github.com/nitreojs/tele/releases/tag/v7.3.3-tele.23)
