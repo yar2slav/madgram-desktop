@@ -26,7 +26,7 @@ all 364 patches, newest release first.
 | [352](../patches/tdesktop/0352-feat-remove-the-notification-centre.patch) | removes tele's notification centre: no main menu entry, no settings group and no stored notice history | always on |
 | [353](../patches/tdesktop/0353-feat-open-mad-links-from-message-text-and-switch-mod.patch) | mad:// links in any message become clickable, mad://ghost/on|off and mad://streamer/on|off switch the modes, and copied setting links use mad- ids | always on |
 | [354](../patches/tdesktop/0354-feat-guide-history-sync-setup-step-by-step.patch) | the history sync window explains where connection.json comes from and walks through the first pc and every next pc step by step | settings → mad → server |
-| [355](../patches/tdesktop/0355-feat-smooth-typing.patch) | the text cursor in input fields glides to its new place while you type, delete, click or move it instead of jumping | settings → mad → interface, off |
+| [355](../patches/tdesktop/0355-feat-smooth-typing.patch) | the text cursor in input fields glides to its new place while you type, delete, click or move it instead of jumping, and new letters fade in | settings → mad → interface, off |
 | [356](../patches/tdesktop/0356-fix-clear-old-windows-notifications-behind-the-taskb.patch) | old mad notifications are cleared from the windows notification centre at launch and when nothing is unread, so the taskbar badge shows a real count | always on |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 

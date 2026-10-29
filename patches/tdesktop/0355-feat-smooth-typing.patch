@@ -11,9 +11,9 @@ Subject: [PATCH] feat: smooth typing
  Telegram/SourceFiles/tele/tele_options.cpp    |   17 +
  Telegram/SourceFiles/tele/tele_options.h      | 1332 +--
  .../SourceFiles/tele/tele_settings_io.cpp     | 2409 +++---
- .../SourceFiles/tele/tele_smooth_typing.cpp   |  204 +
+ .../SourceFiles/tele/tele_smooth_typing.cpp   |  272 +
  .../SourceFiles/tele/tele_smooth_typing.h     |    7 +
- 9 files changed, 7894 insertions(+), 7653 deletions(-)
+ 9 files changed, 7962 insertions(+), 7653 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_smooth_typing.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_smooth_typing.h
 
@@ -15420,20 +15420,23 @@ index cf66733a6e9a3846f5812a876326e7430a55204c..066ea999e7b1fc86adccd6c8cfb3989a
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/tele/tele_smooth_typing.cpp b/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f72d5db530
+index 0000000000000000000000000000000000000000..01a30f3920c00000e0c2fa59dcd25b64c60fc178
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
-@@ -0,0 +1,204 @@
+@@ -0,0 +1,272 @@
 +#include "tele/tele_smooth_typing.h"
 +
 +#include "base/timer.h"
 +#include "tele/tele_options.h"
 +#include "ui/effects/animations.h"
 +#include "ui/widgets/fields/input_field.h"
++#include "styles/style_widgets.h"
 +
 +#include <QtCore/QPointer>
 +#include <QtGui/QAbstractTextDocumentLayout>
 +#include <QtGui/QPainter>
++#include <QtGui/QTextCursor>
++#include <QtGui/QTextDocument>
 +#include <QtWidgets/QApplication>
 +#include <QtWidgets/QScrollBar>
 +#include <QtWidgets/QTextEdit>
@@ -15441,7 +15444,9 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +namespace Tele {
 +namespace {
 +
-+constexpr auto kGlideDuration = crl::time(70);
++constexpr auto kGlideDuration = crl::time(110);
++constexpr auto kFadeDuration = crl::time(160);
++constexpr auto kMaxFadedCharacters = 2;
 +constexpr auto kAttachedProperty = "mad_smooth_caret";
 +
 +class SmoothCaret final : public QWidget {
@@ -15450,7 +15455,11 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +	: QWidget(edit->viewport())
 +	, _edit(edit.get())
 +	, _width(std::max(edit->cursorWidth(), 1))
-+	, _blink([=] { toggleBlink(); }) {
++	, _blink([=] { toggleBlink(); })
++	, _fading([=](crl::time now) { return fadeStep(now); }) {
++		if (const auto field = dynamic_cast<Ui::InputField*>(edit->parentWidget())) {
++			_background = field->st().textBg->c;
++		}
 +		setAttribute(Qt::WA_TransparentForMouseEvents);
 +		setAttribute(Qt::WA_NoSystemBackground);
 +		setAttribute(Qt::WA_TranslucentBackground);
@@ -15463,6 +15472,12 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +		});
 +		connect(edit, &QTextEdit::textChanged, this, [=] {
 +			QMetaObject::invokeMethod(this, [=] { move(true); }, Qt::QueuedConnection);
++		});
++		connect(edit->document(), &QTextDocument::contentsChange, this, [=](int position, int removed, int added) {
++			if (removed || added < 1 || added > kMaxFadedCharacters || !edit->hasFocus()) {
++				return;
++			}
++			QMetaObject::invokeMethod(this, [=] { fadeIn(position, added); }, Qt::QueuedConnection);
 +		});
 +		connect(edit->verticalScrollBar(), &QScrollBar::valueChanged, this, [=] {
 +			move(false);
@@ -15503,10 +15518,20 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +
 +	void paintEvent(QPaintEvent *e) override {
 +		const auto edit = _edit.data();
-+		if (!edit || !edit->hasFocus() || edit->isReadOnly() || !_shown) {
++		if (!edit) {
 +			return;
 +		}
 +		auto p = QPainter(this);
++		const auto now = crl::now();
++		for (const auto &fade : _fades) {
++			const auto progress = std::clamp((now - fade.start) / float64(kFadeDuration), 0., 1.);
++			auto color = _background;
++			color.setAlphaF(1. - anim::easeOutCubic(1., progress));
++			p.fillRect(fade.rect, color);
++		}
++		if (!edit->hasFocus() || edit->isReadOnly() || !_shown) {
++			return;
++		}
 +		p.fillRect(current(), edit->palette().color(QPalette::Text));
 +	}
 +
@@ -15529,7 +15554,10 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +			return;
 +		}
 +		const auto target = QRectF(edit->cursorRect());
-+		if (animated && _placed && target != _to) {
++		if (_placed && target == _to) {
++			restartBlink();
++			return;
++		} else if (animated && _placed) {
 +			_from = current();
 +			_to = target;
 +			_glide.stop();
@@ -15558,6 +15586,39 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +		update();
 +	}
 +
++	void fadeIn(int position, int added) {
++		const auto edit = _edit.data();
++		if (!edit || _background.alpha() < 255) {
++			return;
++		}
++		auto cursor = QTextCursor(edit->document());
++		cursor.setPosition(position);
++		const auto from = edit->cursorRect(cursor);
++		cursor.setPosition(position + added);
++		const auto till = edit->cursorRect(cursor);
++		if (from.top() != till.top() || till.x() <= from.x()) {
++			return;
++		}
++		_fades.push_back({
++			.rect = QRectF(from.x(), from.y(), till.x() - from.x(), from.height()),
++			.start = crl::now(),
++		});
++		if (!_fading.animating()) {
++			_fading.start();
++		}
++		update();
++	}
++
++	bool fadeStep(crl::time now) {
++		_fades.erase(
++			ranges::remove_if(_fades, [&](const Fade &fade) {
++				return now - fade.start >= kFadeDuration;
++			}),
++			end(_fades));
++		update();
++		return !_fades.empty();
++	}
++
 +	QPointer<QTextEdit> _edit;
 +	int _width = 1;
 +	QRectF _from;
@@ -15566,6 +15627,13 @@ index 0000000000000000000000000000000000000000..aaa6e929995aba017496931e268e97f7
 +	bool _shown = true;
 +	Ui::Animations::Simple _glide;
 +	base::Timer _blink;
++	struct Fade {
++		QRectF rect;
++		crl::time start = 0;
++	};
++	std::vector<Fade> _fades;
++	QColor _background;
++	Ui::Animations::Basic _fading;
 +
 +};
 +
