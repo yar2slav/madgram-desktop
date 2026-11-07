@@ -6,7 +6,7 @@
 
 сначала спасибо [nitreojs](https://github.com/nitreojs) за [tele](https://github.com/nitreojs/tele). почти всё, что умеет mad, сделано там: гостмод, сохранённые удалённые сообщения, скрипты, mtproto-консоль, shots, локальные папки и ещё три с лишним сотни патчей. mad это форк tele с нашими патчами поверх
 
-сам tele это очередь патчей поверх каждого стабильного релиза [telegram desktop](https://github.com/telegramdesktop/tdesktop). mad устроен так же: `UPSTREAM` фиксирует тег tdesktop (сейчас `v7.3.3`), `patches/` хранит всю очередь, сборки делает github actions в этом репозитории
+сам tele это очередь патчей поверх каждого стабильного релиза [telegram desktop](https://github.com/telegramdesktop/tdesktop). mad устроен так же: `UPSTREAM` фиксирует тег tdesktop (сейчас `v7.4.1`), `patches/` хранит всю очередь, сборки делает github actions в этом репозитории
 
 ### скачать
 
