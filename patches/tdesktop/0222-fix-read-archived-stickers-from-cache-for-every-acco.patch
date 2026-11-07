@@ -44,10 +44,10 @@ index 1a4b83020f20e1479fd0dc6b9817ebe117e4c629..643874218b3332a1453e710184f6a5ef
  }
  
 diff --git a/Telegram/SourceFiles/storage/storage_account.h b/Telegram/SourceFiles/storage/storage_account.h
-index b372bca4b78068e4293724b8a624ddd0a25a0284..31cad9e977811e07925658952538b2c7a874bc2b 100644
+index b9f388e4a5398e8a008e2bc22098da27f82c8d9d..c67727380e042082701553e7f9ceca1ac9217a29 100644
 --- a/Telegram/SourceFiles/storage/storage_account.h
 +++ b/Telegram/SourceFiles/storage/storage_account.h
-@@ -399,6 +399,8 @@ private:
+@@ -402,6 +402,8 @@ private:
  	bool _searchSuggestionsRead = false;
  	bool _inlineBotsDownloadsRead = false;
  	bool _mediaLastPlaybackPositionsRead = false;

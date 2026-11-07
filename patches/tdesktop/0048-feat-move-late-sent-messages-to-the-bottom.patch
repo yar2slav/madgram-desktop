@@ -17,10 +17,10 @@ Subject: [PATCH] feat: move late-sent messages to the bottom
  create mode 100644 Telegram/SourceFiles/tele/tele_send_order.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 56ef4bfc3e6de12c1ee9e8703f6bd133f759d662..90e49f9ec9c90eda081028bfa6f269131544d1e7 100644
+index f82b287240f1eb06adba382019c0754022fe4578..3fc55156489efd1af4d049aad6ed973bb35151c9 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2529,6 +2529,8 @@ PRIVATE
+@@ -2685,6 +2685,8 @@ PRIVATE
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
      tele/tele_secret_media.h
@@ -30,10 +30,10 @@ index 56ef4bfc3e6de12c1ee9e8703f6bd133f759d662..90e49f9ec9c90eda081028bfa6f26913
      tele/tele_shortcuts.h
      tele/tele_time.cpp
 diff --git a/Telegram/SourceFiles/api/api_updates.cpp b/Telegram/SourceFiles/api/api_updates.cpp
-index b8a861a363229224761525e0f0c398fb35ba5015..5a379e8abcb3215b10876496d745fc8107c85847 100644
+index a89007b00edde014399fa9b99226775f311e9850..793065a25756940bdd01c4dd3c27119bfbbdf0f2 100644
 --- a/Telegram/SourceFiles/api/api_updates.cpp
 +++ b/Telegram/SourceFiles/api/api_updates.cpp
-@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -79,6 +79,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "ui/text/format_values.h" // Ui::FormatPhone
  #include "tele/tele_ghost.h"
@@ -41,7 +41,7 @@ index b8a861a363229224761525e0f0c398fb35ba5015..5a379e8abcb3215b10876496d745fc81
  
  namespace Api {
  namespace {
-@@ -1721,6 +1722,7 @@ void Updates::feedUpdate(const MTPUpdate &update) {
+@@ -1738,6 +1739,7 @@ void Updates::feedUpdate(const MTPUpdate &update) {
  								local->date());
  						}
  						local->setRealId(newId);

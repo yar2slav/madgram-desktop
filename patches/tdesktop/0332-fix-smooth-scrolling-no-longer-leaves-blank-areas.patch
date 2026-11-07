@@ -1,0 +1,175 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Sun, 25 Oct 2026 04:06:49 +0300
+Subject: [PATCH] fix: smooth scrolling no longer leaves blank areas
+
+---
+ .../dialogs/dialogs_inner_widget.cpp          |  1 -
+ .../history/history_inner_widget.cpp          |  2 -
+ .../SourceFiles/tele/tele_smooth_scroll.cpp   | 79 -------------------
+ .../SourceFiles/tele/tele_smooth_scroll.h     |  4 -
+ 4 files changed, 86 deletions(-)
+
+diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
+index d1bd63a886cacf15ece22623ffac7f1595dbf9da..afd69a5288fc2723752aeae6fdf15915e36ad3c3 100644
+--- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
++++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
+@@ -385,7 +385,6 @@ InnerWidget::InnerWidget(
+ 		invalidateLoadedUserpics();
+ 		update();
+ 	});
+-	::Tele::PauseDuringOtherGlides(this);
+ 
+ 	Core::App().notifications().settingsChanged(
+ 	) | rpl::on_next([=](Window::Notifications::ChangeType change) {
+diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
+index cfdabb5ca44d3ab30c44a2797e45440c77e5f23b..9fc551881434ac2743092581de4d9c4c20694c51 100644
+--- a/Telegram/SourceFiles/history/history_inner_widget.cpp
++++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
+@@ -150,7 +150,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_secret_media.h"
+ #include "tele/tele_select_many.h"
+ #include "tele/tele_shot.h"
+-#include "tele/tele_smooth_scroll.h"
+ #include "tele/tele_message_menu.h"
+ #include "tele/tele_options.h"
+ #include "tele/tele_protected.h"
+@@ -456,7 +455,6 @@ HistoryInner::HistoryInner(
+ 	) | rpl::on_next([=] {
+ 		_teleScrollLayer->invalidate();
+ 	}, lifetime());
+-	Tele::PauseDuringOtherGlides(this);
+ 	_history->delegateMixin()->setCurrent(this);
+ 	if (_migrated) {
+ 		_migrated->delegateMixin()->setCurrent(this);
+diff --git a/Telegram/SourceFiles/tele/tele_smooth_scroll.cpp b/Telegram/SourceFiles/tele/tele_smooth_scroll.cpp
+index 62a3e2b9f1dc09dd361afbdeafbdb0fddfeff194..5b83f6197d3a4a137a68636201ee06ef87e106ea 100644
+--- a/Telegram/SourceFiles/tele/tele_smooth_scroll.cpp
++++ b/Telegram/SourceFiles/tele/tele_smooth_scroll.cpp
+@@ -16,57 +16,8 @@ namespace {
+ constexpr auto kDownloadsRepaintDelay = crl::time(100);
+ constexpr auto kHeldRepaintTimeout = crl::time(32);
+ 
+-[[nodiscard]] std::vector<QPointer<QWidget>> &Gliding();
+-
+-[[nodiscard]] std::vector<QPointer<QWidget>> &Pausable() {
+-	static auto result = std::vector<QPointer<QWidget>>();
+-	return result;
+-}
+-
+-[[nodiscard]] std::vector<QPointer<QWidget>> &Paused() {
+-	static auto result = std::vector<QPointer<QWidget>>();
+-	return result;
+-}
+-
+-[[nodiscard]] bool InsideGlide(not_null<QWidget*> widget) {
+-	return ranges::any_of(Gliding(), [&](const QPointer<QWidget> &scroll) {
+-		return scroll && scroll->isAncestorOf(widget);
+-	});
+-}
+-
+-[[nodiscard]] bool OverlapsGlide(
+-		not_null<QWidget*> widget,
+-		not_null<QWidget*> scroll) {
+-	auto branch = scroll.get();
+-	while (const auto parent = branch->parentWidget()) {
+-		if (parent->isAncestorOf(widget)) {
+-			auto other = widget.get();
+-			while (other->parentWidget() != parent) {
+-				other = other->parentWidget();
+-			}
+-			return branch->geometry().intersects(other->geometry());
+-		}
+-		branch = parent;
+-	}
+-	return false;
+-}
+-
+-void Resume(not_null<QWidget*> widget) {
+-	auto &paused = Paused();
+-	const auto i = ranges::find_if(paused, [&](const QPointer<QWidget> &e) {
+-		return (e.data() == widget.get());
+-	});
+-	if (i != end(paused)) {
+-		paused.erase(i);
+-		widget->setUpdatesEnabled(true);
+-	}
+-}
+-
+ // While a glide runs, window repaints wait for its next step, so the
+ // window paints once per step instead of whenever something changes.
+-// Widgets that asked for it and don't overlap the glide stop repainting
+-// meanwhile: a paused widget under a box or over the gliding area would
+-// leave a hole whenever the glide repaints across it.
+ class FrameBatcher final : public QObject {
+ public:
+ 	FrameBatcher(not_null<QWidget*> scroll, not_null<QWidget*> window)
+@@ -78,30 +29,9 @@ public:
+ 		release();
+ 	}) {
+ 		window->installEventFilter(this);
+-		for (const auto &weak : Pausable()) {
+-			const auto widget = weak.data();
+-			if (!widget
+-				|| widget->window() != window.get()
+-				|| widget->isAncestorOf(scroll)) {
+-				continue;
+-			} else if (scroll->isAncestorOf(widget)) {
+-				Resume(widget);
+-			} else if (widget->updatesEnabled()
+-				&& !InsideGlide(widget)
+-				&& !OverlapsGlide(widget, scroll)) {
+-				widget->setUpdatesEnabled(false);
+-				Paused().push_back(widget);
+-				_paused.push_back(widget);
+-			}
+-		}
+ 	}
+ 	~FrameBatcher() {
+ 		release();
+-		for (const auto &widget : _paused) {
+-			if (widget) {
+-				Resume(widget.data());
+-			}
+-		}
+ 	}
+ 
+ 	[[nodiscard]] QWidget *scroll() const {
+@@ -141,7 +71,6 @@ private:
+ 
+ 	const QPointer<QWidget> _scroll;
+ 	const QPointer<QWidget> _window;
+-	std::vector<QPointer<QWidget>> _paused;
+ 	base::Timer _timeout;
+ 	bool _stepped = false;
+ 	bool _held = false;
+@@ -227,14 +156,6 @@ bool SmoothGlideActive() {
+ 	return !Gliding().empty();
+ }
+ 
+-void PauseDuringOtherGlides(not_null<QWidget*> widget) {
+-	auto &list = Pausable();
+-	list.erase(ranges::remove_if(list, [](const QPointer<QWidget> &entry) {
+-		return !entry;
+-	}), end(list));
+-	list.push_back(widget.get());
+-}
+-
+ void RepaintAfterDownloads(
+ 		not_null<Ui::RpWidget*> widget,
+ 		rpl::producer<> downloads,
+diff --git a/Telegram/SourceFiles/tele/tele_smooth_scroll.h b/Telegram/SourceFiles/tele/tele_smooth_scroll.h
+index 429ee4665129bf10e470e1838b4974a2be6ed2ef..4940ac9956179bbb3e1c88b0433db05b74b73280 100644
+--- a/Telegram/SourceFiles/tele/tele_smooth_scroll.h
++++ b/Telegram/SourceFiles/tele/tele_smooth_scroll.h
+@@ -9,10 +9,6 @@ namespace Tele {
+ void StartSmoothScroll();
+ [[nodiscard]] bool SmoothGlideActive();
+ 
+-// The widget doesn't repaint while a glide runs that neither contains nor
+-// overlaps it.
+-void PauseDuringOtherGlides(not_null<QWidget*> widget);
+-
+ void RepaintAfterDownloads(
+ 	not_null<Ui::RpWidget*> widget,
+ 	rpl::producer<> downloads,

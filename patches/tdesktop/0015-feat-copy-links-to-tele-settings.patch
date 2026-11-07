@@ -9,7 +9,7 @@ Subject: [PATCH] feat: copy links to tele settings
  2 files changed, 77 insertions(+), 12 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/deep_links/deep_links_settings.cpp b/Telegram/SourceFiles/core/deep_links/deep_links_settings.cpp
-index ba9096429eac05093e8dbe139a738caaf9929081..7b2258b705dcc7959e6f1e056298db059c6f10c3 100644
+index 6750b8405e629f3a3b153c60ef0906d5dc193a9c..984cdca411717e811df71c91d36f9efa4006f4f1 100644
 --- a/Telegram/SourceFiles/core/deep_links/deep_links_settings.cpp
 +++ b/Telegram/SourceFiles/core/deep_links/deep_links_settings.cpp
 @@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

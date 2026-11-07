@@ -21,10 +21,10 @@ Subject: [PATCH] feat: set or remove chat backgrounds only for you
  create mode 100644 Telegram/SourceFiles/tele/tele_chat_backgrounds.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index cfa44461d570eda3a3fa17021cd7319dcd7bed0a..3d71d11ee40eb5b828f605b0f661dd34cf948a93 100644
+index f1082f02dfe73ab63c420e1f5b86716513839f60..5a50a4bc4c3d5bf7557c8acbf0b03256b25c9f6a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2503,6 +2503,8 @@ PRIVATE
+@@ -2659,6 +2659,8 @@ PRIVATE
      tele/tele_calls.h
      tele/tele_changelog.cpp
      tele/tele_changelog.h
@@ -969,10 +969,10 @@ index 56be81723c6c6d849488f2bbc6b98716bcf5db7d..33f64472daac36649ac304d2bb8011a7
  
  } // namespace Tele
 diff --git a/Telegram/SourceFiles/window/section_widget.cpp b/Telegram/SourceFiles/window/section_widget.cpp
-index 1c11463f2104cfffed4938c7bec6af73cad633cf..fd6e51304ca06455dc7281a125b743b457c5beda 100644
+index 2ab6d4994d102f319ffb81553ab48f579e843105..3772c703183b1fdcd0ac05019c4a2ea7b388fa50 100644
 --- a/Telegram/SourceFiles/window/section_widget.cpp
 +++ b/Telegram/SourceFiles/window/section_widget.cpp
-@@ -28,6 +28,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -29,6 +29,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "main/main_session.h"
  #include "menu/menu_send.h"
  #include "settings/sections/settings_premium.h"
@@ -980,7 +980,7 @@ index 1c11463f2104cfffed4938c7bec6af73cad633cf..fd6e51304ca06455dc7281a125b743b4
  #include "ui/text/text_custom_emoji.h"
  #include "ui/toast/toast.h"
  #include "window/section_memento.h"
-@@ -576,7 +577,7 @@ auto ChatThemeValueFromPeer(
+@@ -604,7 +605,7 @@ auto ChatThemeValueFromPeer(
  	) | rpl::distinct_until_changed();
  
  	return rpl::combine(
@@ -990,7 +990,7 @@ index 1c11463f2104cfffed4938c7bec6af73cad633cf..fd6e51304ca06455dc7281a125b743b4
  	) | rpl::map([=](
  			std::shared_ptr<Ui::ChatTheme> &&cloud,
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index ff774564863dcaa91caf5e1ac4bf781986531e5c..9650aa53d87e352222f0b9dfde3db7c1c56d7d80 100644
+index c197dd5aebf84e622470c673dec06881b377a195..295d4105fea26f8729bd8185940e7b65e3c86836 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

@@ -21,10 +21,10 @@ Subject: [PATCH] feat: peek at a hidden last seen
  create mode 100644 Telegram/SourceFiles/tele/tele_peek.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 2f4d2bb93bbf1ce17059b602946a600aaa59fd46..4fbdf065e67a5a6b76eb0127451acc69dce7aa0f 100644
+index 8218e1ba59a6cab32af4a734058e1b9a3c69eb22..a0b9fbfe1c16f74cbc50f6b58006c39678a26f51 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2758,6 +2758,8 @@ PRIVATE
+@@ -2914,6 +2914,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_past_limit.cpp
      tele/tele_past_limit.h
@@ -34,7 +34,7 @@ index 2f4d2bb93bbf1ce17059b602946a600aaa59fd46..4fbdf065e67a5a6b76eb0127451acc69
      tele/tele_peer_id.h
      tele/tele_phones.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 10911f2ad01de11ea7ffd9f51ad7e2144f83877a..abfbb134deb0949c82770953339f8402d3b28952 100644
+index 9d62a8b9351130aeaa31828c4de7bebbebead6b8..d91c78baf326a08733bf111fefcb02c9f85b1afc 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 @@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -45,7 +45,7 @@ index 10911f2ad01de11ea7ffd9f51ad7e2144f83877a..abfbb134deb0949c82770953339f8402
  #include "tele/tele_phones.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -925,6 +926,7 @@ void TopBarWidget::setActiveChat(
+@@ -926,6 +927,7 @@ void TopBarWidget::setActiveChat(
  		_titleNameVersion = 0;
  		_emojiInteractionSeen = nullptr;
  		_activeChatLifetime.destroy();
@@ -53,7 +53,7 @@ index 10911f2ad01de11ea7ffd9f51ad7e2144f83877a..abfbb134deb0949c82770953339f8402
  		if (const auto peer = _activeChat.key.peer()) {
  			session().changes().peerFlagsValue(
  				peer,
-@@ -1948,7 +1950,10 @@ void TopBarWidget::updateOnlineDisplay() {
+@@ -1959,7 +1961,10 @@ void TopBarWidget::updateOnlineDisplay() {
  			text = QString::fromUtf8("\xe2\x9a\xa0\xef\xb8\x8f check info");
  			titlePeerTextOnline = false;
  		} else {
@@ -66,10 +66,10 @@ index 10911f2ad01de11ea7ffd9f51ad7e2144f83877a..abfbb134deb0949c82770953339f8402
  		}
  	} else if (const auto chat = peer->asChat()) {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index a016fa2e76ef071e88fcd7e5362a6c7cbb63d352..f3e2eeb8492b82bca8257d7a738c54a5cfc04b0d 100644
+index 82fd07ac03d0356e2582c68007ae0b1075cbfdee..985854c199e57d0b700fae7a0e0a80b11a209844 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -82,6 +82,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -83,6 +83,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_lowercase.h"
  #include "tele/tele_name_badges.h"
  #include "tele/tele_options.h"
@@ -77,7 +77,7 @@ index a016fa2e76ef071e88fcd7e5362a6c7cbb63d352..f3e2eeb8492b82bca8257d7a738c54a5
  #include "tele/tele_peer_id.h"
  #include "tele/tele_phones.h"
  #include "tele/tele_username_aliases.h"
-@@ -1643,6 +1644,11 @@ Section DetailsFiller::makeInfo() {
+@@ -1644,6 +1645,11 @@ Section DetailsFiller::makeInfo() {
  				user->session().supportHelper().infoTextValue(user));
  		}
  
@@ -90,10 +90,10 @@ index a016fa2e76ef071e88fcd7e5362a6c7cbb63d352..f3e2eeb8492b82bca8257d7a738c54a5
  			tr::lng_info_mobile_label(),
  			Tele::ProfilePhoneValue(
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 4bb1fd4c4b9fc943283db1b6d3e783adc5b74370..7e25cafa2d898c9f93f8896d58935ab001a0038f 100644
+index c953ea177749ffe909147cf9bc05f57ff334f278..ca2c24f49b133d71caf63638d9a9f54f8006a1af 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -72,6 +72,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -73,6 +73,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_notices.h"
  #include "tele/tele_online_notify.h"
  #include "tele/tele_past_limit.h"
@@ -101,7 +101,7 @@ index 4bb1fd4c4b9fc943283db1b6d3e783adc5b74370..7e25cafa2d898c9f93f8896d58935ab0
  #include "tele/tele_protected.h"
  #include "tele/tele_punctual_scheduled.h"
  #include "tele/tele_send_order.h"
-@@ -297,6 +298,7 @@ Session::Session(
+@@ -299,6 +300,7 @@ Session::Session(
  	Tele::SetupBookmarks(this);
  	Tele::SetupNoAi(this);
  	Tele::SetupOnlineNotify(this);
@@ -125,7 +125,7 @@ index 7c42de02d3158129f9cb4bde0379c2f7ddcbe01f..75bf4f77862b904a72d4c291e15d36ab
  	AddLocalNames(builder);
  	AddOptionToggle(
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2aedb7dc49 100644
+index 4b4094b2c981108a643085126d8692c481bcccb1..0f8f5b3eb4a4f8628529000471b2dee3ebe214b8 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 @@ -236,6 +236,17 @@ constexpr auto kFieldText = uint32(1 << 0);
@@ -146,7 +146,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  [[nodiscard]] MenuItemInfo ViewTlItem(uint32 contexts = 0) {
  	return {
  		.key = u"view_as_tl"_q,
-@@ -834,6 +845,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -832,6 +843,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  				st::menuIconMute),
  		}, .contexts = kUsers | kChats, .gate = kOptionSilentPerChat },
  		OnlineNotifyItem(),
@@ -154,7 +154,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		{ .key = u"create_topic"_q, .phrases = {
  			P([](int) { return tr::lng_forum_create_topic(tr::now); },
  				st::menuIconDiscussion),
-@@ -933,7 +945,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -931,7 +943,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		InspectorItem(),
  	};
  	result.defaults = u""
@@ -163,7 +163,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		"info,create_topic,view_as_topics,jump_first,bookmarks,deleted,"
  		"pinned_bar,discussion,direct_messages,translate,|,"
  		"[For me#forme:alias,local_name,hidden_words,background,"
-@@ -944,7 +956,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -942,7 +954,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"[Tools#tools:view_as_tl,mtp_inspector]"_q;
  	result.upstream = u""
  		"mute,|,"
@@ -173,7 +173,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		"pinned_bar,manage_topic,alias,local_name,hidden_words,"
  		"view_as_topics,manage,story_archive,support_info,boost,"
  		"create_poll,create_todo,theme,background,download_folder,"
-@@ -956,7 +969,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -954,7 +967,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"info,manage,manage_topic,|,"
  		"clear_history,delete_chat,leave,delete_topic"_q;
  	result.power = u""
@@ -182,7 +182,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		"info,create_topic,view_as_topics,jump_first,bookmarks,deleted,"
  		"pinned_bar,discussion,direct_messages,translate,|,"
  		"alias,local_name,hidden_words,background,download_folder,|,"
-@@ -1145,6 +1158,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1143,6 +1156,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		BackgroundItem(),
  		DownloadFolderItem(),
  		OnlineNotifyItem(),
@@ -190,7 +190,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		PinnedBarItem(),
  		{ .key = u"bot_to_group"_q, .phrases = {
  			P([](int) { return tr::lng_profile_invite_to_group(tr::now); },
-@@ -1235,7 +1249,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1233,7 +1247,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"ttl,|,"
  		"add_contact,share_contact,edit_contact,send_gift,bot_to_group,"
  		"add_members,|,"
@@ -200,7 +200,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		"hidden_words,background,download_folder],|,"
  		"manage,statistics,boosts,earn,story_archive,personal_channel,"
  		"add_to_folder,export,no_forwards,discussion,direct_messages,"
-@@ -1246,7 +1261,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1244,7 +1259,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"ttl,|,"
  		"support_info,add_contact,share_contact,edit_contact,alias,"
  		"local_name,hidden_words,background,download_folder,"
@@ -210,7 +210,7 @@ index b83573462589314c6881cbca4cf5c58b422632dc..762f5b47ad54d5feedda4fa4f8437c2a
  		"statistics,boosts,earn,story_archive,manage,personal_channel,"
  		"topic_link,manage_topic,close_topic,discussion,direct_messages,"
  		"export,no_forwards,add_to_folder,block,ban,report,leave,"
-@@ -1259,7 +1275,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1257,7 +1273,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"ttl,|,"
  		"add_contact,share_contact,edit_contact,send_gift,bot_to_group,"
  		"add_members,|,"
@@ -1035,7 +1035,7 @@ index 69bc34c55482381ff2db6e263d5645df0b945917..22848ab6f11877ab1fcbbebfedda1e22
  		Toggle(kOptionNoticesLimits),
  		Toggle(kOptionNoticesLogLimits),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index ce9359be77520bdb157ee9a86574d9d76f8f84fc..b6efa3b31a394db29800e31acbbdd575def4fe79 100644
+index b4f5e03cf96b2ebb883af48f9a5a2311cba6738e..145e9b44e78d5c53c3bec6fb821451dd1f0bbecb 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -141,6 +141,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

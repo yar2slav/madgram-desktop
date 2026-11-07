@@ -17,10 +17,10 @@ Subject: [PATCH] feat: show the message id in the message menu
  create mode 100644 Telegram/SourceFiles/tele/tele_message_menu.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 83e7f2a6cc3a56a6ae2a191f93709233cb9ad8d4..4604685e1dd1ba83d31b85b81f278f3c9dde4fa3 100644
+index 31891320a920c6b0d8cd43df6c9456be569c1351..643070c786044cf2c106784d8e8cd805e5a94460 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2505,6 +2505,8 @@ PRIVATE
+@@ -2661,6 +2661,8 @@ PRIVATE
      tele/tele_ignored.h
      tele/tele_lowercase.cpp
      tele/tele_lowercase.h
@@ -30,10 +30,10 @@ index 83e7f2a6cc3a56a6ae2a191f93709233cb9ad8d4..4604685e1dd1ba83d31b85b81f278f3c
      tele/tele_options.h
      tele/tele_peer_id.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 51c171cce720f3e05ddbe6e97be1d2a880e2d012..e33eed74d57a8582bdde465d3af071c3e3cb6854 100644
+index c617dc33ef1c591831e8a0213d8b9e1b1866aa10..62593b99c837da400f9ecf894760d334d8936783 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -139,6 +139,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_edit_history.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_secret_media.h"
@@ -41,7 +41,7 @@ index 51c171cce720f3e05ddbe6e97be1d2a880e2d012..e33eed74d57a8582bdde465d3af071c3
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
  
-@@ -3905,6 +3906,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3960,6 +3961,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  				poll);
  		}
  	}
@@ -53,10 +53,10 @@ index 51c171cce720f3e05ddbe6e97be1d2a880e2d012..e33eed74d57a8582bdde465d3af071c3
  	if (_menu->empty()) {
  		_menu = nullptr;
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index ba5d28517e875be0f48fc35f6ee233567f45381a..161f75475297bc03d18d3b9d11bbe3a8c599bdcf 100644
+index 3bc0d39b00386bb7ed6f0fbce37713eaa3db3bfa..f20c629154ff6183cddaf36e505aeee2c3d80b14 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -119,6 +119,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_deleted.h"
  #include "tele/tele_edit_history.h"
  #include "tele/tele_secret_media.h"
@@ -64,7 +64,7 @@ index ba5d28517e875be0f48fc35f6ee233567f45381a..161f75475297bc03d18d3b9d11bbe3a8
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_layers.h"
-@@ -1989,6 +1990,10 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
+@@ -2002,6 +2003,10 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
  			InsertPollVoteRestrictionsLabel(result.get(), item, poll);
  		}
  	}

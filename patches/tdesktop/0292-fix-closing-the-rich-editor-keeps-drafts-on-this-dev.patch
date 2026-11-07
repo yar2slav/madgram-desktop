@@ -11,7 +11,7 @@ Subject: [PATCH] fix: closing the rich editor keeps drafts on this device
  4 files changed, 19 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 3b9953a9a8f757373b8cac5eebbbf1bfdd7a825a..a9476da88464773812eea6e8f681beb9accbb1a6 100644
+index 428a1f458918989925e2934dfc8ad9ad454df44b..50a5ca490ccf6032543f64c911199a9f96e5cabb 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -22,7 +22,7 @@ index 3b9953a9a8f757373b8cac5eebbbf1bfdd7a825a..a9476da88464773812eea6e8f681beb9
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_options.h"
-@@ -2414,9 +2415,7 @@ mtpRequestId ApiWrap::savePreparedDraftToCloud(
+@@ -2439,9 +2440,7 @@ mtpRequestId ApiWrap::savePreparedDraftToCloud(
  		bool clearOnFail,
  		Fn<void()> done,
  		Fn<void(const MTP::Error &)> fail) {
@@ -34,7 +34,7 @@ index 3b9953a9a8f757373b8cac5eebbbf1bfdd7a825a..a9476da88464773812eea6e8f681beb9
  	}
  	const auto weak = base::make_weak(thread);
 diff --git a/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp b/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp
-index 9d973dd5f1c31a098f9a6f5c4eddf907135c4c74..b1a427899222b09995efede028786df0c1264419 100644
+index 4f0c5485fe35e1b9572b77f925fe2449ed08bbf6..a837eaa6b37ae19bdeaa335e2f00e3714eb9fd8d 100644
 --- a/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp
 +++ b/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp
 @@ -71,6 +71,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -45,7 +45,7 @@ index 9d973dd5f1c31a098f9a6f5c4eddf907135c4c74..b1a427899222b09995efede028786df0
  #include "tele/tele_options.h"
  #include "ui/boxes/confirm_box.h"
  #include "ui/chat/attach/attach_prepare.h"
-@@ -4515,6 +4516,9 @@ void ArticleSession::saveRichDraftNow() {
+@@ -4512,6 +4513,9 @@ void ArticleSession::saveRichDraftNow() {
  		&*prepared);
  	if (!cloudDraft) {
  		return;
@@ -55,7 +55,7 @@ index 9d973dd5f1c31a098f9a6f5c4eddf907135c4c74..b1a427899222b09995efede028786df0
  	}
  	_richDraftAutosaveRetryPending = (_session->api().saveDraftToCloud(
  		not_null{ thread },
-@@ -4571,6 +4575,9 @@ void ArticleSession::saveRichDraftForClose(uint64 generation) {
+@@ -4568,6 +4572,9 @@ void ArticleSession::saveRichDraftForClose(uint64 generation) {
  	if (!cloudDraft) {
  		closeWithDraftSaveFailed(generation);
  		return;

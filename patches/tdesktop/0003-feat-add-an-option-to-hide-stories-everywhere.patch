@@ -16,10 +16,10 @@ Subject: [PATCH] feat: add an option to hide stories everywhere
  create mode 100644 Telegram/SourceFiles/tele/tele_options.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9f7b660f8d0be172b34c00befb901d9f2d15cfd7..721c50a0aa25267cc52a8cd26b7efde7c1d344b9 100644
+index 0591fe8e0feec7350f68f1cf6bce0398b670bce3..5065bb99bfd9e38b5ce90d293b8f03d6a13147a9 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2485,6 +2485,8 @@ PRIVATE
+@@ -2641,6 +2641,8 @@ PRIVATE
      settings/settings_tele.h
      tele/tele_build.cpp
      tele/tele_build.h
@@ -29,7 +29,7 @@ index 9f7b660f8d0be172b34c00befb901d9f2d15cfd7..721c50a0aa25267cc52a8cd26b7efde7
  set_source_files_properties(${src_loc}/tele/tele_build.cpp
  PROPERTIES
 diff --git a/Telegram/SourceFiles/data/data_media_types.cpp b/Telegram/SourceFiles/data/data_media_types.cpp
-index 3f64b411f4050a60035aa095e4a0727fee9e96c9..eaee27a4acb55fe54e3030c9537a6f1d11b4219b 100644
+index 28a481c9b23d3a245c7b6bf402d08341ed99ae1a..e04449e6e2c60413d3d40c5b9fb1604629c11bd1 100644
 --- a/Telegram/SourceFiles/data/data_media_types.cpp
 +++ b/Telegram/SourceFiles/data/data_media_types.cpp
 @@ -82,6 +82,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -40,7 +40,7 @@ index 3f64b411f4050a60035aa095e4a0727fee9e96c9..eaee27a4acb55fe54e3030c9537a6f1d
  #include "styles/style_chat.h"
  #include "styles/style_dialogs.h"
  
-@@ -2980,6 +2981,9 @@ FullStoryId MediaStory::storyId() const {
+@@ -2988,6 +2989,9 @@ FullStoryId MediaStory::storyId() const {
  }
  
  bool MediaStory::storyExpired(bool revalidate) {
@@ -50,7 +50,7 @@ index 3f64b411f4050a60035aa095e4a0727fee9e96c9..eaee27a4acb55fe54e3030c9537a6f1d
  	if (revalidate) {
  		const auto stories = &parent()->history()->owner().stories();
  		if (const auto maybeStory = stories->lookup(_storyId)) {
-@@ -3057,6 +3061,13 @@ std::unique_ptr<HistoryView::Media> MediaStory::createView(
+@@ -3065,6 +3069,13 @@ std::unique_ptr<HistoryView::Media> MediaStory::createView(
  		not_null<HistoryView::Element*> message,
  		not_null<HistoryItem*> realParent,
  		HistoryView::Element *replacing) {
@@ -65,7 +65,7 @@ index 3f64b411f4050a60035aa095e4a0727fee9e96c9..eaee27a4acb55fe54e3030c9537a6f1d
  	const auto stories = &parent()->history()->owner().stories();
  	const auto maybeStory = stories->lookup(_storyId);
 diff --git a/Telegram/SourceFiles/data/data_stories.cpp b/Telegram/SourceFiles/data/data_stories.cpp
-index a1d5d89580b06cbee04217ef4d00269cd2e7aa76..03f5d38068ec4e8a131e7a47e73959dd94c31389 100644
+index f86dda53c0cd284b2751590b5623591a257da0df..fe383a63ef6ae699c9c393a3969a7407137979b8 100644
 --- a/Telegram/SourceFiles/data/data_stories.cpp
 +++ b/Telegram/SourceFiles/data/data_stories.cpp
 @@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -85,7 +85,7 @@ index a1d5d89580b06cbee04217ef4d00269cd2e7aa76..03f5d38068ec4e8a131e7a47e73959dd
  		applyDeletedFromSources(peerId, StorySourcesList::NotHidden);
  		applyDeletedFromSources(peerId, StorySourcesList::Hidden);
  		peer->setStoriesState(PeerData::StoriesState::None);
-@@ -1779,6 +1780,9 @@ void Stories::albumIdsLoadMore(PeerId peerId, int albumId) {
+@@ -1770,6 +1771,9 @@ void Stories::albumIdsLoadMore(PeerId peerId, int albumId) {
  
  void Stories::albumIdsLoadMore(PeerId peerId, int albumId, bool reload) {
  	Expects(!reload || albumId > 0);
@@ -95,7 +95,7 @@ index a1d5d89580b06cbee04217ef4d00269cd2e7aa76..03f5d38068ec4e8a131e7a47e73959dd
  
  	const auto peer = _owner->peer(peerId);
  	const auto set = albumIdsSet(peerId, albumId);
-@@ -2346,6 +2350,9 @@ void Stories::setPreloadingInViewer(std::vector<FullStoryId> ids) {
+@@ -2314,6 +2318,9 @@ void Stories::setPreloadingInViewer(std::vector<FullStoryId> ids) {
  std::optional<Stories::PeerSourceState> Stories::peerSourceState(
  		not_null<PeerData*> peer,
  		const MTPRecentStory &recent) {
@@ -106,10 +106,10 @@ index a1d5d89580b06cbee04217ef4d00269cd2e7aa76..03f5d38068ec4e8a131e7a47e73959dd
  	const auto maxId = data.vmax_id().value_or_empty();
  	const auto live = data.is_live();
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 88b6ecda7cfe7f4ec03da259a920da14e6c0be45..df98c5d10fa38430365294bcff230757b547f3ac 100644
+index a0f076ca988c3f0b92b6559333af1d4cb64c2596..963a24d80a9bbe8d48d7049977531c8bbf8c61d6 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -119,6 +119,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "styles/style_menu_icons.h"
  #include "styles/style_ttl_media.h"
  #include "platform/platform_text_recognition.h"
@@ -117,7 +117,7 @@ index 88b6ecda7cfe7f4ec03da259a920da14e6c0be45..df98c5d10fa38430365294bcff230757
  
  #include <QGraphicsOpacityEffect>
  
-@@ -4537,6 +4538,9 @@ void OverlayWidget::activate() {
+@@ -4582,6 +4583,9 @@ void OverlayWidget::activate() {
  
  void OverlayWidget::show(OpenRequest request) {
  	const auto story = request.story();

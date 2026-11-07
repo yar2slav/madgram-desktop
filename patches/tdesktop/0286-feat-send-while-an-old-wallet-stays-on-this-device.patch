@@ -122,10 +122,10 @@ index 52dfd1a3665985a4a00cb515da04aafdb5f48cbb..349e4d9b8feb36e7a64f61a982dc1ea3
  			// for, and no wait can clear it. The press goes back there once,
  			// and ends if the box is dismissed without switching: nothing
 diff --git a/Telegram/SourceFiles/wallet/wallet_content.cpp b/Telegram/SourceFiles/wallet/wallet_content.cpp
-index 6e249c959918e7cbace90af8873ddd9fd9fb63d6..1be2831e952ab1d206ffc767fb5f9f20e1ebc1a7 100644
+index f9f0235425e31884c83cceb7839bf3b4f01bb083..43654f48ccf4e14d69c44fba059d4a2bac339515 100644
 --- a/Telegram/SourceFiles/wallet/wallet_content.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_content.cpp
-@@ -10967,7 +10967,7 @@ void RunKeyRequiringAction(
+@@ -10986,7 +10986,7 @@ void RunKeyRequiringAction(
  		return;
  	}
  	const auto state = show->session().wallet().deviceCustodyState();
@@ -134,7 +134,7 @@ index 6e249c959918e7cbace90af8873ddd9fd9fb63d6..1be2831e952ab1d206ffc767fb5f9f20
  		// Resolving the conflict lands no key: it drops the parked record
  		// or exports its phrase. The same press climbs this ladder again
  		// once the parked wallet is switched away, into whatever the served
-@@ -13244,7 +13244,13 @@ void WalletConflictBox(
+@@ -13263,7 +13263,13 @@ void WalletConflictBox(
  	box->addRow(
  		object_ptr<Ui::FlatLabel>(
  			box,
@@ -149,7 +149,7 @@ index 6e249c959918e7cbace90af8873ddd9fd9fb63d6..1be2831e952ab1d206ffc767fb5f9f20
  			st::boxLabel),
  		st::boxRowPadding);
  
-@@ -13299,7 +13305,7 @@ void WalletConflictBox(
+@@ -13318,7 +13324,7 @@ void WalletConflictBox(
  			const auto switchNow = content->add(
  				object_ptr<Ui::RoundButton>(
  					content,
@@ -159,10 +159,10 @@ index 6e249c959918e7cbace90af8873ddd9fd9fb63d6..1be2831e952ab1d206ffc767fb5f9f20
  				st::boxRowPadding,
  				style::al_justify);
 diff --git a/Telegram/SourceFiles/wallet/wallet_session.cpp b/Telegram/SourceFiles/wallet/wallet_session.cpp
-index 3a8759b78e9d3c9b96de95013dfeceb320c3c9cd..4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93 100644
+index 656083a56bd32d239891cab8e5ce30a847421576..bb3b75e3fc42e788fad9d2c595afa05f67c19db1 100644
 --- a/Telegram/SourceFiles/wallet/wallet_session.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_session.cpp
-@@ -569,6 +569,18 @@ struct MergedHead {
+@@ -565,6 +565,18 @@ struct MergedHead {
  		|| record.unresolved(servedKey);
  }
  
@@ -181,7 +181,7 @@ index 3a8759b78e9d3c9b96de95013dfeceb320c3c9cd..4659f0e3f9c594c6b6ea5137e44b5d46
  // WHY: a parked record at the served address is an older key of this
  // same account, so its balance is the one the card already shows.
  [[nodiscard]] QString CheckableParkedAddress(
-@@ -3344,20 +3356,31 @@ bool Session::commentAccessReady() const {
+@@ -3238,20 +3250,31 @@ bool Session::commentAccessReady() const {
  
  bool Session::commentAccessAvailable() const {
  	const auto identity = transferWalletIdentity();
@@ -219,7 +219,7 @@ index 3a8759b78e9d3c9b96de95013dfeceb320c3c9cd..4659f0e3f9c594c6b6ea5137e44b5d46
  }
  
  bool Session::commentScopeCurrent(
-@@ -5498,6 +5521,31 @@ DeviceCustodyState Session::deviceCustodyState() const {
+@@ -5392,6 +5415,31 @@ DeviceCustodyState Session::deviceCustodyState() const {
  	return _deviceCustody.current();
  }
  
@@ -252,10 +252,10 @@ index 3a8759b78e9d3c9b96de95013dfeceb320c3c9cd..4659f0e3f9c594c6b6ea5137e44b5d46
  -> rpl::producer<DeviceCustodyState> {
  	return _deviceCustody.value();
 diff --git a/Telegram/SourceFiles/wallet/wallet_session.h b/Telegram/SourceFiles/wallet/wallet_session.h
-index 384875fde8914251511fd8af21a3ec221304755c..a0890b55c568778aa8004c854253a724f596a866 100644
+index 6a03e2ba3c77cdbe584d5b8165fa3d8d505b20b9..a917806486ee7c94942364cdd6ce9aa300c5d8f0 100644
 --- a/Telegram/SourceFiles/wallet/wallet_session.h
 +++ b/Telegram/SourceFiles/wallet/wallet_session.h
-@@ -571,6 +571,7 @@ public:
+@@ -581,6 +581,7 @@ public:
  	[[nodiscard]] std::optional<BackupDisableApproval> backupDisableApproval();
  	[[nodiscard]] VaultRuntime &vault() const;
  	[[nodiscard]] DeviceCustodyState deviceCustodyState() const;

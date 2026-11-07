@@ -35,10 +35,10 @@ Subject: [PATCH] feat: debug logs and an mtproto inspector
  create mode 100644 Telegram/SourceFiles/tele/tele_mtp_log.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 993071f800a8c8578409cd3c00c04b3f82c63970..f22d86fbda6a03f08c09ff6fa4569b4fae1e378a 100644
+index f46cb7cf87effa5e4868869e6892170ee3eb8316..039f76764fc565baa70ad421f6a3747402a50776 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2519,6 +2519,8 @@ PRIVATE
+@@ -2675,6 +2675,8 @@ PRIVATE
      tele/tele_corner_buttons.h
      tele/tele_crash.cpp
      tele/tele_crash.h
@@ -47,7 +47,7 @@ index 993071f800a8c8578409cd3c00c04b3f82c63970..f22d86fbda6a03f08c09ff6fa4569b4f
      tele/tele_deleted.cpp
      tele/tele_deleted.h
      tele/tele_deleted_reply.cpp
-@@ -2551,6 +2553,12 @@ PRIVATE
+@@ -2707,6 +2709,12 @@ PRIVATE
      tele/tele_menu_order.h
      tele/tele_message_menu.cpp
      tele/tele_message_menu.h
@@ -4616,7 +4616,7 @@ index 0000000000000000000000000000000000000000..efcb11fba09e3e4831e20c1dc7bc6618
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index e7b340fc4982b3619d08e8de31deccf62d9d06f9..25ebc383fc684a1f6940228eb4c26be90cd92ec5 100644
+index 9b5e53d8a46f3b92dac919eebec75868b2829b50..b2421cb268b991f123bf43f96ba0b2c758b54393 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -4627,7 +4627,7 @@ index e7b340fc4982b3619d08e8de31deccf62d9d06f9..25ebc383fc684a1f6940228eb4c26be9
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_view_tl.h"
  #include "styles/style_chat.h"
-@@ -4398,6 +4399,7 @@ void FillDialogsEntryMenu(
+@@ -4407,6 +4408,7 @@ void FillDialogsEntryMenu(
  	}
  	Filler(controller, request, callback).fill();
  	Tele::AddViewTlAction(callback, controller->uiShow(), request);
@@ -4635,7 +4635,7 @@ index e7b340fc4982b3619d08e8de31deccf62d9d06f9..25ebc383fc684a1f6940228eb4c26be9
  }
  
  bool FillVideoChatMenu(
-@@ -4549,6 +4551,7 @@ void FillSenderUserpicMenu(
+@@ -4558,6 +4560,7 @@ void FillSenderUserpicMenu(
  	}
  	Tele::AddIgnoreAction(peer, addAction);
  	Tele::AddViewTlAction(addAction, controller->uiShow(), peer);

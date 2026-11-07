@@ -16,10 +16,10 @@ Subject: [PATCH] feat: usernames from the tele server
  9 files changed, 353 insertions(+), 12 deletions(-)
 
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_values.cpp b/Telegram/SourceFiles/info/profile/info_profile_values.cpp
-index af44e326c91d0561b765389e7061ef339a3db072..efbc0bb74e48ee8d74b1af14437db124b34b1af1 100644
+index b5ce1778229ac436673cd7c812ac7685dd1e6500..bca0542b18ffcea0b5ebfa8c176c5862e5778b4f 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_values.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_values.cpp
-@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_premium_limits.h"
  #include "boxes/peers/edit_peer_permissions_box.h"
  #include "base/unixtime.h"
@@ -27,7 +27,7 @@ index af44e326c91d0561b765389e7061ef339a3db072..efbc0bb74e48ee8d74b1af14437db124
  
  namespace Info {
  namespace Profile {
-@@ -205,7 +206,8 @@ QString UsernameUrl(
+@@ -204,7 +205,8 @@ QString UsernameUrl(
  		not_null<PeerData*> peer,
  		const QString &username,
  		bool link) {
@@ -37,7 +37,7 @@ index af44e326c91d0561b765389e7061ef339a3db072..efbc0bb74e48ee8d74b1af14437db124
  		? u"collectible_username"_q
  		: link
  		? u"username_link"_q
-@@ -233,11 +235,13 @@ rpl::producer<std::vector<TextWithEntities>> UsernamesValue(
+@@ -232,11 +234,13 @@ rpl::producer<std::vector<TextWithEntities>> UsernamesValue(
  	);
  	if (const auto user = peer->asUser()) {
  		return std::move(value) | rpl::map([=] {
@@ -622,10 +622,10 @@ index 664a9918929ddd4b6b26414cdc111de43d71c6c2..548f686a8a0a41f8ff4835de814d8ec8
  	not_null<Ui::PopupMenu*> menu,
  	const std::shared_ptr<Main::SessionShow> &show,
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index d1dd648483d715b8b34e232584b2667c72ee2040..879dc17a5c885172861ba01fe9ee7d2817aff4b8 100644
+index e52d867f663acbdbe44b6f5b5f8b2a6df3310e00..f0f1780cac8a0ecef4459876c8279f80ac1616cc 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -541,7 +541,9 @@ void SessionNavigation::resolveUsername(
+@@ -575,7 +575,9 @@ void SessionNavigation::resolveUsername(
  		const QString &username,
  		Fn<void(not_null<PeerData*>)> done,
  		const QString &referral) {

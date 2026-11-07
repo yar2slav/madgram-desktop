@@ -1,0 +1,286 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 04:10:47 +0200
+Subject: [PATCH] feat: open mad links from message text and switch modes with
+ them
+
+---
+ .../SourceFiles/core/click_handler_types.cpp  |  5 ++
+ Telegram/SourceFiles/history/history_item.cpp |  2 +
+ .../SourceFiles/tele/tele_mad_link_parser.cpp | 54 ++++++++++++++++++-
+ Telegram/SourceFiles/tele/tele_mad_links.cpp  | 51 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_mad_links.h    | 13 +++++
+ .../tele/tests/mad_links_tests.cpp            | 35 ++++++++++++
+ 6 files changed, 159 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/SourceFiles/core/click_handler_types.cpp b/Telegram/SourceFiles/core/click_handler_types.cpp
+index 5c90d8d296f1b4915f5d8effc7e3b8b97263dc60..108893f428b6bdf3b096eb09359c918673e03cbb 100644
+--- a/Telegram/SourceFiles/core/click_handler_types.cpp
++++ b/Telegram/SourceFiles/core/click_handler_types.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "core/click_handler_types.h"
++#include "tele/tele_mad_links.h"
+ 
+ #include "base/unixtime.h"
+ #include "lang/lang_keys.h"
+@@ -508,6 +509,10 @@ void HiddenUrlClickHandler::OpenTranslatedWithIv(
+ }
+ 
+ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
++	if (Tele::IsMadLink(url)) {
++		Tele::OpenMadLink(url, context);
++		return;
++	}
+ 	if (const auto external = UrlClickHandler::ExternalUrlFromInternalUrl(url);
+ 			!external.isEmpty()) {
+ 		url = external;
+diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
+index 430afccad60fe969a5276e8d06ea41ce7154828a..c2defdbaba4dccf8fb2b199b7570690296134403 100644
+--- a/Telegram/SourceFiles/history/history_item.cpp
++++ b/Telegram/SourceFiles/history/history_item.cpp
+@@ -92,6 +92,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_deleted.h"
+ #include "tele/tele_deleted_reply.h"
+ #include "tele/tele_edit_history.h"
++#include "tele/tele_mad_links.h"
+ #include "tele/tele_options.h"
+ #include "tele/tele_send_order.h"
+ #include "tele/tele_shot.h"
+@@ -4798,6 +4799,7 @@ void HistoryItem::detectTextLinks(
+ }
+ 
+ void HistoryItem::setText(TextWithEntities textWithEntities) {
++	Tele::AddMadLinkEntities(textWithEntities);
+ 	detectTextLinks(textWithEntities);
+ 	setTextValue((_media && _media->consumeMessageText(textWithEntities))
+ 		? TextWithEntities()
+diff --git a/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp b/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp
+index 1e5abcfead3d4085988b60ba7ef83a54158d34e8..0df75f2889fb750c996a0e5aecfc4403d8f284ce 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_link_parser.cpp
+@@ -33,6 +33,45 @@ QString Query(const QString &control) {
+ 
+ }
+ 
++MadModeAction ParseMadModeAction(const QString &url) {
++	static const auto pattern = QRegularExpression(
++		QRegularExpression::anchoredPattern(u"mad://(ghost|streamer)/(on|off)/?"_s),
++		QRegularExpression::CaseInsensitiveOption);
++	const auto match = pattern.match(url.trimmed());
++	if (!match.hasMatch()) {
++		return MadModeAction::None;
++	}
++	const auto ghost = match.captured(1).compare(u"ghost"_s, Qt::CaseInsensitive) == 0;
++	const auto enabled = match.captured(2).compare(u"on"_s, Qt::CaseInsensitive) == 0;
++	return ghost
++		? (enabled ? MadModeAction::GhostOn : MadModeAction::GhostOff)
++		: (enabled ? MadModeAction::StreamerOn : MadModeAction::StreamerOff);
++}
++
++std::vector<std::pair<int, int>> FindMadLinks(const QString &text) {
++	auto result = std::vector<std::pair<int, int>>();
++	if (!text.contains(u"mad://"_s, Qt::CaseInsensitive)) {
++		return result;
++	}
++	static const auto pattern = QRegularExpression(
++		u"(?<![\\w/:.])mad://[^\\s<>\"'\u00AB\u00BB]+"_s,
++		QRegularExpression::CaseInsensitiveOption
++			| QRegularExpression::UseUnicodePropertiesOption);
++	auto matches = pattern.globalMatch(text);
++	while (matches.hasNext()) {
++		const auto match = matches.next();
++		auto length = int(match.capturedLength());
++		while (length > 6
++			&& u".,;:!?)]}"_s.contains(text[match.capturedStart() + length - 1])) {
++			--length;
++		}
++		if (length > 6) {
++			result.emplace_back(int(match.capturedStart()), length);
++		}
++	}
++	return result;
++}
++
+ bool IsMadLink(const QString &url) {
+ 	return url.trimmed().startsWith(u"mad:"_s, Qt::CaseInsensitive);
+ }
+@@ -83,6 +122,9 @@ QString LocalMadLink(const QString &value) {
+ 	if (!ValidCategory(category) || !ValidControl(control)) {
+ 		return {};
+ 	}
++	if (control.startsWith(u"mad-"_s)) {
++		control.replace(0, 4, u"tele-"_s);
++	}
+ 	return u"tg://settings/tele"_s
+ 		+ (category.isEmpty() ? QString() : '/' + category)
+ 		+ Query(control);
+@@ -94,7 +136,7 @@ QString MadSettingsLink(const QString &category, const QString &control) {
+ 	}
+ 	return u"mad://settings"_s
+ 		+ (category.isEmpty() ? QString() : '/' + category)
+-		+ Query(control);
++		+ Query(control.startsWith(u"tele-"_s) ? u"mad-"_s + control.mid(5) : control);
+ }
+ 
+ QString PublicMadLink(const QString &value) {
+@@ -109,6 +151,16 @@ QString PublicMadLink(const QString &value) {
+ 	auto result = QUrl(url);
+ 	result.setScheme(u"mad"_s);
+ 	result.setPath(path.startsWith(u"/tele/"_s) ? path.mid(5) : QString());
++	auto query = QUrlQuery(result);
++	const auto control = query.queryItemValue(u"highlight"_s, QUrl::FullyDecoded);
++	if (control.startsWith(u"tele-"_s)) {
++		query.removeAllQueryItems(u"highlight"_s);
++		query.addQueryItem(u"highlight"_s, u"mad-"_s + control.mid(5));
++		result.setQuery(query);
++	}
++	if (result.fragment().startsWith(u"tele-"_s)) {
++		result.setFragment(u"mad-"_s + result.fragment().mid(5));
++	}
+ 	const auto candidate = result.toString(QUrl::FullyEncoded);
+ 	return LocalMadLink(candidate).isEmpty() ? value : candidate;
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_mad_links.cpp b/Telegram/SourceFiles/tele/tele_mad_links.cpp
+index 64fcaf05ec4b6d4869b2e7d33ceb971529f83ebd..187ef08dde861990b616f20d2faf9bca5f4fac39 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_links.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_links.cpp
+@@ -5,6 +5,8 @@
+ #include "core/application.h"
+ #include "core/click_handler_types.h"
+ #include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "ui/text/text_entity.h"
+ #include "window/window_controller.h"
+ #include "window/window_session_controller.h"
+ #include <QtCore/QCoreApplication>
+@@ -12,7 +14,56 @@
+ 
+ namespace Tele {
+ 
++void AddMadLinkEntities(TextWithEntities &text) {
++	const auto links = FindMadLinks(text.text);
++	if (links.empty()) {
++		return;
++	}
++	const auto formatting = [](EntityType type) {
++		return type == EntityType::Bold
++			|| type == EntityType::Italic
++			|| type == EntityType::Underline
++			|| type == EntityType::StrikeOut
++			|| type == EntityType::Spoiler
++			|| type == EntityType::Blockquote;
++	};
++	for (const auto &[offset, length] : links) {
++		const auto overlaps = ranges::any_of(text.entities, [&](
++				const EntityInText &entity) {
++			return !formatting(entity.type())
++				&& entity.offset() < offset + length
++				&& offset < entity.offset() + entity.length();
++		});
++		if (overlaps) {
++			continue;
++		}
++		const auto position = ranges::find_if(text.entities, [&](
++				const EntityInText &entity) {
++			return entity.offset() > offset;
++		});
++		text.entities.insert(
++			position,
++			EntityInText(EntityType::Url, offset, length));
++	}
++}
++
+ bool OpenMadLink(const QString &url, const QVariant &context) {
++	const auto action = ParseMadModeAction(url);
++	if (action != MadModeAction::None) {
++		const auto clicked = context.value<ClickHandlerContext>().sessionWindow.get();
++		const auto window = Core::App().activeWindow();
++		const auto controller = clicked ? clicked
++			: window ? window->sessionController() : nullptr;
++		if (Core::App().passcodeLocked() || !controller) {
++			return false;
++		}
++		const auto ghost = action == MadModeAction::GhostOn
++			|| action == MadModeAction::GhostOff;
++		const auto enabled = action == MadModeAction::GhostOn
++			|| action == MadModeAction::StreamerOn;
++		base::options::lookup<bool>(ghost ? kOptionGhost : kOptionStreamerMode).set(enabled);
++		return true;
++	}
+ 	const auto local = LocalMadLink(url);
+ 	if (!local.isEmpty()) {
+ 		return Core::App().openLocalUrl(local, context);
+diff --git a/Telegram/SourceFiles/tele/tele_mad_links.h b/Telegram/SourceFiles/tele/tele_mad_links.h
+index e97512bf8b2a7619b6cc23949ffca1941b83488a..9724009d7c28b8d167ce8ac30c449f5e5f5d382d 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_links.h
++++ b/Telegram/SourceFiles/tele/tele_mad_links.h
+@@ -3,9 +3,22 @@
+ #include <QtCore/QString>
+ #include <QtCore/QVariant>
+ 
++#include <utility>
++#include <vector>
++
++struct TextWithEntities;
++
+ namespace Tele {
+ 
++enum class MadModeAction {
++	None, GhostOn, GhostOff, StreamerOn, StreamerOff,
++};
++
++[[nodiscard]] MadModeAction ParseMadModeAction(const QString &url);
+ [[nodiscard]] bool IsMadLink(const QString &url);
++[[nodiscard]] std::vector<std::pair<int, int>> FindMadLinks(
++	const QString &text);
++void AddMadLinkEntities(TextWithEntities &text);
+ [[nodiscard]] QString LocalMadLink(const QString &url);
+ [[nodiscard]] QString PublicMadLink(const QString &url);
+ [[nodiscard]] QString MadSettingsLink(
+diff --git a/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp b/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
+index f3a2f35e341de27dc6ac6acc392cfe99158efbef..13e0df2652b49198587ae1ce5f7b76c78808be3a 100644
+--- a/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
++++ b/Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
+@@ -70,5 +70,40 @@ int main(int argc, char *argv[]) {
+ 	Require(Tele::PublicMadLink(u"https://t.me/maadgram"_s) == u"https://t.me/maadgram"_s, "preserve web link");
+ 	Require(Tele::MadSettingsLink(u"bad/path"_s).isEmpty(), "reject invalid generated category");
+ 	Require(Tele::MadSettingsLink(u"privacy"_s, u"unsafe&action=1"_s).isEmpty(), "reject invalid generated control");
++	Require(Tele::PublicMadLink(u"tg://settings/privacy"_s) == u"tg://settings/privacy"_s, "keep upstream setting ids");
++	Require(Tele::MadSettingsLink(u"privacy"_s, u"tele-hide-stories"_s) == u"mad://settings/privacy?highlight=mad-hide-stories"_s, "public mad ids");
++	Require(Tele::LocalMadLink(u"mad://settings/privacy?highlight=mad-hide-stories"_s) == u"tg://settings/tele/privacy?highlight=tele-hide-stories"_s, "map public ids back");
++	Require(Tele::PublicMadLink(u"tg://settings/tele/privacy?highlight=tele-hide-stories"_s) == u"mad://settings/privacy?highlight=mad-hide-stories"_s, "copied mad ids");
++	using Action = Tele::MadModeAction;
++	for (const auto &[url, action] : std::vector<std::pair<QString, Action>>{
++		{ u"mad://ghost/on"_s, Action::GhostOn },
++		{ u"mad://ghost/off"_s, Action::GhostOff },
++		{ u"mad://streamer/on"_s, Action::StreamerOn },
++		{ u" MAD://STREAMER/OFF/ "_s, Action::StreamerOff },
++	}) {
++		Require(Tele::ParseMadModeAction(url) == action, "explicit mode action");
++		Require(Tele::LocalMadLink(url).isEmpty(), "actions never navigate to settings");
++	}
++	for (const auto &url : QStringList{
++		u"mad://ghost"_s, u"mad://ghost/toggle"_s, u"mad://ghost/on?x=1"_s,
++		u"mad://ghost/off#on"_s, u"mad://user@ghost/on"_s, u"mad://ghost:443/on"_s,
++		u"mad://streamer/on/extra"_s, u"mad://ghost/on%0A"_s,
++		u"https://ghost/on"_s, u"mad://ghost/%6Fn"_s,
++	}) {
++		Require(Tele::ParseMadModeAction(url) == Action::None, "reject unsafe mode actions");
++	}
++	using Ranges = std::vector<std::pair<int, int>>;
++	for (const auto &[text, ranges] : std::vector<std::pair<QString, Ranges>>{
++		{ u"mad://settings/server?highlight=mad-server-url"_s, Ranges{ { 0, 46 } } },
++		{ u"open mad://ghost/on."_s, Ranges{ { 5, 14 } } },
++		{ u"(mad://streamer/off) and MAD://SETTINGS"_s, Ranges{ { 1, 18 }, { 25, 14 } } },
++		{ u"«mad://sync»"_s, Ranges{ { 1, 10 } } },
++		{ u"just text"_s, Ranges{} },
++		{ u"mad://"_s, Ranges{} },
++		{ u"nomad://settings"_s, Ranges{} },
++		{ u"https://x.com/mad://settings"_s, Ranges{} },
++	}) {
++		Require(Tele::FindMadLinks(text) == ranges, "find mad links in text");
++	}
+ 	std::puts("mad links tests passed");
+ }

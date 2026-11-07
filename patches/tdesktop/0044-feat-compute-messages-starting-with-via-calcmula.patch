@@ -17,10 +17,10 @@ Subject: [PATCH] feat: compute messages starting with = via calcmula
  create mode 100644 Telegram/SourceFiles/tele/tele_calcmula.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e7bf9b99174ea975376c232af96315f9547c82d1..56ef4bfc3e6de12c1ee9e8703f6bd133f759d662 100644
+index 2f9376076c6a8aa134fc6c2f610e07c89006adae..f82b287240f1eb06adba382019c0754022fe4578 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2495,6 +2495,8 @@ PRIVATE
+@@ -2651,6 +2651,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -30,10 +30,10 @@ index e7bf9b99174ea975376c232af96315f9547c82d1..56ef4bfc3e6de12c1ee9e8703f6bd133
      tele/tele_changelog.h
      tele/tele_crash.cpp
 diff --git a/Telegram/SourceFiles/api/api_sending.cpp b/Telegram/SourceFiles/api/api_sending.cpp
-index eb6cf245f82ce5e300906c14ead47c59c3f51cf2..38ce94efec594427baf02b37c18fc27624a4e214 100644
+index 5035f0f09fee41b39a9b6ca28316e0f42d819eb0..460a81edc5c2dce50c47750fe5d991f5f4532b3a 100644
 --- a/Telegram/SourceFiles/api/api_sending.cpp
 +++ b/Telegram/SourceFiles/api/api_sending.cpp
-@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "mainwidget.h"
  #include "apiwrap.h"
  #include "tele/tele_ghost.h"
@@ -41,7 +41,7 @@ index eb6cf245f82ce5e300906c14ead47c59c3f51cf2..38ce94efec594427baf02b37c18fc276
  
  namespace Api {
  namespace {
-@@ -186,6 +187,16 @@ void SendExistingMedia(
+@@ -200,6 +201,16 @@ void SendExistingMedia(
  		Fn<MTPInputMedia()> inputMedia,
  		Data::FileOrigin origin,
  		std::optional<MsgId> localMessageId) {
@@ -59,7 +59,7 @@ index eb6cf245f82ce5e300906c14ead47c59c3f51cf2..38ce94efec594427baf02b37c18fc276
  	const auto peer = history->peer;
  	const auto session = &history->session();
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index d7202ae6f4e6cff059b311818b21f0701c866ab4..bfe792e482c7228e638b23549bee5457e12db22c 100644
+index d34d7c6a982ba90d376c613d9ffd49c9d42b99ad..bac24da82c8b247420bcff4a1e505e979fab0406 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -110,6 +110,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -67,10 +67,10 @@ index d7202ae6f4e6cff059b311818b21f0701c866ab4..bfe792e482c7228e638b23549bee5457
  #include "tele/tele_secret_media.h"
  #include "tele/tele_ghost.h"
 +#include "tele/tele_calcmula.h"
+ #include "tgw/tgw_storage.h"
  
  namespace {
- 
-@@ -4349,6 +4350,9 @@ void ApiWrap::sendFiles(
+@@ -4357,6 +4358,9 @@ void ApiWrap::sendFiles(
  		SendMediaType type,
  		std::shared_ptr<SendingAlbum> album,
  		SendAction action) {
@@ -80,7 +80,7 @@ index d7202ae6f4e6cff059b311818b21f0701c866ab4..bfe792e482c7228e638b23549bee5457
  	const auto &ephemeral = _session->ephemeralMessages();
  	if (album && !ephemeral.isEphemeralBotReply(action.replyTo.messageId)) {
  		const auto peer = action.history->peer;
-@@ -4773,6 +4777,9 @@ void ApiWrap::sendRichMessage(
+@@ -4765,6 +4769,9 @@ void ApiWrap::sendRichMessage(
  void ApiWrap::sendMessage(
  		MessageToSend &&message,
  		std::optional<MsgId> localMessageId) {

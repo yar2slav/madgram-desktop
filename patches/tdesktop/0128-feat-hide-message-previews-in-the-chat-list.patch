@@ -20,10 +20,10 @@ Subject: [PATCH] feat: hide message previews in the chat list
  create mode 100644 Telegram/SourceFiles/tele/tele_list_previews.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4e0326948ca754e9d22ce749d9546e8d898f8102..01cb2ed210544b04a156bdc9ba5f8a58884d9765 100644
+index 65b543594aac43edcc64b88026255cc1e94c754f..2849b6ece28324c3ae4c1bc73d62163594304631 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2605,6 +2605,8 @@ PRIVATE
+@@ -2761,6 +2761,8 @@ PRIVATE
      tele/tele_launch_flags.h
      tele/tele_links.cpp
      tele/tele_links.h
@@ -56,10 +56,10 @@ index 9d82f1b204fb5a92bc040d8cb897916b9c65c2e0..6787a564f126c0bd0e6775a69f537c9d
  	} else if (&base == &st::forumDialogRow) {
  		return st::communityInfoForumDialogRow;
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c08c37125 100644
+index 93a701aeee7d608341d9847a07adf948dacf27da..53c4562fb7b3ac0b6f5754e4901e76481df8ae0b 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -88,6 +88,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peer_list_box.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_corner_buttons.h"
@@ -67,7 +67,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  #include "tele/tele_local_pins.h"
  #include "tele/tele_options.h"
  #include "tele/tele_username_aliases.h"
-@@ -158,7 +159,7 @@ constexpr auto kPreviewPostsLimit = 3;
+@@ -168,7 +169,7 @@ constexpr auto kPreviewPostsLimit = 3;
  }
  
  [[nodiscard]] UserData *MaybeBotWithApp(Row *row) {
@@ -76,7 +76,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  		if (const auto history = row->key().history()) {
  			if (const auto user = history->peer->asUser()) {
  				if (user->botInfo && user->botInfo->hasMainApp) {
-@@ -325,6 +326,21 @@ InnerWidget::InnerWidget(
+@@ -335,6 +336,21 @@ InnerWidget::InnerWidget(
  		update();
  	}, lifetime());
  
@@ -98,7 +98,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  	::Tele::CornerButtonsHiddenChanges(
  	) | rpl::on_next([=] {
  		update();
-@@ -1131,6 +1147,10 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
+@@ -1154,6 +1170,10 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
  		}
  
  		context.st = (forum || monoforum) ? &st::forumDialogRow : _st.get();
@@ -109,7 +109,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  
  		const auto videoUserpic = validateVideoUserpic(row);
  		const auto cacheRatio = style::DevicePixelRatio();
-@@ -1167,7 +1187,7 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
+@@ -1190,7 +1210,7 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
  		}
  
  		auto chatsFilterTags = std::vector<QImage*>();
@@ -118,7 +118,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  			context.chatsFilterTags = nullptr;
  		} else if (row->entry()->hasChatsFilterTags(context.filter)) {
  			const auto a = active;
-@@ -3024,7 +3044,7 @@ bool InnerWidget::pinnedShiftAnimationCallback(crl::time now) {
+@@ -3050,7 +3070,7 @@ bool InnerWidget::pinnedShiftAnimationCallback(crl::time now) {
  		if (updateMax < _draggingIndex) updateMax = _draggingIndex;
  	}
  	if (updateMin >= 0) {
@@ -127,7 +127,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  		const auto maxHeight = st::taggedForumDialogRow.height;
  		auto top = pinnedOffset();
  		auto updateFrom = top + minHeight * (updateMin - 1);
-@@ -5926,7 +5946,7 @@ ChosenRow InnerWidget::computeChosenRow() const {
+@@ -6057,7 +6077,7 @@ ChosenRow InnerWidget::computeChosenRow() const {
  
  bool InnerWidget::isUserpicPress() const {
  	return (_lastRowLocalMouseX >= 0)
@@ -136,7 +136,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  		&& (_collapsedSelected < 0
  			|| _collapsedSelected >= _collapsedRows.size());
  }
-@@ -6265,7 +6285,7 @@ void InnerWidget::repaintDialogRowCornerStatus(not_null<History*> history) {
+@@ -6396,7 +6416,7 @@ void InnerWidget::repaintDialogRowCornerStatus(not_null<History*> history) {
  		RowDescriptor(
  			history,
  			FullMsgId()),
@@ -146,7 +146,7 @@ index e566ea98102a27a765a21fa9b272cde6def4bdcc..4e018ea12908dce3d78682e31325791c
  }
  
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
-index f4d5a3aef19dfb1cb54ad7aff74d89b94b553f11..e74f8e7073254fdaf4ba8c150c5237eec76ac2f4 100644
+index c557bb42c4582bbb1fa392739c7bfc9003d1991b..2dac9b468f34d8d70acd012a0fc6692a474bc91a 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 @@ -36,6 +36,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

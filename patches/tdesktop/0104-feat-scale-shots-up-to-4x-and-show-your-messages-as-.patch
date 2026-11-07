@@ -47,10 +47,10 @@ Subject: [PATCH] feat: scale shots up to 4x and show your messages as incoming
  create mode 100644 Telegram/SourceFiles/tele/tele_shot_sharp.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 214100833c81873c77583a33f7d6845eba1a01ca..5d5f0b443900cf3790a65fdb624dfa59702c3cba 100644
+index 85b4bb4f5a0000677b25b1a25384430dfbeb5df1..72e5a023758bd9111cc81bab94140c64dcb53ecb 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2611,6 +2611,8 @@ PRIVATE
+@@ -2767,6 +2767,8 @@ PRIVATE
      tele/tele_shortcuts.h
      tele/tele_shot.cpp
      tele/tele_shot.h
@@ -60,7 +60,7 @@ index 214100833c81873c77583a33f7d6845eba1a01ca..5d5f0b443900cf3790a65fdb624dfa59
      tele/tele_spoilers.h
      tele/tele_time.cpp
 diff --git a/Telegram/SourceFiles/data/data_peer.cpp b/Telegram/SourceFiles/data/data_peer.cpp
-index 10025d6db800bd5e444eca87e6d480368ed7db02..3842ba6691946c237cdd8d449c7bec1c76880ec3 100644
+index e25296cbc6a78c084890fe88a5748674f0219e81..9ad32fb85cb825a3143c013cbab741980c638c91 100644
 --- a/Telegram/SourceFiles/data/data_peer.cpp
 +++ b/Telegram/SourceFiles/data/data_peer.cpp
 @@ -56,6 +56,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -112,10 +112,10 @@ index deaf6870917288bf22cbafec01f484bea4f49da7..9e9d9c15ce2f97e2ebc35034fb42a115
  
  Ui::Text::CustomEmojiFactory CustomEmojiManager::factory(
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index f195b394124c031480e21e7143c63608589141e1..fab8f45efd6bf317002973e34e8570d43cf612a3 100644
+index afc461182023c6d1cf452a9281dcd7a3e02a693f..3c2e7426fa7842348434e39d1a0a30dd6a6d9160 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -3890,7 +3890,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3945,7 +3945,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  		controller,
  		(isUponSelected > 1) ? getSelectedItems() : MessageIdsList(),
  		(isUponSelected != -2) ? _dragStateItem : nullptr,
@@ -126,7 +126,7 @@ index f195b394124c031480e21e7143c63608589141e1..fab8f45efd6bf317002973e34e8570d4
  		_menu.get(),
  		controller,
 diff --git a/Telegram/SourceFiles/history/history_item_components.cpp b/Telegram/SourceFiles/history/history_item_components.cpp
-index fcfb750c29b76f664e992a818cf1a9ed61af0ca6..219b4a47717a3527af5bc86941bd9333ee7ed106 100644
+index 793eb9355d03cdd96dc13106983a37bf6094d58b..1d296ca713c079f98d3debc50cca4e4b1df41f62 100644
 --- a/Telegram/SourceFiles/history/history_item_components.cpp
 +++ b/Telegram/SourceFiles/history/history_item_components.cpp
 @@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -147,7 +147,7 @@ index fcfb750c29b76f664e992a818cf1a9ed61af0ca6..219b4a47717a3527af5bc86941bd9333
  	p.drawImage(QRect(x, y, size, size), view.cached);
  	return valid;
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index ad987aa41468715c836f7e39151aae84ac380cc4..8ed73b8630020d4a1eb782067e09b2b9bfa07708 100644
+index bf49f695e956d7ef66c6ff97bd68a7de5d4898c2..42e4eb24dfae6a15302227284e6d1b5fd48f5e99 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -76,6 +76,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -199,7 +199,7 @@ index a09fb575e84a44cb0b83965f85d4ae721c689bd2..ddfd358ccde6ea0ba92832da3cf2b58c
  	}
  	for (auto &entry : list) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 05f81082df5add15eb0e713279be5f3840b29b75..2286f0031387d685981d13eae026f509a3eca3e6 100644
+index d0c910359b6eb7a32fe727287e6c33a801caabea..8c0a9e0342906038582aff7fbfffe823e4e58f76 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
 @@ -69,6 +69,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -211,7 +211,7 @@ index 05f81082df5add15eb0e713279be5f3840b29b75..2286f0031387d685981d13eae026f509
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_chat_style.h"
-@@ -2439,7 +2441,9 @@ void Message::paintCommentsButton(
+@@ -2442,7 +2444,9 @@ void Message::paintCommentsButton(
  		const auto single = st::historyCommentsUserpics.size;
  		const auto shift = st::historyCommentsUserpics.shift;
  		const auto regenerate = [&] {
@@ -222,7 +222,7 @@ index 05f81082df5add15eb0e713279be5f3840b29b75..2286f0031387d685981d13eae026f509
  				return true;
  			}
  			for (auto i = 0; i != count; ++i) {
-@@ -3915,7 +3919,8 @@ bool Message::hasFromPhoto() const {
+@@ -3924,7 +3928,8 @@ bool Message::hasFromPhoto() const {
  		if (item->isGuestChatBotMessage()) {
  			return true;
  		}
@@ -232,7 +232,7 @@ index 05f81082df5add15eb0e713279be5f3840b29b75..2286f0031387d685981d13eae026f509
  	} break;
  	case Context::ContactPreview:
  	case Context::ShortcutMessages:
-@@ -5876,7 +5881,8 @@ bool Message::displayForwardedFrom() const {
+@@ -5840,7 +5845,8 @@ bool Message::displayForwardedFrom() const {
  }
  
  bool Message::hasOutLayout() const {
@@ -390,7 +390,7 @@ index 16f2c29a6218f398fb529d3d78798ff801d5c71f..41e8e76001627d861b794fc7db489ff1
  	if (backgroundEmojiData) {
  		ValidateBackgroundEmoji(
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_document.cpp b/Telegram/SourceFiles/history/view/media/history_view_document.cpp
-index add37f41264c654c9b13b3ab954eedeb740e5f4f..a112f56e7602f7ba3c170a1a3917947c0a3b3651 100644
+index 3d92a8ed90c6bc98fc81492d4d2eb77d0749835c..5fe118877f1fae438c989b5a3edc9e8abf63ce44 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_document.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_document.cpp
 @@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -432,7 +432,7 @@ index add37f41264c654c9b13b3ab954eedeb740e5f4f..a112f56e7602f7ba3c170a1a3917947c
  			switch (rounding[i]) {
  			case Corner::Small: corners[i] = small[i]; break;
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_game.cpp b/Telegram/SourceFiles/history/view/media/history_view_game.cpp
-index 85368fd7f45c780412b629bbb79fae9a68546dab..b64e15ed44793af36155784c40e9be6829946ca1 100644
+index 4fe8d2b4789363ddf6f40694a4aad89bfe03334a..61e8c7926d5de72d89480318b005eba0f5c4f6ef 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_game.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_game.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -443,7 +443,7 @@ index 85368fd7f45c780412b629bbb79fae9a68546dab..b64e15ed44793af36155784c40e9be68
  #include "styles/style_chat.h"
  
  namespace HistoryView {
-@@ -235,7 +236,7 @@ void Game::draw(Painter &p, const PaintContext &context) const {
+@@ -239,7 +240,7 @@ void Game::draw(Painter &p, const PaintContext &context) const {
  		: useColorIndex
  		? st->coloredReplyCache(selected, colorIndex).get()
  		: stm->replyCache[colorPattern].get();
@@ -453,7 +453,7 @@ index 85368fd7f45c780412b629bbb79fae9a68546dab..b64e15ed44793af36155784c40e9be68
  
  	if (_ripple) {
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index d96356a860a1edb813d2f7407ddd155cd32627f4..8a89b640ce8f5bf194e059bbb50b7603bc7a9471 100644
+index 4ae0d8289c309e0ec18a70babc0dd7a587273ed3..6110b0a1bf2a08cbd7064f9eda0da5114999a076 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 @@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -464,7 +464,7 @@ index d96356a860a1edb813d2f7407ddd155cd32627f4..8a89b640ce8f5bf194e059bbb50b7603
  #include "tele/tele_spoilers.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
-@@ -1254,7 +1255,7 @@ void Gif::validateThumbCache(
+@@ -1253,7 +1254,7 @@ void Gif::validateThumbCache(
  			&& (normal->width() < kUseNonBlurredThreshold)
  			&& (normal->height() < kUseNonBlurredThreshold))
  		: !videothumb;
@@ -473,7 +473,7 @@ index d96356a860a1edb813d2f7407ddd155cd32627f4..8a89b640ce8f5bf194e059bbb50b7603
  	const auto scaled = ScaledInstantViewMediaSize(
  		outer,
  		HostedInstantViewMediaPixelScale(_parent));
-@@ -1317,7 +1318,7 @@ void Gif::validateSpoilerImageCache(
+@@ -1316,7 +1317,7 @@ void Gif::validateSpoilerImageCache(
  		std::optional<Ui::BubbleRounding> rounding) const {
  	Expects(_spoiler != nullptr);
  
@@ -482,7 +482,7 @@ index d96356a860a1edb813d2f7407ddd155cd32627f4..8a89b640ce8f5bf194e059bbb50b7603
  	const auto scaled = ScaledInstantViewMediaSize(
  		outer,
  		HostedInstantViewMediaPixelScale(_parent));
-@@ -2258,7 +2259,8 @@ void Gif::validateGroupedCache(
+@@ -2257,7 +2258,8 @@ void Gif::validateGroupedCache(
  		| (uint64(height) << 32)
  		| (uint64(options) << 16)
  		| (uint64(rounding.key()) << 8)
@@ -492,7 +492,7 @@ index d96356a860a1edb813d2f7407ddd155cd32627f4..8a89b640ce8f5bf194e059bbb50b7603
  	if (*cacheKey == key) {
  		return;
  	}
-@@ -2269,10 +2271,10 @@ void Gif::validateGroupedCache(
+@@ -2268,10 +2270,10 @@ void Gif::validateGroupedCache(
  	const auto pixSize = Ui::GetImageScaleSizeForGeometry(
  		{ originalWidth, originalHeight },
  		{ width, height });
@@ -554,7 +554,7 @@ index 2d9fb0cc6be75a92fe644b8da59aa00f04b6c451..88d7ccaf3542065c1eb575bd260731a0
  		return;
  	}
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_media.cpp b/Telegram/SourceFiles/history/view/media/history_view_media.cpp
-index 0555fbfcf2da5e88fb9faab7021456384dad4dde..4463a3754e9f1ba611628b083dd6bfe524089729 100644
+index 13fd4f27051eaaf7adbe45b3e717e77178523e5c..c3e8ffa8cef7b847948fd6f4f96c5997d9081e9d 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_media.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_media.cpp
 @@ -34,6 +34,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -565,7 +565,7 @@ index 0555fbfcf2da5e88fb9faab7021456384dad4dde..4463a3754e9f1ba611628b083dd6bfe5
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_menu_icons.h" // mediaMenuIconStealth.
-@@ -661,12 +662,13 @@ Images::CornersMaskRef MediaRoundingMask(
+@@ -662,12 +663,13 @@ Images::CornersMaskRef MediaRoundingMask(
  		std::optional<Ui::BubbleRounding> rounding) {
  	using Radius = Ui::CachedCornerRadius;
  	if (!rounding) {
@@ -583,7 +583,7 @@ index 0555fbfcf2da5e88fb9faab7021456384dad4dde..4463a3754e9f1ba611628b083dd6bfe5
  		switch ((*rounding)[i]) {
  		case Corner::Small: result.p[i] = &small[i]; break;
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp b/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp
-index b8f4311660eb46f73104c22d29a69377754a99f0..7e94cdf5c7a0a4c2f44174cc05a4bbb5ed2550ab 100644
+index d72ba1c44454056fc6be1b9723d16c4f8e4a06cc..4d99a2f3f00a7b6f5887d9be049db772af2cc63c 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp
 @@ -51,6 +51,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -690,7 +690,7 @@ index f3600aec873d6e5369b0acb1cf0f5d9e388ee922..3d78e44b8c0d00cb1d0455166d71575c
  		pixSize * ratio,
  		{ .options = options, .outer = { width, height } });
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_poll.cpp b/Telegram/SourceFiles/history/view/media/history_view_poll.cpp
-index afec6c28b1f8c1ce8e5cc9549d4e1e331d74b2d2..965aedcce6618d11348247d90834892f9c19f025 100644
+index 6a44a6cb5b81bec0167f7c4e1c841e88e79cb9e3..cf96c147078bf02ca4cfea07403be4e0f2711c62 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_poll.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_poll.cpp
 @@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -701,7 +701,7 @@ index afec6c28b1f8c1ce8e5cc9549d4e1e331d74b2d2..965aedcce6618d11348247d90834892f
  #include "window/window_session_controller.h"
  #include "ui/layers/generic_box.h"
  #include "ui/wrap/padding_wrap.h"
-@@ -2844,7 +2845,7 @@ void Poll::Header::validateTopMediaCache(QSize size) const {
+@@ -2836,7 +2837,7 @@ void Poll::Header::validateTopMediaCache(QSize size) const {
  	if (!_attachedMedia || !_attachedMedia->thumbnail || size.isEmpty()) {
  		return;
  	}
@@ -710,7 +710,7 @@ index afec6c28b1f8c1ce8e5cc9549d4e1e331d74b2d2..965aedcce6618d11348247d90834892f
  	const auto rounding = topMediaRounding();
  	auto source = QImage();
  	auto blurred = false;
-@@ -2891,7 +2892,7 @@ void Poll::Header::validateTopMediaCache(QSize size) const {
+@@ -2883,7 +2884,7 @@ void Poll::Header::validateTopMediaCache(QSize size) const {
  	const auto options = blurred
  		? Images::Option::Blur
  		: Images::Option();
@@ -719,7 +719,7 @@ index afec6c28b1f8c1ce8e5cc9549d4e1e331d74b2d2..965aedcce6618d11348247d90834892f
  		source,
  		size * ratio,
  		{ .options = options, .outer = size });
-@@ -3610,7 +3611,7 @@ void Poll::Header::paintSolutionBlock(
+@@ -3618,7 +3619,7 @@ void Poll::Header::paintSolutionBlock(
  		? chatSt.coloredReplyCache(selected, colorIndex).get()
  		: stm->replyCache[colorPattern].get();
  
@@ -728,7 +728,7 @@ index afec6c28b1f8c1ce8e5cc9549d4e1e331d74b2d2..965aedcce6618d11348247d90834892f
  	Ui::Text::FillQuotePaint(p, outer, *cache, qst);
  
  	const auto innerLeft = left + qst.padding.left();
-@@ -3789,7 +3790,7 @@ void Poll::Options::paintAnswer(
+@@ -3797,7 +3798,7 @@ void Poll::Options::paintAnswer(
  		const auto userpicsWidth = answer.recentVotersImage.isNull()
  			? 0
  			: (answer.recentVotersImage.width()
@@ -768,7 +768,7 @@ index 5b9a3c0c6195bf1419e9fe27a051e2827927d55e..a469c026958224aa46721ca20557e1f3
  }
  
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_sticker.cpp b/Telegram/SourceFiles/history/view/media/history_view_sticker.cpp
-index 4ef4cc7be1288442c9d70ab6388e8287076e2f3e..7bca5ba17855a7b3de7be6e9fd1d80f962b12d3a 100644
+index 49c64497a0484f988a7ef70d5c2ae9073fa60d28..4b3c9c63a70b74848df8ec6471fe9813e7714f48 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_sticker.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_sticker.cpp
 @@ -32,6 +32,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -779,7 +779,7 @@ index 4ef4cc7be1288442c9d70ab6388e8287076e2f3e..7bca5ba17855a7b3de7be6e9fd1d80f9
  #include "data/data_file_origin.h"
  #include "chat_helpers/stickers_lottie.h"
  #include "styles/style_chat.h"
-@@ -244,6 +245,20 @@ void Sticker::draw(
+@@ -239,6 +240,20 @@ void Sticker::draw(
  	}
  
  	ensureDataMediaCreated();
@@ -801,7 +801,7 @@ index 4ef4cc7be1288442c9d70ab6388e8287076e2f3e..7bca5ba17855a7b3de7be6e9fd1d80f9
  		paintAnimationFrame(p, context, r);
  	} else if (!_data->sticker()
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_web_page.cpp b/Telegram/SourceFiles/history/view/media/history_view_web_page.cpp
-index e3b4e274d526d4ccdfd8de0358d475dc7cfccc73..b1ba2daf6f26b81c1bee5be4f031cb044b343911 100644
+index 954bb9afa98059021f6d8a6c9f5ca4d9db61b576..ebb472a27981c92c44f1abe490f9e810aa01f1d6 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_web_page.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_web_page.cpp
 @@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -812,7 +812,7 @@ index e3b4e274d526d4ccdfd8de0358d475dc7cfccc73..b1ba2daf6f26b81c1bee5be4f031cb04
  #include "styles/style_chat.h"
  
  namespace HistoryView {
-@@ -1040,7 +1041,7 @@ void WebPage::draw(Painter &p, const PaintContext &context) const {
+@@ -1037,7 +1038,7 @@ void WebPage::draw(Painter &p, const PaintContext &context) const {
  			context.outbg,
  			true,
  			useColorIndex ? (colorIndex + 1) : 0)];

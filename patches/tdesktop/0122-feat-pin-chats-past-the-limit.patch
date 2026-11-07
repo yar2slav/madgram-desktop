@@ -23,10 +23,10 @@ Subject: [PATCH] feat: pin chats past the limit
  create mode 100644 Telegram/SourceFiles/tele/tele_local_pins.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b946abd3a0ef7dec2e3b1db178f457ea0b5cb826..7df26dbc48f7f6f000d2b13d1b4875c680c117a6 100644
+index ea36c4f88079587c81f5ca414a17878972a0ddab..7ede79408b73472a7d1d168a61078c72b0c17a61 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2571,6 +2571,8 @@ PRIVATE
+@@ -2727,6 +2727,8 @@ PRIVATE
      tele/tele_local_drafts.h
      tele/tele_local_names.cpp
      tele/tele_local_names.h
@@ -36,10 +36,10 @@ index b946abd3a0ef7dec2e3b1db178f457ea0b5cb826..7df26dbc48f7f6f000d2b13d1b4875c6
      tele/tele_lowercase.h
      tele/tele_menu_order.cpp
 diff --git a/Telegram/SourceFiles/data/data_session.cpp b/Telegram/SourceFiles/data/data_session.cpp
-index 63f9da3f82543a7820c61876560427d9b9976f63..ebc03820139fc1b9ddd902cad0e236d34f2d26d4 100644
+index 7079d99264d5494f629b6680b30be45a53969b9f..c8c2890d99d38d53aa5658160fd7eb7f1fdc5858 100644
 --- a/Telegram/SourceFiles/data/data_session.cpp
 +++ b/Telegram/SourceFiles/data/data_session.cpp
-@@ -96,6 +96,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "spellcheck/spellcheck_highlight_syntax.h"
  #include "tele/tele_badges.h"
  #include "tele/tele_deleted.h"
@@ -47,7 +47,7 @@ index 63f9da3f82543a7820c61876560427d9b9976f63..ebc03820139fc1b9ddd902cad0e236d3
  
  namespace Data {
  namespace {
-@@ -3023,6 +3024,9 @@ void Session::reorderTwoPinnedChats(
+@@ -3033,6 +3034,9 @@ void Session::reorderTwoPinnedChats(
  	Expects(key1.entry()->folderKnown() && key2.entry()->folderKnown());
  	Expects(filterId || (key1.entry()->folder() == key2.entry()->folder()));
  
@@ -81,10 +81,10 @@ index 2fe437a3edc6e1589e52347d9c09aaf01554323b..2474fa2790f713175fa64775c72a3fbb
  
  bool Entry::hasUnreadUnmutedForSort() const {
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 2e96d3565f3c14bb49ee9d02e7311921a1c8a9a4..e566ea98102a27a765a21fa9b272cde6def4bdcc 100644
+index bc51ef70d85eaecec61d856bde5b9cb438ea35dd..93a701aeee7d608341d9847a07adf948dacf27da 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -88,6 +88,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peer_list_box.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_corner_buttons.h"
@@ -92,7 +92,7 @@ index 2e96d3565f3c14bb49ee9d02e7311921a1c8a9a4..e566ea98102a27a765a21fa9b272cde6
  #include "tele/tele_options.h"
  #include "tele/tele_username_aliases.h"
  #include "api/api_chat_filters.h"
-@@ -2817,6 +2818,8 @@ int InnerWidget::countPinnedIndex(Row *ofRow) {
+@@ -2843,6 +2844,8 @@ int InnerWidget::countPinnedIndex(Row *ofRow) {
  void InnerWidget::savePinnedOrder() {
  	if (_savedSublists && _savedSublists->parentChat()) {
  		return;
@@ -167,7 +167,7 @@ index 2a8b17bbda840664b7a6cec624f22f84e9652130..db65954c7f5f6a387625d5ecbbaf5708
  			texttop,
  			context.width);
 diff --git a/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp b/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp
-index d102242bc0777df6e287fae5a35d47960697a94e..f52a12644abdabba40d837097d940659085619f9 100644
+index e11ca116303455c6b692fe25536b319f4b649a5e..7c2e8652545499c308c07be492224e34004d99a1 100644
 --- a/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp
 @@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -178,7 +178,7 @@ index d102242bc0777df6e287fae5a35d47960697a94e..f52a12644abdabba40d837097d940659
  #include "ui/controls/subsection_tabs_slider_reorder.h"
  #include "ui/controls/subsection_tabs_slider.h"
  #include "ui/dynamic_image.h"
-@@ -1015,6 +1016,9 @@ void SubsectionTabs::applyReorder(
+@@ -1020,6 +1021,9 @@ void SubsectionTabs::applyReorder(
  				}
  			}
  		}
@@ -189,10 +189,10 @@ index d102242bc0777df6e287fae5a35d47960697a94e..f52a12644abdabba40d837097d940659
  		session().api().savePinnedOrder(forum);
  	}
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 32383d556e5c46f3d4ea3da4a4ed5ed3de25fe57..a4fbb74d398e3c92c68e88e8be16f8ac6a667d31 100644
+index 6932fbd1829919f44c0483b7fd0e6cdec8196137..25d13f7ce410c18d9182f3d962b812868fb69df5 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/text/text_utilities.h"
  #include "ui/layers/generic_box.h"
  #include "tele/tele_communities.h"
@@ -200,7 +200,7 @@ index 32383d556e5c46f3d4ea3da4a4ed5ed3de25fe57..a4fbb74d398e3c92c68e88e8be16f8ac
  #include "tele/tele_protected.h"
  #include "tele/tele_punctual_scheduled.h"
  #include "styles/style_layers.h"
-@@ -284,6 +285,7 @@ Session::Session(
+@@ -286,6 +287,7 @@ Session::Session(
  	Tele::SetupPunctualScheduled(this);
  	Tele::SetupProtectedCopies(this);
  	Tele::SetupCommunities(this);
@@ -1378,7 +1378,7 @@ index fc7333aab5545af34b83cc85677a9bb227c6cd34..32a6b46cc1e024f6446affe579e4414c
  			.id = kOptionCallButton,
  			.kind = Kind::Choice,
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 25ebc383fc684a1f6940228eb4c26be90cd92ec5..d7075ac651076e59a429f20e3d03b9d4c6535406 100644
+index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea246680fd00132 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -1426,7 +1426,7 @@ index 25ebc383fc684a1f6940228eb4c26be90cd92ec5..d7075ac651076e59a429f20e3d03b9d4
  		//if (isPinned) {
  		//	controller->content()->dialogsToUp();
  		//}
-@@ -4683,6 +4687,10 @@ void TogglePinnedThread(
+@@ -4692,6 +4696,10 @@ void TogglePinnedThread(
  		return;
  	}
  

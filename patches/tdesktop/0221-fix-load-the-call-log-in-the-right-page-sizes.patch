@@ -9,7 +9,7 @@ Subject: [PATCH] fix: load the call log in the right page sizes
  2 files changed, 14 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/calls/calls_box_controller.cpp b/Telegram/SourceFiles/calls/calls_box_controller.cpp
-index ab97937966dc356591dc6856a3a023284d3458ab..197bbec7ad2c4decc1e99b6905505ae0f313af5c 100644
+index f8bb56be743b1cfe492479f691c0667621b9087d..7db25d7268d1a94ba44d2e5c9f4e5f083d27f909 100644
 --- a/Telegram/SourceFiles/calls/calls_box_controller.cpp
 +++ b/Telegram/SourceFiles/calls/calls_box_controller.cpp
 @@ -56,6 +56,8 @@ namespace {

@@ -16,10 +16,10 @@ Subject: [PATCH] feat: jump to the first message of a chat
  create mode 100644 Telegram/SourceFiles/tele/tele_jump_to_first.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 3756f8337da3b9d799499c803ab21a5716f9e01e..b5597608f4b0b2e6a0cfb18d08998e2acb0a10c2 100644
+index 812982d2595e1a4b1e9cb26d945617cdfa28c3cb..ff40df304adc0c7d6069b5232a9eb9871dc6500d 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2509,6 +2509,8 @@ PRIVATE
+@@ -2665,6 +2665,8 @@ PRIVATE
      tele/tele_lowercase.h
      tele/tele_message_menu.cpp
      tele/tele_message_menu.h
@@ -187,7 +187,7 @@ index eaf058704d83cdd7117c6ddd98b0de88bc418e1e..db0fc99215c2a3c9dd163d3a98de82cd
  [[nodiscard]] bool PeerIdsWithoutSpaces();
  [[nodiscard]] bool BotApiPeerIds();
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index cde4b204853432b3234969a1d6e0df63a8c58cb0..e08b4f4b0225f0eb48d60b95e40db45a5bc08828 100644
+index ebfda48205a404cfeb7636d807d1795d9d035b73..93370686893e4625972b1e339254890cb9e0fbdf 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

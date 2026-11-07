@@ -36,10 +36,10 @@ Subject: [PATCH] feat: name people only for you
  create mode 100644 Telegram/SourceFiles/tele/tele_local_names.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index faac5242cbd7cc944fbbe205ebb267b19ce84d41..3ffea811153c852c20cd5f45e92af504fb8214f5 100644
+index 4a6cb1973b07139ee67d36e5c8dc2fcdfb650ec4..0e0cc46a68eb357fdecf9bcf07a12ee43c4df75c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2537,6 +2537,8 @@ PRIVATE
+@@ -2693,6 +2693,8 @@ PRIVATE
      tele/tele_ignored.h
      tele/tele_inline_via.cpp
      tele/tele_inline_via.h
@@ -122,10 +122,10 @@ index 67cb87ac3a7d513fbd39b093b06c6a02cfe44985..8a0a0e4f8c9842ac5ef6dc1f61805856
  						.confirmText = tr::lng_box_remove(),
  					}));
 diff --git a/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp b/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp
-index 8daacf9c6729f47f9fce74458b622a8d1d89c1af..6c87cb3f05aa2486c287d96d05e82c316686f681 100644
+index f7c6b8bd27a0c3fec8b835a5c2c1537b2fba37a8..b18678af70e3986fc2558b4b4fef051223d4ef7b 100644
 --- a/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp
 +++ b/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp
-@@ -2311,7 +2311,7 @@ void ParticipantsBoxController::kickParticipant(not_null<PeerData*> participant)
+@@ -2315,7 +2315,7 @@ void ParticipantsBoxController::kickParticipant(not_null<PeerData*> participant)
  		: tr::lng_profile_sure_kick_channel)(
  			tr::now,
  			lt_user,
@@ -134,7 +134,7 @@ index 8daacf9c6729f47f9fce74458b622a8d1d89c1af..6c87cb3f05aa2486c287d96d05e82c31
  	showBox(
  		Ui::MakeConfirmBox({
  			.text = text,
-@@ -2336,7 +2336,7 @@ void ParticipantsBoxController::removeAdmin(not_null<UserData*> user) {
+@@ -2340,7 +2340,7 @@ void ParticipantsBoxController::removeAdmin(not_null<UserData*> user) {
  			.text = tr::lng_profile_sure_remove_admin(
  				tr::now,
  				lt_user,
@@ -144,7 +144,7 @@ index 8daacf9c6729f47f9fce74458b622a8d1d89c1af..6c87cb3f05aa2486c287d96d05e82c31
  			.confirmText = tr::lng_box_remove(),
  		}));
 diff --git a/Telegram/SourceFiles/boxes/url_auth_box.cpp b/Telegram/SourceFiles/boxes/url_auth_box.cpp
-index 1fa4309f2091cf148b0b6f249efa029bdc171c53..0015a0b9674d1d49a8cb0c890283acdc26251bd0 100644
+index 8be257698ede2f8c637e78c1c17b2ad122f6642b..0552deaa6d47fe5549394c9dff879737324d44f9 100644
 --- a/Telegram/SourceFiles/boxes/url_auth_box.cpp
 +++ b/Telegram/SourceFiles/boxes/url_auth_box.cpp
 @@ -441,7 +441,7 @@ void RequestButton(
@@ -183,10 +183,10 @@ index 537e7d3ed9196a1934df5a9a8c52b2f0e453ec9b..e44937d3e8ac88ca02bd7ea940c96947
  			} else if (result.invited.size() > 1) {
  				showToast(tr::lng_group_call_invite_done_many(
 diff --git a/Telegram/SourceFiles/calls/group/calls_group_panel.cpp b/Telegram/SourceFiles/calls/group/calls_group_panel.cpp
-index bb51956175d7feafece52dea67d6a4335f5d29ed..5ebe3c9f0538cdfc672c6f9907d85c994d16ff60 100644
+index 130df11ace7463443c27deeea5f9ee674ece0986..4bf17ccbc5fd9eae5797c4dfa67761ac5057bc7f 100644
 --- a/Telegram/SourceFiles/calls/group/calls_group_panel.cpp
 +++ b/Telegram/SourceFiles/calls/group/calls_group_panel.cpp
-@@ -1863,7 +1863,7 @@ void Panel::kickParticipant(not_null<PeerData*> participantPeer) {
+@@ -1870,7 +1870,7 @@ void Panel::kickParticipant(not_null<PeerData*> participantPeer) {
  						: tr::lng_profile_sure_kick)(
  							tr::now,
  							lt_user,
@@ -196,7 +196,7 @@ index bb51956175d7feafece52dea67d6a4335f5d29ed..5ebe3c9f0538cdfc672c6f9907d85c99
  			style::margins(
  				st::boxRowPadding.left(),
 diff --git a/Telegram/SourceFiles/data/data_peer.cpp b/Telegram/SourceFiles/data/data_peer.cpp
-index 28f5e424575509a3a0735150ad3bcf97f3a4d501..10025d6db800bd5e444eca87e6d480368ed7db02 100644
+index 701a088c9822851721967fad73d994d3653cc67a..e25296cbc6a78c084890fe88a5748674f0219e81 100644
 --- a/Telegram/SourceFiles/data/data_peer.cpp
 +++ b/Telegram/SourceFiles/data/data_peer.cpp
 @@ -55,6 +55,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -207,7 +207,7 @@ index 28f5e424575509a3a0735150ad3bcf97f3a4d501..10025d6db800bd5e444eca87e6d48036
  
  namespace {
  
-@@ -1087,6 +1088,7 @@ void PeerData::fillNames() {
+@@ -1099,6 +1100,7 @@ void PeerData::fillNames() {
  		if (user->nameOrPhone != name()) {
  			appendToIndex(user->nameOrPhone);
  		}
@@ -215,7 +215,7 @@ index 28f5e424575509a3a0735150ad3bcf97f3a4d501..10025d6db800bd5e444eca87e6d48036
  		appendToIndex(user->username());
  		if (isSelf()) {
  			const auto english = u"Saved messages"_q;
-@@ -1308,7 +1310,7 @@ const QString &PeerData::topBarNameText() const {
+@@ -1320,7 +1322,7 @@ const QString &PeerData::topBarNameText() const {
  	if (const auto to = migrateTo()) {
  		return to->topBarNameText();
  	} else if (const auto user = asUser()) {
@@ -224,7 +224,7 @@ index 28f5e424575509a3a0735150ad3bcf97f3a4d501..10025d6db800bd5e444eca87e6d48036
  			return user->nameOrPhone;
  		}
  	}
-@@ -1330,6 +1332,9 @@ const QString &PeerData::name() const {
+@@ -1342,6 +1344,9 @@ const QString &PeerData::name() const {
  
  const QString &PeerData::shortName() const {
  	if (const auto user = asUser()) {
@@ -235,7 +235,7 @@ index 28f5e424575509a3a0735150ad3bcf97f3a4d501..10025d6db800bd5e444eca87e6d48036
  	} else if (const auto to = migrateTo()) {
  		return to->shortName();
 diff --git a/Telegram/SourceFiles/data/data_user.cpp b/Telegram/SourceFiles/data/data_user.cpp
-index 00f224d6e000d5a3897172bf0689e75b70920515..88ab9af1f4ea425165b5257cef1210d264e45447 100644
+index ac613a80d2997190a3957ea52badc6d9c9e85cc9..5a23bd441f8f6f75eebe58a41ec240d89be52238 100644
 --- a/Telegram/SourceFiles/data/data_user.cpp
 +++ b/Telegram/SourceFiles/data/data_user.cpp
 @@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -246,7 +246,7 @@ index 00f224d6e000d5a3897172bf0689e75b70920515..88ab9af1f4ea425165b5257cef1210d2
  #include "wallet/wallet_own_card.h"
  #include "wallet/wallet_session.h"
  #include "window/notifications_manager.h"
-@@ -413,7 +414,9 @@ void UserData::setName(
+@@ -422,7 +423,9 @@ void UserData::setName(
  			lastName = newLastName;
  		}
  	}
@@ -258,10 +258,10 @@ index 00f224d6e000d5a3897172bf0689e75b70920515..88ab9af1f4ea425165b5257cef1210d2
  }
  
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index 1c615988e75c442f2c55f436bbcd77927f9e7369..372e8018bb05fcf33ecfc036e85435931418f246 100644
+index b1b6454377d4dbe1e81e09cdc2d232b60d40ff29..68891f752e13c85234be8f33f0a8baa680739a1e 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
-@@ -6978,8 +6978,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
+@@ -7042,8 +7042,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
  		});
  		const auto peer = isSelf ? history()->peer : _from;
  		const auto user = peer->asUser();
@@ -272,7 +272,7 @@ index 1c615988e75c442f2c55f436bbcd77927f9e7369..372e8018bb05fcf33ecfc036e8543593
  			: peer->name();
  		result.links.push_back(peer->createOpenLink());
  		result.text = (isSelf
-@@ -7047,8 +7047,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
+@@ -7111,8 +7111,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
  		const auto both = action.is_for_both();
  		const auto peer = isSelf ? history()->peer : _from;
  		const auto user = peer->asUser();
@@ -283,7 +283,7 @@ index 1c615988e75c442f2c55f436bbcd77927f9e7369..372e8018bb05fcf33ecfc036e8543593
  			: peer->name();
  		auto result = PreparedServiceText{};
  		if (!isSelf) {
-@@ -7747,8 +7747,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
+@@ -7769,8 +7769,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
  		const auto isSelf = (_from->id == _from->session().userPeerId());
  		const auto peer = isSelf ? history()->peer : _from;
  		const auto user = peer->asUser();
@@ -295,7 +295,7 @@ index 1c615988e75c442f2c55f436bbcd77927f9e7369..372e8018bb05fcf33ecfc036e8543593
  		result.links.push_back(peer->createOpenLink());
  		result.text = (isSelf
 diff --git a/Telegram/SourceFiles/history/history_item_components.cpp b/Telegram/SourceFiles/history/history_item_components.cpp
-index 077860b09c2fffe7a18fa806b803579560b4c0af..fcfb750c29b76f664e992a818cf1a9ed61af0ca6 100644
+index b36ca0e059eaac3a7dead912104a6a302f016296..793eb9355d03cdd96dc13106983a37bf6094d58b 100644
 --- a/Telegram/SourceFiles/history/history_item_components.cpp
 +++ b/Telegram/SourceFiles/history/history_item_components.cpp
 @@ -188,7 +188,7 @@ void HistoryMessageGuestChat::create(
@@ -398,10 +398,10 @@ index 7eb6dd055ccdd574d17a38b86979971f48db0ad7..1887cd321abc9e87d136f1ebd72864b7
  	if (photo->hasVideo()) {
  		const auto done = [=](Fn<void()> close) {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index dfb81777ed3ebe39e849c80f722d4973991e72db..315ac52e792ace5b3a7936c9dd145fc4670b5bfe 100644
+index aaab6c2eec57204f2894a03dcc04b56ef1f2a103..428002b192b22f5edac0b7bb3a2e853c55027daa 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -76,6 +76,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "menu/menu_mute.h"
  #include "settings/settings_common.h"
  #include "support/support_helper.h"
@@ -409,7 +409,7 @@ index dfb81777ed3ebe39e849c80f722d4973991e72db..315ac52e792ace5b3a7936c9dd145fc4
  #include "tele/tele_lowercase.h"
  #include "tele/tele_options.h"
  #include "tele/tele_peer_id.h"
-@@ -1862,6 +1863,10 @@ Section DetailsFiller::makeInfo() {
+@@ -1863,6 +1864,10 @@ Section DetailsFiller::makeInfo() {
  			controller);
  	}
  	if (!_topic) {
@@ -421,10 +421,10 @@ index dfb81777ed3ebe39e849c80f722d4973991e72db..315ac52e792ace5b3a7936c9dd145fc4
  			addInfoOneLine(
  				Tele::Lower(u"Aliases"_q),
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp b/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp
-index 4b167bea2beb2a1e1ec5cbb4eae9b72765f13e7c..b54f6a66d9b4b21e7550f4fbe095d303cf3e4c6a 100644
+index bcdf9cca55c4afcd34a8daec5a08cc9662234f2f..1bf3671d5e816223a985b01c8516f6ff96118b90 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp
-@@ -121,7 +121,7 @@ void AddUnofficialSecurityRiskWarning(
+@@ -96,7 +96,7 @@ void AddUnofficialSecurityRiskWarning(
  					lt_icon,
  					rpl::single(std::move(icon)),
  					lt_name,
@@ -434,10 +434,10 @@ index 4b167bea2beb2a1e1ec5cbb4eae9b72765f13e7c..b54f6a66d9b4b21e7550f4fbe095d303
  				st::defaultDividerLabel.label,
  				st::defaultPopupMenu,
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index 9fb079f6318b0a7819d27fdce53d96ab8ea59e8e..c70df1177f01d27e1c2545a8abbe45c255ad103d 100644
+index da0cedb03f13ab8c9824de5a70579045a1b5dd65..75721e6058581bfc8fa0127291148e1ff627ee6a 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -1451,8 +1451,8 @@ void TopBar::setupUserpicButton(
+@@ -1473,8 +1473,8 @@ void TopBar::setupUserpicButton(
  
  	const auto editorData = [=](ChosenType type) {
  		const auto user = _peer->asUser();
@@ -1071,10 +1071,10 @@ index 86b3175a449f33886ac8b9ddb865d8e98f769a1f..43829071f2e4014738d6d86060315ef5
  
  } // namespace Tele
 diff --git a/Telegram/SourceFiles/ui/controls/userpic_button.cpp b/Telegram/SourceFiles/ui/controls/userpic_button.cpp
-index ef39e4684c4885b7d8a19a3ec10cefbffcf5d3fb..8bd0fa3dd0212c5a5b6a64cd3035a3c73a228afa 100644
+index 18c8b39bda1f25713ad255bd6145d57014901fae..838b13f12e8c3e2453bf6dd46f8dbd3f3f6ff94a 100644
 --- a/Telegram/SourceFiles/ui/controls/userpic_button.cpp
 +++ b/Telegram/SourceFiles/ui/controls/userpic_button.cpp
-@@ -329,8 +329,8 @@ void UserpicButton::choosePhotoLocally() {
+@@ -330,8 +330,8 @@ void UserpicButton::choosePhotoLocally() {
  	};
  	const auto editorData = [=](ChosenType type) {
  		const auto user = _peer ? _peer->asUser() : nullptr;
@@ -1086,7 +1086,7 @@ index ef39e4684c4885b7d8a19a3ec10cefbffcf5d3fb..8bd0fa3dd0212c5a5b6a64cd3035a3c7
  			? _peer->name()
  			: QString();
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 5281a4470007d5df8798b499e66d0d72dfcf1c97..e7b340fc4982b3619d08e8de31deccf62d9d06f9 100644
+index 2ce1cae8f9129a0426ce03a9167b0defd66a35c6..9b5e53d8a46f3b92dac919eebec75868b2829b50 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -133,6 +133,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -1113,7 +1113,7 @@ index 5281a4470007d5df8798b499e66d0d72dfcf1c97..e7b340fc4982b3619d08e8de31deccf6
  	addBotToGroup();
  	addNewMembers();
  	addSendGift();
-@@ -4480,7 +4483,7 @@ void FillSenderUserpicMenu(
+@@ -4489,7 +4492,7 @@ void FillSenderUserpicMenu(
  				fieldForMention->insertTag('@' + username);
  			} else {
  				fieldForMention->insertTag(

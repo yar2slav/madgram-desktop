@@ -8,7 +8,7 @@ Subject: [PATCH] fix: userpics in compact chat list rows
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
-index e74f8e7073254fdaf4ba8c150c5237eec76ac2f4..ad458cd25509fa87f84a688f25629c856f50d9d1 100644
+index 2dac9b468f34d8d70acd012a0fc6692a474bc91a..9a477aa7fbb2ed7411e0a7f53abb3d9321e17e0a 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 @@ -798,7 +798,8 @@ void Row::paintUserpic(

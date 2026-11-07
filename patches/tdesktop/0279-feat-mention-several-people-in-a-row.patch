@@ -17,10 +17,10 @@ Subject: [PATCH] feat: mention several people in a row
  create mode 100644 Telegram/SourceFiles/tele/tele_chain_mentions.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b544e9c860c90b59577522d88b14d3baa05f7da1..27e7e327f8bab993bbf0a2e9b299df92a16145ab 100644
+index 0a3028da01d673584ef6b1d4f149f8cb379e6fca..e2b5fc370a5d01f8721d0ed98876418282e7be5e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2521,6 +2521,8 @@ PRIVATE
+@@ -2677,6 +2677,8 @@ PRIVATE
      tele/tele_calcmula_preview.h
      tele/tele_calls.cpp
      tele/tele_calls.h
@@ -30,7 +30,7 @@ index b544e9c860c90b59577522d88b14d3baa05f7da1..27e7e327f8bab993bbf0a2e9b299df92
      tele/tele_changelog.h
      tele/tele_changelog_chat.cpp
 diff --git a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
-index c17be12c12155caf82bff8e06c0a56433ac243dc..3a8524b6533a860772e1e816816fcb9e3dee2e8b 100644
+index 920f36a02b71bbe22934da1cdbd9dadc6ef33bcc..82f9fd6ca2e22b49e0a34f8f28cc1d535b33b1cb 100644
 --- a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 @@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -41,7 +41,7 @@ index c17be12c12155caf82bff8e06c0a56433ac243dc..3a8524b6533a860772e1e816816fcb9e
  #include "tele/tele_confirm_send.h"
  #include "tele/tele_mention_search.h"
  #include "tele/tele_shortcuts.h"
-@@ -1680,6 +1681,15 @@ bool FieldAutocomplete::Inner::isRemovableMentionRow(int index) const {
+@@ -1688,6 +1689,15 @@ bool FieldAutocomplete::Inner::isRemovableMentionRow(int index) const {
  
  void FieldAutocomplete::Inner::mousePressEvent(QMouseEvent *e) {
  	selectByMouse(e->globalPos());
@@ -57,7 +57,7 @@ index c17be12c12155caf82bff8e06c0a56433ac243dc..3a8524b6533a860772e1e816816fcb9e
  	if (e->button() == Qt::LeftButton) {
  		if (_overDelete
  			&& (_mrows->empty()
-@@ -2058,8 +2068,11 @@ void InitFieldAutocomplete(
+@@ -2086,8 +2096,11 @@ void InitFieldAutocomplete(
  	raw->mentionChosen(
  	) | rpl::on_next([=](FieldAutocomplete::MentionChosen data) {
  		const auto user = data.user;
@@ -70,7 +70,7 @@ index c17be12c12155caf82bff8e06c0a56433ac243dc..3a8524b6533a860772e1e816816fcb9e
  		if (data.mention.isEmpty() || ctrlClick) {
  			field->insertTag(
  				user->firstName.isEmpty() ? user->name() : user->firstName,
-@@ -2067,6 +2080,9 @@ void InitFieldAutocomplete(
+@@ -2095,6 +2108,9 @@ void InitFieldAutocomplete(
  		} else {
  			field->insertTag('@' + data.mention);
  		}

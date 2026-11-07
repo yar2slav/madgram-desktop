@@ -13,10 +13,10 @@ Subject: [PATCH] feat: hide mention and reaction badges in the chat list
  6 files changed, 35 insertions(+), 5 deletions(-)
 
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 14ef6edc17fe370dfc88be7113c6dcef25dcf467..2e96d3565f3c14bb49ee9d02e7311921a1c8a9a4 100644
+index bb1779d7817dc743144f433e27165a4833ffc58a..bc51ef70d85eaecec61d856bde5b9cb438ea35dd 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -87,6 +87,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -96,6 +96,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peers/edit_forum_topic_box.h"
  #include "boxes/peer_list_box.h"
  #include "tele/tele_communities.h"
@@ -24,7 +24,7 @@ index 14ef6edc17fe370dfc88be7113c6dcef25dcf467..2e96d3565f3c14bb49ee9d02e7311921
  #include "tele/tele_options.h"
  #include "tele/tele_username_aliases.h"
  #include "api/api_chat_filters.h"
-@@ -323,6 +324,11 @@ InnerWidget::InnerWidget(
+@@ -333,6 +334,11 @@ InnerWidget::InnerWidget(
  		update();
  	}, lifetime());
  
@@ -68,7 +68,7 @@ index fbb7b882942b76bb594bc624759194d4b1905dcc..2a8b17bbda840664b7a6cec624f22f84
  	const auto displayPinnedIcon = false;
  
 diff --git a/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp b/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp
-index 4c6739969da16e3e973ae7104bc73865cadae0e4..d102242bc0777df6e287fae5a35d47960697a94e 100644
+index 9a4f2c9d3cdbd175c38cd4ab8ebabd31bd5e0221..e11ca116303455c6b692fe25536b319f4b649a5e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_subsection_tabs.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -90,7 +90,7 @@ index 4c6739969da16e3e973ae7104bc73865cadae0e4..d102242bc0777df6e287fae5a35d4796
  }
  
  SubsectionTabs::~SubsectionTabs() {
-@@ -909,7 +914,7 @@ void SubsectionTabs::refreshSlice() {
+@@ -914,7 +919,7 @@ void SubsectionTabs::refreshSlice() {
  		}
  		slice.push_back({
  			.thread = thread,

@@ -72,10 +72,10 @@ index 0823d173aa0822fdb937c8bc8d6235fe088cece0..c9436e00e43e42949633502d3826c058
  
  	MTP::Sender _api;
 diff --git a/Telegram/SourceFiles/info/media/info_media_widget.cpp b/Telegram/SourceFiles/info/media/info_media_widget.cpp
-index 603958b00d8c1a430e8258d2932619fd2dacf642..724a857981818128809ef73b727e99079073af90 100644
+index 9deba64c7610b7d443908ac1b4340be44dfd6629..86d4e2705228bc08abc97fe6339ad092b670b013 100644
 --- a/Telegram/SourceFiles/info/media/info_media_widget.cpp
 +++ b/Telegram/SourceFiles/info/media/info_media_widget.cpp
-@@ -184,9 +184,13 @@ void Widget::fillTopBarMenu(const Ui::Menu::MenuCallback &addAction) {
+@@ -173,9 +173,13 @@ void Widget::fillTopBarMenu(const Ui::Menu::MenuCallback &addAction) {
  			_inner->zoomOut();
  		}, &st::menuIconZoomOut);
  	}
@@ -91,10 +91,10 @@ index 603958b00d8c1a430e8258d2932619fd2dacf642..724a857981818128809ef73b727e9907
  					controller()->key().peer())),
  			.date = QDate::currentDate(),
 diff --git a/Telegram/SourceFiles/info/profile/tabs/adapters/info_profile_tab_media.cpp b/Telegram/SourceFiles/info/profile/tabs/adapters/info_profile_tab_media.cpp
-index 746b8180e8c4bf904851715e6272beb078c38821..3a0e4fab9492a56315efcfd4bbf7c507d97503ef 100644
+index b644bf84fdec9383e2e8b522a03b926d37985c2c..25743d0d2425b8d7b0bb421db9487d6f5c5eb67c 100644
 --- a/Telegram/SourceFiles/info/profile/tabs/adapters/info_profile_tab_media.cpp
 +++ b/Telegram/SourceFiles/info/profile/tabs/adapters/info_profile_tab_media.cpp
-@@ -259,12 +259,18 @@ private:
+@@ -255,12 +255,18 @@ private:
  				list->zoomOut();
  			}, &st::menuIconZoomOut);
  		}
@@ -115,10 +115,10 @@ index 746b8180e8c4bf904851715e6272beb078c38821..3a0e4fab9492a56315efcfd4bbf7c507
  				.mediaPhoto = (type != SharedMediaType::Video),
  				.mediaVideo = (type != SharedMediaType::Photo),
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index be536ddd3cf0eb9ff1f055c46ef9b3fb0710a51a..cc5a6c5e12179ca5df73ff80aaf3da5f239647ff 100644
+index c3bc3e914af0d165142cca1ce0517daf09c8c0e4..c1998339f9ac56359eb9a5f55fe809405ad517f1 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -3035,6 +3035,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
+@@ -3214,6 +3214,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
  		const auto search = std::make_shared<Api::SearchCalendarController>(
  			&session(),
  			history->peer->id,

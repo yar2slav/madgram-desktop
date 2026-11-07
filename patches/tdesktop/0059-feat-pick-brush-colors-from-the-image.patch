@@ -15,10 +15,10 @@ Subject: [PATCH] feat: pick brush colors from the image
  create mode 100644 Telegram/SourceFiles/tele/tele_editor_eyedropper.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f6f3f88402224245a488585a289cccf4ee7ffab2..215f4f0d33d635bc537a04d85a7342b26df126df 100644
+index 024fa5366e1beb78150d2d2d3e57d4c83ccc98a3..295d15f4a97ee13408ef07aa283e6917e0a94928 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2509,6 +2509,8 @@ PRIVATE
+@@ -2665,6 +2665,8 @@ PRIVATE
      tele/tele_deleted_section.h
      tele/tele_edit_history.cpp
      tele/tele_edit_history.h
@@ -136,7 +136,7 @@ index c8c1caa910c343a1d5200e6e10c67eed41d23a8d..f49a4948349a072f4f230fa9c9ef35eb
  	QPoint _toolSelectionTo;
  
 diff --git a/Telegram/SourceFiles/editor/photo_editor.cpp b/Telegram/SourceFiles/editor/photo_editor.cpp
-index 88a070e39e2fdbad1efeb5d04edaba6a649f0481..2f36a6f77d553757f7d202e88bea40bfdd4cbabf 100644
+index 3be3dd790affae083e15de5c73819a80eb773358..a16d81d23dab289b728abcded47c2f2b69b58b9b 100644
 --- a/Telegram/SourceFiles/editor/photo_editor.cpp
 +++ b/Telegram/SourceFiles/editor/photo_editor.cpp
 @@ -13,6 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

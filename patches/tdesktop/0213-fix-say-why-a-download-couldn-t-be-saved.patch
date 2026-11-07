@@ -4,19 +4,19 @@ Date: Sun, 4 Oct 2026 11:39:32 +0300
 Subject: [PATCH] fix: say why a download couldn't be saved
 
 ---
- Telegram/SourceFiles/data/data_document.cpp   | 15 +---
+ Telegram/SourceFiles/data/data_document.cpp   | 20 +----
  .../SourceFiles/storage/file_download.cpp     |  3 +
  .../tele/tele_download_folders.cpp            | 89 +++++++++++++++++++
  .../SourceFiles/tele/tele_download_folders.h  |  5 ++
  .../SourceFiles/tele/tele_download_paths.cpp  | 24 +++++
  .../SourceFiles/tele/tele_download_paths.h    |  2 +
- 6 files changed, 126 insertions(+), 12 deletions(-)
+ 6 files changed, 126 insertions(+), 17 deletions(-)
 
 diff --git a/Telegram/SourceFiles/data/data_document.cpp b/Telegram/SourceFiles/data/data_document.cpp
-index 18aa8aeb8d8aa905565737314f6ebbac5688952d..dae12e0061b839ac5fbf7c483a24829f84565cdb 100644
+index bfd915d4e553a95ae0865624599da7003c093d57..4391356520cd1cff41604f89a294414465c6e85d 100644
 --- a/Telegram/SourceFiles/data/data_document.cpp
 +++ b/Telegram/SourceFiles/data/data_document.cpp
-@@ -1340,7 +1340,9 @@ void DocumentData::handleLoaderUpdates() {
+@@ -1358,7 +1358,9 @@ void DocumentData::handleLoaderUpdates() {
  		_owner->documentLoadProgress(this);
  	}, [=](FileLoader::Error error) {
  		using FailureReason = FileLoader::FailureReason;
@@ -27,26 +27,31 @@ index 18aa8aeb8d8aa905565737314f6ebbac5688952d..dae12e0061b839ac5fbf7c483a24829f
  			const auto origin = _loader->fileOrigin();
  			const auto failedFileName = _loader->fileName();
  			const auto retry = [=] {
-@@ -1351,17 +1353,6 @@ void DocumentData::handleLoaderUpdates() {
+@@ -1369,22 +1371,6 @@ void DocumentData::handleLoaderUpdates() {
  				tr::lng_download_finish_failed(),
  				crl::guard(&session(), retry)
  			}));
 -		} else if (error.failureReason == FailureReason::FileWriteFailure) {
 -			if (!Core::App().settings().downloadPath().isEmpty()) {
--				Core::App().settings().setDownloadPathBookmark(QByteArray());
--				Core::App().settings().setDownloadPath(QString());
--				Core::App().saveSettingsDelayed();
 -				InvokeQueued(qApp, [] {
--					Ui::show(
+-					static auto box = base::weak_qptr<Ui::GenericBox>();
+-					static auto nextWarningAt = crl::time();
+-					const auto now = crl::now();
+-					if (box || now < nextWarningAt) {
+-						return;
+-					}
+-					nextWarningAt = now + 60 * crl::time(1000);
+-					box = Ui::show(
 -						Ui::MakeInformBox(
--							tr::lng_download_path_failed(tr::now)));
+-							tr::lng_download_path_failed(tr::now)),
+-						Ui::LayerOption::KeepOther);
 -				});
 -			}
  		}
  		finishLoad();
  		status = FileDownloadFailed;
 diff --git a/Telegram/SourceFiles/storage/file_download.cpp b/Telegram/SourceFiles/storage/file_download.cpp
-index e02954924ca6cf1a54e19bc28af517437ae23c6f..a010fcc5aa4eb10fdb37836bc4a444301ed4d0a5 100644
+index b18fbcb30070381432b222d52a2bebd82dc80253..baf844b9eb836d4db2bf6219cfec1d4d6b1cbcb2 100644
 --- a/Telegram/SourceFiles/storage/file_download.cpp
 +++ b/Telegram/SourceFiles/storage/file_download.cpp
 @@ -349,6 +349,9 @@ void FileLoader::cancel() {

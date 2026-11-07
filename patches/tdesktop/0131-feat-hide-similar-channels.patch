@@ -15,10 +15,10 @@ Subject: [PATCH] feat: hide similar channels
  8 files changed, 62 insertions(+), 4 deletions(-)
 
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 2e0498737dbb933d84a8b4c425227791e9849530..5dcda40d190b34f1d18ee2c37a75bf8b7649a7c5 100644
+index 898be571b03e90cdf14910495adb86d09c9c5a2d..04b5f86d727be08c5b42a6fdea0f647b5f43f2c5 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
-@@ -1967,7 +1967,9 @@ void ApiWrap::joinChannel(not_null<ChannelData*> channel) {
+@@ -1992,7 +1992,9 @@ void ApiWrap::joinChannel(not_null<ChannelData*> channel) {
  		_channelAmInRequests.emplace(channel, requestId);
  
  		using Flag = ChannelDataFlag;
@@ -30,7 +30,7 @@ index 2e0498737dbb933d84a8b4c425227791e9849530..5dcda40d190b34f1d18ee2c37a75bf8b
  	}
  }
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index e287f561960aaf48e92a795d0c11fb53bb8e87ee..d530f63e326760e41995043599e432d61a6c3bfe 100644
+index 31ee0728a92e09cfa34f429f919c5aae30ff23b1..89a1f6b8e8ddae5321f3147f04383aae43cd6d0c 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -76,6 +76,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -52,10 +52,10 @@ index e287f561960aaf48e92a795d0c11fb53bb8e87ee..d530f63e326760e41995043599e432d6
  	} else if (isOnlyCustomEmoji()
  		&& Core::App().settings().largeEmoji()
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp b/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp
-index b54f6a66d9b4b21e7550f4fbe095d303cf3e4c6a..e703210e72e5e661aac5888a8158b6714d7ec031 100644
+index 1bf3671d5e816223a985b01c8516f6ff96118b90..99f5b5592ae986ec2f1f07e323af7b8dbc5d296a 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_inner_widget.cpp
-@@ -57,6 +57,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -52,6 +52,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/painter.h"
  #include "ui/vertical_list.h"
  #include "ui/ui_utility.h"
@@ -63,7 +63,7 @@ index b54f6a66d9b4b21e7550f4fbe095d303cf3e4c6a..e703210e72e5e661aac5888a8158b671
  #include "styles/style_info.h"
  
  namespace Info {
-@@ -316,7 +317,9 @@ object_ptr<Ui::RpWidget> InnerWidget::setupContent(
+@@ -283,7 +284,9 @@ object_ptr<Ui::RpWidget> InnerWidget::setupContent(
  			if (const auto user = _peer->asUser()) {
  				tabs.push_back(MakeCommonGroupsTabDescriptor(user));
  			}

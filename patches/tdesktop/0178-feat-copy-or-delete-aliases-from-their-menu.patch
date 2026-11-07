@@ -23,10 +23,10 @@ index 1149b101ba7510a731f75d8910650027dc9c276e..ea15e8445e49389fda1a0a3174966027
  	const auto button = handler ? handler->getButton() : nullptr;
  	if (!button || !CopyButtonData()) {
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index b446b683b6984ba993ba59a1c7b85a3d02f5140c..50d4a2baa3667d8735ecc6b3fdfe046c8f774726 100644
+index e6ac581c70abe4599b318cf82a903bd3f78d8a65..b17925603c042bc12e2b72dc96ba31a59282938f 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-@@ -536,6 +536,24 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -534,6 +534,24 @@ constexpr auto kFieldText = uint32(1 << 0);
  			Prefix([](int) { return Lower(u"Open the real "_q) + '@'; },
  				st::menuIconUsername),
  		}, .contexts = kText | kPost },
@@ -51,7 +51,7 @@ index b446b683b6984ba993ba59a1c7b85a3d02f5140c..50d4a2baa3667d8735ecc6b3fdfe046c
  		{ .key = u"copy_button_data"_q, .label = [] {
  			return Lower(u"Copy button data"_q);
  		}, .phrases = {
-@@ -701,9 +719,9 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -699,9 +717,9 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"poll_results,poll_retract,poll_stop,add_tasks,send_gift,"
  		"view_replies,factcheck,statistics,add_offer,|,"
  		"copy_selected,copy_text,[Copy#copy:copy_markdown,copy_html,"
@@ -63,7 +63,7 @@ index b446b683b6984ba993ba59a1c7b85a3d02f5140c..50d4a2baa3667d8735ecc6b3fdfe046c
  		"[tele#tele:[Bookmark#bookmark:bookmark,rename_bookmark],mark_read,"
  		"edit_history,shot,mark_viewed],|,"
  		"select,select_up_to,clear_selection,|,"
-@@ -720,7 +738,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -718,7 +736,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"open_gif,save_gif,sticker_set,fave_sticker,show_in_folder,"
  		"save_sound,save_as,copy_image,copy_filename,attached_stickers,"
  		"copy_phone,send_gift,copy_text,translate,copy_link,"
@@ -73,7 +73,7 @@ index b446b683b6984ba993ba59a1c7b85a3d02f5140c..50d4a2baa3667d8735ecc6b3fdfe046c
  		"forward,add_offer,send_now,edit_caption,cancel_upload,delete,"
  		"download_selected,save_html,report,block_user,select,"
  		"select_up_to,clear_selection,reschedule,|,"
-@@ -746,9 +765,9 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -744,9 +763,9 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"poll_results,poll_retract,poll_stop,add_tasks,send_gift,"
  		"view_replies,factcheck,statistics,add_offer,|,"
  		"copy_selected,copy_text,copy_markdown,copy_html,copy_link,"

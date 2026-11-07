@@ -20,10 +20,10 @@ Subject: [PATCH] feat: ignore users by hiding or fading their messages
  create mode 100644 Telegram/SourceFiles/tele/tele_ignored.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index c33e38f77547085f5cf26b2560cedec24529b9e9..d65b36779787fbc0e90fa6ad276cceda9b4ed7db 100644
+index be5be7bd349f3421db6ba7236433c2dca2ccb270..4d09634c904048a6bf8868f096596e59bc72a3ab 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2495,6 +2495,8 @@ PRIVATE
+@@ -2651,6 +2651,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_gifts.cpp
      tele/tele_gifts.h
@@ -33,10 +33,10 @@ index c33e38f77547085f5cf26b2560cedec24529b9e9..d65b36779787fbc0e90fa6ad276cceda
      tele/tele_options.h
      tele/tele_peer_id.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 269747833b59f6a730496f91416e3a2669dfd2e8..dd11a7df62750166f84047cd1bed5072dc0ef136 100644
+index 78c2bf87ca2e4df7b8d79c7e88be9a4f55468970..c0deb139d88e3394abb72b372a69c78622898e7f 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_histories.h"
  #include "data/data_changes.h"
  #include "dialogs/ui/dialogs_video_userpic.h"
@@ -44,7 +44,7 @@ index 269747833b59f6a730496f91416e3a2669dfd2e8..dd11a7df62750166f84047cd1bed5072
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
  
-@@ -1722,6 +1723,7 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
+@@ -1738,6 +1739,7 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
  		// paint the userpic if it intersects the painted rect
  		if (userpicTop + st::msgPhotoSize > clip.top()) {
  			const auto item = view->data();
@@ -53,7 +53,7 @@ index 269747833b59f6a730496f91416e3a2669dfd2e8..dd11a7df62750166f84047cd1bed5072
  				item->id.bare);
  			if (shift) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index 52a02c4b1857a989764569f74aaeb434b86cc528..1cdf5ab3533c7d7f2931b739f8006f1f2b357c4e 100644
+index c7086658aad9da4e8cba89d5fa8885135678a801..3294916e3653f7ddff1adeef4eee81e532ecf609 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -74,6 +74,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -81,7 +81,7 @@ index 52a02c4b1857a989764569f74aaeb434b86cc528..1cdf5ab3533c7d7f2931b739f8006f1f
  }
  
  void Element::overrideMedia(std::unique_ptr<Media> media) {
-@@ -3621,6 +3623,7 @@ Element::~Element() {
+@@ -3634,6 +3636,7 @@ Element::~Element() {
  		history()->owner().notifyViewRemoved(this);
  	}
  	history()->owner().unregisterItemView(this);
@@ -90,10 +90,10 @@ index 52a02c4b1857a989764569f74aaeb434b86cc528..1cdf5ab3533c7d7f2931b739f8006f1f
  
  void Element::Hovered(Element *view) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 7a2d1becd98a678de9e2a2a5d5f5c7b5367bfee2..75e1041d401a295bf707db4aa0635a39d6cd1642 100644
+index c0e8d04bc504c7395d12e073c4476853d1aa2390..6e1a57db9edc3beed0c40570d35a80899543c8e1 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -100,6 +100,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -104,6 +104,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_file_click_handler.h"
  #include "data/data_message_reactions.h"
  #include "data/data_peer_values.h"
@@ -101,7 +101,7 @@ index 7a2d1becd98a678de9e2a2a5d5f5c7b5367bfee2..75e1041d401a295bf707db4aa0635a39
  #include "styles/style_chat.h"
  #include "styles/style_window.h" // columnMaximalWidthLeft
  
-@@ -3223,6 +3224,7 @@ void ListWidget::paintUserpics(
+@@ -3669,6 +3670,7 @@ void ListWidget::paintUserpics(
  		// paint the userpic if it intersects the painted rect
  		if (userpicTop + st::msgPhotoSize > clip.top()) {
  			const auto item = view->data();
@@ -109,7 +109,7 @@ index 7a2d1becd98a678de9e2a2a5d5f5c7b5367bfee2..75e1041d401a295bf707db4aa0635a39
  			const auto shift = context.gestureHorizontal.visualTranslationFor(
  				item->id.bare);
  			if (shift) {
-@@ -4108,6 +4110,11 @@ void ListWidget::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -4565,6 +4567,11 @@ void ListWidget::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  		return;
  	} else if (linkUserpicPeerId) {
  		_menu = _delegate->listFillSenderUserpicMenu(linkUserpicPeerId);
@@ -122,7 +122,7 @@ index 7a2d1becd98a678de9e2a2a5d5f5c7b5367bfee2..75e1041d401a295bf707db4aa0635a39
  			Window::AddSenderUserpicModerateAction(
  				controller(),
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index e1e3b0477fc35f1c3ae6cc3f4b9c8e09c7932df5..f224d09630cb18c04ffc95e40146a4c699554bec 100644
+index f4ed937c4922d5dbe4afc01a2ce22a7fd0365a1a..20e8c0a944beffd7fc68955072d3f1315738a276 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
 @@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -133,7 +133,7 @@ index e1e3b0477fc35f1c3ae6cc3f4b9c8e09c7932df5..f224d09630cb18c04ffc95e40146a4c6
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_chat_style.h"
-@@ -1843,6 +1844,7 @@ void Message::draw(Painter &p, const PaintContext &context) const {
+@@ -1846,6 +1847,7 @@ void Message::draw(Painter &p, const PaintContext &context) const {
  	if (isHidden()) {
  		return;
  	}
@@ -820,7 +820,7 @@ index d1bebdec494e8825ae4e325ff3eb1060651c091f..0e1aabd4e07b37ff98696589a659f0fb
  void SetServerUrl(const QString &url);
  [[nodiscard]] rpl::producer<QString> ServerUrlValue();
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 864a8103df594c634cb1017c7bf2733da13885f2..8ea569d735423f7530cda93fbf35230972bfd8bb 100644
+index 25a3d52d0ef258f33fa673f9eb53f6346233393f..d56ca5015c1a0761faf25f1505a908254e9d7891 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -831,7 +831,7 @@ index 864a8103df594c634cb1017c7bf2733da13885f2..8ea569d735423f7530cda93fbf352309
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_credits.h"
-@@ -4524,6 +4525,7 @@ void FillSenderUserpicMenu(
+@@ -4533,6 +4534,7 @@ void FillSenderUserpicMenu(
  			}
  		}
  	}

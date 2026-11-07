@@ -13,7 +13,7 @@ Subject: [PATCH] feat: queue messages behind an uploading media
  6 files changed, 330 insertions(+)
 
 diff --git a/Telegram/SourceFiles/data/data_histories.cpp b/Telegram/SourceFiles/data/data_histories.cpp
-index 30089124af11621e1b94b2493d486dc135944820..2ceaf52f45798265ef9b8e699f14e765c584f351 100644
+index e36eaec47915260f8fb9a00b34831b45907b65ce..dbab84a581125bf309d44fede97af0e79c1f2140 100644
 --- a/Telegram/SourceFiles/data/data_histories.cpp
 +++ b/Telegram/SourceFiles/data/data_histories.cpp
 @@ -36,6 +36,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

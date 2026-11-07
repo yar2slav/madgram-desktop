@@ -21,10 +21,10 @@ Subject: [PATCH] feat: open anyone's gifts in the gift grid
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_grid_import.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 463485b4bf9db3c055de1de3a4f12596a4a50a2c..0a2758446465707c117ddf978f38a21f11d3b823 100644
+index de75c945c60a06f409f1143e761b9f16f77a89af..7add1c6f995b8a4524d798333814f8ca322baa23 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2608,6 +2608,8 @@ PRIVATE
+@@ -2764,6 +2764,8 @@ PRIVATE
      tele/tele_gift_grid_editor.h
      tele/tele_gift_grid_export.cpp
      tele/tele_gift_grid_export.h
@@ -34,7 +34,7 @@ index 463485b4bf9db3c055de1de3a4f12596a4a50a2c..0a2758446465707c117ddf978f38a21f
      tele/tele_gift_quantity.h
      tele/tele_gift_roll_number.cpp
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index e6690845c440cefb807f6796de21f6ba61e5ae58..567fab057cbe02169c537ef0e46b361b4c27e725 100644
+index a607839f3843e22982eeda723b5b6c9200fb603e..67d65cd0fdd6cc522b4a5a0872056d20fa2a9fc0 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -45,7 +45,7 @@ index e6690845c440cefb807f6796de21f6ba61e5ae58..567fab057cbe02169c537ef0e46b361b
  #include "tele/tele_gift_search.h"
  #include "tele/tele_list_dates.h"
  #include "ui/boxes/confirm_box.h"
-@@ -1141,6 +1142,7 @@ void InnerWidget::showMenuForCollection(int id) {
+@@ -1150,6 +1151,7 @@ void InnerWidget::showMenuForCollection(int id) {
  		editCollectionGifts(id);
  	}, &st::menuIconGiftPremium);
  	Tele::AddCollectionCopyLink(addAction, _window, _peer, id);
@@ -53,7 +53,7 @@ index e6690845c440cefb807f6796de21f6ba61e5ae58..567fab057cbe02169c537ef0e46b361b
  	if (const auto username = _peer->username(); !username.isEmpty()) {
  		addAction(tr::lng_gift_collection_share(tr::now), [=] {
  			shareCollectionLink(username, id);
-@@ -1907,6 +1909,10 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
+@@ -1929,6 +1931,10 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
  
  void InnerWidget::fillMenu(const Ui::Menu::MenuCallback &addAction) {
  	Tele::FillGiftSelectionMenu(this, addAction);

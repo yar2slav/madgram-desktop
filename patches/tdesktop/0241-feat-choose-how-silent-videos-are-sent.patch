@@ -195,7 +195,7 @@ index ef50043f9d921d0ada08999a6f4c7e135fd7ad20..3f9196f1d6f80664d47065bcadfaddca
  [[nodiscard]] bool DownloadsPerChat();
  [[nodiscard]] rpl::producer<> PunctualScheduledChanges();
 diff --git a/Telegram/SourceFiles/tele/tele_protected.cpp b/Telegram/SourceFiles/tele/tele_protected.cpp
-index b2dfcb2164437c611c95ec7402ff0eb43584cb5d..653eea98c226549b63c01aaffae76ad319cc2714 100644
+index c58434d26542c85a97b5ac50d00ff037172935ee..61a31c4bcfdd9a268762344364a1157205510723 100644
 --- a/Telegram/SourceFiles/tele/tele_protected.cpp
 +++ b/Telegram/SourceFiles/tele/tele_protected.cpp
 @@ -26,6 +26,7 @@

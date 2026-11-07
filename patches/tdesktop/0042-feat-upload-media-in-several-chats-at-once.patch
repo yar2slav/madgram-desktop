@@ -14,10 +14,10 @@ Subject: [PATCH] feat: upload media in several chats at once
  create mode 100644 Telegram/SourceFiles/tele/tele_uploads.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 49de4294591597030f0741b71feda14f9ea29317..6124b344e8aa6db8576a7400dbd2a166080dfa66 100644
+index e693673d9196addfc281f458a73cd425a0f7686a..6a8d3b0bc46a6ce0639e616d6b8332c94924d9a7 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2535,6 +2535,7 @@ PRIVATE
+@@ -2691,6 +2691,7 @@ PRIVATE
      tele/tele_title_template.h
      tele/tele_updater.cpp
      tele/tele_updater.h
@@ -40,7 +40,7 @@ index 46b917be98d627067c1cbec9cc41c47b5a4a3d7e..b78a3d6ad94c720d920058ab93ab9a8c
  	AddOptionToggle(builder, ::Tele::kOptionKeepSecretMedia);
  	AddOptionToggle(builder, ::Tele::kOptionScreenshotSecretMedia);
 diff --git a/Telegram/SourceFiles/storage/file_upload.cpp b/Telegram/SourceFiles/storage/file_upload.cpp
-index a19470a24b6a62b58c63d8cc21d831641d970260..d8b3c0e5b8fcaf429e277641557d06ea41669e10 100644
+index ec6297c8660b2bc3aeafc1732c0af1c8b4091b17..f3a1c8384e824182d1c049ccdf3b9a66da403e66 100644
 --- a/Telegram/SourceFiles/storage/file_upload.cpp
 +++ b/Telegram/SourceFiles/storage/file_upload.cpp
 @@ -31,6 +31,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -61,7 +61,7 @@ index a19470a24b6a62b58c63d8cc21d831641d970260..d8b3c0e5b8fcaf429e277641557d06ea
  
  	for (auto i = begin(_queue); i != end(_queue); ++i) {
  		if (i->preparing) {
-@@ -1068,7 +1072,8 @@ void Uploader::partLoaded(const MTPBool &result, mtpRequestId requestId) {
+@@ -1069,7 +1073,8 @@ void Uploader::partLoaded(const MTPBool &result, mtpRequestId requestId) {
  		_nonPremiumDelays.fire_copy(itemId);
  	}
  
@@ -71,7 +71,7 @@ index a19470a24b6a62b58c63d8cc21d831641d970260..d8b3c0e5b8fcaf429e277641557d06ea
  		maybeFinishFront();
  	}
  	maybeSend();
-@@ -1104,7 +1109,7 @@ void Uploader::maybeFinishFront() {
+@@ -1105,7 +1110,7 @@ void Uploader::maybeFinishFront() {
  			&& !entry.partsWaiting
  			&& !entry.docPartsWaiting) {
  			finishFront();

@@ -7,7 +7,7 @@ Subject: [PATCH] feat: folders past the limit
  Telegram/CMakeLists.txt                       |   2 +
  Telegram/SourceFiles/api/api_chat_filters.cpp |   4 +
  .../api/api_chat_filters_remove_manager.cpp   |   5 +-
- .../SourceFiles/boxes/choose_filter_box.cpp   |  15 +-
+ .../SourceFiles/boxes/choose_filter_box.cpp   |  18 +-
  .../boxes/filters/edit_filter_box.cpp         |  21 +-
  .../boxes/filters/edit_filter_chats_list.cpp  |   3 +-
  .../boxes/filters/edit_filter_links.cpp       |   8 +-
@@ -24,15 +24,15 @@ Subject: [PATCH] feat: folders past the limit
  .../ui/widgets/chat_filters_tabs_strip.cpp    |   7 +-
  .../window/window_filters_menu.cpp            |   4 +-
  .../window/window_session_controller.cpp      |   2 +
- 20 files changed, 1092 insertions(+), 35 deletions(-)
+ 20 files changed, 1095 insertions(+), 35 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_local_folders.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_local_folders.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7df26dbc48f7f6f000d2b13d1b4875c680c117a6..a11d7f7c508671cb1fd79f42c2907c2bfcbb8108 100644
+index 7ede79408b73472a7d1d168a61078c72b0c17a61..25fa92abd3129904aacd35783aea515cd02b5ccd 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2569,6 +2569,8 @@ PRIVATE
+@@ -2725,6 +2725,8 @@ PRIVATE
      tele/tele_inline_via.h
      tele/tele_local_drafts.cpp
      tele/tele_local_drafts.h
@@ -87,7 +87,7 @@ index 7839b59028f882b4b183a74310150176447cc790..72a707f1519909e09802383d7b24aaad
  			MTP_flags(MTPmessages_UpdateDialogFilter::Flag(0)),
  			MTP_int(filterId),
 diff --git a/Telegram/SourceFiles/boxes/choose_filter_box.cpp b/Telegram/SourceFiles/boxes/choose_filter_box.cpp
-index 468215e0103a7ec72749969e3795030d9c87525c..24f01cf53cd56a0f6476132ec016563ef62c901e 100644
+index 01e543318e5fc2b40e8a6a7d9bf43aa22ace9cd0..9a0525fbcb2a5f2fac2a0ae3bda6e579f090ff04 100644
 --- a/Telegram/SourceFiles/boxes/choose_filter_box.cpp
 +++ b/Telegram/SourceFiles/boxes/choose_filter_box.cpp
 @@ -33,6 +33,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -118,7 +118,7 @@ index 468215e0103a7ec72749969e3795030d9c87525c..24f01cf53cd56a0f6476132ec016563e
  	};
  	if ((list.size() - 1) < limit()) {
  		menu->addAction(tr::lng_filters_create(tr::now), [=] {
-@@ -373,9 +378,13 @@ void FillChooseFilterMenu(
+@@ -373,11 +378,18 @@ void FillChooseFilterMenu(
  				}
  				return id;
  			};
@@ -127,13 +127,18 @@ index 468215e0103a7ec72749969e3795030d9c87525c..24f01cf53cd56a0f6476132ec016563e
 +			auto filter = Data::ChatFilter(
 +				Tele::NewFolderId(session),
 +				{}, {}, {}, {}, { history }, {}, {});
- 			const auto send = [=](const Data::ChatFilter &filter) {
+ 			const auto saveAnd = [=](
+ 					const Data::ChatFilter &filter,
+ 					Fn<void(Data::ChatFilter)> next) {
 +				if (Tele::SaveLocalFolder(session, filter)) {
++					if (next) {
++						next(filter);
++					}
 +					return;
 +				}
+ 				const auto updated = filter.withId(
+ 					filter.id() ? filter.id() : chooseNextId());
  				session->api().request(MTPmessages_UpdateDialogFilter(
- 					MTP_flags(MTPmessages_UpdateDialogFilter::Flag::f_filter),
- 					MTP_int(chooseNextId()),
 diff --git a/Telegram/SourceFiles/boxes/filters/edit_filter_box.cpp b/Telegram/SourceFiles/boxes/filters/edit_filter_box.cpp
 index 83d945f0075b7bec089dcf06dfb420b158388f81..4fb29a42b110dd1b818aabcc8978d6695cf0ba8b 100644
 --- a/Telegram/SourceFiles/boxes/filters/edit_filter_box.cpp
@@ -384,10 +389,10 @@ index 7eba8addc7a361eee5e5e806d6836d25df75d269..294e6eaeec48901b977d75a4efc5f2af
  }
  
 diff --git a/Telegram/SourceFiles/data/data_session.cpp b/Telegram/SourceFiles/data/data_session.cpp
-index ebc03820139fc1b9ddd902cad0e236d34f2d26d4..dd82011ab17ba5be8d8483023c7f328a852dc00e 100644
+index c8c2890d99d38d53aa5658160fd7eb7f1fdc5858..87c279e9864960ef90fe411c063a1c65f8565542 100644
 --- a/Telegram/SourceFiles/data/data_session.cpp
 +++ b/Telegram/SourceFiles/data/data_session.cpp
-@@ -96,6 +96,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "spellcheck/spellcheck_highlight_syntax.h"
  #include "tele/tele_badges.h"
  #include "tele/tele_deleted.h"
@@ -395,7 +400,7 @@ index ebc03820139fc1b9ddd902cad0e236d34f2d26d4..dd82011ab17ba5be8d8483023c7f328a
  #include "tele/tele_local_pins.h"
  
  namespace Data {
-@@ -2921,7 +2922,7 @@ int Session::pinnedChatsLimit(Data::Folder *folder) const {
+@@ -2931,7 +2932,7 @@ int Session::pinnedChatsLimit(Data::Folder *folder) const {
  
  int Session::pinnedChatsLimit(FilterId filterId) const {
  	const auto limits = Data::PremiumLimits(_session);
@@ -404,7 +409,7 @@ index ebc03820139fc1b9ddd902cad0e236d34f2d26d4..dd82011ab17ba5be8d8483023c7f328a
  }
  
  int Session::pinnedChatsLimit(not_null<Data::Forum*> forum) const {
-@@ -2957,10 +2958,10 @@ rpl::producer<int> Session::maxPinnedChatsLimitValue(
+@@ -2967,10 +2968,10 @@ rpl::producer<int> Session::maxPinnedChatsLimitValue(
  	// We always use premium limit in the MainList limit producer,
  	// because it slices the list to that limit. We don't want to slice
  	// premium-ly added chats from the pinned list because of sync issues.
@@ -418,7 +423,7 @@ index ebc03820139fc1b9ddd902cad0e236d34f2d26d4..dd82011ab17ba5be8d8483023c7f328a
  
  rpl::producer<int> Session::maxPinnedChatsLimitValue(
 diff --git a/Telegram/SourceFiles/settings/sections/settings_folders.cpp b/Telegram/SourceFiles/settings/sections/settings_folders.cpp
-index 8c5b9b4d6b7a5b3166c12ac8e20c50775a84e9dd..52c07598e03cfcc88bc331d5985ab1e59860c65e 100644
+index 997d8da164cbc508af5c45c487227d3693d8643e..61543548678aaa23f2681f17ced07ca9fe84f95a 100644
 --- a/Telegram/SourceFiles/settings/sections/settings_folders.cpp
 +++ b/Telegram/SourceFiles/settings/sections/settings_folders.cpp
 @@ -45,6 +45,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -438,7 +443,7 @@ index 8c5b9b4d6b7a5b3166c12ac8e20c50775a84e9dd..52c07598e03cfcc88bc331d5985ab1e5
  }
  
  FilterRowButton::FilterRowButton(
-@@ -372,7 +373,8 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
+@@ -410,7 +411,8 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
  	const auto weak = base::make_weak(container);
  	const auto session = &controller->session();
  	const auto limit = [=] {
@@ -448,7 +453,7 @@ index 8c5b9b4d6b7a5b3166c12ac8e20c50775a84e9dd..52c07598e03cfcc88bc331d5985ab1e5
  	};
  
  	const auto find = [=](not_null<FilterRowButton*> button) {
-@@ -592,7 +594,8 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
+@@ -601,7 +603,8 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
  		controller->window().show(Box(
  			EditFilterBox,
  			controller,
@@ -458,7 +463,7 @@ index 8c5b9b4d6b7a5b3166c12ac8e20c50775a84e9dd..52c07598e03cfcc88bc331d5985ab1e5
  			crl::guard(container, doneCallback),
  			crl::guard(container, saveAnd)));
  	});
-@@ -611,7 +614,7 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
+@@ -620,7 +623,7 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
  		auto result = base::flat_map<not_null<FilterRowButton*>, FilterId>();
  		for (auto &row : state->rows) {
  			const auto id = row.filter.id();
@@ -467,7 +472,7 @@ index 8c5b9b4d6b7a5b3166c12ac8e20c50775a84e9dd..52c07598e03cfcc88bc331d5985ab1e5
  				continue;
  			} else if (!id
  				|| !ranges::contains(list, id, &Data::ChatFilter::id)) {
-@@ -674,6 +677,8 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
+@@ -683,6 +686,8 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
  					MTPchatlists_LeaveChatlist(
  						MTP_inputChatlistDialogFilter(MTP_int(newId)),
  						MTP_vector<MTPInputPeer>(std::move(inputs))));
@@ -1611,10 +1616,10 @@ index 7e4811ece0ef462b3070cd74c240571207d7221e..71d0f680afd46b977248621158170923
  	const auto &list = Tele::FolderTabs(&_session->session());
  	const auto premiumFrom = (reorderAll ? 0 : 1) + maxLimit - hidden;
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 390185b38d3c045b71d8e8c16ccfb886e996d714..c7883cdf5f5da0e01e5dfe1dccde29d08a806e98 100644
+index 7750448cbdc8519ca8a6fbedf7f21a874df247f0..9a2eb1017804b52c0051a985876b359b69c74c22 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_changelog_chat.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_folders.h"
@@ -1622,7 +1627,7 @@ index 390185b38d3c045b71d8e8c16ccfb886e996d714..c7883cdf5f5da0e01e5dfe1dccde29d0
  #include "tele/tele_options.h"
  #include "tele/tele_username_aliases.h"
  #include "styles/style_chat_helpers.h"
-@@ -4189,6 +4190,7 @@ bool CheckAndJumpToNearChatsFilter(
+@@ -4368,6 +4369,7 @@ bool CheckAndJumpToNearChatsFilter(
  		return false;
  	}
  	if (changed > Data::PremiumLimits(session).dialogFiltersCurrent()

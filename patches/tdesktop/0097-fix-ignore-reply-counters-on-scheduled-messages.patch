@@ -8,10 +8,10 @@ Subject: [PATCH] fix: ignore reply counters on scheduled messages
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index 372e8018bb05fcf33ecfc036e85435931418f246..c26d83bb67a30125893f1e141f6008361bf8cad2 100644
+index 68891f752e13c85234be8f33f0a8baa680739a1e..aef115b9bb8fec693397975b46e714f45e5d517d 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
-@@ -4269,7 +4269,7 @@ void HistoryItem::setPostAuthor(const QString &postAuthor) {
+@@ -4353,7 +4353,7 @@ void HistoryItem::setPostAuthor(const QString &postAuthor) {
  }
  
  void HistoryItem::setReplies(HistoryMessageRepliesData &&data, bool notify) {

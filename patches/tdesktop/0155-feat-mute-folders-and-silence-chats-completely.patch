@@ -19,10 +19,10 @@ Subject: [PATCH] feat: mute folders and silence chats completely
  create mode 100644 Telegram/SourceFiles/tele/tele_mute.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index afbd3205facd733e003705379bb83cd331fe3609..81bea4ec1714496dbd567aca2655f2002859e7b4 100644
+index fc258aa5aabe0b764f9c9362f7be72ceffc17954..e43044112173efe8e619183206002738a85bb717 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2601,6 +2601,8 @@ PRIVATE
+@@ -2757,6 +2757,8 @@ PRIVATE
      tele/tele_mtp_inspector.h
      tele/tele_mtp_log.cpp
      tele/tele_mtp_log.h
@@ -64,10 +64,10 @@ index 2900ab2c493e6c98436405146ac114d5de71c8ae..c76afc509f481a2781e64c53823499aa
  		return MutedFromUntil(*until, changesIn);
  	} else if (const auto community = CommunityFallback(peer)) {
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 475967df096996e746695bd8fb2aa5856078aa6c..5d56740038492b0026f4e5d3908f28ad2765043a 100644
+index 610d9b2095cf2984e1f3c9cbb50f33910516442a..1d25930313362629eeeb74e21a518df2cb5a25b9 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_bookmarks.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_local_pins.h"
@@ -75,7 +75,7 @@ index 475967df096996e746695bd8fb2aa5856078aa6c..5d56740038492b0026f4e5d3908f28ad
  #include "tele/tele_no_ai.h"
  #include "tele/tele_online_notify.h"
  #include "tele/tele_protected.h"
-@@ -292,6 +293,7 @@ Session::Session(
+@@ -294,6 +295,7 @@ Session::Session(
  	Tele::SetupBookmarks(this);
  	Tele::SetupNoAi(this);
  	Tele::SetupOnlineNotify(this);
@@ -588,7 +588,7 @@ index fddbb1b9c8700708276e860272df2a2ed97e3f89..693f67e545ec123d8af236421d789c99
  		auto showRemoveBox = [=] {
  			state->removeApi.request(base::make_weak(parent), controller, id);
 diff --git a/Telegram/SourceFiles/window/notifications_manager.cpp b/Telegram/SourceFiles/window/notifications_manager.cpp
-index e5b9eb949e180667952172d338cbcf3e552798d8..91200c3fc2f1556892148c192c7020cb7a47090f 100644
+index 9aac369dc2a8fd409ea0c3315eb40921da951ccd..b959ef27922ffc4f351409282fe3d869499aaede 100644
 --- a/Telegram/SourceFiles/window/notifications_manager.cpp
 +++ b/Telegram/SourceFiles/window/notifications_manager.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -599,7 +599,7 @@ index e5b9eb949e180667952172d338cbcf3e552798d8..91200c3fc2f1556892148c192c7020cb
  #include "ui/text/text_utilities.h"
  #include "platform/platform_specific.h"
  
-@@ -317,6 +318,7 @@ System::SkipState System::skipNotification(
+@@ -324,6 +325,7 @@ System::SkipState System::skipNotification(
  	const auto thread = item->maybeNotificationThread();
  	if (!thread
  		|| !thread->currentNotification()

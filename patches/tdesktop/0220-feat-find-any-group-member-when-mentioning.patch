@@ -15,10 +15,10 @@ Subject: [PATCH] feat: find any group member when mentioning
  create mode 100644 Telegram/SourceFiles/tele/tele_mention_search.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f1f5436c36520e76d87ce4680066df6467b8dcc0..4bf9756b82e537ff99d13569938d248433935f77 100644
+index 4169657579daa376c65e2b8cc90220e17435e19e..ca1a372c852c6219051639727998962ab7cd5935 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2668,6 +2668,8 @@ PRIVATE
+@@ -2824,6 +2824,8 @@ PRIVATE
      tele/tele_lowercase.h
      tele/tele_maps.cpp
      tele/tele_maps.h
@@ -28,7 +28,7 @@ index f1f5436c36520e76d87ce4680066df6467b8dcc0..4bf9756b82e537ff99d13569938d2484
      tele/tele_menu_apply.h
      tele/tele_menu_editor.cpp
 diff --git a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
-index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c51227f3e527 100644
+index 5c530b0bf5cbd0a5808d687c5574cf98ffa7ed93..2ebf7d3b03140e42daa670639c3fd718f68bdf21 100644
 --- a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 @@ -40,6 +40,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -39,7 +39,7 @@ index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c512
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_username_aliases.h"
  #include "ui/effects/message_sending_animation_common.h"
-@@ -305,6 +306,10 @@ FieldAutocomplete::FieldAutocomplete(
+@@ -307,6 +308,10 @@ FieldAutocomplete::FieldAutocomplete(
  		}
  		updateFiltered();
  	}, lifetime());
@@ -50,7 +50,7 @@ index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c512
  }
  
  std::shared_ptr<Show> FieldAutocomplete::uiShow() const {
-@@ -390,6 +395,7 @@ void FieldAutocomplete::showFiltered(
+@@ -392,6 +397,7 @@ void FieldAutocomplete::showFiltered(
  	_user = peer->asUser();
  	_channel = peer->asChannel();
  	if (query.isEmpty()) {
@@ -58,7 +58,7 @@ index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c512
  		_type = Type::Mentions;
  		rowsUpdated(
  			MentionRows(),
-@@ -659,6 +665,12 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
+@@ -661,6 +667,12 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
  					pushMentionRow(user, Source::MentionCandidate);
  				}
  			}
@@ -71,7 +71,7 @@ index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c512
  		}
  		auto aliasIndex = 0;
  		for (const auto &[alias, user] : Tele::UsernameAliasMentions(
-@@ -1062,6 +1074,10 @@ void FieldAutocomplete::setSendMenuDetails(
+@@ -1070,6 +1082,10 @@ void FieldAutocomplete::setSendMenuDetails(
  	_inner->setSendMenuDetails(std::move(callback));
  }
  
@@ -82,7 +82,7 @@ index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c512
  bool FieldAutocomplete::eventFilter(QObject *obj, QEvent *e) {
  	const auto hidden = isHidden();
  	const auto moderate = Core::App().settings().moderateModeEnabled();
-@@ -2092,6 +2108,7 @@ void InitFieldAutocomplete(
+@@ -2120,6 +2136,7 @@ void InitFieldAutocomplete(
  
  	raw->setModerateKeyActivateCallback(
  		std::move(descriptor.moderateKeyActivateCallback));
@@ -91,7 +91,7 @@ index 542f29d9adcc15d75ebeb84fd8b9fb21d46e7d46..74678a13a218531bf3672a2ae8b0c512
  	if (const auto stickerChoosing = descriptor.stickerChoosing) {
  		raw->choosingProcesses(
 diff --git a/Telegram/SourceFiles/chat_helpers/field_autocomplete.h b/Telegram/SourceFiles/chat_helpers/field_autocomplete.h
-index a83b6ccbcc07f4b6e93badbb2a1d1f891e9cedb6..c5c88d6a5f6369b84713ebed1aa35c7893ef479f 100644
+index 5e6ea4874936cce92198cbdafbc022c542c1e0b5..1d2346ffff24193f7ccaee18486f5e754fb9d978 100644
 --- a/Telegram/SourceFiles/chat_helpers/field_autocomplete.h
 +++ b/Telegram/SourceFiles/chat_helpers/field_autocomplete.h
 @@ -27,6 +27,10 @@ namespace Main {
@@ -105,7 +105,7 @@ index a83b6ccbcc07f4b6e93badbb2a1d1f891e9cedb6..c5c88d6a5f6369b84713ebed1aa35c78
  namespace SendMenu {
  struct Details;
  } // namespace SendMenu
-@@ -115,6 +119,7 @@ public:
+@@ -117,6 +121,7 @@ public:
  		_moderateKeyActivateCallback = std::move(callback);
  	}
  	void setSendMenuDetails(Fn<SendMenu::Details()> &&callback);
@@ -113,7 +113,7 @@ index a83b6ccbcc07f4b6e93badbb2a1d1f891e9cedb6..c5c88d6a5f6369b84713ebed1aa35c78
  
  	void hideFast();
  	void showAnimated();
-@@ -198,6 +203,8 @@ private:
+@@ -200,6 +205,8 @@ private:
  
  	Fn<bool(int)> _moderateKeyActivateCallback;
  
@@ -122,7 +122,7 @@ index a83b6ccbcc07f4b6e93badbb2a1d1f891e9cedb6..c5c88d6a5f6369b84713ebed1aa35c78
  };
  
  struct FieldAutocompleteDescriptor {
-@@ -214,6 +221,7 @@ struct FieldAutocompleteDescriptor {
+@@ -216,6 +223,7 @@ struct FieldAutocompleteDescriptor {
  	Fn<void(QString)> sendBotCommand;
  	Fn<void(QString)> processShortcut;
  	Fn<bool(int)> moderateKeyActivateCallback;
@@ -131,10 +131,10 @@ index a83b6ccbcc07f4b6e93badbb2a1d1f891e9cedb6..c5c88d6a5f6369b84713ebed1aa35c78
  void InitFieldAutocomplete(
  	std::unique_ptr<FieldAutocomplete> &autocomplete,
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 2b05d1a1579f475e1a23039e514045e315c2a013..76cd71e47fdf66b386550dde7c71f3ee4cc075a7 100644
+index a08750263161161d62464ebe5b6959c95486e619..715376d8c78394c8f861f0dccb6ed014c923f6c9 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-@@ -3492,6 +3492,7 @@ void ComposeControls::initFieldAutocomplete() {
+@@ -3507,6 +3507,7 @@ void ComposeControls::initFieldAutocomplete() {
  				return _moderateKeyActivateCallback(key);
  			})
  			: nullptr),

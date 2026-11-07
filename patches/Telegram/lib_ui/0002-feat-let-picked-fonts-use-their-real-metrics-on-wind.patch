@@ -9,10 +9,10 @@ Subject: [PATCH] feat: let picked fonts use their real metrics on windows
  2 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/ui/style/style_core_font.cpp b/ui/style/style_core_font.cpp
-index 0b12a6c42540e46564026cb219541f7e65effd4c..bb59d70b13d45152e0c3bd7a02fcbdb0bd594ca8 100644
+index e179ece9410b513683419782f15791a36ab0c1bb..f8b4615911564be59a874b1263908023ecb32ce0 100644
 --- a/ui/style/style_core_font.cpp
 +++ b/ui/style/style_core_font.cpp
-@@ -44,6 +44,7 @@ namespace {
+@@ -46,6 +46,7 @@ namespace {
  constexpr auto kSubSuperMultiplier = 0.75;
  
  QString Custom;
@@ -20,7 +20,7 @@ index 0b12a6c42540e46564026cb219541f7e65effd4c..bb59d70b13d45152e0c3bd7a02fcbdb0
  
  } // namespace
  
-@@ -56,6 +57,10 @@ void SetCustomFont(const QString &font) {
+@@ -58,6 +59,10 @@ void SetCustomFont(const QString &font) {
  	Custom = font;
  }
  
@@ -31,7 +31,7 @@ index 0b12a6c42540e46564026cb219541f7e65effd4c..bb59d70b13d45152e0c3bd7a02fcbdb0
  namespace internal {
  
  struct ResolvedFont {
-@@ -246,7 +251,10 @@ struct Metrics {
+@@ -220,7 +225,10 @@ struct Metrics {
  
  		auto heights = std::array<float64, kCount>{};
  		for (auto i = 0; i != kCount; ++i) {
@@ -43,7 +43,7 @@ index 0b12a6c42540e46564026cb219541f7e65effd4c..bb59d70b13d45152e0c3bd7a02fcbdb0
  		}
  		ranges::sort(heights);
  		//return heights[kCount / 2];
-@@ -349,6 +357,13 @@ struct Metrics {
+@@ -323,6 +331,13 @@ struct Metrics {
  	font.setPixelSize(size);
  
  	const auto adjust = (overriden || system);
@@ -58,7 +58,7 @@ index 0b12a6c42540e46564026cb219541f7e65effd4c..bb59d70b13d45152e0c3bd7a02fcbdb0
  
  	if (monospace || !(flags & FontFlag::SubOrSuper)) {
 diff --git a/ui/style/style_core_font.h b/ui/style/style_core_font.h
-index 42e32482c72f18cefa392ef24e60dc4eedfdd7d4..2340493299d137575ff2d4edf6cc48bdd0575ea6 100644
+index e194c4de4ea715d786c755525d8dee922a747d51..7048286171a8df4d7ff58213c85a8f7aef728918 100644
 --- a/ui/style/style_core_font.h
 +++ b/ui/style/style_core_font.h
 @@ -21,6 +21,7 @@ namespace style {

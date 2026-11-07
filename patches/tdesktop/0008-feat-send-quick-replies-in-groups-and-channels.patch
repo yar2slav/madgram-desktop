@@ -18,10 +18,10 @@ Subject: [PATCH] feat: send quick replies in groups and channels
  create mode 100644 Telegram/SourceFiles/tele/tele_shortcuts.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index adf84fd9a5d369dd54ac8950a96e0e17e979fca8..4cfdd5f86cbeeb9b12480f09f29f605d35fdea8c 100644
+index 969b10be8346ab2b86ac38fe5601920c723dcc26..2ed02b34cab2934c2ac426a0891b1fc30ed3fa87 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2489,6 +2489,8 @@ PRIVATE
+@@ -2645,6 +2645,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_options.cpp
      tele/tele_options.h
@@ -31,7 +31,7 @@ index adf84fd9a5d369dd54ac8950a96e0e17e979fca8..4cfdd5f86cbeeb9b12480f09f29f605d
      tele/tele_updater.h
  )
 diff --git a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
-index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322612f6ae7 100644
+index 416b167977c01bd7a7fdb6c0e1fb3e5f1b233b03..22e0145a7dee370c476896aeec93925c1c341d78 100644
 --- a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 @@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -42,7 +42,7 @@ index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322
  #include "ui/effects/message_sending_animation_common.h"
  #include "ui/effects/path_shift_gradient.h"
  #include "ui/image/image.h"
-@@ -771,11 +772,18 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
+@@ -773,11 +774,18 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
  				}
  			}
  		}
@@ -65,7 +65,7 @@ index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322
  			for (const auto &[id, shortcut] : shortcuts) {
  				const auto &name = shortcut.name;
  				if (shortcut.count < 1
-@@ -793,8 +801,8 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
+@@ -795,8 +803,8 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
  					.userpic = self->activeUserpicView(),
  				});
  			}
@@ -76,7 +76,7 @@ index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322
  			}
  		}
  	}
-@@ -1392,7 +1400,7 @@ void FieldAutocomplete::Inner::paintRows(Painter &p, QRect clip) {
+@@ -1400,7 +1408,7 @@ void FieldAutocomplete::Inner::paintRows(Painter &p, QRect clip) {
  			}
  
  			auto toHighlight = row.command;
@@ -85,7 +85,7 @@ index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322
  				toHighlight += '@' + PrimaryUsername(user);
  			}
  			user->loadUserpic();
-@@ -1612,7 +1620,7 @@ bool FieldAutocomplete::Inner::chooseAtIndex(
+@@ -1620,7 +1628,7 @@ bool FieldAutocomplete::Inner::chooseAtIndex(
  			const auto &command = _brows->at(index).command;
  			const auto commandString = u"/%1%2"_q.arg(
  				command,
@@ -94,7 +94,7 @@ index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322
  					? ('@' + PrimaryUsername(user))
  					: QString());
  			_botCommandChosen.fire({ user, commandString, method });
-@@ -2030,6 +2038,9 @@ void InitFieldAutocomplete(
+@@ -2058,6 +2066,9 @@ void InitFieldAutocomplete(
  	const auto shortcutMessages = (processShortcut != nullptr)
  		? &peer->owner().shortcutMessages()
  		: nullptr;
@@ -105,10 +105,10 @@ index d2f8a9f99ebd5ef8186c92f142ccca763b974c65..6fd3698f727ff9d27a8bb99b07873322
  	) | rpl::on_next([=](FieldAutocomplete::BotCommandChosen data) {
  		if (!features().autocompleteCommands) {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index c92bd433bbd4544d234b4a3c72a88342f5d2b467..8e4ef2593005a66f9facd4970fcea10296115971 100644
+index a2697162d72e280a3e0847703835b36bff9da222..a0f8f24c79372a5211f1e5cc3bc5ccb45d1017a7 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -171,6 +171,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -174,6 +174,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "storage/file_upload.h"
  #include "storage/storage_folder_archive.h"
  #include "storage/storage_media_prepare.h"
@@ -116,7 +116,7 @@ index c92bd433bbd4544d234b4a3c72a88342f5d2b467..8e4ef2593005a66f9facd4970fcea102
  #include "media/audio/media_audio.h"
  #include "media/audio/media_audio_capture.h"
  #include "media/player/media_player_instance.h"
-@@ -1988,7 +1989,12 @@ void HistoryWidget::initFieldAutocomplete() {
+@@ -2042,7 +2043,12 @@ void HistoryWidget::initFieldAutocomplete() {
  				controller(),
  				PremiumFeature::QuickReplies);
  		} else if (shortcutId) {
@@ -131,10 +131,10 @@ index c92bd433bbd4544d234b4a3c72a88342f5d2b467..8e4ef2593005a66f9facd4970fcea102
  			setFieldText(_field->getTextWithTagsPart(
  				_field->textCursor().position()));
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-index d45b35fc34d663a900d3b3e441c2c17709f7c4dd..3395510ec070b1f64364edf92ff0eff7d590180d 100644
+index 31eaa9b7f2805eca3190cbbd32c0ceafea40b8e4..36ae1e7ce79fe83d05318927ad41209187c394b7 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "support/support_autocomplete.h"
  #include "support/support_common.h"
  #include "support/support_preload.h"
@@ -142,7 +142,7 @@ index d45b35fc34d663a900d3b3e441c2c17709f7c4dd..3395510ec070b1f64364edf92ff0eff7
  #include "inline_bots/inline_bot_result.h"
  #include "info/profile/info_profile_values.h"
  #include "iv/editor/iv_editor_session.h"
-@@ -410,7 +411,12 @@ ChatWidget::ChatWidget(
+@@ -412,7 +413,12 @@ ChatWidget::ChatWidget(
  					controller,
  					PremiumFeature::QuickReplies);
  			} else if (shortcutId) {

@@ -15,17 +15,17 @@ Subject: [PATCH] feat: call the app tele everywhere
  .../SourceFiles/platform/mac/specific_mac.mm  |  4 +-
  .../platform/mac/window_title_mac.mm          |  4 +-
  .../SourceFiles/platform/win/specific_win.cpp |  8 +-
- Telegram/SourceFiles/tele/tele_app_name.cpp   | 79 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_app_name.cpp   | 78 +++++++++++++++++++
  Telegram/SourceFiles/tele/tele_app_name.h     |  7 ++
- 13 files changed, 120 insertions(+), 30 deletions(-)
+ 13 files changed, 119 insertions(+), 30 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_app_name.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_app_name.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9a52ead59318157219c137c724049efc797e32b2..320de97f89eb19450494e5e5895eb765a414a60f 100644
+index 7657dfa3a87380d5516b5f49ee724bc837e59f8d..526b3a21af5710cf8c20bcd345045067f75cf9dd 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2485,6 +2485,8 @@ PRIVATE
+@@ -2641,6 +2641,8 @@ PRIVATE
      settings/settings_tele.h
      tele/tele_account_badges.cpp
      tele/tele_account_badges.h
@@ -113,10 +113,10 @@ index 13bb6dbb47c6a4de4aef8551d8625a7d68d6b7b9..2c8f97b42226866491a654ee60538a31
  		updateControls();
  		return;
 diff --git a/Telegram/SourceFiles/core/external_control.cpp b/Telegram/SourceFiles/core/external_control.cpp
-index 43327bc03c528b65b41ce72add5e7cca584ea371..3f04dc7072a9302068cc7fe5d7c0e6b5daf495d0 100644
+index 4b1268e35a36733941faaced1014149cceffca77..cebd94502e8fe683cd4c33f557bab4b392c86b18 100644
 --- a/Telegram/SourceFiles/core/external_control.cpp
 +++ b/Telegram/SourceFiles/core/external_control.cpp
-@@ -120,7 +120,7 @@ void RequestEnableAutomation() {
+@@ -122,7 +122,7 @@ void RequestEnableAutomation() {
  		FillAutomationConfirmBox(
  			box,
  			u"An external program is trying to control "
@@ -125,8 +125,8 @@ index 43327bc03c528b65b41ce72add5e7cca584ea371..3f04dc7072a9302068cc7fe5d7c0e6b5
  			u"windows and activate them, change the proxy, the theme "
  			u"and lock the app.\n\nEnable local "
  			u"automation? While it is on, anything running under your "
-@@ -594,7 +594,7 @@ QByteArray HandleExternalControl(const QString &command) {
- 	} else if (!AutomationEnabled()) {
+@@ -601,7 +601,7 @@ QByteArray HandleExternalControl(const QString &command) {
+ 		}
  		RequestEnableAutomation();
  		return Error(u"local automation is disabled — confirm in the "
 -			u"Telegram window to enable"_q);
@@ -135,7 +135,7 @@ index 43327bc03c528b65b41ce72add5e7cca584ea371..3f04dc7072a9302068cc7fe5d7c0e6b5
  		Core::App().settings().writePref<bool>(kAutomationKey, false);
  		auto object = QJsonObject();
 diff --git a/Telegram/SourceFiles/export/output/export_output_html.cpp b/Telegram/SourceFiles/export/output/export_output_html.cpp
-index 7247d7c6c1d977ac4d04c9a6c39f3c165e4a8c14..601acf7ac08a4d30e1cc250cb06eea5bd85c98f7 100644
+index 64b29d8819fc72e23fcebec940d5f64ee569edcd..4624f378f6aa07c99e78ffd6ea8721a770e8e8c1 100644
 --- a/Telegram/SourceFiles/export/output/export_output_html.cpp
 +++ b/Telegram/SourceFiles/export/output/export_output_html.cpp
 @@ -3930,7 +3930,7 @@ auto HtmlWriter::Wrap::pushMessage(
@@ -148,7 +148,7 @@ index 7247d7c6c1d977ac4d04c9a6c39f3c165e4a8c14..601acf7ac08a4d30e1cc250cb06eea5b
  
  	const auto wrapReplyToLink = [&](const QByteArray &text) {
 diff --git a/Telegram/SourceFiles/lang/lang_instance.cpp b/Telegram/SourceFiles/lang/lang_instance.cpp
-index 208e3502f460d9773bc82a36274f7aebf8f5b589..9de52ee1a37e686528037df0af90c80a07f1caf2 100644
+index 76f13261af99dfe9ec59e971d00a772b95a29ddc..53635ce8350466015c27a28efb64bbad74432408 100644
 --- a/Telegram/SourceFiles/lang/lang_instance.cpp
 +++ b/Telegram/SourceFiles/lang/lang_instance.cpp
 @@ -13,6 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -159,10 +159,10 @@ index 208e3502f460d9773bc82a36274f7aebf8f5b589..9de52ee1a37e686528037df0af90c80a
  #include "tele/tele_lowercase.h"
  #include "base/platform/base_platform_info.h"
  #include "base/qthelp_regex.h"
-@@ -806,7 +807,7 @@ QString GetNonDefaultValue(const QByteArray &key) {
- namespace details {
+@@ -808,7 +809,7 @@ namespace details {
  
  QString Current(ushort key) {
+ 	Test::NoteLangRead(key);
 -	return Tele::Lower(GetInstance().getValue(key));
 +	return Tele::Lower(Tele::AppName(key, GetInstance().getValue(key)));
  }
@@ -201,7 +201,7 @@ index e25ad970e84686e9aca061d02c274048793b5ad4..8c73ef820d75a3047c566da96fdb60e0
   if(e.data&&e.data.t==='traffic'){const up=e.data.up,down=e.data.down;if(Number.isSafeInteger(up)&&up>=0&&Number.isSafeInteger(down)&&down>=0){traffic.up+=up;traffic.down+=down}return}
   if(e.data&&e.data.t==='close'){state.textContent='The proxy site closed the connection.';local.close()}}
 diff --git a/Telegram/SourceFiles/platform/linux/main_window_linux.cpp b/Telegram/SourceFiles/platform/linux/main_window_linux.cpp
-index 5c09c6b57acbec40159b84d1bd52380c002a6db6..b62fcf66f2ccf692644d16d2f2cd9d86977d75f1 100644
+index 1a375253bf42bfd97525c8cdf78783893346ae81..2bc27869a1883d22299fd3c0e8f2ace567035e57 100644
 --- a/Telegram/SourceFiles/platform/linux/main_window_linux.cpp
 +++ b/Telegram/SourceFiles/platform/linux/main_window_linux.cpp
 @@ -221,7 +221,7 @@ void MainWindow::createGlobalMenu() {
@@ -223,10 +223,10 @@ index 5c09c6b57acbec40159b84d1bd52380c002a6db6..b62fcf66f2ccf692644d16d2f2cd9d86
  			ensureWindowShown();
  			controller().show(Box(AboutBox));
 diff --git a/Telegram/SourceFiles/platform/mac/global_menu_mac.mm b/Telegram/SourceFiles/platform/mac/global_menu_mac.mm
-index 74058212746fbb2adb4ea23464439c46227b3e5b..165ba001e25a0cc0bbba05f73c985cb9e0520597 100644
+index d3e830c2a2d6fa297928e3905ab882c9fc8426f8..a973f2f300e637fa91996f4c5b2bde88c049e492 100644
 --- a/Telegram/SourceFiles/platform/mac/global_menu_mac.mm
 +++ b/Telegram/SourceFiles/platform/mac/global_menu_mac.mm
-@@ -414,7 +414,7 @@ void Manager::buildAppleMenu(QMenu *main) {
+@@ -426,7 +426,7 @@ void Manager::buildAppleMenu(QMenu *main) {
  			});
  		};
  		_about = main->addAction(
@@ -235,7 +235,7 @@ index 74058212746fbb2adb4ea23464439c46227b3e5b..165ba001e25a0cc0bbba05f73c985cb9
  			std::move(callback));
  		_about->setMenuRole(QAction::AboutQtRole);
  	}
-@@ -648,7 +648,7 @@ void Manager::buildWindowMenu(QMenu *window) {
+@@ -660,7 +660,7 @@ void Manager::buildWindowMenu(QMenu *window) {
  	}
  	window->addSeparator();
  	_showTelegram = window->addAction(
@@ -244,7 +244,7 @@ index 74058212746fbb2adb4ea23464439c46227b3e5b..165ba001e25a0cc0bbba05f73c985cb9
  		receiver,
  		[this] {
  			if (const auto w = resolveActiveWindow()) {
-@@ -660,7 +660,7 @@ void Manager::buildWindowMenu(QMenu *window) {
+@@ -672,7 +672,7 @@ void Manager::buildWindowMenu(QMenu *window) {
  }
  
  void Manager::buildMenu() {
@@ -313,10 +313,10 @@ index ba7f267b6d8c1c0f600d82d9a9226bfbc323da42..3ba85430d3b170009cfe6d68ea739b61
  // Stub while we still support Windows 7.
 diff --git a/Telegram/SourceFiles/tele/tele_app_name.cpp b/Telegram/SourceFiles/tele/tele_app_name.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..c9ca7e9880e9eb54623da9441a75fa65e3e4e3fd
+index 0000000000000000000000000000000000000000..960e88b84b93dc7e8be11344bdfd23601babe52e
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_app_name.cpp
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,78 @@
 +#include "tele/tele_app_name.h"
 +
 +#include "lang/lang_keys.h"
@@ -356,7 +356,6 @@ index 0000000000000000000000000000000000000000..c9ca7e9880e9eb54623da9441a75fa65
 +		tr::lng_unsupported_message_text.base,
 +		tr::lng_unsupported_block_text.base,
 +		tr::lng_bot_share_location_unavailable.base,
-+		tr::lng_gift_transfer_unlocks_update_about.base,
 +		tr::lng_new_version_wrap.base,
 +		tr::lng_theme_editor_need_unlock.base,
 +		tr::lng_group_call_mac_access.base,

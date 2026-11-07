@@ -325,7 +325,7 @@ index 40218942bc854a8ff5a7b617ebb16732ab09f556..86319e81023e19e1d2b82b6de8696a1c
  		Toggle(kOptionMessageSeconds),
  		Toggle(kOptionEditHistory),
 diff --git a/Telegram/SourceFiles/window/notifications_manager.cpp b/Telegram/SourceFiles/window/notifications_manager.cpp
-index 399b91ef431b5739949be1336791ee4c9e809ef4..62bf9bcf20f0817ce54807e655c3384f283a3258 100644
+index 559321d7f8f77c9b0876c948d82fe7cda0d4f542..6ac734ff777e9ff0994e1d114fd6444db08dfe55 100644
 --- a/Telegram/SourceFiles/window/notifications_manager.cpp
 +++ b/Telegram/SourceFiles/window/notifications_manager.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -336,7 +336,7 @@ index 399b91ef431b5739949be1336791ee4c9e809ef4..62bf9bcf20f0817ce54807e655c3384f
  #include "tele/tele_mute.h"
  #include "tele/tele_options.h"
  #include "ui/text/text_utilities.h"
-@@ -321,6 +322,7 @@ System::SkipState System::skipNotification(
+@@ -328,6 +329,7 @@ System::SkipState System::skipNotification(
  		|| !thread->currentNotification()
  		|| Tele::SilencedCompletely(thread)
  		|| (messageType && item->skipNotification())

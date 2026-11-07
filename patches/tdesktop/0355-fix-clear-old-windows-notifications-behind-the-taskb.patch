@@ -1,0 +1,106 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 04:10:48 +0200
+Subject: [PATCH] fix: clear old windows notifications behind the taskbar badge
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/SourceFiles/core/application.cpp     |  2 +
+ .../SourceFiles/tele/tele_toast_history.cpp   | 40 +++++++++++++++++++
+ .../SourceFiles/tele/tele_toast_history.h     |  7 ++++
+ 4 files changed, 51 insertions(+)
+ create mode 100644 Telegram/SourceFiles/tele/tele_toast_history.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_toast_history.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 223b387811ab15870ad4976026d3be6f62192c50..a6137b31befecae6f9f5a0ef6ff8e5c6c8171a04 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3150,6 +3150,8 @@ PRIVATE
+     tele/tele_smooth_scroll.h
+     tele/tele_smooth_typing.cpp
+     tele/tele_smooth_typing.h
++    tele/tele_toast_history.cpp
++    tele/tele_toast_history.h
+     tele/tele_spoilers.cpp
+     tele/tele_spoilers.h
+     tele/tele_stars_tools.cpp
+diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
+index 1bdb16d1f04d115e623eafbb9603909f089fbcd0..435f90ba7ae5a51e73d932fc50a89e709b123932 100644
+--- a/Telegram/SourceFiles/core/application.cpp
++++ b/Telegram/SourceFiles/core/application.cpp
+@@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_options.h"
+ #include "tele/tele_smooth_scroll.h"
+ #include "tele/tele_smooth_typing.h"
++#include "tele/tele_toast_history.h"
+ #include "tele/tele_start_menu.h"
+ 
+ #include <QtCore/QStandardPaths>
+@@ -384,6 +385,7 @@ void Application::run() {
+ 	Tele::StartReduceMotion();
+ 	Tele::StartSmoothScroll();
+ 	Tele::StartSmoothTyping();
++	Tele::StartToastHistoryCleanup();
+ 	Tele::StartListKeys();
+ 	Tele::StartMtpConsole();
+ 	Tele::StartFreezeWatchdog();
+diff --git a/Telegram/SourceFiles/tele/tele_toast_history.cpp b/Telegram/SourceFiles/tele/tele_toast_history.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..75e7600481ec9f8a38fbdb1862771675b8592709
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_toast_history.cpp
+@@ -0,0 +1,40 @@
++#include "tele/tele_toast_history.h"
++
++#ifdef Q_OS_WIN
++#include "base/platform/win/base_windows_winrt.h"
++#include "core/application.h"
++#include "platform/win/windows_app_user_model_id.h"
++
++#include <winrt/Windows.Foundation.h>
++#include <winrt/Windows.UI.Notifications.h>
++#endif // Q_OS_WIN
++
++namespace Tele {
++namespace {
++
++#ifdef Q_OS_WIN
++void ClearToastHistory() {
++	base::WinRT::Try([] {
++		using namespace winrt::Windows::UI::Notifications;
++		ToastNotificationManager::History().Clear(
++			Platform::AppUserModelId::Id());
++	});
++}
++#endif // Q_OS_WIN
++
++} // namespace
++
++void StartToastHistoryCleanup() {
++#ifdef Q_OS_WIN
++	static auto lifetime = rpl::lifetime();
++	ClearToastHistory();
++	Core::App().unreadBadgeChanges(
++	) | rpl::filter([] {
++		return !Core::App().unreadBadge();
++	}) | rpl::on_next([] {
++		ClearToastHistory();
++	}, lifetime);
++#endif // Q_OS_WIN
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_toast_history.h b/Telegram/SourceFiles/tele/tele_toast_history.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..f9bb1bfcff32761b7dcd04125977209d0c7e72b6
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_toast_history.h
+@@ -0,0 +1,7 @@
++#pragma once
++
++namespace Tele {
++
++void StartToastHistoryCleanup();
++
++} // namespace Tele

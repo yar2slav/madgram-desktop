@@ -11,7 +11,7 @@ Subject: [PATCH] feat: turn @username into a t.me link in the link box
  4 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/chat_helpers/message_field.cpp b/Telegram/SourceFiles/chat_helpers/message_field.cpp
-index de09887000c8e44f6555ea5c0926bf3d2a5e4d3c..0547c9a1da1dcad930c8ccb1c1b421dc7bb3633e 100644
+index cb2161a89133adf2f2e562a3aaaed2af154dcf8f..3126e47cc4ebf9fa10f7c76faefe87f4a3b0b60f 100644
 --- a/Telegram/SourceFiles/chat_helpers/message_field.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/message_field.cpp
 @@ -221,7 +221,7 @@ void EditLinkBox(
@@ -24,10 +24,10 @@ index de09887000c8e44f6555ea5c0926bf3d2a5e4d3c..0547c9a1da1dcad930c8ccb1c1b421dc
  			text->showError();
  			return;
 diff --git a/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp b/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp
-index c25aea330ab61d0efa9561ffabdf5503cf16f1d1..62732430d0e3a6798b0fabb8e7bb8d1f86116e36 100644
+index d927399ab71fa8a09092a5cea98e0c4b88954466..5936996ff909805f2073a80c64a0e392b7f814f3 100644
 --- a/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp
 +++ b/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp
-@@ -75,6 +75,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/widgets/menu/menu_separator.h"
  #include "ui/widgets/popup_menu.h"
  #include "ui/widgets/scroll_area.h"
@@ -35,7 +35,7 @@ index c25aea330ab61d0efa9561ffabdf5503cf16f1d1..62732430d0e3a6798b0fabb8e7bb8d1f
  
  #include "styles/palette.h"
  #include "styles/style_boxes.h"
-@@ -831,6 +832,7 @@ struct InputRule {
+@@ -865,6 +866,7 @@ struct InputRule {
  }
  
  [[nodiscard]] QString ValidateInstantViewEditorLink(QString link) {

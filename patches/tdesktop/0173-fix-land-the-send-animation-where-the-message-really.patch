@@ -4,73 +4,15 @@ Date: Thu, 1 Oct 2026 04:41:56 +0300
 Subject: [PATCH] fix: land the send animation where the message really is
 
 ---
- .../SourceFiles/history/history_widget.cpp    | 15 +++---------
- .../history/view/history_view_list_widget.cpp | 10 +++-----
- .../message_sending_animation_controller.cpp  | 24 +++++++++----------
+ .../message_sending_animation_controller.cpp  | 31 ++++++++-----------
  .../message_sending_animation_controller.h    |  2 +-
- 4 files changed, 19 insertions(+), 32 deletions(-)
+ 2 files changed, 14 insertions(+), 19 deletions(-)
 
-diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 469756096befd215b8feb1e30fed2e803293f6b0..b0d2d6f752aaef313ce783d3bc964499da935f46 100644
---- a/Telegram/SourceFiles/history/history_widget.cpp
-+++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -8971,23 +8971,14 @@ void HistoryWidget::startMessageSendingAnimation(
- 	}
- 	Assert(item->mainView() != nullptr);
- 
--	auto globalEndTopLeft = rpl::merge(
--		_scroll->innerResizes() | rpl::to_empty,
--		session().data().newItemAdded() | rpl::to_empty,
--		geometryValue() | rpl::to_empty,
--		_scroll->geometryValue() | rpl::to_empty,
--		_list->geometryValue() | rpl::to_empty
--	) | rpl::map([=]() -> std::optional<QPoint> {
-+	auto globalEndTopLeft = [=]() -> std::optional<QPoint> {
- 		const auto view = item->mainView();
- 		const auto top = view ? _list->itemTop(view) : -1;
- 		if (top < 0) {
- 			return std::nullopt;
- 		}
--		const auto additional = (_list->height() == _scroll->height())
--			? view->height()
--			: 0;
--		return _list->mapToGlobal(QPoint(0, top - additional));
--	});
-+		return _list->mapToGlobal(QPoint(0, top));
-+	};
- 
- 	sendingAnimation.startAnimation({
- 		.globalEndTopLeft = std::move(globalEndTopLeft),
-diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index fcc3e897a1a1cef8dcf9b3722d94d4d4503d9890..c4cc9ed1d1c2e54a4989b2a109fe9ef3b39c7d44 100644
---- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-+++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -2748,17 +2748,13 @@ void ListWidget::startMessageSendingAnimation(
- 		return;
- 	}
- 
--	auto globalEndTopLeft = rpl::merge(
--		session().data().newItemAdded() | rpl::to_empty,
--		geometryValue() | rpl::to_empty
--	) | rpl::map([=]() -> std::optional<QPoint> {
-+	auto globalEndTopLeft = [=]() -> std::optional<QPoint> {
- 		const auto view = viewForItem(item);
- 		if (!view) {
- 			return std::nullopt;
- 		}
--		const auto additional = !_visibleTop ? view->height() : 0;
--		return mapToGlobal(QPoint(0, itemTop(view) - additional));
--	});
-+		return mapToGlobal(QPoint(0, itemTop(view)));
-+	};
- 
- 	sendingAnimation->startAnimation({
- 		.globalEndTopLeft = std::move(globalEndTopLeft),
 diff --git a/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.cpp b/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.cpp
-index 4b66885b149f08497aef9478f1adcac2c991cafc..6edeb76e9d05b4cd97938d7c98e1bff4c1b8337c 100644
+index 3eeecec38de5530f047e51715b9cbdd176e50114..2d267442fdf122aa6b0d0d573fd0c9989240fa8a 100644
 --- a/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.cpp
 +++ b/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.cpp
-@@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/rp_widget.h"
  #include "ui/power_saving.h"
  #include "ui/text/text_isolated_emoji.h"
@@ -78,7 +20,7 @@ index 4b66885b149f08497aef9478f1adcac2c991cafc..6edeb76e9d05b4cd97938d7c98e1bff4
  #include "window/window_session_controller.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
-@@ -107,17 +108,6 @@ Content::Content(
+@@ -108,17 +109,6 @@ Content::Content(
  	setAttribute(Qt::WA_TransparentForMouseEvents);
  	raise();
  
@@ -96,7 +38,7 @@ index 4b66885b149f08497aef9478f1adcac2c991cafc..6edeb76e9d05b4cd97938d7c98e1bff4
  	_controller->session().downloaderTaskFinished(
  	) | rpl::on_next([=] {
  		update();
-@@ -128,6 +118,12 @@ Content::Content(
+@@ -129,6 +119,12 @@ Content::Content(
  	const auto innerGeometry = maybeView()->innerGeometry();
  
  	auto animationCallback = [=](float64 value) {
@@ -109,7 +51,7 @@ index 4b66885b149f08497aef9478f1adcac2c991cafc..6edeb76e9d05b4cd97938d7c98e1bff4
  		auto resultFrom = rect();
  		if (_isText) {
  			resultFrom.moveTo(
-@@ -193,7 +189,11 @@ Content::Content(
+@@ -194,7 +190,11 @@ Content::Content(
  	};
  	animationCallback(0.);
  	_animation.start(
@@ -122,16 +64,37 @@ index 4b66885b149f08497aef9478f1adcac2c991cafc..6edeb76e9d05b4cd97938d7c98e1bff4
  		0.,
  		1.,
  		st::itemRevealDuration,
+@@ -422,11 +422,6 @@ void Content::createBubble() {
+ [[nodiscard]] MessageSendingAnimationController::SendingInfoTo TrackTarget(
+ 		MessageSendingAnimationController::SendingTarget &&target) {
+ 	const auto globalTopLeft = std::move(target.globalTopLeft);
+-	auto globalEndTopLeft = rpl::duplicate(
+-		target.changes
+-	) | rpl::map([=] {
+-		return globalTopLeft(false);
+-	});
+ 	auto globalLiveTopLeft = rpl::merge(
+ 		std::move(target.changes),
+ 		std::move(target.revealChanges)
+@@ -434,7 +429,7 @@ void Content::createBubble() {
+ 		return globalTopLeft(true);
+ 	});
+ 	return {
+-		.globalEndTopLeft = std::move(globalEndTopLeft),
++		.globalEndTopLeft = [=] { return globalTopLeft(true); },
+ 		.globalLiveTopLeft = std::move(globalLiveTopLeft),
+ 		.view = std::move(target.view),
+ 		.paintContext = std::move(target.paintContext),
 diff --git a/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.h b/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.h
-index 8250e778ad79b3ae5c5763e82ef35247dc999bfc..8cedf07228fe4fdd6f9932f5e30906d2d5dacf90 100644
+index fca8ee40921fb0ab9e7c98a9817f629a1310116e..acf91b7df4c2ecf0190c79190a5ff30e0732dbfa 100644
 --- a/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.h
 +++ b/Telegram/SourceFiles/ui/effects/message_sending_animation_controller.h
-@@ -29,7 +29,7 @@ public:
- 		not_null<Window::SessionController*> controller);
- 
+@@ -41,7 +41,7 @@ public:
+ 		Fn<Ui::ChatPaintContext()> paintContext;
+ 	};
  	struct SendingInfoTo {
 -		rpl::producer<std::optional<QPoint>> globalEndTopLeft;
 +		Fn<std::optional<QPoint>()> globalEndTopLeft;
+ 		rpl::producer<std::optional<QPoint>> globalLiveTopLeft;
  		Fn<HistoryView::Element*()> view;
  		Fn<Ui::ChatPaintContext()> paintContext;
- 	};

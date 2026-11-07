@@ -12,10 +12,10 @@ Subject: [PATCH] feat: add an option to watch stories invisibly
  5 files changed, 28 insertions(+), 2 deletions(-)
 
 diff --git a/Telegram/SourceFiles/data/data_stories.cpp b/Telegram/SourceFiles/data/data_stories.cpp
-index 03f5d38068ec4e8a131e7a47e73959dd94c31389..b88ba7e336a9bfe01ab9e3aedfcbe4d4ec936412 100644
+index fe383a63ef6ae699c9c393a3969a7407137979b8..3a4486fcdf7ff97f8a5710048252c104bffc0802 100644
 --- a/Telegram/SourceFiles/data/data_stories.cpp
 +++ b/Telegram/SourceFiles/data/data_stories.cpp
-@@ -1242,13 +1242,14 @@ void Stories::markAsRead(FullStoryId id, bool viewed) {
+@@ -1238,13 +1238,14 @@ void Stories::markAsRead(FullStoryId id, bool viewed) {
  		return;
  	}
  	const auto story = *maybeStory;
@@ -33,10 +33,10 @@ index 03f5d38068ec4e8a131e7a47e73959dd94c31389..b88ba7e336a9bfe01ab9e3aedfcbe4d4
  	}
  	if (!_markReadPending.contains(id.peer)) {
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index df98c5d10fa38430365294bcff230757b547f3ac..fc03ac3a4efc1d5bce7fbe4ef8af37f314bfdd9b 100644
+index 963a24d80a9bbe8d48d7049977531c8bbf8c61d6..4c3d7850a4335fb3acc0eb7a99091153d9e98be7 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -4540,6 +4540,9 @@ void OverlayWidget::show(OpenRequest request) {
+@@ -4585,6 +4585,9 @@ void OverlayWidget::show(OpenRequest request) {
  	const auto story = request.story();
  	if (story && Tele::HideStories()) {
  		return;
@@ -46,7 +46,7 @@ index df98c5d10fa38430365294bcff230757b547f3ac..fc03ac3a4efc1d5bce7fbe4ef8af37f3
  	}
  	const auto document = story ? story->document() : request.document();
  	const auto photo = story ? story->photo() : request.photo();
-@@ -4898,6 +4901,11 @@ void OverlayWidget::displayDocument(
+@@ -4945,6 +4948,11 @@ void OverlayWidget::displayDocument(
  void OverlayWidget::displayVideoStream(
  		const std::shared_ptr<Data::GroupCall> &call,
  		anim::activation activation) {

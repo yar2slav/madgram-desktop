@@ -11,10 +11,10 @@ Subject: [PATCH] feat: move chats instantly in the chat list
  4 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 180de85b0e67f0e9c2e91ea095d28da2c9d50f96..bebc4a7cb888ad019ee9831c0ea0594331e14013 100644
+index bd9b2431c6c26c88a39a922372106168cb8142ec..df87b79341c643d1758355bc22f586ae3ceab451 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -2098,7 +2098,8 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
+@@ -2124,7 +2124,8 @@ void InnerWidget::mouseMoveEvent(QMouseEvent *e) {
  }
  
  bool InnerWidget::skipChatsListFreeze() const {

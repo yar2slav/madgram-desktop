@@ -72,10 +72,10 @@ Subject: [PATCH] feat: notification centre
  create mode 100644 Telegram/SourceFiles/tele/tele_rate_limits.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 8416e844e41d8db5daa67972d4bff691763b5b4e..5343c88bb73794de72b3e61886fbc9cdfcfe771e 100644
+index fa3570edd39b2dead5c39e1ff1fa8b10734bd11c..550d84feb6743ae464684085ed7bdfc0bb497a32 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2577,6 +2577,7 @@ PRIVATE
+@@ -2733,6 +2733,7 @@ PRIVATE
      tele/tele_edit_history_section.h
      tele/tele_field_resize.cpp
      tele/tele_field_resize.h
@@ -83,7 +83,7 @@ index 8416e844e41d8db5daa67972d4bff691763b5b4e..5343c88bb73794de72b3e61886fbc9cd
      tele/tele_folders.cpp
      tele/tele_folders.h
      tele/tele_freeze_watchdog.cpp
-@@ -2683,6 +2684,10 @@ PRIVATE
+@@ -2839,6 +2840,10 @@ PRIVATE
      tele/tele_new_settings.h
      tele/tele_no_ai.cpp
      tele/tele_no_ai.h
@@ -94,7 +94,7 @@ index 8416e844e41d8db5daa67972d4bff691763b5b4e..5343c88bb73794de72b3e61886fbc9cd
      tele/tele_online_notify.cpp
      tele/tele_online_notify.h
      tele/tele_jump_to_first.cpp
-@@ -2717,6 +2722,8 @@ PRIVATE
+@@ -2873,6 +2878,8 @@ PRIVATE
      tele/tele_protected.h
      tele/tele_punctual_scheduled.cpp
      tele/tele_punctual_scheduled.h
@@ -167,10 +167,10 @@ index c45f35c4da4256aa9b3246c63dc3c7df4caad88e..47738fedc0cdd5b1d29bdb2ebed2f1c5
  }
  
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 19287b82a0eaa7e3bc6b429bf0fde951a2ff0eae..38d0580380fdb80327aacf04fcb1fff109c45b10 100644
+index 27d030601cdc162de23946ef06122bb9122eaf9c..c801825ab6f5b4a3ac5130ea52ee5bbf18725a5b 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -70,6 +70,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_local_pins.h"
  #include "tele/tele_mute.h"
  #include "tele/tele_no_ai.h"
@@ -178,7 +178,7 @@ index 19287b82a0eaa7e3bc6b429bf0fde951a2ff0eae..38d0580380fdb80327aacf04fcb1fff1
  #include "tele/tele_online_notify.h"
  #include "tele/tele_past_limit.h"
  #include "tele/tele_protected.h"
-@@ -295,6 +296,7 @@ Session::Session(
+@@ -297,6 +298,7 @@ Session::Session(
  	Tele::SetupBookmarks(this);
  	Tele::SetupNoAi(this);
  	Tele::SetupOnlineNotify(this);
@@ -187,7 +187,7 @@ index 19287b82a0eaa7e3bc6b429bf0fde951a2ff0eae..38d0580380fdb80327aacf04fcb1fff1
  	Tele::SetupMediaPastLimit(this);
  	Tele::SetupKeptStore(this);
 diff --git a/Telegram/SourceFiles/mtproto/mtp_instance.cpp b/Telegram/SourceFiles/mtproto/mtp_instance.cpp
-index d25fe3b72298fab371854f80186ee8e4777ea087..82711e8525cd2e0c1ea84abfb71fdf2639bdea56 100644
+index 7745223823a695a014ebfba8dc3dd73ce1655a38..847a0d9ed5f2098aafb9e4685d02aaac421614c4 100644
 --- a/Telegram/SourceFiles/mtproto/mtp_instance.cpp
 +++ b/Telegram/SourceFiles/mtproto/mtp_instance.cpp
 @@ -102,6 +102,7 @@ public:
@@ -283,7 +283,7 @@ index d25fe3b72298fab371854f80186ee8e4777ea087..82711e8525cd2e0c1ea84abfb71fdf26
  	_private->requestConfigIfOld();
  }
 diff --git a/Telegram/SourceFiles/mtproto/mtp_instance.h b/Telegram/SourceFiles/mtproto/mtp_instance.h
-index eeb56d29cc8316bd6600c26b6f8edf3a912601eb..46215298aec518d826399a6dbd960f9a38ef635e 100644
+index 94dbb7bf85b2470009089d2dc7e10c2347ef4f98..3615e1486f262a7b2a352a18a2778f773acf75a1 100644
 --- a/Telegram/SourceFiles/mtproto/mtp_instance.h
 +++ b/Telegram/SourceFiles/mtproto/mtp_instance.h
 @@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -294,7 +294,7 @@ index eeb56d29cc8316bd6600c26b6f8edf3a912601eb..46215298aec518d826399a6dbd960f9a
  
  namespace MTP {
  namespace details {
-@@ -143,6 +144,7 @@ public:
+@@ -144,6 +145,7 @@ public:
  	[[nodiscard]] auto nonPremiumDelayedRequests() const
  		-> rpl::producer<mtpRequestId>;
  	[[nodiscard]] rpl::producer<> frozenErrorReceived() const;
@@ -3143,7 +3143,7 @@ index 4e2db84769f722114d58cae3458eeb272db35001..d343c21862baeb156cbde3b078f390cf
  				.iconLottie = u"toast/copy"_q,
  				.iconLottieSize = st::toastLottieIconSize,
 diff --git a/Telegram/SourceFiles/tele/tele_protected.cpp b/Telegram/SourceFiles/tele/tele_protected.cpp
-index 28aea28062ab5a1ebd8a582fa9c70967e9bd3698..b2dfcb2164437c611c95ec7402ff0eb43584cb5d 100644
+index 13fa732f673f0118bfeaeacf04ff8258fbb6770e..c58434d26542c85a97b5ac50d00ff037172935ee 100644
 --- a/Telegram/SourceFiles/tele/tele_protected.cpp
 +++ b/Telegram/SourceFiles/tele/tele_protected.cpp
 @@ -27,6 +27,7 @@

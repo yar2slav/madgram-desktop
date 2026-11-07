@@ -19,10 +19,10 @@ Subject: [PATCH] feat: bigger, faster chat export
  create mode 100644 Telegram/SourceFiles/tele/tele_export.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index fb6fb2417f677d0688ae1e4afc6428c47c809ceb..0c7d4918ff961e8db6e9a34c2fbbbb376bd0e4d7 100644
+index d8b9a4f898e1f8f96ec3ad86c71227b0cc754e1a..15ed6b496fd5960d4d0031a3050bc584bfeb4f98 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2581,6 +2581,8 @@ PRIVATE
+@@ -2737,6 +2737,8 @@ PRIVATE
      tele/tele_editor_eyedropper.h
      tele/tele_emoji_panel.cpp
      tele/tele_emoji_panel.h
@@ -32,7 +32,7 @@ index fb6fb2417f677d0688ae1e4afc6428c47c809ceb..0c7d4918ff961e8db6e9a34c2fbbbb37
      tele/tele_edit_history_section.h
      tele/tele_failed_sends.cpp
 diff --git a/Telegram/SourceFiles/export/export_api_wrap.cpp b/Telegram/SourceFiles/export/export_api_wrap.cpp
-index 6ebc6e4eec97b6429acde51de3fe0b8dbf1c21a1..5e35b81980360bb5ef312763aaaef53f375a44b5 100644
+index 5404e6e78bfc81c7ba95e35bd040bcad4bffb211..fca5efcc7a44b1e5bf7d42ede1bfe5479d99fa6d 100644
 --- a/Telegram/SourceFiles/export/export_api_wrap.cpp
 +++ b/Telegram/SourceFiles/export/export_api_wrap.cpp
 @@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -43,7 +43,7 @@ index 6ebc6e4eec97b6429acde51de3fe0b8dbf1c21a1..5e35b81980360bb5ef312763aaaef53f
  #include <set>
  #include <deque>
  
-@@ -515,6 +516,7 @@ struct ApiWrap::FileProcess {
+@@ -531,6 +532,7 @@ struct ApiWrap::FileProcess {
  	};
  	std::deque<Request> requests;
  	mtpRequestId requestId = 0;
@@ -51,7 +51,7 @@ index 6ebc6e4eec97b6429acde51de3fe0b8dbf1c21a1..5e35b81980360bb5ef312763aaaef53f
  };
  
  struct ApiWrap::FileProgress {
-@@ -747,7 +749,7 @@ auto ApiWrap::fileRequest(const Data::FileLocation &location, int64 offset) {
+@@ -763,7 +765,7 @@ auto ApiWrap::fileRequest(const Data::FileLocation &location, int64 offset) {
  			MTP_flags(0),
  			location.data,
  			MTP_long(offset),
@@ -60,7 +60,7 @@ index 6ebc6e4eec97b6429acde51de3fe0b8dbf1c21a1..5e35b81980360bb5ef312763aaaef53f
  	)).fail([=](const MTP::Error &result) {
  		_fileProcess->requestId = 0;
  		if (result.type() == u"TAKEOUT_FILE_EMPTY"_q
-@@ -3422,7 +3424,7 @@ void ApiWrap::loadFilePart() {
+@@ -3483,7 +3485,7 @@ void ApiWrap::loadFilePart() {
  		_fileProcess->requestId = 0;
  		filePartDone(offset, result);
  	}).send();
@@ -70,7 +70,7 @@ index 6ebc6e4eec97b6429acde51de3fe0b8dbf1c21a1..5e35b81980360bb5ef312763aaaef53f
  	if (_fileProcess->size > 0
  		&& _fileProcess->requests.size() < kFileRequestsCount) {
 diff --git a/Telegram/SourceFiles/export/output/export_output_html.cpp b/Telegram/SourceFiles/export/output/export_output_html.cpp
-index 601acf7ac08a4d30e1cc250cb06eea5bd85c98f7..d6bd4ab154564f5b25cc111f782e752471db5ef5 100644
+index 4624f378f6aa07c99e78ffd6ea8721a770e8e8c1..61d82ba2a7431b597358e78d16037747e85a4c31 100644
 --- a/Telegram/SourceFiles/export/output/export_output_html.cpp
 +++ b/Telegram/SourceFiles/export/output/export_output_html.cpp
 @@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -81,7 +81,7 @@ index 601acf7ac08a4d30e1cc250cb06eea5bd85c98f7..d6bd4ab154564f5b25cc111f782e7524
  #include "ui/grouped_layout_geometry.h"
  #include "ui/text/format_values.h"
  
-@@ -6418,6 +6419,7 @@ Result HtmlWriter::writeDialogStart(const Data::DialogInfo &data) {
+@@ -6420,6 +6421,7 @@ Result HtmlWriter::writeDialogStart(const Data::DialogInfo &data) {
  	_chat = fileWithRelativePath(data.relativePath + messagesFile(0));
  	_chatFileEmpty = true;
  	_messagesCount = 0;
@@ -89,7 +89,7 @@ index 601acf7ac08a4d30e1cc250cb06eea5bd85c98f7..d6bd4ab154564f5b25cc111f782e7524
  	_dateMessageId = 0;
  	_lastMessageInfo = nullptr;
  	_lastMessageIdsPerFile.clear();
-@@ -6433,7 +6435,7 @@ Result HtmlWriter::writeDialogSlice(const Data::MessagesSlice &data) {
+@@ -6435,7 +6437,7 @@ Result HtmlWriter::writeDialogSlice(const Data::MessagesSlice &data) {
  		return wrapMessageLink(messageId, text);
  	};
  	auto oldIndex = (_messagesCount > 0)
@@ -98,7 +98,7 @@ index 601acf7ac08a4d30e1cc250cb06eea5bd85c98f7..d6bd4ab154564f5b25cc111f782e7524
  		: 0;
  	auto previous = _lastMessageInfo.get();
  	auto saved = std::optional<MessageInfo>();
-@@ -6442,7 +6444,7 @@ Result HtmlWriter::writeDialogSlice(const Data::MessagesSlice &data) {
+@@ -6444,7 +6446,7 @@ Result HtmlWriter::writeDialogSlice(const Data::MessagesSlice &data) {
  		if (Data::SkipMessageByDate(message, _settings)) {
  			continue;
  		}

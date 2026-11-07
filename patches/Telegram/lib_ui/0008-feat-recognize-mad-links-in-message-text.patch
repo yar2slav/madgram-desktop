@@ -8,10 +8,10 @@ Subject: [PATCH] feat: recognize mad links in message text
  1 file changed, 1 insertion(+)
 
 diff --git a/ui/text/text_entity.cpp b/ui/text/text_entity.cpp
-index aa9c1b309458592322d079ed99fbaad7e0217a97..c590a30777d4e61902fab39a510d846b760d12cd 100644
+index 6691a69bd2bfd0691c9a859423a66fe44f83a03d..eb0fa12df0324eb0d6deeb7ede5bf505dff8c2fc 100644
 --- a/ui/text/text_entity.cpp
 +++ b/ui/text/text_entity.cpp
-@@ -181,6 +181,7 @@ base::flat_set<int32> CreateValidProtocols() {
+@@ -184,6 +184,7 @@ base::flat_set<int32> CreateValidProtocols() {
  	addOne(QString::fromLatin1("itmss")); // itunes
  	addOne(QString::fromLatin1("http"));
  	addOne(QString::fromLatin1("https"));

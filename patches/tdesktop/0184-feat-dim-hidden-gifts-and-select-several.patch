@@ -20,10 +20,10 @@ Subject: [PATCH] feat: dim hidden gifts and select several
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_list.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7e392e72a640de0de4f479598b6b21fdb894154f..d1428568ffd71439a777850b590ca0fdc67611ea 100644
+index 99e364d7227dcf98f44e4a031be2d0eda7fad2b2..ea537ee914cd7e27a9464df0359bb2832d815f16 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2585,6 +2585,8 @@ PRIVATE
+@@ -2741,6 +2741,8 @@ PRIVATE
      tele/tele_gif_video.h
      tele/tele_gift_quantity.cpp
      tele/tele_gift_quantity.h
@@ -73,10 +73,10 @@ index c1eaa14708cbfe9ceab62fbec19a71c04103afe9..551c37464e453c00d45b2d9fb2bc9e76
  void ShowGiftSaleAcceptBox(
  	not_null<Window::SessionController*> controller,
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_common.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_common.cpp
-index 6443eced5d1ab94e44b427276831760d8050dfaa..6a19b2e744a608454d39bb7ef0492c37533c7397 100644
+index 0c7453ddf39506d0d9b25b45dcdfcfb187bec53d..705d8168d60ea9fea06f8d78afa79d389c539236 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_common.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_common.cpp
-@@ -26,6 +26,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -27,6 +27,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "info/channel_statistics/earn/earn_icons.h"
  #include "main/main_session.h"
  #include "overview/overview_checkbox.h"
@@ -85,7 +85,7 @@ index 6443eced5d1ab94e44b427276831760d8050dfaa..6a19b2e744a608454d39bb7ef0492c37
  #include "settings/settings_credits_graphics.h"
  #include "ui/layers/generic_box.h"
  #include "ui/text/format_values.h"
-@@ -1017,7 +1019,14 @@ void GiftButton::paintEvent(QPaintEvent *e) {
+@@ -983,7 +985,14 @@ void GiftButton::paintEvent(QPaintEvent *e) {
  
  	auto p = QPainter(this);
  	if (!canCraftAt || base::unixtime::now() >= canCraftAt) {
@@ -101,7 +101,7 @@ index 6443eced5d1ab94e44b427276831760d8050dfaa..6a19b2e744a608454d39bb7ef0492c37
  		return;
  	}
  	const auto ratio = style::DevicePixelRatio();
-@@ -1220,7 +1229,7 @@ void GiftButton::paint(QPainter &p, float64 craftProgress) {
+@@ -1186,7 +1195,7 @@ void GiftButton::paint(QPainter &p, float64 craftProgress) {
  			: frame;
  		p.drawImage(target, image);
  	}
@@ -111,7 +111,7 @@ index 6443eced5d1ab94e44b427276831760d8050dfaa..6a19b2e744a608454d39bb7ef0492c37
  			(width - stickerSize().width()) / 2,
  			(small()
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index c07961f397cbc3bad111730e78dae60c91dbbd19..676cf5f34ffbf8c029679853bc51699589fdebe9 100644
+index 8e37059e26364d4bd63a74f431009b387af79727..d9fbeb0e6c29ee5e7bcd986f5aced4ce2489d7a8 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -49,6 +49,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -135,7 +135,7 @@ index c07961f397cbc3bad111730e78dae60c91dbbd19..676cf5f34ffbf8c029679853bc516995
  
  	if (peer->canManageGifts()) {
  		subscribeToUpdates();
-@@ -903,6 +910,7 @@ void InnerWidget::validateButtons() {
+@@ -912,6 +919,7 @@ void InnerWidget::validateButtons() {
  				anim::type::instant);
  		}
  		view.button->setDescriptor(descriptor, _mode);
@@ -143,7 +143,7 @@ index c07961f397cbc3bad111730e78dae60c91dbbd19..676cf5f34ffbf8c029679853bc516995
  		return true;
  	};
  	for (auto j = fromRow; j != tillRow; ++j) {
-@@ -1254,6 +1262,9 @@ void InnerWidget::showMenuFor(not_null<GiftButton*> button, QPoint point) {
+@@ -1268,6 +1276,9 @@ void InnerWidget::showMenuFor(not_null<GiftButton*> button, QPoint point) {
  void InnerWidget::showGift(int index) {
  	Expects(index >= 0 && index < _list->size());
  
@@ -153,7 +153,7 @@ index c07961f397cbc3bad111730e78dae60c91dbbd19..676cf5f34ffbf8c029679853bc516995
  	if (const auto id = _addingToCollectionId) {
  		const auto &gift = (*_list)[index].gift;
  		auto changes = _collectionChanges.current();
-@@ -1775,7 +1786,8 @@ int InnerWidget::resizeGetHeight(int width) {
+@@ -1797,7 +1808,8 @@ int InnerWidget::resizeGetHeight(int width) {
  		result += margin.top() + about->height() + margin.bottom();
  	}
  
@@ -163,7 +163,7 @@ index c07961f397cbc3bad111730e78dae60c91dbbd19..676cf5f34ffbf8c029679853bc516995
  }
  
  void InnerWidget::saveState(not_null<Memento*> memento) {
-@@ -1790,6 +1802,7 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
+@@ -1812,6 +1824,7 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
  }
  
  void InnerWidget::fillMenu(const Ui::Menu::MenuCallback &addAction) {
@@ -171,7 +171,7 @@ index c07961f397cbc3bad111730e78dae60c91dbbd19..676cf5f34ffbf8c029679853bc516995
  	const auto canManage = _peer->canManageGifts();
  	const auto descriptor = _descriptor.current();
  	const auto filter = descriptor.filter;
-@@ -1971,6 +1984,7 @@ void InnerWidget::mousePressEvent(QMouseEvent *e) {
+@@ -1993,6 +2006,7 @@ void InnerWidget::mousePressEvent(QMouseEvent *e) {
  	_pressedIndex = index;
  	const auto collectionId = _descriptor.current().collectionId;
  	const auto canDrag = !_addingToCollectionId

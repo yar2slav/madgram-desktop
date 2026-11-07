@@ -11,7 +11,7 @@ Subject: [PATCH] feat: skip the rich message prompt on paste
  4 files changed, 17 insertions(+)
 
 diff --git a/Telegram/SourceFiles/chat_helpers/rich_paste_toast.cpp b/Telegram/SourceFiles/chat_helpers/rich_paste_toast.cpp
-index 51e3411ea4c4c74e843f9e3f1f2147d26c77aa11..49d3f9f1217d043c338a6584e2959fc0e21c464f 100644
+index ef1dadb82f74161ae3147ccd7e7ce69f4ca90386..0ceab7159d049ba317f5192908f4f010a7445177 100644
 --- a/Telegram/SourceFiles/chat_helpers/rich_paste_toast.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/rich_paste_toast.cpp
 @@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

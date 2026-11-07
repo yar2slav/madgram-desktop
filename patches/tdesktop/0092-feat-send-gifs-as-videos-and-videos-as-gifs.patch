@@ -9,7 +9,7 @@ Subject: [PATCH] feat: send gifs as videos and videos as gifs
  .../chat_helpers/gifs_list_widget.cpp         |   6 +
  .../history/history_inner_widget.cpp          |   5 +
  .../view/history_view_context_menu.cpp        |   2 +
- .../SourceFiles/storage/localimageloader.cpp  |   8 +-
+ .../SourceFiles/storage/localimageloader.cpp  |   6 +-
  Telegram/SourceFiles/tele/tele_gif_video.cpp  | 308 ++++++++++++++++++
  Telegram/SourceFiles/tele/tele_gif_video.h    |  46 +++
  Telegram/SourceFiles/tele/tele_send_files.cpp | 129 ++++++++
@@ -19,17 +19,17 @@ Subject: [PATCH] feat: send gifs as videos and videos as gifs
  .../ui/chat/attach/attach_album_thumbnail.h   |   2 +
  .../ui/chat/attach/attach_prepare.h           |   1 +
  .../attach/attach_single_media_preview.cpp    |   6 +-
- 15 files changed, 559 insertions(+), 105 deletions(-)
+ 15 files changed, 558 insertions(+), 104 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_gif_video.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_gif_video.h
  create mode 100644 Telegram/SourceFiles/tele/tele_send_files.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_send_files.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a15b9873d5c2221ddac96f9966db117ebe183ec1..92a792df1cd8ca1e4bff2b916c29a94b05f59002 100644
+index 5db1a8e57c11e5dd6359fcaace3de5fa5631a233..74c370ca8fe118222ddbb23639067c806d7c6763 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2539,6 +2539,8 @@ PRIVATE
+@@ -2695,6 +2695,8 @@ PRIVATE
      tele/tele_edit_history_section.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -38,7 +38,7 @@ index a15b9873d5c2221ddac96f9966db117ebe183ec1..92a792df1cd8ca1e4bff2b916c29a94b
      tele/tele_gifts.cpp
      tele/tele_gifts.h
      tele/tele_ghost.cpp
-@@ -2583,6 +2585,8 @@ PRIVATE
+@@ -2739,6 +2741,8 @@ PRIVATE
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
      tele/tele_secret_media.h
@@ -48,7 +48,7 @@ index a15b9873d5c2221ddac96f9966db117ebe183ec1..92a792df1cd8ca1e4bff2b916c29a94b
      tele/tele_send_order.h
      tele/tele_shortcuts.cpp
 diff --git a/Telegram/SourceFiles/boxes/send_files_box.cpp b/Telegram/SourceFiles/boxes/send_files_box.cpp
-index 7311fd204278929cdd8869b242b07e23c846e09f..cfee652375b860ee3a9c2978f6951217f060dbeb 100644
+index 992735071b2b7ba9f798a6737c4a20ed746763d3..bf04500c033568b730249e4390e51317e6010d00 100644
 --- a/Telegram/SourceFiles/boxes/send_files_box.cpp
 +++ b/Telegram/SourceFiles/boxes/send_files_box.cpp
 @@ -34,6 +34,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -59,7 +59,7 @@ index 7311fd204278929cdd8869b242b07e23c846e09f..cfee652375b860ee3a9c2978f6951217
  #include "tele/tele_link_rewrites.h"
  #include "base/event_filter.h"
  #include "base/call_delayed.h"
-@@ -1940,6 +1941,17 @@ void SendFilesBox::pushBlock(int from, int till) {
+@@ -1947,6 +1948,17 @@ void SendFilesBox::pushBlock(int from, int till) {
  				&icons.menuSpoiler,
  				spoilered);
  		}
@@ -78,7 +78,7 @@ index 7311fd204278929cdd8869b242b07e23c846e09f..cfee652375b860ee3a9c2978f6951217
  		const auto canSetTtl = !hasPrice()
  			&& (_sendType == Api::SendType::Normal)
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index 9503a4e4eae922334155f88bb245ac282dc43b0a..9ecb91e8645c09dac223336bef24d0415e83e7cf 100644
+index 70688114fe2aba93c8b8ad98533200bc333abebd..089e1937d60abd6e8a2a7ec6d523f6ab9c4dc7ac 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -89,7 +89,7 @@ index 9503a4e4eae922334155f88bb245ac282dc43b0a..9ecb91e8645c09dac223336bef24d041
  #include "styles/style_chat_helpers.h"
  #include "styles/style_menu_icons.h"
  
-@@ -433,6 +434,11 @@ base::unique_qptr<Ui::PopupMenu> GifsListWidget::fillContextMenu(
+@@ -441,6 +442,11 @@ base::unique_qptr<Ui::PopupMenu> GifsListWidget::fillContextMenu(
  				menu->addAction(text, std::move(done), icon);
  			};
  			AddGifAction(std::move(callback), _show, document, icons);
@@ -102,10 +102,10 @@ index 9503a4e4eae922334155f88bb245ac282dc43b0a..9ecb91e8645c09dac223336bef24d041
  	}
  
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 1da6051b84c797be3cb3bd108483acea04e45d4e..f195b394124c031480e21e7143c63608589141e1 100644
+index 955fd3be8d07cdc2e77d3c8c81b1f9d97c9c666f..afc461182023c6d1cf452a9281dcd7a3e02a693f 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -133,6 +133,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -138,6 +138,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
  #include "tele/tele_ghost.h"
@@ -113,7 +113,7 @@ index 1da6051b84c797be3cb3bd108483acea04e45d4e..f195b394124c031480e21e7143c63608
  #include "tele/tele_ignored.h"
  #include "tele/tele_secret_media.h"
  #include "tele/tele_shot.h"
-@@ -3890,6 +3891,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3945,6 +3946,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  		(isUponSelected > 1) ? getSelectedItems() : MessageIdsList(),
  		(isUponSelected != -2) ? _dragStateItem : nullptr,
  		width());
@@ -125,10 +125,10 @@ index 1da6051b84c797be3cb3bd108483acea04e45d4e..f195b394124c031480e21e7143c63608
  		_menu.get(),
  		controller->uiShow(),
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index fabdee813ebd97bf0d5ee6ab6c777774172c116f..d708ee1e2584592a169203debbe012515c582726 100644
+index 921193359fb469897c10125445b9e962054af208..02618897757629c399ae6fb36448b086a5885c4e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -119,6 +119,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_custom_emoji.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
@@ -136,7 +136,7 @@ index fabdee813ebd97bf0d5ee6ab6c777774172c116f..d708ee1e2584592a169203debbe01251
  #include "tele/tele_secret_media.h"
  #include "tele/tele_shot.h"
  #include "tele/tele_message_menu.h"
-@@ -1995,6 +1996,7 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
+@@ -2008,6 +2009,7 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
  		}
  	}
  	Tele::AddShotAction(result.get(), list, request);
@@ -145,7 +145,7 @@ index fabdee813ebd97bf0d5ee6ab6c777774172c116f..d708ee1e2584592a169203debbe01251
  		result.get(),
  		list->controller()->uiShow(),
 diff --git a/Telegram/SourceFiles/storage/localimageloader.cpp b/Telegram/SourceFiles/storage/localimageloader.cpp
-index 641f3efc9f0dfbc6161acdf5a7325bc54612dd79..569cccca2213ffd5d75fa0c283c9f8a69e1b5d95 100644
+index d7f130937aa82474760f40d27a0f0176e8dfb3f3..aa08a8d5ba5adeecbf3d8817725d45561a89f720 100644
 --- a/Telegram/SourceFiles/storage/localimageloader.cpp
 +++ b/Telegram/SourceFiles/storage/localimageloader.cpp
 @@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -156,37 +156,28 @@ index 641f3efc9f0dfbc6161acdf5a7325bc54612dd79..569cccca2213ffd5d75fa0c283c9f8a6
  
  #include <QtCore/QBuffer>
  #include <QtGui/QImageWriter>
-@@ -993,6 +994,7 @@ void FileLoadTask::process(ProcessArgs &&args) {
- 			auto coverHeight = video->thumbnail.height();
- 			auto realSeconds = video->duration / 1000.;
- 			const auto gif = video->modifications.gif && !_forceFile;
-+			const auto silent = Tele::SendsAsSilentVideo(*_information);
+@@ -996,6 +997,7 @@ void FileLoadTask::process(ProcessArgs &&args) {
+ 			// WHY: a soundless source sent as a video gets a silent track
+ 			// added, so the server still has to be told it has no sound.
+ 			const auto silent = gif || !video->hasAudio;
++			const auto silentGif = Tele::SendsAsSilentVideo(*_information);
+ 			// A GIF is sent as an animated mp4, so re-encode anything else.
  			const auto convertForGif = gif
- 				&& video->isGifv
  				&& (filemime != u"video/mp4"_q);
-@@ -1007,11 +1009,11 @@ void FileLoadTask::process(ProcessArgs &&args) {
+@@ -1010,11 +1012,11 @@ void FileLoadTask::process(ProcessArgs &&args) {
  						video->modifications,
  						video->thumbnail.size(),
  						video->duration,
 -						video->hasAudio))) {
-+						video->hasAudio || silent))) {
++						video->hasAudio || silentGif))) {
  				auto source = Editor::ComposeVideoSource(
  					_filepath,
  					video->modifications,
 -					{},
-+					{ .removeAudio = silent },
++					{ .removeAudio = silentGif },
  					false);
  				source.bytes = _filepath.isEmpty() ? _content : QByteArray();
  				const auto target = Media::Encode::TranscodedSize(
-@@ -1065,7 +1067,7 @@ void FileLoadTask::process(ProcessArgs &&args) {
- 				if (video->supportsStreaming) {
- 					flags |= MTPDdocumentAttributeVideo::Flag::f_supports_streaming;
- 				}
--				if (gif) {
-+				if (gif || silent) {
- 					flags |= MTPDdocumentAttributeVideo::Flag::f_nosound;
- 				}
- 				const auto startTs = _result->videoCoverOffset;
 diff --git a/Telegram/SourceFiles/tele/tele_gif_video.cpp b/Telegram/SourceFiles/tele/tele_gif_video.cpp
 new file mode 100644
 index 0000000000000000000000000000000000000000..d0ba9479b3028766f7812afc466e1c32f32177c2

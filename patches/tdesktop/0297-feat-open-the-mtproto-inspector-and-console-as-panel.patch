@@ -11,10 +11,10 @@ Subject: [PATCH] feat: open the mtproto inspector and console as panels
  4 files changed, 182 insertions(+), 135 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index b63544b8d114e810f8611d205c0db886c37f2a58..43cc81e55efa42460e015b5f8b83f7f938549144 100644
+index 02783e19ccd4ee55ac4718b2288ea8c2b48fec25..bba8948e0df3d7f111904611b29b21c188dd6735 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -110,6 +110,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_reduce_motion.h"
  #include "tele/tele_list_keys.h"
  #include "tele/tele_mtp_console.h"
@@ -22,7 +22,7 @@ index b63544b8d114e810f8611d205c0db886c37f2a58..43cc81e55efa42460e015b5f8b83f7f9
  #include "tele/tele_counters.h"
  #include "tele/tele_bubble_padding.h"
  #include "tele/tele_freeze_watchdog.h"
-@@ -1870,7 +1871,8 @@ bool Application::closeActiveWindow() {
+@@ -1892,7 +1893,8 @@ bool Application::closeActiveWindow() {
  		|| Iv::Editor::CloseActiveWindow()
  		|| calls().closeCurrentActiveCall()
  		|| (_savedWindows && _savedWindows->closeActiveShell())
@@ -32,7 +32,7 @@ index b63544b8d114e810f8611d205c0db886c37f2a58..43cc81e55efa42460e015b5f8b83f7f9
  		return true;
  	} else if (const auto window = activeWindow()) {
  		if (window->widget()->isActive()) {
-@@ -1888,7 +1890,8 @@ bool Application::minimizeActiveWindow() {
+@@ -1910,7 +1912,8 @@ bool Application::minimizeActiveWindow() {
  	} else if (_iv->minimizeActive()
  		|| Iv::Editor::MinimizeActiveWindow()
  		|| calls().minimizeCurrentActiveCall()
@@ -243,7 +243,7 @@ index 17ccc12bcb7254cb2727abf28f00fa6f43683ab8..188084b833c0a0a14971010c1cdf544b
  		});
  	});
 diff --git a/Telegram/SourceFiles/tele/tele_mtp_inspector.cpp b/Telegram/SourceFiles/tele/tele_mtp_inspector.cpp
-index df6086906fe0033c03545ad1a2a3bd0cc96a21c2..1b276d0c2a35b63da88fd78f35db70e7c9e9f356 100644
+index d22a97ca9cfcd3069bbd25685e12e96b99345453..26520afe69684a16ba2172a7d2a6f250f8b1c405 100644
 --- a/Telegram/SourceFiles/tele/tele_mtp_inspector.cpp
 +++ b/Telegram/SourceFiles/tele/tele_mtp_inspector.cpp
 @@ -1,6 +1,9 @@

@@ -15,10 +15,10 @@ Subject: [PATCH] fix: show oversized stickers as files like the server does
  create mode 100644 Telegram/SourceFiles/tele/tele_sticker_truth.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 3dd4f7cbc23c6d4ae675322d544a40154fd02f3d..dd6795f381a36dd7521e13b48f5bd59589c28903 100644
+index 0c03a283cd1adf10592defc6debf256fd8ea2901..b6eaf7d2ce8a2a4c31ade9ea7b82863d13ed486c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2715,6 +2715,8 @@ PRIVATE
+@@ -2871,6 +2871,8 @@ PRIVATE
      tele/tele_stars_tools.h
      tele/tele_sticker_captions.cpp
      tele/tele_sticker_captions.h
@@ -28,10 +28,10 @@ index 3dd4f7cbc23c6d4ae675322d544a40154fd02f3d..dd6795f381a36dd7521e13b48f5bd595
      tele/tele_streamer_mode.h
      tele/tele_streaming_audio.cpp
 diff --git a/Telegram/SourceFiles/data/data_document.cpp b/Telegram/SourceFiles/data/data_document.cpp
-index 4fb3a8d7e9a6888b5ffe934cf509a1d4ffcd6005..18aa8aeb8d8aa905565737314f6ebbac5688952d 100644
+index 9b7206427fe5c1db5c955e806adfc7f9f6f7fcca..bfd915d4e553a95ae0865624599da7003c093d57 100644
 --- a/Telegram/SourceFiles/data/data_document.cpp
 +++ b/Telegram/SourceFiles/data/data_document.cpp
-@@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -44,6 +44,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/abstract_box.h" // Ui::hideLayer().
  #include "tele/tele_download_folders.h"
  #include "tele/tele_download_paths.h"
@@ -39,7 +39,7 @@ index 4fb3a8d7e9a6888b5ffe934cf509a1d4ffcd6005..18aa8aeb8d8aa905565737314f6ebbac
  
  #include <QtCore/QBuffer>
  #include <QtCore/QMimeType>
-@@ -354,6 +355,10 @@ void DocumentData::setattributes(
+@@ -366,6 +367,10 @@ void DocumentData::setattributes(
  		| kStreamingSupportedMask);
  	_flags |= kStreamingSupportedUnknown;
  
@@ -51,10 +51,10 @@ index 4fb3a8d7e9a6888b5ffe934cf509a1d4ffcd6005..18aa8aeb8d8aa905565737314f6ebbac
  
  	auto wasVideoData = isVideoFile() ? std::move(_additional) : nullptr;
 diff --git a/Telegram/SourceFiles/data/data_media_types.cpp b/Telegram/SourceFiles/data/data_media_types.cpp
-index abecf28a17bb81347b01f5414729cc81029a2eb2..2f50a6a161638a2f8c23b6321830820930df148b 100644
+index 5d842570eee83afacb2d4ffa70668db1a6e10eb6..a28658a192a6ac7df42ee0d9d2af137acf41bf98 100644
 --- a/Telegram/SourceFiles/data/data_media_types.cpp
 +++ b/Telegram/SourceFiles/data/data_media_types.cpp
-@@ -1475,11 +1475,12 @@ bool MediaFile::updateSentMedia(const MTPMessageMedia &media) {
+@@ -1482,11 +1482,12 @@ bool MediaFile::updateSentMedia(const MTPMessageMedia &media) {
  		return false;
  	}
  	const auto owner = &parent()->history()->owner();
@@ -69,7 +69,7 @@ index abecf28a17bb81347b01f5414729cc81029a2eb2..2f50a6a161638a2f8c23b63218308209
  
  std::unique_ptr<HistoryView::Media> MediaFile::createView(
 diff --git a/Telegram/SourceFiles/storage/localimageloader.cpp b/Telegram/SourceFiles/storage/localimageloader.cpp
-index 12402a937f362df3f89c8f822e52bb3492c7cf80..2f581d6f7b4bceac01590b0b82d2c2dd3f381069 100644
+index f2aa4cf5c6c8541ed432d69a115e3795b8090f4d..3935c191ca48f105a322c9599c704975885fdb1f 100644
 --- a/Telegram/SourceFiles/storage/localimageloader.cpp
 +++ b/Telegram/SourceFiles/storage/localimageloader.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

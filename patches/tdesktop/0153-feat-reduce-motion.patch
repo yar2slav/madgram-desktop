@@ -19,10 +19,10 @@ Subject: [PATCH] feat: reduce motion
  create mode 100644 Telegram/SourceFiles/tele/tele_reduce_motion.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 782bc3a149298d92cbc21194692d6ecc2c150805..c50742b9d7e673a38edeb7bb1bc276d3da1a58df 100644
+index f50e6338fe3d06c6cc0175432ca433f7f195114a..b8411ad2cdc3804f7732214773f30a903deb68e2 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2637,6 +2637,8 @@ PRIVATE
+@@ -2793,6 +2793,8 @@ PRIVATE
      tele/tele_read_log.h
      tele/tele_recent_emoji.cpp
      tele/tele_recent_emoji.h
@@ -32,10 +32,10 @@ index 782bc3a149298d92cbc21194692d6ecc2c150805..c50742b9d7e673a38edeb7bb1bc276d3
      tele/tele_rich_timestamps.h
      tele/tele_rmb_beside_bubble.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 4a096ce8faa7ad0d0f935a3ecc0fe8bee0409797..dc41fd7fa73873a4f72f878bf990e04643f4510c 100644
+index 927d08f3c033e041f7570ed7273a481b176ce378..5787d4679d61b1fd6f95ff931a9438a9b016319f 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -107,6 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -108,6 +108,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_updater.h"
  #include "tele/tele_changelog.h"
  #include "tele/tele_badges.h"
@@ -43,7 +43,7 @@ index 4a096ce8faa7ad0d0f935a3ecc0fe8bee0409797..dc41fd7fa73873a4f72f878bf990e046
  #include "tele/tele_counters.h"
  
  #include <QtCore/QStandardPaths>
-@@ -362,6 +363,7 @@ void Application::run() {
+@@ -363,6 +364,7 @@ void Application::run() {
  	Tele::StartUpdater();
  	Tele::StartChangelog();
  	Tele::StartBadges();
@@ -52,7 +52,7 @@ index 4a096ce8faa7ad0d0f935a3ecc0fe8bee0409797..dc41fd7fa73873a4f72f878bf990e046
  	if (MediaControlsManager::Supported()) {
  		_mediaControlsManager = std::make_unique<MediaControlsManager>();
 diff --git a/Telegram/SourceFiles/history/view/history_view_emoji_interactions.cpp b/Telegram/SourceFiles/history/view/history_view_emoji_interactions.cpp
-index 1da83e06d7d10de5d1ddc52798734bc6ed738563..debc9312044e773b7e15bdc62f57ff9d078895d3 100644
+index 2c62c9afde79a63f1ca72de61454f97e3cf384ec..ad7801db9ad8e3cf1a6872ba8280192a2f6762e0 100644
 --- a/Telegram/SourceFiles/history/view/history_view_emoji_interactions.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_emoji_interactions.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -63,7 +63,7 @@ index 1da83e06d7d10de5d1ddc52798734bc6ed738563..debc9312044e773b7e15bdc62f57ff9d
  
  namespace HistoryView {
  namespace {
-@@ -173,6 +174,9 @@ void EmojiInteractions::playEffectOnRead(not_null<const Element*> view) {
+@@ -177,6 +178,9 @@ void EmojiInteractions::playEffectOnRead(not_null<const Element*> view) {
  }
  
  void EmojiInteractions::playEffect(not_null<const Element*> view) {

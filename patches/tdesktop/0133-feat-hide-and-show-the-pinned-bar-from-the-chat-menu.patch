@@ -13,10 +13,10 @@ Subject: [PATCH] feat: hide and show the pinned bar from the chat menu
  create mode 100644 Telegram/SourceFiles/tele/tele_show_pinned.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 3cf0875cd866195ca9631c85abcd4c1aeed2e438..c0c65904c48487df22478e28047cb65174a1cf6b 100644
+index 9f4f3694d174806971238983c9301fc96bce31ad..e99cc3453af142a3e393ddf4e71ec7b18ce80d40 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2645,6 +2645,8 @@ PRIVATE
+@@ -2801,6 +2801,8 @@ PRIVATE
      tele/tele_shot.h
      tele/tele_shot_sharp.cpp
      tele/tele_shot_sharp.h
@@ -175,7 +175,7 @@ index 0000000000000000000000000000000000000000..4e881c0427444de945b23f732eea8a48
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index b855753d31df69c167887a0d2edb86924d6a6587..04bc47d345914f2cf7866131e06ac0781a7e08a7 100644
+index 4a3395a1de6524784c01aa2055d392895756d862..a4864e3576228e8561d0fe328ddcf9f7386cc634 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -137,6 +137,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

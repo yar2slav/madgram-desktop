@@ -13,7 +13,7 @@ Subject: [PATCH] feat: open collectible gifts in see.tg
  6 files changed, 58 insertions(+)
 
 diff --git a/Telegram/SourceFiles/settings/settings_credits_graphics.cpp b/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
-index 8df5fa19cea68145c7210cb50b20103024fa4403..7ef266063b95c23bafa6119d5576969c6ad04fa6 100644
+index ca954dfbac5ed64a34f41a4f90276ad51476815d..942cf017f283985f1dc41b419da532a52ec9da01 100644
 --- a/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
 +++ b/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
 @@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -24,7 +24,7 @@ index 8df5fa19cea68145c7210cb50b20103024fa4403..7ef266063b95c23bafa6119d5576969c
  #include "tele/tele_view_tl.h"
  #include "styles/style_boxes.h"
  #include "styles/style_calls.h"
-@@ -2336,6 +2337,7 @@ void GenericCreditsEntryBody(
+@@ -2338,6 +2339,7 @@ void GenericCreditsEntryBody(
  			canConvert ? convert : Fn<void()>(),
  			canUpgrade,
  			canRemoveDetails ? removeDetails : Fn<void(Fn<void()>)>());

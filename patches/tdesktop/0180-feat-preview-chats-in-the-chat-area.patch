@@ -18,10 +18,10 @@ Subject: [PATCH] feat: preview chats in the chat area
  create mode 100644 Telegram/SourceFiles/tele/tele_full_preview.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 979b07ff16ed8cc2d2e778ecbb0ed3d2fdb311e2..b413001461aa33a616b5c2ec6b714a1f583c4166 100644
+index 9f22830028cf475ab34ba8f5de2bbb5114ea270c..73df2e88d825de58c72e601c80b95c11324c976a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2579,6 +2579,8 @@ PRIVATE
+@@ -2735,6 +2735,8 @@ PRIVATE
      tele/tele_field_resize.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -31,10 +31,10 @@ index 979b07ff16ed8cc2d2e778ecbb0ed3d2fdb311e2..b413001461aa33a616b5c2ec6b714a1f
      tele/tele_gif_video.h
      tele/tele_gifts.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index c4cc9ed1d1c2e54a4989b2a109fe9ef3b39c7d44..9d3da61261efe2e83dd12d152f037cdf6da4cf17 100644
+index 15f68ae63d95efcb6a8e7690e58701b1489007b9..8c8da058f65163116f6f15832faec49343f854dc 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -104,6 +104,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -108,6 +108,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_message_menu.h"
  #include "tele/tele_options.h"
  #include "tele/tele_deleted_reply.h"
@@ -42,7 +42,7 @@ index c4cc9ed1d1c2e54a4989b2a109fe9ef3b39c7d44..9d3da61261efe2e83dd12d152f037cdf
  #include "tele/tele_protected.h"
  #include "tele/tele_rmb_beside_bubble.h"
  #include "styles/style_chat.h"
-@@ -4020,6 +4021,9 @@ void ListWidget::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -4481,6 +4482,9 @@ void ListWidget::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  			_overElement = view;
  		}
  	}
@@ -1196,10 +1196,10 @@ index da12c8e6e296ff99a54a1727107a5987a57ecccf..9fa1eb3bfed660828a0b5cfb22198cd8
  		Toggle(kOptionHideMentionsButton),
  		Toggle(kOptionHideReactionsButton),
 diff --git a/Telegram/SourceFiles/window/window_chat_preview.cpp b/Telegram/SourceFiles/window/window_chat_preview.cpp
-index 7dfb0c3428ffd0103466a82f7b719f56d06f57c8..e7f56f2ec6313ef4d90f2cf2f0ac4cbd516de13d 100644
+index fe64b81961f5a5ac51a32f073fefcabe268af290..f2f3782025b5e7e54bf85c2cf184184c6e60fa42 100644
 --- a/Telegram/SourceFiles/window/window_chat_preview.cpp
 +++ b/Telegram/SourceFiles/window/window_chat_preview.cpp
-@@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "history/view/history_view_chat_preview.h"
  #include "mainwidget.h"
  #include "tele/tele_changelog_chat.h"
@@ -1207,7 +1207,7 @@ index 7dfb0c3428ffd0103466a82f7b719f56d06f57c8..e7f56f2ec6313ef4d90f2cf2f0ac4cbd
  #include "ui/widgets/popup_menu.h"
  #include "window/window_peer_menu.h"
  #include "window/window_session_controller.h"
-@@ -56,6 +57,11 @@ bool ChatPreviewManager::show(
+@@ -62,6 +63,11 @@ bool ChatPreviewManager::show(
  	}
  	if (SkipChatPreviewFor(row.key)) {
  		return false;

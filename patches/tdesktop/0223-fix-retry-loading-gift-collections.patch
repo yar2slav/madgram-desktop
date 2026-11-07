@@ -8,7 +8,7 @@ Subject: [PATCH] fix: retry loading gift collections
  1 file changed, 15 insertions(+)
 
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index b02e8d2aaefc63022406c0b62bd5f2c8c3f7c3a5..e6690845c440cefb807f6796de21f6ba61e5ae58 100644
+index 26099e21ad6d775f35a884895c644b06dd18523f..a607839f3843e22982eeda723b5b6c9200fb603e 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -63,6 +63,7 @@ constexpr auto kPreloadPages = 2;
@@ -35,15 +35,15 @@ index b02e8d2aaefc63022406c0b62bd5f2c8c3f7c3a5..e6690845c440cefb807f6796de21f6ba
  
  	rpl::event_stream<Descriptor> _descriptorChanges;
  	rpl::event_stream<bool> _notifyEnabled;
-@@ -445,6 +448,7 @@ void InnerWidget::switchTo(int collectionId) {
- 		teleShowFound();
- 		return;
+@@ -451,6 +454,7 @@ void InnerWidget::switchTo(int collectionId) {
+ 	if (entries != _entries.get() && _dragging.index >= 0) {
+ 		cancelDragging();
  	}
 +	retryCollections();
  	_collectionsLoadedCallback = nullptr;
  	_api.request(base::take(_loadMoreRequestId)).cancel();
- 	_entries = collectionId ? &_perCollection[collectionId] : &_all;
-@@ -512,17 +516,27 @@ void InnerWidget::loadCollections() {
+ 	_entries = entries;
+@@ -518,17 +522,27 @@ void InnerWidget::loadCollections() {
  		}, [&](const MTPDpayments_starGiftCollectionsNotModified &) {
  		});
  		_collectionsLoaded = true;
@@ -71,7 +71,7 @@ index b02e8d2aaefc63022406c0b62bd5f2c8c3f7c3a5..e6690845c440cefb807f6796de21f6ba
  void InnerWidget::subscribeToUpdates() {
  	_peer->owner().giftUpdates(
  	) | rpl::on_next([=](const Data::GiftUpdate &update) {
-@@ -710,6 +724,7 @@ void InnerWidget::markUnpinned(std::vector<Entry>::iterator i) {
+@@ -719,6 +733,7 @@ void InnerWidget::markUnpinned(std::vector<Entry>::iterator i) {
  void InnerWidget::visibleTopBottomUpdated(
  		int visibleTop,
  		int visibleBottom) {

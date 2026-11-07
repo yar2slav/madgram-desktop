@@ -17,10 +17,10 @@ Subject: [PATCH] feat: forward messages one by one
  create mode 100644 Telegram/SourceFiles/tele/tele_forward.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 0a2758446465707c117ddf978f38a21f11d3b823..0d34c60470d4f41088d66ae678c09becbea497ae 100644
+index 7add1c6f995b8a4524d798333814f8ca322baa23..ffe65a0a62f9c9291c1b2101efba64e500e47bfa 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2588,6 +2588,8 @@ PRIVATE
+@@ -2744,6 +2744,8 @@ PRIVATE
      tele/tele_flood_wait.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -30,10 +30,10 @@ index 0a2758446465707c117ddf978f38a21f11d3b823..0d34c60470d4f41088d66ae678c09bec
      tele/tele_freeze_watchdog.h
      tele/tele_full_preview.cpp
 diff --git a/Telegram/SourceFiles/history/history_item_helpers.cpp b/Telegram/SourceFiles/history/history_item_helpers.cpp
-index 5db4fe9023dab1ff764c8475952eea08bb5d44b2..cd8d2bf9b4000f3ae5e80184ce02a01fd1f682ee 100644
+index 07c65a6cb317dbaed7662f3e64be6a282c407554..54424351a2cef906c8026fc82c95228c4db55e0e 100644
 --- a/Telegram/SourceFiles/history/history_item_helpers.cpp
 +++ b/Telegram/SourceFiles/history/history_item_helpers.cpp
-@@ -56,6 +56,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -57,6 +57,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/widgets/checkbox.h"
  #include "ui/item_text_options.h"
  #include "lang/lang_keys.h"
@@ -41,7 +41,7 @@ index 5db4fe9023dab1ff764c8475952eea08bb5d44b2..cd8d2bf9b4000f3ae5e80184ce02a01f
  #include "tele/tele_local_password.h"
  #include "tele/tele_silent.h"
  
-@@ -688,7 +689,8 @@ std::vector<ForwardRange> CollectForwardRanges(
+@@ -689,7 +690,8 @@ std::vector<ForwardRange> CollectForwardRanges(
  			continue;
  		}
  		if (result.empty()

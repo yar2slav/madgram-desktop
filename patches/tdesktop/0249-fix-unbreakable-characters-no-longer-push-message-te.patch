@@ -3356,7 +3356,7 @@ index 9eb6919d858f8a51e8207acf3c2260c76d2f39f7..0cb04b7cdd915dbb70efe36850117f6c
  			]
  		}
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index 9247ed1f3c0f83e01e83d8d684196693942366c7..aa26ca0bd5aa636c071ab08549be1618f6daed79 100644
+index a6f653ddd96800d44c16829b86862929d67b874a..7cef89823060c7fe2415c92747ce61dea9c4566a 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -1933,7 +1933,13 @@ int Element::textHeightFor(int textWidth) const {
@@ -3375,10 +3375,10 @@ index 9247ed1f3c0f83e01e83d8d684196693942366c7..aa26ca0bd5aa636c071ab08549be1618
  		}
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 0583aae6196f2ab87bd12fc091a8bee4f6155f4b..8561423e3ab31cd6b372207cf49c805de3fa3c19 100644
+index a7bb20ea7d8bdfa182f62b151ae9eeb2a570c33b..8eae6e95edc19cdf6b4ef2e5758fd875ca943a78 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -3141,9 +3141,14 @@ void Message::paintText(
+@@ -3144,9 +3144,14 @@ void Message::paintText(
  	}
  
  	auto highlightRequest = context.computeHighlightCache();
@@ -3394,7 +3394,7 @@ index 0583aae6196f2ab87bd12fc091a8bee4f6155f4b..8561423e3ab31cd6b372207cf49c805d
  		.palette = &stm->textPalette,
  		.pre = stm->preCache.get(),
  		.blockquote = context.quoteCache(
-@@ -3161,6 +3166,7 @@ void Message::paintText(
+@@ -3164,6 +3169,7 @@ void Message::paintText(
  		.useFullWidth = true,
  		.linePostprocess = linePostprocess ? &*linePostprocess : nullptr,
  	});

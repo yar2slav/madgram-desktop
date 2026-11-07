@@ -12,10 +12,10 @@ Subject: [PATCH] feat: hide the collectible status tooltip in profiles
  5 files changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index 930d7dc60ea056eccd69133af950324d5928b767..bc00bf9a467ba6f605b51d0b0326f9909c577a4d 100644
+index 26e5b695b40a5e52240c69b840f4925ff720d6f7..83077159c7eb4b1541ae34916119a4bd927a5a92 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -1695,7 +1695,9 @@ void TopBar::startUploadOverlay() {
+@@ -1719,7 +1719,9 @@ void TopBar::startUploadOverlay() {
  }
  
  void TopBar::setupUniqueBadgeTooltip() {

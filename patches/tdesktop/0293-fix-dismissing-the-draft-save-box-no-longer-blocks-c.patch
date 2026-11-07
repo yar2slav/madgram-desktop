@@ -9,10 +9,10 @@ Subject: [PATCH] fix: dismissing the draft save box no longer blocks closing
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp b/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp
-index b1a427899222b09995efede028786df0c1264419..7dd8c8dda48d1fbc6bb57560724081b61a08945b 100644
+index a837eaa6b37ae19bdeaa335e2f00e3714eb9fd8d..5caae20d0fbb81a96ea6dd62160a300a18eb6dcd 100644
 --- a/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp
 +++ b/Telegram/SourceFiles/iv/editor/iv_editor_session.cpp
-@@ -4527,7 +4527,11 @@ void ArticleSession::saveRichDraftNow() {
+@@ -4524,7 +4524,11 @@ void ArticleSession::saveRichDraftNow() {
  
  void ArticleSession::startCloseWithDraftSave() {
  	if (_closeDraftSaveActive) {

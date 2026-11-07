@@ -12,10 +12,10 @@ Subject: [PATCH] feat: show id and dc in one row
  5 files changed, 112 insertions(+), 30 deletions(-)
 
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index 0037eadfc5610a21e9ced458c1368be7446ff813..7f53fb060667f51bce19ff1d96d22da3d0d74241 100644
+index eec70050dc2d122db0413d35545cb0a6b2d4cc2c..ec23ae36c058a0b8be0de149fe42346ff4c36970 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -1854,7 +1854,7 @@ Section DetailsFiller::makeInfo() {
+@@ -1855,7 +1855,7 @@ Section DetailsFiller::makeInfo() {
  			setupAboutContextMenu(about.text, AboutWithAdvancedValue(_peer));
  		}
  	}
@@ -24,7 +24,7 @@ index 0037eadfc5610a21e9ced458c1368be7446ff813..7f53fb060667f51bce19ff1d96d22da3
  		Tele::SetupPeerIdLabel(
  			addInfoOneLine(
  				Tele::Lower(u"ID"_q),
-@@ -1862,8 +1862,6 @@ Section DetailsFiller::makeInfo() {
+@@ -1863,8 +1863,6 @@ Section DetailsFiller::makeInfo() {
  				QString()).text,
  			_peer,
  			controller);
@@ -33,7 +33,7 @@ index 0037eadfc5610a21e9ced458c1368be7446ff813..7f53fb060667f51bce19ff1d96d22da3
  		addInfoOneLine(
  			Tele::Lower(u"Real name"_q),
  			Tele::LocalRealNameValue(_peer),
-@@ -1875,8 +1873,6 @@ Section DetailsFiller::makeInfo() {
+@@ -1876,8 +1874,6 @@ Section DetailsFiller::makeInfo() {
  				QString()).text,
  			_peer,
  			controller);

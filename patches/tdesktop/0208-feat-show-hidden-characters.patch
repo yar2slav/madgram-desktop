@@ -18,7 +18,7 @@ Subject: [PATCH] feat: show hidden characters
  11 files changed, 455 insertions(+), 6 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/ui_integration.cpp b/Telegram/SourceFiles/core/ui_integration.cpp
-index c97f808fea9b05c8090cace43f83c414f3a360a8..4d31ba03d7a590ac40ffe935c0272b8ace94b86c 100644
+index 834ec54e68dd65e2e97f6dd0948ffbee2c8bc573..3674d0ebaa5f6d42b54420e4a909c5feb23f0d1f 100644
 --- a/Telegram/SourceFiles/core/ui_integration.cpp
 +++ b/Telegram/SourceFiles/core/ui_integration.cpp
 @@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -29,7 +29,7 @@ index c97f808fea9b05c8090cace43f83c414f3a360a8..4d31ba03d7a590ac40ffe935c0272b8a
  #include "tele/tele_links.h"
  #include "styles/style_chat_helpers.h"
  
-@@ -323,6 +324,9 @@ bool UiIntegration::screenIsLocked() {
+@@ -358,6 +359,9 @@ bool UiIntegration::screenIsLocked() {
  std::shared_ptr<ClickHandler> UiIntegration::createLinkHandler(
  		const EntityLinkData &data,
  		const Ui::Text::MarkedContext &context) {
@@ -88,7 +88,7 @@ index a4f0e62201c7bc01855a3ba830f8eff12e2cecdb..21d7add6d4159501aae9f606de5f0a68
  		const auto title = data.customPhrases()
  			? data.title
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index 2c61e8c927c01975054d2f89444279758321eb55..b2d8399e92a89a7181a981a3f8c026de4574f040 100644
+index cc4a549c178a9cb3e25b5d847273ad6be73148c7..64246527b6488913dc08c26d2f6ae3e7e8d2dc46 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -99,7 +99,7 @@ index 2c61e8c927c01975054d2f89444279758321eb55..b2d8399e92a89a7181a981a3f8c026de
  #include "tele/tele_options.h"
  #include "tele/tele_shot.h"
  #include "tele/tele_shot_sharp.h"
-@@ -2317,7 +2318,7 @@ void Element::setTextWithLinks(
+@@ -2332,7 +2333,7 @@ void Element::setTextWithLinks(
  		clearSpecialOnlyEmoji();
  		_text.setMarkedText(
  			Tele::CodeLinesTextStyle(this, text),

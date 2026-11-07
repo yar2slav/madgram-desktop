@@ -1,0 +1,445 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 04:10:48 +0200
+Subject: [PATCH] feat: smooth typing
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |   4 +-
+ Telegram/SourceFiles/core/application.cpp     |   2 +
+ .../SourceFiles/settings/settings_tele.cpp    |   4 +
+ Telegram/SourceFiles/tele/tele_options.cpp    |  17 ++
+ Telegram/SourceFiles/tele/tele_options.h      |   2 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
+ .../SourceFiles/tele/tele_smooth_typing.cpp   | 272 ++++++++++++++++++
+ .../SourceFiles/tele/tele_smooth_typing.h     |   7 +
+ 9 files changed, 310 insertions(+), 1 deletion(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_smooth_typing.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_smooth_typing.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index c7e56c42629fa1ceddc0e69b92a4195481ad7fa9..223b387811ab15870ad4976026d3be6f62192c50 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3148,6 +3148,8 @@ PRIVATE
+     tele/tele_silent.h
+     tele/tele_smooth_scroll.cpp
+     tele/tele_smooth_scroll.h
++    tele/tele_smooth_typing.cpp
++    tele/tele_smooth_typing.h
+     tele/tele_spoilers.cpp
+     tele/tele_spoilers.h
+     tele/tele_stars_tools.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 43c615408275b639064fa85b6fb54fc3ffbc9016..da15700a026f50552cde4b0564ea7549f1f15357 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2068,5 +2068,7 @@
+   "Step 2 of 2. Turn on sync for this account. Saving deleted messages and edit history turns on with it.": "Шаг 2 из 2. Включи синхронизацию для этого аккаунта. Вместе с ней включится сохранение удалённых сообщений и истории правок.",
+   "Sync this account": "Синхронизировать этот аккаунт",
+   "To add another PC, open this window on it and choose the transfer file saved here.": "Чтобы добавить ещё один ПК, открой на нём это окно и выбери файл переноса, сохранённый здесь.",
+-  "Open transfer file": "Открыть файл переноса"
++  "Open transfer file": "Открыть файл переноса",
++  "Smooth typing": "Плавный ввод",
++  "The text cursor glides to its new place instead of jumping.": "Курсор в поле ввода плавно переезжает на новое место, а не прыгает."
+ }
+diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
+index f38a017c92ce97c0358ffc3f1aefcd39d5f345c5..1bdb16d1f04d115e623eafbb9603909f089fbcd0 100644
+--- a/Telegram/SourceFiles/core/application.cpp
++++ b/Telegram/SourceFiles/core/application.cpp
+@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_freeze_watchdog.h"
+ #include "tele/tele_options.h"
+ #include "tele/tele_smooth_scroll.h"
++#include "tele/tele_smooth_typing.h"
+ #include "tele/tele_start_menu.h"
+ 
+ #include <QtCore/QStandardPaths>
+@@ -382,6 +383,7 @@ void Application::run() {
+ 	Tele::StartMadBadges();
+ 	Tele::StartReduceMotion();
+ 	Tele::StartSmoothScroll();
++	Tele::StartSmoothTyping();
+ 	Tele::StartListKeys();
+ 	Tele::StartMtpConsole();
+ 	Tele::StartFreezeWatchdog();
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 230664c21df38ceb3263a25af56d64c315ff3f86..c3cf0be1784d28e637f9d0060b8ef2ca293e6091 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -2729,6 +2729,10 @@ void FillInterface(SectionBuilder &builder) {
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Text"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionLowercase);
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionSmoothTyping,
++		{ u"cursor"_q, u"caret"_q, u"typing"_q, u"animation"_q });
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Scrolling"_q);
+ 	AddOptionToggle(
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 62183c4f01408238d9cfc1bdc1e06c77fe386bea..7cd1a1c122e3459cbec4248086ae9c75f32cae72 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -75,6 +75,7 @@ const char kOptionReduceMotion[] = "tele-reduce-motion";
+ const char kOptionReduceMotionSaved[] = "tele-reduce-motion-saved";
+ const char kOptionListKeys[] = "tele-list-keys";
+ const char kOptionSmoothScroll[] = "tele-smooth-scroll";
++const char kOptionSmoothTyping[] = "tele-smooth-typing";
+ const char kOptionScrollStats[] = "tele-scroll-stats";
+ const char kOptionScrollZoom[] = "tele-scroll-zoom";
+ const char kOptionViewerMouseBack[] = "tele-viewer-mouse-back";
+@@ -695,6 +696,12 @@ base::options::toggle SmoothScrollOption({
+ 	.description = "Eases each mouse wheel step, like profiles already do.",
+ });
+ 
++base::options::toggle SmoothTypingOption({
++	.id = kOptionSmoothTyping,
++	.name = "Smooth typing",
++	.description = "The text cursor glides to its new place instead of jumping.",
++});
++
+ base::options::toggle ScrollStatsOption({
+ 	.id = kOptionScrollStats,
+ 	.name = "Log scroll frame rate",
+@@ -2436,6 +2443,16 @@ rpl::producer<bool> ListKeysValue() {
+ 	});
+ }
+ 
++rpl::producer<bool> SmoothTypingValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		SmoothTypingOption.changes() | rpl::to_empty
++	) | rpl::map([] {
++		return SmoothTypingOption.value();
++	});
++}
++
+ rpl::producer<bool> SmoothScrollValue() {
+ 	return rpl::single(
+ 		rpl::empty
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 9662dcbc97772adbf24a2c9002ab2d7a2791fa2b..188a92e9b232003f321599e4b400edfb4f2cc672 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -67,6 +67,7 @@ extern const char kOptionReduceMotion[];
+ extern const char kOptionReduceMotionSaved[];
+ extern const char kOptionListKeys[];
+ extern const char kOptionSmoothScroll[];
++extern const char kOptionSmoothTyping[];
+ extern const char kOptionScrollStats[];
+ extern const char kOptionScrollZoom[];
+ extern const char kOptionViewerMouseBack[];
+@@ -366,6 +367,7 @@ void SetLinkPreviews(const QString &value);
+ void SetReduceMotionSaved(const QString &value);
+ [[nodiscard]] rpl::producer<bool> ListKeysValue();
+ [[nodiscard]] rpl::producer<bool> SmoothScrollValue();
++[[nodiscard]] rpl::producer<bool> SmoothTypingValue();
+ [[nodiscard]] bool ScrollStats();
+ [[nodiscard]] bool ScrollZoom();
+ [[nodiscard]] bool ViewerMouseBack();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index cf66733a6e9a3846f5812a876326e7430a55204c..ef0b1445e4b19fccc09e4c342468508581241daf 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -155,6 +155,7 @@ struct Spec {
+ 		Toggle(kOptionReduceMotion),
+ 		Toggle(kOptionListKeys),
+ 		Toggle(kOptionSmoothScroll),
++		Toggle(kOptionSmoothTyping),
+ 		Toggle(kOptionScrollStats),
+ 		Toggle(kOptionScrollZoom),
+ 		Toggle(kOptionViewerMouseBack),
+diff --git a/Telegram/SourceFiles/tele/tele_smooth_typing.cpp b/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..e21623249ea3e2741358bd08c75a87a60f6f29c9
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
+@@ -0,0 +1,272 @@
++#include "tele/tele_smooth_typing.h"
++
++#include "base/timer.h"
++#include "tele/tele_options.h"
++#include "ui/effects/animations.h"
++#include "ui/widgets/fields/input_field.h"
++#include "styles/style_widgets.h"
++
++#include <QtCore/QPointer>
++#include <QtGui/QAbstractTextDocumentLayout>
++#include <QtGui/QPainter>
++#include <QtGui/QTextCursor>
++#include <QtGui/QTextDocument>
++#include <QtWidgets/QApplication>
++#include <QtWidgets/QScrollBar>
++#include <QtWidgets/QTextEdit>
++
++namespace Tele {
++namespace {
++
++constexpr auto kGlideDuration = crl::time(110);
++constexpr auto kFadeDuration = crl::time(160);
++constexpr auto kMaxFadedCharacters = 2;
++constexpr auto kAttachedProperty = "mad_smooth_caret";
++
++class SmoothCaret final : public QWidget {
++public:
++	explicit SmoothCaret(not_null<QTextEdit*> edit)
++	: QWidget(edit->viewport())
++	, _edit(edit.get())
++	, _width(std::max(edit->cursorWidth(), 1))
++	, _blink([=] { toggleBlink(); })
++	, _fading([=](crl::time now) { return fadeStep(now); }) {
++		if (const auto field = dynamic_cast<Ui::InputField*>(edit->parentWidget())) {
++			_background = field->st().textBg->c;
++		}
++		setAttribute(Qt::WA_TransparentForMouseEvents);
++		setAttribute(Qt::WA_NoSystemBackground);
++		setAttribute(Qt::WA_TranslucentBackground);
++		edit->setCursorWidth(0);
++		edit->setProperty(kAttachedProperty, true);
++		edit->installEventFilter(this);
++		edit->viewport()->installEventFilter(this);
++		connect(edit, &QTextEdit::cursorPositionChanged, this, [=] {
++			move(true);
++		});
++		connect(edit, &QTextEdit::textChanged, this, [=] {
++			QMetaObject::invokeMethod(this, [=] { move(true); }, Qt::QueuedConnection);
++		});
++		connect(edit->document(), &QTextDocument::contentsChange, this, [=](int position, int removed, int added) {
++			if (removed || added < 1 || added > kMaxFadedCharacters || !edit->hasFocus()) {
++				return;
++			}
++			QMetaObject::invokeMethod(this, [=] { fadeIn(position, added); }, Qt::QueuedConnection);
++		});
++		connect(edit->verticalScrollBar(), &QScrollBar::valueChanged, this, [=] {
++			move(false);
++		});
++		connect(edit->horizontalScrollBar(), &QScrollBar::valueChanged, this, [=] {
++			move(false);
++		});
++		connect(edit->document()->documentLayout(), &QAbstractTextDocumentLayout::documentSizeChanged, this, [=] {
++			move(false);
++		});
++		setGeometry(edit->viewport()->rect());
++		raise();
++		show();
++		move(false);
++	}
++
++	~SmoothCaret() {
++		if (const auto edit = _edit.data()) {
++			edit->setCursorWidth(_width);
++			edit->setProperty(kAttachedProperty, QVariant());
++		}
++	}
++
++protected:
++	bool eventFilter(QObject *watched, QEvent *e) override {
++		const auto edit = _edit.data();
++		if (!edit) {
++			return false;
++		} else if (watched == edit->viewport() && e->type() == QEvent::Resize) {
++			setGeometry(edit->viewport()->rect());
++			move(false);
++		} else if (watched == edit
++			&& (e->type() == QEvent::FocusIn || e->type() == QEvent::FocusOut)) {
++			restartBlink();
++		}
++		return false;
++	}
++
++	void paintEvent(QPaintEvent *e) override {
++		const auto edit = _edit.data();
++		if (!edit) {
++			return;
++		}
++		auto p = QPainter(this);
++		const auto now = crl::now();
++		for (const auto &fade : _fades) {
++			const auto progress = std::clamp((now - fade.start) / float64(kFadeDuration), 0., 1.);
++			auto color = _background;
++			color.setAlphaF(1. - anim::easeOutCubic(1., progress));
++			p.fillRect(fade.rect, color);
++		}
++		if (!edit->hasFocus() || edit->isReadOnly() || !_shown) {
++			return;
++		}
++		p.fillRect(current(), edit->palette().color(QPalette::Text));
++	}
++
++private:
++	[[nodiscard]] QRectF current() const {
++		const auto progress = _glide.value(1.);
++		const auto mix = [&](qreal from, qreal to) {
++			return from + (to - from) * progress;
++		};
++		return QRectF(
++			mix(_from.x(), _to.x()),
++			mix(_from.y(), _to.y()),
++			_width,
++			mix(_from.height(), _to.height()));
++	}
++
++	void move(bool animated) {
++		const auto edit = _edit.data();
++		if (!edit) {
++			return;
++		}
++		const auto target = QRectF(edit->cursorRect());
++		if (_placed && target == _to) {
++			restartBlink();
++			return;
++		} else if (animated && _placed) {
++			_from = current();
++			_to = target;
++			_glide.stop();
++			_glide.start([=] { update(); }, 0., 1., kGlideDuration, anim::easeOutCubic);
++		} else {
++			_glide.stop();
++			_from = _to = target;
++			_placed = true;
++		}
++		restartBlink();
++	}
++
++	void restartBlink() {
++		_shown = true;
++		const auto period = QApplication::cursorFlashTime() / 2;
++		if (period > 0) {
++			_blink.callEach(period);
++		} else {
++			_blink.cancel();
++		}
++		update();
++	}
++
++	void toggleBlink() {
++		_shown = !_shown;
++		update();
++	}
++
++	void fadeIn(int position, int added) {
++		const auto edit = _edit.data();
++		if (!edit || _background.alpha() < 255) {
++			return;
++		}
++		auto cursor = QTextCursor(edit->document());
++		cursor.setPosition(position);
++		const auto from = edit->cursorRect(cursor);
++		cursor.setPosition(position + added);
++		const auto till = edit->cursorRect(cursor);
++		if (from.top() != till.top() || till.x() <= from.x()) {
++			return;
++		}
++		_fades.push_back({
++			.rect = QRectF(from.x(), from.y(), till.x() - from.x(), from.height()),
++			.start = crl::now(),
++		});
++		if (!_fading.animating()) {
++			_fading.start();
++		}
++		update();
++	}
++
++	bool fadeStep(crl::time now) {
++		_fades.erase(
++			ranges::remove_if(_fades, [&](const Fade &fade) {
++				return now - fade.start >= kFadeDuration;
++			}),
++			end(_fades));
++		update();
++		return !_fades.empty();
++	}
++
++	QPointer<QTextEdit> _edit;
++	int _width = 1;
++	QRectF _from;
++	QRectF _to;
++	bool _placed = false;
++	bool _shown = true;
++	Ui::Animations::Simple _glide;
++	base::Timer _blink;
++	struct Fade {
++		QRectF rect;
++		crl::time start = 0;
++	};
++	std::vector<Fade> _fades;
++	QColor _background;
++	Ui::Animations::Basic _fading;
++
++};
++
++class FocusWatcher final : public QObject {
++public:
++	FocusWatcher() : QObject(qApp) {
++		qApp->installEventFilter(this);
++		if (const auto focused = QApplication::focusWidget()) {
++			attach(focused);
++		}
++	}
++
++	~FocusWatcher() {
++		for (const auto &caret : _carets) {
++			delete caret.data();
++		}
++	}
++
++protected:
++	bool eventFilter(QObject *watched, QEvent *e) override {
++		if (e->type() == QEvent::FocusIn && watched->isWidgetType()) {
++			attach(static_cast<QWidget*>(watched));
++		}
++		return false;
++	}
++
++private:
++	void attach(not_null<QWidget*> widget) {
++		const auto edit = qobject_cast<QTextEdit*>(widget.get());
++		if (!edit
++			|| edit->property(kAttachedProperty).toBool()
++			|| !dynamic_cast<Ui::InputField*>(edit->parentWidget())) {
++			return;
++		}
++		_carets.erase(
++			ranges::remove_if(_carets, [](const QPointer<SmoothCaret> &caret) {
++				return !caret;
++			}),
++			end(_carets));
++		_carets.push_back(new SmoothCaret(edit));
++	}
++
++	std::vector<QPointer<SmoothCaret>> _carets;
++
++};
++
++} // namespace
++
++void StartSmoothTyping() {
++	static auto lifetime = rpl::lifetime();
++	static auto watcher = QPointer<FocusWatcher>();
++	SmoothTypingValue(
++	) | rpl::on_next([](bool enabled) {
++		if (!enabled) {
++			delete watcher.data();
++		} else if (!watcher) {
++			watcher = new FocusWatcher();
++		}
++	}, lifetime);
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_smooth_typing.h b/Telegram/SourceFiles/tele/tele_smooth_typing.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..8ac9f642242d08611e524f416d93f3139f7cb57e
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_smooth_typing.h
+@@ -0,0 +1,7 @@
++#pragma once
++
++namespace Tele {
++
++void StartSmoothTyping();
++
++} // namespace Tele

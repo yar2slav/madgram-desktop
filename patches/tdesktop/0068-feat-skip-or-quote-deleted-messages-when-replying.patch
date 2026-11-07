@@ -5,9 +5,7 @@ Subject: [PATCH] feat: skip or quote deleted messages when replying
 
 ---
  Telegram/CMakeLists.txt                       |   2 +
- Telegram/SourceFiles/api/api_polls.cpp        |   2 +
- Telegram/SourceFiles/api/api_sending.cpp      |   4 +
- Telegram/SourceFiles/api/api_todo_lists.cpp   |   2 +
+ Telegram/SourceFiles/api/api_sending.cpp      |   5 +
  Telegram/SourceFiles/apiwrap.cpp              |  11 +-
  .../history/history_inner_widget.cpp          |   4 +-
  Telegram/SourceFiles/history/history_item.cpp |   2 +
@@ -24,15 +22,15 @@ Subject: [PATCH] feat: skip or quote deleted messages when replying
  Telegram/SourceFiles/tele/tele_options.h      |   4 +
  Telegram/SourceFiles/tele/tele_shortcuts.cpp  |   2 +
  .../window/session/window_session_media.cpp   |   5 +-
- 20 files changed, 463 insertions(+), 35 deletions(-)
+ 18 files changed, 460 insertions(+), 35 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_deleted_reply.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_deleted_reply.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 3d71d11ee40eb5b828f605b0f661dd34cf948a93..6db32d8b6c4f6a874536ba41bfa98033077e0844 100644
+index 5a50a4bc4c3d5bf7557c8acbf0b03256b25c9f6a..4c4d65236a650f3afc96ae3b8171a0097c0b83ff 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2509,6 +2509,8 @@ PRIVATE
+@@ -2665,6 +2665,8 @@ PRIVATE
      tele/tele_crash.h
      tele/tele_deleted.cpp
      tele/tele_deleted.h
@@ -41,31 +39,11 @@ index 3d71d11ee40eb5b828f605b0f661dd34cf948a93..6db32d8b6c4f6a874536ba41bfa98033
      tele/tele_deleted_section.cpp
      tele/tele_deleted_section.h
      tele/tele_edit_history.cpp
-diff --git a/Telegram/SourceFiles/api/api_polls.cpp b/Telegram/SourceFiles/api/api_polls.cpp
-index bdcf29d0b1329a2860770ca16422386ea81d1989..61e846c39312d493d19299e65fba7213115e68da 100644
---- a/Telegram/SourceFiles/api/api_polls.cpp
-+++ b/Telegram/SourceFiles/api/api_polls.cpp
-@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "lang/lang_keys.h"
- #include "main/main_session.h"
- #include "styles/style_polls.h"
-+#include "tele/tele_deleted_reply.h"
- #include "ui/toast/toast.h"
- #include "window/window_session_controller.h"
- 
-@@ -224,6 +225,7 @@ void Polls::create(
- 		Fn<void()> done,
- 		Fn<void(bool fileReferenceExpired)> fail) {
- 	StripEphemeralReply(_session, action.replyTo);
-+	Tele::StripDeletedReply(action.history, action.replyTo);
- 	_session->api().sendAction(action);
- 
- 	const auto history = action.history;
 diff --git a/Telegram/SourceFiles/api/api_sending.cpp b/Telegram/SourceFiles/api/api_sending.cpp
-index de2267135ca96df78a7da2fe66c7cf4a324547a9..ddc96e46187241035802c829da0c71289654fe44 100644
+index ab7326d058b5362f7436d3c2745501df96f2b814..160e47f37f6330a7c152a6f221008e2baa8e0f93 100644
 --- a/Telegram/SourceFiles/api/api_sending.cpp
 +++ b/Telegram/SourceFiles/api/api_sending.cpp
-@@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -40,6 +40,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_calcmula.h"
  #include "tele/tele_links.h"
@@ -73,7 +51,7 @@ index de2267135ca96df78a7da2fe66c7cf4a324547a9..ddc96e46187241035802c829da0c7128
  
  namespace Api {
  namespace {
-@@ -91,6 +92,7 @@ void SendSimpleMedia(SendAction action, MTPInputMedia inputMedia) {
+@@ -128,6 +129,7 @@ void SendSimpleMedia(SendAction action, MTPInputMedia inputMedia) {
  		return;
  	}
  
@@ -81,7 +59,7 @@ index de2267135ca96df78a7da2fe66c7cf4a324547a9..ddc96e46187241035802c829da0c7128
  	if (action.replyTo.messageId
  		&& !IsServerMsgId(action.replyTo.messageId.msg)
  		&& !session->data().message(action.replyTo.messageId)) {
-@@ -198,6 +200,7 @@ void SendExistingMedia(
+@@ -212,6 +214,7 @@ void SendExistingMedia(
  	})) {
  		return;
  	}
@@ -89,7 +67,7 @@ index de2267135ca96df78a7da2fe66c7cf4a324547a9..ddc96e46187241035802c829da0c7128
  	const auto history = message.action.history;
  	const auto peer = history->peer;
  	const auto session = &history->session();
-@@ -746,6 +749,7 @@ void SendMusicSelection(
+@@ -737,6 +740,7 @@ void SendMusicSelection(
  	if (items.empty()) {
  		return;
  	}
@@ -97,28 +75,16 @@ index de2267135ca96df78a7da2fe66c7cf4a324547a9..ddc96e46187241035802c829da0c7128
  
  	auto caption = TextWithEntities{
  		std::move(message.textWithTags.text),
-diff --git a/Telegram/SourceFiles/api/api_todo_lists.cpp b/Telegram/SourceFiles/api/api_todo_lists.cpp
-index dc577a2c9b5f6598a15c08bd0de399f75d3a2a3e..b266bf3d1052cafa76836feba9860e063953ccd5 100644
---- a/Telegram/SourceFiles/api/api_todo_lists.cpp
-+++ b/Telegram/SourceFiles/api/api_todo_lists.cpp
-@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "history/history_item.h"
- #include "history/history_item_helpers.h" // ShouldSendSilent
- #include "main/main_session.h"
-+#include "tele/tele_deleted_reply.h"
- 
- namespace Api {
- namespace {
-@@ -39,6 +40,7 @@ void TodoLists::create(
- 		Fn<void()> done,
- 		Fn<void(QString)> fail) {
- 	StripEphemeralReply(_session, action.replyTo);
+@@ -981,6 +985,7 @@ MTPmessages_SendMedia::Flags PrepareSendMedia(
+ 		SendAction &action,
+ 		int &starsPaid) {
+ 	StripEphemeralReply(session, action.replyTo);
 +	Tele::StripDeletedReply(action.history, action.replyTo);
- 	_session->api().sendAction(action);
+ 	session->api().sendAction(action);
  
  	const auto history = action.history;
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f450b0a1358 100644
+index 883812733a894b4ca4f23432c75c3f4c8ec2e5da..5f9b910681c45ce41820105bd09faf5e8e1a3eb9 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -126,10 +92,10 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  #include "tele/tele_calcmula.h"
  #include "tele/tele_links.h"
 +#include "tele/tele_deleted_reply.h"
+ #include "tgw/tgw_storage.h"
  
  namespace {
- 
-@@ -4275,8 +4276,9 @@ void ApiWrap::sendVoiceMessage(
+@@ -4299,8 +4300,9 @@ void ApiWrap::sendVoiceMessage(
  		crl::time duration,
  		bool video,
  		const SendAction &action) {
@@ -141,7 +107,7 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  	_fileLoader->addTask(
  		std::make_unique<FileLoadTask>(FileLoadTask::VoiceArgs{
  			.session = &session(),
-@@ -4355,6 +4357,7 @@ void ApiWrap::sendFiles(
+@@ -4363,6 +4365,7 @@ void ApiWrap::sendFiles(
  	if (Tele::CalcmulaFiles(list, type, album, action)) {
  		return;
  	}
@@ -149,7 +115,7 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  	const auto &ephemeral = _session->ephemeralMessages();
  	if (album && !ephemeral.isEphemeralBotReply(action.replyTo.messageId)) {
  		const auto peer = action.history->peer;
-@@ -4537,6 +4540,7 @@ void ApiWrap::sendRichMessage(
+@@ -4529,6 +4532,7 @@ void ApiWrap::sendRichMessage(
  	if (!ephemeral) {
  		StripEphemeralReply(_session, action.replyTo);
  	}
@@ -157,7 +123,7 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  	const auto newId = FullMsgId(
  		peer->id,
  		_session->data().nextLocalMessageId());
-@@ -4604,6 +4608,7 @@ void ApiWrap::sendRichMessage(
+@@ -4596,6 +4600,7 @@ void ApiWrap::sendRichMessage(
  	const auto submittedSummary = item->originalText();
  
  	StripEphemeralReply(_session, action.replyTo);
@@ -165,7 +131,7 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  
  	const auto history = item->history();
  	const auto peer = history->peer;
-@@ -4782,6 +4787,7 @@ void ApiWrap::sendMessage(
+@@ -4774,6 +4779,7 @@ void ApiWrap::sendMessage(
  	if (Tele::CalcmulaMessage(message)) {
  		return;
  	}
@@ -173,7 +139,7 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  	const auto history = message.action.history;
  	const auto peer = history->peer;
  	const auto &textWithTags = message.textWithTags;
-@@ -5147,6 +5153,7 @@ void ApiWrap::sendInlineResult(
+@@ -5139,6 +5145,7 @@ void ApiWrap::sendInlineResult(
  	if (Tele::SendInlineWithoutVia(data, action, localMessageId, done)) {
  		return;
  	}
@@ -182,10 +148,10 @@ index c14dc25975ba9f5f0be966e00088e8b67a8069c2..edfa6f2303ca75b4d4b5d237d0df5f45
  
  	const auto history = action.history;
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index ae2e76e3b57531eb7810705558dd4f93d258bdbc..ad2a4881513a28760ec2641296bb6a9839bc2260 100644
+index 6564c592f32d8a7c645ca9972c5b315af5c7bdf5..6b2725232057931f216c0c4db15ac9a1bdb39f61 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -130,7 +130,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -135,7 +135,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_changes.h"
  #include "dialogs/ui/dialogs_video_userpic.h"
  #include "tele/tele_button_payload.h"
@@ -194,7 +160,7 @@ index ae2e76e3b57531eb7810705558dd4f93d258bdbc..ad2a4881513a28760ec2641296bb6a98
  #include "tele/tele_edit_history.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_ignored.h"
-@@ -6573,7 +6573,7 @@ auto HistoryInner::DelegateMixin()
+@@ -6635,7 +6635,7 @@ auto HistoryInner::DelegateMixin()
  }
  
  bool CanSendReply(not_null<const HistoryItem*> item) {
@@ -204,7 +170,7 @@ index ae2e76e3b57531eb7810705558dd4f93d258bdbc..ad2a4881513a28760ec2641296bb6a98
  	}
  	if (item->isEphemeral() && !CanReplyToEphemeral(item)) {
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index 4627fa7a9459c23856ef82041acccc31df406726..1c615988e75c442f2c55f436bbcd77927f9e7369 100644
+index 1d7b7447ec662702eb15785615bd892ab47026dc..b1b6454377d4dbe1e81e09cdc2d232b60d40ff29 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
 @@ -88,6 +88,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -213,9 +179,9 @@ index 4627fa7a9459c23856ef82041acccc31df406726..1c615988e75c442f2c55f436bbcd7792
  #include "tele/tele_deleted.h"
 +#include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
+ #include "tgw/tgw_media.h"
  
- #include "styles/style_chat.h"
-@@ -5414,6 +5415,7 @@ TextWithEntities HistoryItem::withLocalEntities(
+@@ -5498,6 +5499,7 @@ TextWithEntities HistoryItem::withLocalEntities(
  }
  
  void HistoryItem::createComponentsHelper(HistoryItemCommonFields &&fields) {
@@ -224,10 +190,10 @@ index 4627fa7a9459c23856ef82041acccc31df406726..1c615988e75c442f2c55f436bbcd7792
  	auto config = CreateConfig();
  	config.viaBotId = fields.viaBotId;
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 7d950c4f8becde249796904db255c9086f7623e5..4de52b8e66e018d9126933ab55f0a94adbed683c 100644
+index 5d53892862e2743f5d930e008a8f28efd8103bff..3149b6c94b1a4375309b1135bc506701dba4051d 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -174,6 +174,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -177,6 +177,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_calls.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
@@ -235,7 +201,7 @@ index 7d950c4f8becde249796904db255c9086f7623e5..4de52b8e66e018d9126933ab55f0a94a
  #include "media/audio/media_audio.h"
  #include "media/audio/media_audio_capture.h"
  #include "media/player/media_player_instance.h"
-@@ -9355,8 +9356,9 @@ bool HistoryWidget::replyToPreviousMessage() {
+@@ -9604,8 +9605,9 @@ bool HistoryWidget::replyToPreviousMessage() {
  	const auto skipLocal = [](HistoryView::Element *from) {
  		auto view = from;
  		while (view
@@ -247,7 +213,7 @@ index 7d950c4f8becde249796904db255c9086f7623e5..4de52b8e66e018d9126933ab55f0a94a
  			view = view->previousDisplayedInBlocks();
  		}
  		return view;
-@@ -9401,8 +9403,9 @@ bool HistoryWidget::replyToNextMessage() {
+@@ -9650,8 +9652,9 @@ bool HistoryWidget::replyToNextMessage() {
  		if (const auto view = item->mainView()) {
  			auto next = view->nextDisplayedInBlocks();
  			while (next
@@ -259,7 +225,7 @@ index 7d950c4f8becde249796904db255c9086f7623e5..4de52b8e66e018d9126933ab55f0a94a
  				next = next->nextDisplayedInBlocks();
  			}
  			if (next) {
-@@ -10385,7 +10388,9 @@ void HistoryWidget::clearFieldText(
+@@ -10634,7 +10637,9 @@ void HistoryWidget::clearFieldText(
  
  void HistoryWidget::replyToMessage(FullReplyTo id) {
  	if (const auto item = session().data().message(id.messageId)) {
@@ -270,7 +236,7 @@ index 7d950c4f8becde249796904db255c9086f7623e5..4de52b8e66e018d9126933ab55f0a94a
  			replyToMessage(item, id);
  		} else if (item->allowsForward()) {
  			const auto show = controller()->uiShow();
-@@ -10462,6 +10467,8 @@ void HistoryWidget::processReply() {
+@@ -10692,6 +10697,8 @@ void HistoryWidget::processReply() {
  	} else if (!_processingReplyItem->isRegular()
  		&& !CanReplyToEphemeral(_processingReplyItem)) {
  		return processCancel();
@@ -280,7 +246,7 @@ index 7d950c4f8becde249796904db255c9086f7623e5..4de52b8e66e018d9126933ab55f0a94a
  		; forum && _processingReplyItem->history() == _history) {
  		const auto topicRootId = _processingReplyItem->topicRootId();
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index af3445dd2696c09a635415521f293f0c48b637d6..607c6550a4d34692dabc1404f772bf1544a35bc8 100644
+index c2b304482b6675c2f3c30ac02490144a41c2a6fe..30356f48d8fa0f18f7f0c1965fb7a2d438d069c4 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -291,7 +257,7 @@ index af3445dd2696c09a635415521f293f0c48b637d6..607c6550a4d34692dabc1404f772bf15
  #include "support/support_helper.h"
  #include "ui/item_text_options.h"
  #include "ui/text/text_options.h"
-@@ -5998,6 +5999,9 @@ void ComposeControls::replyToMessage(FullReplyTo id) {
+@@ -6033,6 +6034,9 @@ void ComposeControls::replyToMessage(FullReplyTo id) {
  
  	if (draftKey(DraftType::Normal) == Data::DraftKey::None()) {
  		return;
@@ -302,10 +268,10 @@ index af3445dd2696c09a635415521f293f0c48b637d6..607c6550a4d34692dabc1404f772bf15
  	id.topicRootId = _topicRootId;
  	id.monoforumPeerId = _monoforumPeerId;
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-index a99655d415089858882d356b99423160da20abb1..cdb011129b89bc5e893b9672a05556dddbc0e383 100644
+index a7faa3912ad446bba4370999cc78a3485884b25f..f673806ad51ea0e9d7f1a5c329cde96de6b66eec 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -124,6 +124,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "support/support_preload.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
@@ -313,7 +279,7 @@ index a99655d415089858882d356b99423160da20abb1..cdb011129b89bc5e893b9672a05556dd
  #include "inline_bots/inline_bot_result.h"
  #include "info/profile/info_profile_values.h"
  #include "iv/editor/iv_editor_session.h"
-@@ -1820,6 +1821,9 @@ void ChatWidget::setupComposeControls() {
+@@ -1879,6 +1880,9 @@ void ChatWidget::setupComposeControls() {
  
  void ChatWidget::setupSwipeReplyAndBack() {
  	const auto can = [=](not_null<HistoryItem*> still) {
@@ -324,11 +290,11 @@ index a99655d415089858882d356b99423160da20abb1..cdb011129b89bc5e893b9672a05556dd
  			_peer,
  			resolvedTopic(),
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 414b8516308e228d9abb234b665afea6176cd5d9..f2c0fe51345e352f164dbe7ab838bb0e2809b580 100644
+index ab653dbe219f4ff167506586b33f4153c9484a4a..e40fea3d88836198b2865c137a5c03dd16fb3fd5 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -114,7 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "spellcheck/spellcheck_types.h"
+@@ -116,7 +116,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tgw/tgw_selection.h"
  #include "apiwrap.h"
  #include "tele/tele_button_payload.h"
 -#include "tele/tele_deleted.h"
@@ -336,7 +302,7 @@ index 414b8516308e228d9abb234b665afea6176cd5d9..f2c0fe51345e352f164dbe7ab838bb0e
  #include "tele/tele_edit_history.h"
  #include "tele/tele_secret_media.h"
  #include "tele/tele_message_menu.h"
-@@ -842,7 +842,7 @@ bool AddReplyToMessageAction(
+@@ -838,7 +838,7 @@ bool AddReplyToMessageAction(
  	if (!item
  		|| (!item->isRegular() && !CanReplyToEphemeral(item))
  		|| IsAnchoredEphemeral(item)
@@ -346,10 +312,10 @@ index 414b8516308e228d9abb234b665afea6176cd5d9..f2c0fe51345e352f164dbe7ab838bb0e
  			&& context != Context::Replies
  			&& context != Context::Monoforum)) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 8a1b9bd8ae36e8a4ec021186380aa34a824c10e0..539698407e24451b3ddf3d70c298725c8acb0104 100644
+index 409a25ce5ea391fddcdfd2d221cd5e336c9ae8fc..f6c566fd890fe035076626eeadade95dcb2170c6 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -106,6 +106,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_peer_values.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_options.h"
@@ -357,7 +323,7 @@ index 8a1b9bd8ae36e8a4ec021186380aa34a824c10e0..539698407e24451b3ddf3d70c298725c
  #include "styles/style_chat.h"
  #include "styles/style_window.h" // columnMaximalWidthLeft
  
-@@ -5950,8 +5951,9 @@ void ListWidget::replyNextMessage(FullMsgId fullId, bool next) {
+@@ -6494,8 +6495,9 @@ void ListWidget::replyNextMessage(FullMsgId fullId, bool next) {
  	const auto reply = [&](Element *view) {
  		if (view) {
  			const auto newFullId = view->data()->fullId();
@@ -370,7 +336,7 @@ index 8a1b9bd8ae36e8a4ec021186380aa34a824c10e0..539698407e24451b3ddf3d70c298725c
  			}
  			replyToMessageRequestNotify({ newFullId });
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index c54773901a8b4bed6be13099b218834eddb13d20..05f81082df5add15eb0e713279be5f3840b29b75 100644
+index 40455bd0a95370c736c4d1b72831447b39b8bf85..d0c910359b6eb7a32fe727287e6c33a801caabea 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
 @@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -381,7 +347,7 @@ index c54773901a8b4bed6be13099b218834eddb13d20..05f81082df5add15eb0e713279be5f38
  #include "tele/tele_ignored.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
-@@ -6011,6 +6012,7 @@ bool Message::displayFastReply() const {
+@@ -5975,6 +5976,7 @@ bool Message::displayFastReply() const {
  
  	return hasFastReply()
  		&& data()->isRegular()

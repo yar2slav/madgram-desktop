@@ -19,10 +19,10 @@ Subject: [PATCH] feat: keep drafts on this device
  create mode 100644 Telegram/SourceFiles/tele/tele_local_drafts.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 92a792df1cd8ca1e4bff2b916c29a94b05f59002..e7e600ef40ac4388be3b5fb4fbf946b605fa0672 100644
+index 74c370ca8fe118222ddbb23639067c806d7c6763..d9d3941a0724e551225d85cb5ea37f4fae94218d 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2549,6 +2549,8 @@ PRIVATE
+@@ -2705,6 +2705,8 @@ PRIVATE
      tele/tele_ignored.h
      tele/tele_inline_via.cpp
      tele/tele_inline_via.h
@@ -32,7 +32,7 @@ index 92a792df1cd8ca1e4bff2b916c29a94b05f59002..e7e600ef40ac4388be3b5fb4fbf946b6
      tele/tele_local_names.h
      tele/tele_lowercase.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 4586118cf1f142de285081bf80d7dc7e798c2c1b..e0f544ad13c72fb1636e2d153c2188d843284e4c 100644
+index 08df43fed5511006edfca712fb239b50d1fe18de..5c13a50d4b0d407e7050a80164ee66e9bec50999 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -116,6 +116,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -40,10 +40,10 @@ index 4586118cf1f142de285081bf80d7dc7e798c2c1b..e0f544ad13c72fb1636e2d153c2188d8
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_username_aliases.h"
 +#include "tele/tele_options.h"
+ #include "tgw/tgw_storage.h"
  
  namespace {
- 
-@@ -2396,6 +2397,9 @@ mtpRequestId ApiWrap::savePreparedDraftToCloud(
+@@ -2421,6 +2422,9 @@ mtpRequestId ApiWrap::savePreparedDraftToCloud(
  		bool clearOnFail,
  		Fn<void()> done,
  		Fn<void(const MTP::Error &)> fail) {
@@ -54,10 +54,10 @@ index 4586118cf1f142de285081bf80d7dc7e798c2c1b..e0f544ad13c72fb1636e2d153c2188d8
  	const auto history = thread->owningHistory();
  	const auto topicRootId = thread->topicRootId();
 diff --git a/Telegram/SourceFiles/history/history.cpp b/Telegram/SourceFiles/history/history.cpp
-index f02e4c2b84f9b85caa9c1197ea8caeefacf31d5a..65165816832c02f8c5c78e57d0b28f7c996930d5 100644
+index 46bb6dddb00bd160ad87f2f04ae5746db713aa4f..0756c310d8b70dd20e728613712e748b2a74d46f 100644
 --- a/Telegram/SourceFiles/history/history.cpp
 +++ b/Telegram/SourceFiles/history/history.cpp
-@@ -83,6 +83,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -84,6 +84,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "base/unixtime.h"
  #include "base/qt/qt_common_adapters.h"
  #include "tele/tele_deleted.h"
@@ -66,7 +66,7 @@ index f02e4c2b84f9b85caa9c1197ea8caeefacf31d5a..65165816832c02f8c5c78e57d0b28f7c
  #include "styles/style_dialogs.h"
  
  namespace {
-@@ -453,6 +455,9 @@ bool History::skipCloudDraftUpdate(
+@@ -454,6 +456,9 @@ bool History::skipCloudDraftUpdate(
  		MsgId topicRootId,
  		PeerId monoforumPeerId,
  		TimeId date) const {
@@ -76,7 +76,7 @@ index f02e4c2b84f9b85caa9c1197ea8caeefacf31d5a..65165816832c02f8c5c78e57d0b28f7c
  	if (Iv::Editor::IsComposeBoxOpen(
  			&session(),
  			peer->id,
-@@ -3568,6 +3573,7 @@ void History::applyDialog(
+@@ -3570,6 +3575,7 @@ void History::applyDialog(
  			PeerId(), // monoforumPeerId
  			draft->c_draftMessage());
  	}
@@ -189,10 +189,10 @@ index afe6f61af833fd32ba02a3bd8a48f6801cb583d5..1a4b83020f20e1479fd0dc6b9817ebe1
  	if (local.fname.isEmpty()) {
  		return;
 diff --git a/Telegram/SourceFiles/storage/storage_account.h b/Telegram/SourceFiles/storage/storage_account.h
-index f631f933e73968f81231ae02644eb34757431768..b372bca4b78068e4293724b8a624ddd0a25a0284 100644
+index 43e9548485cde99f69bd9ace6850633114331d2a..b9f388e4a5398e8a008e2bc22098da27f82c8d9d 100644
 --- a/Telegram/SourceFiles/storage/storage_account.h
 +++ b/Telegram/SourceFiles/storage/storage_account.h
-@@ -109,6 +109,7 @@ public:
+@@ -112,6 +112,7 @@ public:
  	void readDraftsWithCursors(not_null<History*> history);
  	void writeDraftCursors(not_null<History*> history);
  	[[nodiscard]] bool hasDraftCursors(PeerId peerId);

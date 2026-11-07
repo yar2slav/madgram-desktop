@@ -5,23 +5,25 @@ Subject: [PATCH] feat: send inline results without via
 
 ---
  Telegram/CMakeLists.txt                       |   2 +
+ Telegram/SourceFiles/api/api_sending.cpp      |   4 +
+ Telegram/SourceFiles/api/api_sending.h        |   2 +
  Telegram/SourceFiles/apiwrap.cpp              |   4 +
  .../inline_bots/inline_bot_result.h           |   5 +
  .../inline_bots/inline_bot_send_data.h        |   8 +
  .../SourceFiles/settings/settings_tele.cpp    |   1 +
- Telegram/SourceFiles/tele/tele_inline_via.cpp | 137 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_inline_via.cpp | 139 ++++++++++++++++++
  Telegram/SourceFiles/tele/tele_inline_via.h   |  19 +++
  Telegram/SourceFiles/tele/tele_options.cpp    |  11 ++
  Telegram/SourceFiles/tele/tele_options.h      |   2 +
- 9 files changed, 189 insertions(+)
+ 11 files changed, 197 insertions(+)
  create mode 100644 Telegram/SourceFiles/tele/tele_inline_via.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_inline_via.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b377cbd59d23b3052a6f9c3a61cd1c5896d998c1..cfa44461d570eda3a3fa17021cd7319dcd7bed0a 100644
+index 814c48139c0dfeb73c315f0a2acdb75f2c65e96b..f1082f02dfe73ab63c420e1f5b86716513839f60 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2523,6 +2523,8 @@ PRIVATE
+@@ -2679,6 +2679,8 @@ PRIVATE
      tele/tele_ghost.h
      tele/tele_ignored.cpp
      tele/tele_ignored.h
@@ -30,8 +32,36 @@ index b377cbd59d23b3052a6f9c3a61cd1c5896d998c1..cfa44461d570eda3a3fa17021cd7319d
      tele/tele_lowercase.cpp
      tele/tele_lowercase.h
      tele/tele_menu_order.cpp
+diff --git a/Telegram/SourceFiles/api/api_sending.cpp b/Telegram/SourceFiles/api/api_sending.cpp
+index 509995fe5a8bf515ca5801f87d01ff98b1daf87e..ab7326d058b5362f7436d3c2745501df96f2b814 100644
+--- a/Telegram/SourceFiles/api/api_sending.cpp
++++ b/Telegram/SourceFiles/api/api_sending.cpp
+@@ -965,6 +965,10 @@ void SendLocation(SendAction action, float64 lat, float64 lon) {
+ 				MTPint()))); // accuracy_radius
+ }
+ 
++void SendInputMedia(SendAction action, MTPInputMedia inputMedia) {
++	SendSimpleMedia(std::move(action), std::move(inputMedia));
++}
++
+ void FillMessagePostFlags(
+ 		const SendAction &action,
+ 		not_null<PeerData*> peer,
+diff --git a/Telegram/SourceFiles/api/api_sending.h b/Telegram/SourceFiles/api/api_sending.h
+index e9623e007d6fe4a7a927367dd1483e5be63bac5d..ada82bcc80363add677704419d53d010c4055c5e 100644
+--- a/Telegram/SourceFiles/api/api_sending.h
++++ b/Telegram/SourceFiles/api/api_sending.h
+@@ -52,6 +52,8 @@ bool SendDice(MessageToSend &message);
+ // map thumbnail in messages history without access hash.
+ void SendLocation(SendAction action, float64 lat, float64 lon);
+ 
++void SendInputMedia(SendAction action, MTPInputMedia inputMedia);
++
+ void FillMessagePostFlags(
+ 	const SendAction &action,
+ 	not_null<PeerData*> peer,
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index f91d10ad06029f0a3d0ff96c85b6796e410e06b5..c14dc25975ba9f5f0be966e00088e8b67a8069c2 100644
+index dfbacbe9f006bc7d556cb3ef23c3e1bf34f85337..883812733a894b4ca4f23432c75c3f4c8ec2e5da 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -110,6 +110,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -41,8 +71,8 @@ index f91d10ad06029f0a3d0ff96c85b6796e410e06b5..c14dc25975ba9f5f0be966e00088e8b6
 +#include "tele/tele_inline_via.h"
  #include "tele/tele_calcmula.h"
  #include "tele/tele_links.h"
- 
-@@ -5143,6 +5144,9 @@ void ApiWrap::sendInlineResult(
+ #include "tgw/tgw_storage.h"
+@@ -5135,6 +5136,9 @@ void ApiWrap::sendInlineResult(
  		Fn<void(bool)> done) {
  	StripEphemeralReply(_session, action.replyTo);
  	Tele::ApplyGhostSchedule(action);
@@ -53,7 +83,7 @@ index f91d10ad06029f0a3d0ff96c85b6796e410e06b5..c14dc25975ba9f5f0be966e00088e8b6
  
  	const auto history = action.history;
 diff --git a/Telegram/SourceFiles/inline_bots/inline_bot_result.h b/Telegram/SourceFiles/inline_bots/inline_bot_result.h
-index 80d7ae848e53db076bc08b45aa5e8eccedcd80da..3549dfc79dc34a26e10f940b1c5384f708b66b80 100644
+index 6d56d365beb5b05095321b25cf74fae6d792a9e0..3d720262ee0e4cd0ce6ab75951573d4585bbf92d 100644
 --- a/Telegram/SourceFiles/inline_bots/inline_bot_result.h
 +++ b/Telegram/SourceFiles/inline_bots/inline_bot_result.h
 @@ -23,6 +23,10 @@ class LocationPoint;
@@ -76,7 +106,7 @@ index 80d7ae848e53db076bc08b45aa5e8eccedcd80da..3549dfc79dc34a26e10f940b1c5384f7
  		uint64 queryId = 0;
  		Type type = Type::Unknown;
 diff --git a/Telegram/SourceFiles/inline_bots/inline_bot_send_data.h b/Telegram/SourceFiles/inline_bots/inline_bot_send_data.h
-index de21fd1defadf5c17a8435997de9596655444745..5725581df0e308a5d5d2762d27da30d8fa02f328 100644
+index 0b44269df8a462ba459196f7755df61591a4966e..230787028705f4ab396b07f1f5be4a1c58d482f4 100644
 --- a/Telegram/SourceFiles/inline_bots/inline_bot_send_data.h
 +++ b/Telegram/SourceFiles/inline_bots/inline_bot_send_data.h
 @@ -27,6 +27,10 @@ namespace Iv {
@@ -90,7 +120,7 @@ index de21fd1defadf5c17a8435997de9596655444745..5725581df0e308a5d5d2762d27da30d8
  namespace InlineBots {
  
  class Result;
-@@ -281,6 +285,8 @@ public:
+@@ -290,6 +294,8 @@ public:
  		not_null<History*> history) const override;
  
  private:
@@ -99,7 +129,7 @@ index de21fd1defadf5c17a8435997de9596655444745..5725581df0e308a5d5d2762d27da30d8
  	PhotoData *_photo;
  	QString _message;
  	EntitiesInText _entities;
-@@ -315,6 +321,8 @@ public:
+@@ -324,6 +330,8 @@ public:
  		not_null<History*> history) const override;
  
  private:
@@ -122,10 +152,10 @@ index b1fa391b6fbe352ee58d497a5fc78c509e06f064..d8ebbe826d3f5620e5210a7b95d99ed8
  
 diff --git a/Telegram/SourceFiles/tele/tele_inline_via.cpp b/Telegram/SourceFiles/tele/tele_inline_via.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..0f32bbbb3f500e210393a3184e9c6b062e92566a
+index 0000000000000000000000000000000000000000..b4deb8bdcb1b6c3b64618bebdb88910740e1bcac
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_inline_via.cpp
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,139 @@
 +#include "tele/tele_inline_via.h"
 +
 +#include "api/api_common.h"
@@ -198,15 +228,17 @@ index 0000000000000000000000000000000000000000..0f32bbbb3f500e210393a3184e9c6b06
 +		});
 +	}, [&](const MTPDmessageMediaVenue &media) {
 +		return media.vgeo().match([&](const MTPDgeoPoint &point) {
-+			Api::SendVenue(action, {
-+				.lat = point.vlat().v,
-+				.lon = point.vlong().v,
-+				.title = qs(media.vtitle()),
-+				.address = qs(media.vaddress()),
-+				.provider = qs(media.vprovider()),
-+				.id = qs(media.vvenue_id()),
-+				.venueType = qs(media.vvenue_type()),
-+			});
++			Api::SendInputMedia(action, MTP_inputMediaVenue(
++				MTP_inputGeoPoint(
++					MTP_flags(0),
++					point.vlat(),
++					point.vlong(),
++					MTPint()),
++				media.vtitle(),
++				media.vaddress(),
++				media.vprovider(),
++				media.vvenue_id(),
++				media.vvenue_type()));
 +			return true;
 +		}, [](const MTPDgeoPointEmpty &) {
 +			return false;

@@ -21,10 +21,10 @@ Subject: [PATCH] feat: filter long lists by date
  create mode 100644 Telegram/SourceFiles/tele/tele_list_dates.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 04f3e9d921c2e4eaa8a35c8b0cda266923901f5d..3dd4f7cbc23c6d4ae675322d544a40154fd02f3d 100644
+index b882f3ceb642d76e0cba32d290db744932b520cb..0c03a283cd1adf10592defc6debf256fd8ea2901 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2655,6 +2655,8 @@ PRIVATE
+@@ -2811,6 +2811,8 @@ PRIVATE
      tele/tele_launch_flags.h
      tele/tele_links.cpp
      tele/tele_links.h
@@ -69,10 +69,10 @@ index 5c1869566dd0551bdf9679aa71c2e1be8392dd93..590cac92fc035e35de59adbffce36042
  		MTP_int(addOffset),
  		MTP_int(limit),
 diff --git a/Telegram/SourceFiles/info/media/info_media_list_widget.cpp b/Telegram/SourceFiles/info/media/info_media_list_widget.cpp
-index 7431962c569a6136262214bf4a039e8fc01d3c3a..7b14ab7b06aa82f472e341859ca3f700f64b7e1d 100644
+index 33901296f984d9fe8bfbc07860f30a64c5d48f1a..a5fb2f97a31c1eb9ad918adc9f3ed592be905e06 100644
 --- a/Telegram/SourceFiles/info/media/info_media_list_widget.cpp
 +++ b/Telegram/SourceFiles/info/media/info_media_list_widget.cpp
-@@ -73,6 +73,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -74,6 +74,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "core/file_utilities.h"
  #include "core/application.h"
  #include "ui/toast/toast.h"
@@ -80,7 +80,7 @@ index 7431962c569a6136262214bf4a039e8fc01d3c3a..7b14ab7b06aa82f472e341859ca3f700
  #include "styles/style_info.h"
  #include "styles/style_layers.h"
  #include "styles/style_menu_icons.h"
-@@ -244,6 +245,9 @@ void ListWidget::start() {
+@@ -245,6 +246,9 @@ void ListWidget::start() {
  		) | rpl::on_next([this] {
  			restart();
  		}, lifetime());
@@ -91,7 +91,7 @@ index 7431962c569a6136262214bf4a039e8fc01d3c3a..7b14ab7b06aa82f472e341859ca3f700
  		if (_provider->type() == Type::File) {
  			// For downloads manager.
 diff --git a/Telegram/SourceFiles/info/media/info_media_widget.cpp b/Telegram/SourceFiles/info/media/info_media_widget.cpp
-index 2e01ff312a0afa424344905d130a07694413cb11..603958b00d8c1a430e8258d2932619fd2dacf642 100644
+index 53e5bf4b5c9ce6f85d1c5865e122e1cab5b6c254..9deba64c7610b7d443908ac1b4340be44dfd6629 100644
 --- a/Telegram/SourceFiles/info/media/info_media_widget.cpp
 +++ b/Telegram/SourceFiles/info/media/info_media_widget.cpp
 @@ -23,6 +23,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -102,7 +102,7 @@ index 2e01ff312a0afa424344905d130a07694413cb11..603958b00d8c1a430e8258d2932619fd
  #include "styles/style_menu_icons.h"
  
  namespace Info::Media {
-@@ -154,6 +155,7 @@ Widget::Widget(QWidget *parent, not_null<Controller*> controller)
+@@ -143,6 +144,7 @@ Widget::Widget(QWidget *parent, not_null<Controller*> controller)
  		return (e->modifiers() & Qt::ControlModifier)
  			&& _inner->processZoomWheel(e);
  	});
@@ -110,7 +110,7 @@ index 2e01ff312a0afa424344905d130a07694413cb11..603958b00d8c1a430e8258d2932619fd
  }
  
  rpl::producer<SelectedItems> Widget::selectedListValue() const {
-@@ -165,6 +167,7 @@ void Widget::selectionAction(SelectionAction action) {
+@@ -154,6 +156,7 @@ void Widget::selectionAction(SelectionAction action) {
  }
  
  void Widget::fillTopBarMenu(const Ui::Menu::MenuCallback &addAction) {
@@ -119,7 +119,7 @@ index 2e01ff312a0afa424344905d130a07694413cb11..603958b00d8c1a430e8258d2932619fd
  	if (type != Type::Photo
  		&& type != Type::Video
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index 0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48..d06d96fd64de1a02fa1193d8a02099a0254d12c3 100644
+index 8dcf800843ff400ce27a4fb28b6d4f3b71a50688..25eef7e9749459b2920102933fc091943f90cd60 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -158,7 +158,7 @@ index 0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48..d06d96fd64de1a02fa1193d8a02099a0
  		teleShowFound();
  		return;
  	}
-@@ -449,7 +455,9 @@ void InnerWidget::switchTo(int collectionId) {
+@@ -455,7 +461,9 @@ void InnerWidget::switchTo(int collectionId) {
  
  void InnerWidget::teleShowFound() {
  	const auto descriptor = _descriptor.current();
@@ -169,7 +169,7 @@ index 0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48..d06d96fd64de1a02fa1193d8a02099a0
  		if (_entries == &_teleFound) {
  			_teleFound = Entries();
  			switchTo(descriptor.collectionId);
-@@ -459,10 +467,15 @@ void InnerWidget::teleShowFound() {
+@@ -465,10 +473,15 @@ void InnerWidget::teleShowFound() {
  	_collectionsLoadedCallback = nullptr;
  	_api.request(base::take(_loadMoreRequestId)).cancel();
  	const auto filter = descriptor.filter;
@@ -189,7 +189,7 @@ index 0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48..d06d96fd64de1a02fa1193d8a02099a0
  	_teleFound = Entries{
  		.filter = filter,
  		.total = int(found.size()),
-@@ -1368,7 +1381,9 @@ void InnerWidget::showGift(int index) {
+@@ -1382,7 +1395,9 @@ void InnerWidget::showGift(int index) {
  void InnerWidget::refreshAbout() {
  	if (_entries == &_teleFound) {
  		_collectionEmpty = false;
@@ -200,7 +200,7 @@ index 0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48..d06d96fd64de1a02fa1193d8a02099a0
  		resizeToWidth(width());
  		return;
  	}
-@@ -1817,6 +1832,9 @@ int InnerWidget::resizeGetHeight(int width) {
+@@ -1839,6 +1854,9 @@ int InnerWidget::resizeGetHeight(int width) {
  	auto result = _teleTop = _teleSearch
  		? _teleSearch->resizeGetHeight(width)
  		: 0;
@@ -210,7 +210,7 @@ index 0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48..d06d96fd64de1a02fa1193d8a02099a0
  	if (_collectionsTabs && !_collectionsTabs->isHidden()) {
  		result += padding.top();
  		_collectionsTabs->resizeToWidth(width);
-@@ -1871,6 +1889,9 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
+@@ -1893,6 +1911,9 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
  
  void InnerWidget::fillMenu(const Ui::Menu::MenuCallback &addAction) {
  	Tele::FillGiftSelectionMenu(this, addAction);

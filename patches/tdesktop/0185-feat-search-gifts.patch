@@ -17,10 +17,10 @@ Subject: [PATCH] feat: search gifts
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_search.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index d1428568ffd71439a777850b590ca0fdc67611ea..6420e472c9582621fe8193736635aac2b0e14ca5 100644
+index ea537ee914cd7e27a9464df0359bb2832d815f16..0860f781cf95994206e57158be6c74deec23f922 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2587,6 +2587,8 @@ PRIVATE
+@@ -2743,6 +2743,8 @@ PRIVATE
      tele/tele_gift_quantity.h
      tele/tele_gift_list.cpp
      tele/tele_gift_list.h
@@ -30,7 +30,7 @@ index d1428568ffd71439a777850b590ca0fdc67611ea..6420e472c9582621fe8193736635aac2
      tele/tele_gifts.h
      tele/tele_ghost.cpp
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc65893940d008b2 100644
+index d9fbeb0e6c29ee5e7bcd986f5aced4ce2489d7a8..1ce63f292762d9780ba5026f629de45ee02ae4fb 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -80,10 +80,10 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
 +		teleShowFound();
 +		return;
 +	}
- 	_collectionsLoadedCallback = nullptr;
- 	_api.request(base::take(_loadMoreRequestId)).cancel();
- 	_entries = collectionId ? &_perCollection[collectionId] : &_all;
-@@ -423,6 +438,41 @@ void InnerWidget::switchTo(int collectionId) {
+ 	const auto entries = collectionId
+ 		? &_perCollection[collectionId]
+ 		: &_all;
+@@ -429,6 +444,41 @@ void InnerWidget::switchTo(int collectionId) {
  	loadMore();
  }
  
@@ -125,7 +125,7 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
  void InnerWidget::loadCollections() {
  	if (_addingToCollectionId) {
  		return;
-@@ -831,9 +881,10 @@ void InnerWidget::validateButtons() {
+@@ -840,9 +890,10 @@ void InnerWidget::validateButtons() {
  		return;
  	}
  	const auto padding = st::giftBoxPadding;
@@ -138,7 +138,7 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
  	const auto row = _single.height() + st::giftBoxGiftSkip.y();
  	const auto totalRows = (int(_list->size()) + _perRow - 1) / _perRow;
  	const auto fromRow = std::clamp(
-@@ -1306,6 +1357,12 @@ void InnerWidget::showGift(int index) {
+@@ -1320,6 +1371,12 @@ void InnerWidget::showGift(int index) {
  }
  
  void InnerWidget::refreshAbout() {
@@ -151,7 +151,7 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
  	const auto descriptor = _descriptor.current();
  	const auto filter = descriptor.filter;
  	const auto collectionId = descriptor.collectionId;
-@@ -1748,7 +1805,9 @@ int InnerWidget::resizeGetHeight(int width) {
+@@ -1770,7 +1827,9 @@ int InnerWidget::resizeGetHeight(int width) {
  	if (!_perRow) {
  		return 0;
  	}
@@ -162,7 +162,7 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
  	if (_collectionsTabs && !_collectionsTabs->isHidden()) {
  		result += padding.top();
  		_collectionsTabs->resizeToWidth(width);
-@@ -1985,6 +2044,7 @@ void InnerWidget::mousePressEvent(QMouseEvent *e) {
+@@ -2007,6 +2066,7 @@ void InnerWidget::mousePressEvent(QMouseEvent *e) {
  	const auto collectionId = _descriptor.current().collectionId;
  	const auto canDrag = !_addingToCollectionId
  		&& !Tele::GiftSelectionActive(this)
@@ -170,7 +170,7 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
  		&& _peer->canManageGifts()
  		&& _list->size() > 1
  		&& (collectionId
-@@ -2278,9 +2338,10 @@ int InnerWidget::giftFromGlobalPos(const QPoint &p) const {
+@@ -2300,9 +2360,10 @@ int InnerWidget::giftFromGlobalPos(const QPoint &p) const {
  		return -1;
  	}
  	const auto padding = st::giftBoxPadding;
@@ -183,7 +183,7 @@ index 676cf5f34ffbf8c029679853bc51699589fdebe9..c088af4b02098082b9f8435adc658939
  	const auto row = (l.y() >= vskip)
  		? ((l.y() - vskip) / (_single.height() + st::giftBoxGiftSkip.y()))
  		: -1;
-@@ -2303,9 +2364,10 @@ QPoint InnerWidget::posFromIndex(int index) const {
+@@ -2325,9 +2386,10 @@ QPoint InnerWidget::posFromIndex(int index) const {
  		return {};
  	}
  	const auto padding = st::giftBoxPadding;

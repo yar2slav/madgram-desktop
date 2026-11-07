@@ -14,10 +14,10 @@ Subject: [PATCH] feat: send crash reports to the tele server
  create mode 100644 Telegram/SourceFiles/tele/tele_crash.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index de34f621bfe2d53ca31b478a21116bfd450a0a41..ffdef37705f2532320834c70dc92b9c8fea041fe 100644
+index 58f3db0e00266ade1bef2063b8d81e4d664e479d..a0988b516333a0f3b5f90cc19c9d6dffd257343b 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2493,6 +2493,8 @@ PRIVATE
+@@ -2649,6 +2649,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -80,7 +80,7 @@ index 0089def69b2e0a3e60b03285c96079ee11eef1fd..13bb6dbb47c6a4de4aef8551d8625a7d
  
  	connect(
 diff --git a/Telegram/SourceFiles/core/crash_reports.cpp b/Telegram/SourceFiles/core/crash_reports.cpp
-index d0e352d6be6b40b15ca68bdf5659bb601bb9673d..dbf0031ffcd8370b30dca4d21a96a7f546e368b7 100644
+index 70fbd01e568106dab4f83ad82899aa869dfa6a7f..d0eeaba2b80ab471e6c148a9ff744eb8d9d47229 100644
 --- a/Telegram/SourceFiles/core/crash_reports.cpp
 +++ b/Telegram/SourceFiles/core/crash_reports.cpp
 @@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

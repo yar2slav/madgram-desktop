@@ -21,10 +21,10 @@ Subject: [PATCH] feat: keep saved gifs and stickers past the limit
  create mode 100644 Telegram/SourceFiles/tele/tele_past_limit.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a9b39f695368e043ccfe17e6d5fa86fab9f8943a..c586227e379e684c3bbcc56b8844666e6a19eeec 100644
+index f7c100387b466f745206ba0dcc872e6d0a4600b5..e3409cdd4330d59a4e5863e2ac56493f53da9913 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2635,6 +2635,8 @@ PRIVATE
+@@ -2791,6 +2791,8 @@ PRIVATE
      tele/tele_name_badges.h
      tele/tele_options.cpp
      tele/tele_options.h
@@ -55,7 +55,7 @@ index 6c28df197d78f6404d6444e4b6ea3eccc324f945..43bfd703aea66d75e966b2773893f7fa
  	auto done = [=] {
  		document->owner().stickers().setFaved(show, document, faved);
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index ec94fd4aa81109848a2c126e98a256165e742c95..aecec67cad869733a06dc38a8f4430bd17af8eaf 100644
+index 5fb7e440b0b22a8694f24c9c3ebbf5ba7a6a77a2..e4068d3b39ed3214987d07e8f240958ca73df0d0 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -85,7 +85,7 @@ index ec94fd4aa81109848a2c126e98a256165e742c95..aecec67cad869733a06dc38a8f4430bd
  		Api::ToggleSavedGif(
  			show,
  			document,
-@@ -623,7 +627,9 @@ void GifsListWidget::refreshSavedGifs() {
+@@ -631,7 +635,9 @@ void GifsListWidget::refreshSavedGifs() {
  	if (_section == Section::Gifs) {
  		clearInlineRows(false);
  
@@ -97,7 +97,7 @@ index ec94fd4aa81109848a2c126e98a256165e742c95..aecec67cad869733a06dc38a8f4430bd
  			const auto layouts = ranges::views::all(
  				saved
 diff --git a/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp
-index 097d43f9285e6228ab9b34b3d5e458962e28efea..2c8b86ec11fc3b325b5d5f1f26a29eed89c4dbcc 100644
+index 33ad6da408c5d41b9a45d28e2e40772a085b323b..0de41c65912397e834a4ed57884080c5fec44ef8 100644
 --- a/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp
 @@ -57,6 +57,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -108,7 +108,7 @@ index 097d43f9285e6228ab9b34b3d5e458962e28efea..2c8b86ec11fc3b325b5d5f1f26a29eed
  #include "styles/style_chat_helpers.h"
  #include "styles/style_window.h"
  #include "styles/style_menu_icons.h"
-@@ -3539,12 +3540,11 @@ void StickersListWidget::refreshFavedStickers() {
+@@ -3546,12 +3547,11 @@ void StickersListWidget::refreshFavedStickers() {
  	}
  	clearSelection();
  	const auto &sets = session().data().stickers().sets();
@@ -124,7 +124,7 @@ index 097d43f9285e6228ab9b34b3d5e458962e28efea..2c8b86ec11fc3b325b5d5f1f26a29eed
  	const auto shortName = QString();
  	auto elements = PrepareStickers(set->stickers, skipPremium);
 diff --git a/Telegram/SourceFiles/data/stickers/data_stickers.cpp b/Telegram/SourceFiles/data/stickers/data_stickers.cpp
-index dc94eb02679b68ba98b35c910224046759031ccb..76f1fc26a01a5bac3d83291e2f7f93b7eadc4c19 100644
+index 8e506b4f8d5f9bdfd24d9d9878d93015618ad458..2ef734afd06a81aadfd561ddd72780c7f171fb7d 100644
 --- a/Telegram/SourceFiles/data/stickers/data_stickers.cpp
 +++ b/Telegram/SourceFiles/data/stickers/data_stickers.cpp
 @@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -135,7 +135,7 @@ index dc94eb02679b68ba98b35c910224046759031ccb..76f1fc26a01a5bac3d83291e2f7f93b7
  #include "styles/style_chat_helpers.h"
  
  namespace Data {
-@@ -509,14 +510,14 @@ bool Stickers::isFaved(not_null<const DocumentData*> document) const {
+@@ -599,14 +600,14 @@ bool Stickers::isFaved(not_null<const DocumentData*> document) const {
  	const auto &sets = this->sets();
  	const auto it = sets.find(FavedSetId);
  	if (it == sets.cend()) {
@@ -152,7 +152,7 @@ index dc94eb02679b68ba98b35c910224046759031ccb..76f1fc26a01a5bac3d83291e2f7f93b7
  }
  
  void Stickers::checkFavedLimit(
-@@ -663,6 +664,7 @@ void Stickers::removeFromRecentSet(not_null<DocumentData*> document) {
+@@ -753,6 +754,7 @@ void Stickers::removeFromRecentSet(not_null<DocumentData*> document) {
  }
  
  void Stickers::setIsNotFaved(not_null<DocumentData*> document) {
@@ -161,10 +161,10 @@ index dc94eb02679b68ba98b35c910224046759031ccb..76f1fc26a01a5bac3d83291e2f7f93b7
  	session().local().writeFavedStickers();
  	notifyUpdated(StickersType::Stickers);
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 5d56740038492b0026f4e5d3908f28ad2765043a..46308227213bf4ef0c5f122044ba7598f72199e2 100644
+index 1d25930313362629eeeb74e21a518df2cb5a25b9..20c952a6dd39f352ece726c6d0335c6d68fcf475 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -70,6 +70,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_mute.h"
  #include "tele/tele_no_ai.h"
  #include "tele/tele_online_notify.h"
@@ -172,7 +172,7 @@ index 5d56740038492b0026f4e5d3908f28ad2765043a..46308227213bf4ef0c5f122044ba7598
  #include "tele/tele_protected.h"
  #include "tele/tele_punctual_scheduled.h"
  #include "styles/style_layers.h"
-@@ -294,6 +295,7 @@ Session::Session(
+@@ -296,6 +297,7 @@ Session::Session(
  	Tele::SetupNoAi(this);
  	Tele::SetupOnlineNotify(this);
  	Tele::SetupMute(this);

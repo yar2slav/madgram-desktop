@@ -18,10 +18,10 @@ Subject: [PATCH] feat: open the emoji panel and attach menu by click only
  create mode 100644 Telegram/SourceFiles/tele/tele_emoji_panel.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1cedc3656ea9cef2d71214cca2d27ad4d7c3e503..d1bb49d8fc4bd420bced4f7cc0b69ddb0d550d26 100644
+index 487dc3ffeb8d5ca5871c6d2892ac970a92346fc7..2aff8ceb3c0d9c8a20c74f83f480ab8fdcf4590a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2523,6 +2523,8 @@ PRIVATE
+@@ -2679,6 +2679,8 @@ PRIVATE
      tele/tele_edit_history.h
      tele/tele_editor_eyedropper.cpp
      tele/tele_editor_eyedropper.h
@@ -62,10 +62,10 @@ index 5c67148ad039eb669a68d00c828805045fb65c86..74a653c01b836a2954d7a19dcae3bfc6
  	} else if (e->type() == QEvent::Enter) {
  		otherEnter();
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 4de52b8e66e018d9126933ab55f0a94adbed683c..f9dc937155be3b071da7545f156ce8595bf01299 100644
+index 3149b6c94b1a4375309b1135bc506701dba4051d..47e14a4807cd534ab5d571b843c8a5fef7b7f32b 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -175,6 +175,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -178,6 +178,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
@@ -73,7 +73,7 @@ index 4de52b8e66e018d9126933ab55f0a94adbed683c..f9dc937155be3b071da7545f156ce859
  #include "media/audio/media_audio.h"
  #include "media/audio/media_audio_capture.h"
  #include "media/player/media_player_instance.h"
-@@ -3694,7 +3695,7 @@ void HistoryWidget::setHistory(History *history) {
+@@ -3760,7 +3761,7 @@ void HistoryWidget::setHistory(History *history) {
  	if (was && !now) {
  		_attachToggle->removeEventFilter(_attachBotsMenu.get());
  		_attachBotsMenu->hideFast();
@@ -82,7 +82,7 @@ index 4de52b8e66e018d9126933ab55f0a94adbed683c..f9dc937155be3b071da7545f156ce859
  		_attachToggle->installEventFilter(_attachBotsMenu.get());
  	}
  
-@@ -3796,7 +3797,7 @@ void HistoryWidget::refreshAttachBotsMenu() {
+@@ -3864,7 +3865,7 @@ void HistoryWidget::refreshAttachBotsMenu() {
  	}
  	_attachBotsMenu->setOrigin(
  		Ui::PanelAnimation::Origin::BottomLeft);
@@ -92,7 +92,7 @@ index 4de52b8e66e018d9126933ab55f0a94adbed683c..f9dc937155be3b071da7545f156ce859
  	}
  	_attachBotsMenu->heightValue(
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 607c6550a4d34692dabc1404f772bf1544a35bc8..96e76fb04e995f7fbe7e1ae121c088537eb2600a 100644
+index 30356f48d8fa0f18f7f0c1965fb7a2d438d069c4..6e82ae440d230de5f6340d7b59233cdf2062f77a 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -114,6 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -103,7 +103,7 @@ index 607c6550a4d34692dabc1404f772bf1544a35bc8..96e76fb04e995f7fbe7e1ae121c08853
  #include "support/support_helper.h"
  #include "ui/item_text_options.h"
  #include "ui/text/text_options.h"
-@@ -5702,7 +5703,7 @@ void ComposeControls::updateAttachBotsMenu() {
+@@ -5737,7 +5738,7 @@ void ComposeControls::updateAttachBotsMenu() {
  	}
  	_attachBotsMenu->setOrigin(
  		Ui::PanelAnimation::Origin::BottomLeft);

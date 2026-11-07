@@ -18,10 +18,10 @@ Subject: [PATCH] feat: update from the tele github releases
  create mode 100644 Telegram/SourceFiles/tele/tele_updater.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1610d46ae49e71def0332a0af9a4606628c58e91..c1c8b2c2707838e5ddc677452905170f365d040e 100644
+index 5f59e1475b55264f4a70a73b8647070d4411f18d..7bdaf3eafa093c8e7814558260532d0942df7bc3 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2489,6 +2489,8 @@ PRIVATE
+@@ -2645,6 +2645,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_options.cpp
      tele/tele_options.h
@@ -31,10 +31,10 @@ index 1610d46ae49e71def0332a0af9a4606628c58e91..c1c8b2c2707838e5ddc677452905170f
  set_source_files_properties(${src_loc}/tele/tele_build.cpp
  PROPERTIES
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 7172206f5c1e540e19c90798e9a9e5721276cc53..ff05cac63e53e34b33492c07c77e8e6520e17784 100644
+index 0279ccc6cb67d55ef36a25a8b25abc3b9ddffff6..853f06795728b657262a439f524ac77f213cd162 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -104,6 +104,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/boxes/confirm_box.h"
  #include "core/cached_webview_availability.h"
  #include "test/test_agent.h"
@@ -42,7 +42,7 @@ index 7172206f5c1e540e19c90798e9a9e5721276cc53..ff05cac63e53e34b33492c07c77e8e65
  
  #include <QtCore/QStandardPaths>
  #include <QtCore/QMimeDatabase>
-@@ -355,6 +356,7 @@ void Application::run() {
+@@ -356,6 +357,7 @@ void Application::run() {
  	Media::Encode::ClearStaleTempFiles();
  	Storage::ClearStaleArchiveFiles();
  	Webview::ClearStaleTemporaryStorage();
@@ -51,7 +51,7 @@ index 7172206f5c1e540e19c90798e9a9e5721276cc53..ff05cac63e53e34b33492c07c77e8e65
  	if (MediaControlsManager::Supported()) {
  		_mediaControlsManager = std::make_unique<MediaControlsManager>();
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 786c3859322b78d417535afdf1afdcc2cdace172..4e716d2abd26b89b0b9c328518a45f0ff8d3c176 100644
+index 452910343f82036be985ce6641e9617e78335aa8..70353e5a723f579e6639fe09b3c8fc96a8d2db21 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 @@ -95,6 +95,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -62,7 +62,7 @@ index 786c3859322b78d417535afdf1afdcc2cdace172..4e716d2abd26b89b0b9c328518a45f0f
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
-@@ -661,6 +662,11 @@ Widget::Widget(
+@@ -695,6 +696,11 @@ Widget::Widget(
  		) | rpl::on_next([=] {
  			checkUpdateStatus();
  		}, lifetime());
@@ -74,7 +74,7 @@ index 786c3859322b78d417535afdf1afdcc2cdace172..4e716d2abd26b89b0b9c328518a45f0f
  	}
  
  	_cancelSearch->setClickedCallback([=] {
-@@ -2627,14 +2633,14 @@ QPixmap Widget::grabForFolderSlideAnimation() {
+@@ -2704,14 +2710,14 @@ QPixmap Widget::grabForFolderSlideAnimation() {
  }
  
  void Widget::checkUpdateStatus() {
@@ -92,7 +92,7 @@ index 786c3859322b78d417535afdf1afdcc2cdace172..4e716d2abd26b89b0b9c328518a45f0f
  		if (_updateTelegram) {
  			return;
  		}
-@@ -2647,6 +2653,10 @@ void Widget::checkUpdateStatus() {
+@@ -2724,6 +2730,10 @@ void Widget::checkUpdateStatus() {
  			true);
  		_updateTelegram->show();
  		_updateTelegram->setClickedCallback([] {

@@ -13,10 +13,10 @@ Subject: [PATCH] feat: show ids on regular gifts
  6 files changed, 38 insertions(+), 8 deletions(-)
 
 diff --git a/Telegram/SourceFiles/boxes/gift_premium_box.cpp b/Telegram/SourceFiles/boxes/gift_premium_box.cpp
-index db8da85a8b3ef242573ef5104fb13bfbf650e42f..f605241e0e0db9aab094434f93ec3661f22ec415 100644
+index db08ae30662372c6ce8b9b6399802e2b4ba65411..5696e76b64a0180abc9d9f958e1f6d602e893416 100644
 --- a/Telegram/SourceFiles/boxes/gift_premium_box.cpp
 +++ b/Telegram/SourceFiles/boxes/gift_premium_box.cpp
-@@ -1514,7 +1514,7 @@ void AddStarGiftTable(
+@@ -1512,7 +1512,7 @@ void AddStarGiftTable(
  		&& (entry.in || entry.bareGiftOwnerId == selfBareId);
  	const auto giftToChannel = entry.giftChannelSavedId
  		&& peerIsChannel(PeerId(entry.bareEntryOwnerId));

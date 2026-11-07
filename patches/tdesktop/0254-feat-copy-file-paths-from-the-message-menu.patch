@@ -15,10 +15,10 @@ Subject: [PATCH] feat: copy file paths from the message menu
  8 files changed, 56 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 9f558b3a32ba05a333a5f29179a5f228a79ae875..85af79db0897027365dca981b842b540ae9bd3b9 100644
+index 3d188907eeb75af5b08450ea327b89aaa773dfc0..70a733341ee9d9c097609b568acaebefe2727080 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -2789,6 +2789,10 @@ void AddCopyFilename(
+@@ -2805,6 +2805,10 @@ void AddCopyFilename(
  			}
  		}, &st::menuIconCopy);
  	}
@@ -45,10 +45,10 @@ index 3f64f9ca81182deedfd415ef3f8017bc188bc02a..adb385a3c9e475770755415f13d97342
  	AddOptionToggle(
  		builder,
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index f6352da939eed47c5b4e8669d782ee8d3c566743..b83573462589314c6881cbca4cf5c58b422632dc 100644
+index eef9d903fd0f7b037ee614dbc3eb2942fdfb460f..4b4094b2c981108a643085126d8692c481bcccb1 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-@@ -486,6 +486,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -484,6 +484,10 @@ constexpr auto kFieldText = uint32(1 << 0);
  			P([](int) { return tr::lng_context_copy_filename(tr::now); },
  				st::menuIconCopy),
  		}, .contexts = kMedia },
@@ -59,7 +59,7 @@ index f6352da939eed47c5b4e8669d782ee8d3c566743..b83573462589314c6881cbca4cf5c58b
  		{ .key = u"attached_stickers"_q, .phrases = {
  			P([](int) {
  				return tr::lng_context_attached_stickers(tr::now);
-@@ -734,7 +738,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -732,7 +736,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"view_replies,factcheck,statistics,add_offer,|,"
  		"copy_selected,copy_text,[Copy#copy:copy_markdown,copy_html,"
  		"copy_link,alias_copy,copy_message_link,copy_id,copy_emoji_id,"
@@ -69,7 +69,7 @@ index f6352da939eed47c5b4e8669d782ee8d3c566743..b83573462589314c6881cbca4cf5c58b
  		"translate,open_uncleaned,open_username,alias_open,alias_delete,|,"
  		"[tele#tele:[Bookmark#bookmark:bookmark,rename_bookmark],mark_read,"
  		"edit_history,shot,mark_viewed],|,"
-@@ -750,7 +755,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -748,7 +753,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"mark_viewed,mark_read,rename_bookmark,bookmark,factcheck,pin,"
  		"statistics,poll_results,poll_retract,poll_stop,cancel_download,"
  		"open_gif,save_gif,sticker_set,fave_sticker,show_in_folder,"
@@ -79,7 +79,7 @@ index f6352da939eed47c5b4e8669d782ee8d3c566743..b83573462589314c6881cbca4cf5c58b
  		"copy_phone,send_gift,copy_text,translate,copy_link,"
  		"open_uncleaned,open_username,alias_copy,alias_open,alias_delete,"
  		"copy_button_data,copy_message_link,"
-@@ -782,7 +788,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -780,7 +786,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"view_replies,factcheck,statistics,add_offer,|,"
  		"copy_selected,copy_text,copy_markdown,copy_html,copy_link,"
  		"alias_copy,copy_message_link,copy_id,copy_emoji_id,"

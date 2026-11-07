@@ -17,10 +17,10 @@ Subject: [PATCH] feat: translate your message before sending
  create mode 100644 Telegram/SourceFiles/tele/tele_translate_out.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 19d565c8ddc312e6102b09e6013b0f193f2563ca..b284c01a7c4784d950c401ddc696216fd1cdbb01 100644
+index 000e776170cb21ec9886e51e4813b962b6c8592b..6c407fbb9a0765522e2524c276e0a4dd5784e713 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2689,6 +2689,8 @@ PRIVATE
+@@ -2845,6 +2845,8 @@ PRIVATE
      tele/tele_title_box.h
      tele/tele_title_template.cpp
      tele/tele_title_template.h
@@ -30,10 +30,10 @@ index 19d565c8ddc312e6102b09e6013b0f193f2563ca..b284c01a7c4784d950c401ddc696216f
      tele/tele_updater.h
      tele/tele_uploads.h
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 2c3d71d90a315026ba5d9e5a64d90916076f0e19..469756096befd215b8feb1e30fed2e803293f6b0 100644
+index b008d2530d03ee45324742d2e3d1b62f399759fc..d400d48e6850a96a6483833a5f71094900d05bca 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -173,6 +173,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -176,6 +176,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "storage/storage_media_prepare.h"
  #include "tele/tele_calcmula_preview.h"
  #include "tele/tele_link_previews.h"
@@ -41,7 +41,7 @@ index 2c3d71d90a315026ba5d9e5a64d90916076f0e19..469756096befd215b8feb1e30fed2e80
  #include "tele/tele_calls.h"
  #include "tele/tele_confirm_send.h"
  #include "tele/tele_drafts_compose.h"
-@@ -553,6 +554,7 @@ HistoryWidget::HistoryWidget(
+@@ -572,6 +573,7 @@ HistoryWidget::HistoryWidget(
  				: FullMsgId();
  		},
  	});
@@ -49,7 +49,7 @@ index 2c3d71d90a315026ba5d9e5a64d90916076f0e19..469756096befd215b8feb1e30fed2e80
  	_teleDrafts = std::make_unique<Tele::ComposeDrafts>(
  		Tele::ComposeDraftsDescriptor{
  			.parent = this,
-@@ -6301,6 +6303,7 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
+@@ -6410,6 +6412,7 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
  	Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
  	Tele::ComposeDockedMenu(_teleDocked.get(), result);
  	Tele::CalcmulaMenu(_field.data(), result);
@@ -58,7 +58,7 @@ index 2c3d71d90a315026ba5d9e5a64d90916076f0e19..469756096befd215b8feb1e30fed2e80
  }
  
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 9d288309eb2be27521dbdc0be736b85b7ff3200b..04b5b44ccbaf2464d89d4b116c6d290cdd797b01 100644
+index 54815a02221133318b94c9e228c0783d7a76784e..2250dbd549f4d1f71d9b2c9445fb0db839eb56c8 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -69,7 +69,7 @@ index 9d288309eb2be27521dbdc0be736b85b7ff3200b..04b5b44ccbaf2464d89d4b116c6d290c
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_confirm_send.h"
  #include "tele/tele_drafts_compose.h"
-@@ -3386,6 +3387,7 @@ void ComposeControls::initField() {
+@@ -3401,6 +3402,7 @@ void ComposeControls::initField() {
  		.processor = [=] { return _preview.get(); },
  		.editing = [=] { return _header->editMsgId(); },
  	});
@@ -77,7 +77,7 @@ index 9d288309eb2be27521dbdc0be736b85b7ff3200b..04b5b44ccbaf2464d89d4b116c6d290c
  	Data::AmPremiumValue(&session()) | rpl::on_next([=] {
  		checkCharsLimitation();
  		updateAiButtonVisibility();
-@@ -5106,6 +5108,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
+@@ -5127,6 +5129,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
  	Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
  	Tele::ComposeDockedMenu(_teleDocked.get(), result);
  	Tele::CalcmulaMenu(_field, result);

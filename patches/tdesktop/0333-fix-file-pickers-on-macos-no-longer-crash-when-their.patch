@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Sun, 25 Oct 2026 04:17:01 +0300
+Subject: [PATCH] fix: file pickers on macos no longer crash when their window
+ closes
+
+---
+ Telegram/SourceFiles/core/file_utilities.cpp | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/SourceFiles/core/file_utilities.cpp b/Telegram/SourceFiles/core/file_utilities.cpp
+index 1ca919bb30162cce5da740a6565235d7b416734d..a01e529c379b07bd2c57dbefc4344450ce9e8214 100644
+--- a/Telegram/SourceFiles/core/file_utilities.cpp
++++ b/Telegram/SourceFiles/core/file_utilities.cpp
+@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "core/file_utilities.h"
+ 
+ #include "base/platform/base_platform_file_utilities.h"
++#include "base/platform/base_platform_info.h"
+ #include "base/unixtime.h"
+ #include "core/application.h"
+ #include "core/click_handler_types.h"
+@@ -451,7 +452,11 @@ bool GetDefault(
+ 	}
+ 	QString file;
+ 
+-	const auto resolvedParent = (parent && parent->window()->isVisible())
++	// macOS panels run app-modal either way, and Qt crashes after runModal
++	// when the parent was destroyed while the panel was open.
++	const auto resolvedParent = Platform::IsMac()
++		? nullptr
++		: (parent && parent->window()->isVisible())
+ 		? parent->window()
+ 		: Core::App().getFileDialogParent();
+ 	Core::App().notifyFileDialogShown(true);

@@ -61,10 +61,10 @@ Subject: [PATCH] feat: gift studio
  create mode 100644 Telegram/SourceFiles/tele/tele_tgs_rules.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 0496912e225f95a6ff5c65a7bc5abe8a994d5361..52652465f1e6e6ada2286cba5d6d118e95462d1b 100644
+index 23e79529e023a3650c4db3826d35e1e1f7a67748..d5e7fb8e5343e6f41a056e525bc1d21574837ecc 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2585,6 +2585,26 @@ PRIVATE
+@@ -2741,6 +2741,26 @@ PRIVATE
      tele/tele_gif_video.h
      tele/tele_gift_quantity.cpp
      tele/tele_gift_quantity.h
@@ -91,7 +91,7 @@ index 0496912e225f95a6ff5c65a7bc5abe8a994d5361..52652465f1e6e6ada2286cba5d6d118e
      tele/tele_gift_list.cpp
      tele/tele_gift_list.h
      tele/tele_gift_search.cpp
-@@ -2721,6 +2741,8 @@ PRIVATE
+@@ -2877,6 +2897,8 @@ PRIVATE
      tele/tele_sticker_captions.h
      tele/tele_sticker_truth.cpp
      tele/tele_sticker_truth.h
@@ -101,7 +101,7 @@ index 0496912e225f95a6ff5c65a7bc5abe8a994d5361..52652465f1e6e6ada2286cba5d6d118e
      tele/tele_streamer_mode.h
      tele/tele_streaming_audio.cpp
 diff --git a/Telegram/SourceFiles/settings/settings_credits_graphics.cpp b/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
-index 84de8df90cf647a82fdb27c8459e7615daf97eec..8ca795ce9676804ad209af3f08b9a9f512435f6b 100644
+index 93050800cf02321ddb676c62513043b0ab8ceea7..109467e1af904c9348cfe8b347b80b0185b14088 100644
 --- a/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
 +++ b/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
 @@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -112,7 +112,7 @@ index 84de8df90cf647a82fdb27c8459e7615daf97eec..8ca795ce9676804ad209af3f08b9a9f5
  #include "tele/tele_gifts.h"
  #include "tele/tele_local_password.h"
  #include "tele/tele_view_tl.h"
-@@ -1260,6 +1261,7 @@ void FillUniqueGiftMenu(
+@@ -1281,6 +1282,7 @@ void FillUniqueGiftMenu(
  				shareBoxSt ? *shareBoxSt : ShareBoxStyleOverrides());
  		}, st.share ? st.share : &st::menuIconShare);
  	}

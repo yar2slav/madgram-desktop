@@ -76,7 +76,7 @@
 
 ```
 git clone https://github.com/yar2slav/madgram-desktop.git mad
-git clone --branch v7.3.3 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
+git clone --branch v7.4.1 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
 python mad/tele.py --tdesktop tdesktop apply
 python mad/configure-mad.py
 python mad/build-mad.py
@@ -167,7 +167,7 @@ same as tele: install what tdesktop needs for the tag in `UPSTREAM`, apply the q
 
 ```
 git clone https://github.com/yar2slav/madgram-desktop.git mad
-git clone --branch v7.3.3 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
+git clone --branch v7.4.1 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
 python mad/tele.py --tdesktop tdesktop apply
 python mad/configure-mad.py
 python mad/build-mad.py

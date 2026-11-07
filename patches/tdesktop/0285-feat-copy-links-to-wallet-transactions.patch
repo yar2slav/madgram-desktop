@@ -13,10 +13,10 @@ Subject: [PATCH] feat: copy links to wallet transactions
  create mode 100644 Telegram/SourceFiles/tele/tele_wallet_links.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 36cf966f62f8ac7de9631ad3f4fc02d26950ea67..831dbb5b4a5919d2a20c357bdc1b21d2587735b8 100644
+index bbeb601ce2e58e78dec4bb77d54bf4a579ee148b..6d4820ca69b2205e9d77ab96c4ee3412e7ae5603 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2896,6 +2896,8 @@ PRIVATE
+@@ -3052,6 +3052,8 @@ PRIVATE
      tele/tele_voice_fade.h
      tele/tele_voice_quality.cpp
      tele/tele_voice_quality.h
@@ -140,7 +140,7 @@ index 0000000000000000000000000000000000000000..8a2c4e498fe8fc53f0a2db87dde15576
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/wallet/wallet_content.cpp b/Telegram/SourceFiles/wallet/wallet_content.cpp
-index 719f5900e3d9368d997499261b28a532729e1745..6e249c959918e7cbace90af8873ddd9fd9fb63d6 100644
+index 10294c0477f2e4d0f30111bfcf1f93428022957b..f9f0235425e31884c83cceb7839bf3b4f01bb083 100644
 --- a/Telegram/SourceFiles/wallet/wallet_content.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_content.cpp
 @@ -59,6 +59,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -151,7 +151,7 @@ index 719f5900e3d9368d997499261b28a532729e1745..6e249c959918e7cbace90af8873ddd9f
  #include "ui/boxes/confirm_box.h"
  #include "ui/controls/feature_list.h"
  #include "ui/controls/table_rows.h"
-@@ -3561,8 +3562,7 @@ void AddDetailsCollectibleHeader(
+@@ -3580,8 +3581,7 @@ void AddDetailsCollectibleHeader(
  	collection->setClickedCallback([=] {
  		const auto contract = media->collection(collectionKey());
  		if (!contract.isEmpty()) {
@@ -161,7 +161,7 @@ index 719f5900e3d9368d997499261b28a532729e1745..6e249c959918e7cbace90af8873ddd9f
  				FormatFriendly(contract, true)));
  		}
  	});
-@@ -5011,15 +5011,8 @@ void SetupIntroTooltip(
+@@ -5030,15 +5030,8 @@ void SetupIntroTooltip(
  	}, parent->lifetime());
  }
  
@@ -179,7 +179,7 @@ index 719f5900e3d9368d997499261b28a532729e1745..6e249c959918e7cbace90af8873ddd9f
  }
  
  void WalletTransactionBox(
-@@ -5183,8 +5176,9 @@ void WalletTransactionBox(
+@@ -5202,8 +5195,9 @@ void WalletTransactionBox(
  		toggle->setForceRippled(true);
  		// Read when the menu opens, not when the box was built: a served
  		// transaction can name the trace a message did not carry.
@@ -190,7 +190,7 @@ index 719f5900e3d9368d997499261b28a532729e1745..6e249c959918e7cbace90af8873ddd9f
  			raw->addAction(
  				Ui::Text::FixAmpersandInAction(
  					tr::lng_channel_earn_history_out_button(tr::now)),
-@@ -14606,7 +14600,12 @@ void Content::setupContent() {
+@@ -14625,7 +14619,12 @@ void Content::setupContent() {
  					media,
  					click);
  			} else {
@@ -204,7 +204,7 @@ index 719f5900e3d9368d997499261b28a532729e1745..6e249c959918e7cbace90af8873ddd9f
  			}
  			_sendingRow->content = std::move(content);
  		}
-@@ -14635,11 +14634,16 @@ void Content::setupContent() {
+@@ -14654,11 +14653,16 @@ void Content::setupContent() {
  		});
  		const auto addItem = [=](const TransferItem &item, ListRowKey key) {
  			const auto content = RowContentFromItem(item, &_show->session());

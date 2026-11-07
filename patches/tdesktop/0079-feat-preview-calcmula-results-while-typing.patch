@@ -19,10 +19,10 @@ Subject: [PATCH] feat: preview calcmula results while typing
  create mode 100644 Telegram/SourceFiles/tele/tele_calcmula_preview.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b49b5a3c5b6e592c0962c8b1427143b2d3abebd1..837ce4a6999614b90de08ce5f5e0912aa013856d 100644
+index 197e85ec59cfe81b5384659dc30b2e8fb66457c1..b15556e9319fb629fb3b0fad483dc4c568f7164a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2499,6 +2499,8 @@ PRIVATE
+@@ -2655,6 +2655,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_calcmula.cpp
      tele/tele_calcmula.h
@@ -32,10 +32,10 @@ index b49b5a3c5b6e592c0962c8b1427143b2d3abebd1..837ce4a6999614b90de08ce5f5e0912a
      tele/tele_calls.h
      tele/tele_changelog.cpp
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index f9dc937155be3b071da7545f156ce8595bf01299..494143aea448efbd4e1ba59712c1cd13c44aaf16 100644
+index 47e14a4807cd534ab5d571b843c8a5fef7b7f32b..5b4946c59d556c348af10ea59bb5b164f13cc869 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -171,6 +171,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -174,6 +174,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "storage/file_upload.h"
  #include "storage/storage_folder_archive.h"
  #include "storage/storage_media_prepare.h"
@@ -43,7 +43,7 @@ index f9dc937155be3b071da7545f156ce8595bf01299..494143aea448efbd4e1ba59712c1cd13
  #include "tele/tele_calls.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
-@@ -501,6 +502,24 @@ HistoryWidget::HistoryWidget(
+@@ -520,6 +521,24 @@ HistoryWidget::HistoryWidget(
  	) | rpl::on_next([=] {
  		fieldChanged();
  	}, _field->lifetime());
@@ -69,7 +69,7 @@ index f9dc937155be3b071da7545f156ce8595bf01299..494143aea448efbd4e1ba59712c1cd13
  		checkCharsLimitation();
  		updateAiButtonVisibility();
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 96e76fb04e995f7fbe7e1ae121c088537eb2600a..9406bf2dc391c2edfa8cadad031b697dddc46407 100644
+index 6e82ae440d230de5f6340d7b59233cdf2062f77a..14e15b1dbeb72f1b23d812587f2fd85266a1da48 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -80,7 +80,7 @@ index 96e76fb04e995f7fbe7e1ae121c088537eb2600a..9406bf2dc391c2edfa8cadad031b697d
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_emoji_panel.h"
  #include "support/support_helper.h"
-@@ -3247,6 +3248,22 @@ void ComposeControls::initField() {
+@@ -3262,6 +3263,22 @@ void ComposeControls::initField() {
  		updateSendAsFileVisibility();
  		updateExpandButtonVisibility();
  	}, _field->lifetime());

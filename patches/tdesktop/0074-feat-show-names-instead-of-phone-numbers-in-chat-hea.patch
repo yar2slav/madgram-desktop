@@ -16,10 +16,10 @@ Subject: [PATCH] feat: show names instead of phone numbers in chat headers
  create mode 100644 Telegram/SourceFiles/tele/tele_phones.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index cbe63bb9930cef01e45790df8fd9d385ce0d47e4..1cedc3656ea9cef2d71214cca2d27ad4d7c3e503 100644
+index bfd52661988f60eca7220059515dd7da0a87f3d8..487dc3ffeb8d5ca5871c6d2892ac970a92346fc7 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2549,6 +2549,8 @@ PRIVATE
+@@ -2705,6 +2705,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_peer_id.cpp
      tele/tele_peer_id.h
@@ -29,7 +29,7 @@ index cbe63bb9930cef01e45790df8fd9d385ce0d47e4..1cedc3656ea9cef2d71214cca2d27ad4
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 6cb499b61bbecb6e64a8e844b2ad6c82bb7ecc66..8024357cdea12a78cfe71cc36a9ba39d43b7bcbb 100644
+index 97a604743937c1ddfe22426089192d1b19d462ad..d0c423e7a5b1967fa48c625dd96e46999eea0bbc 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 @@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

@@ -29,7 +29,7 @@ index bbf81a5a6c343f1776b9bc902ddf3fe2d4620265..e43acddc1a6d0556c03b594216d5e1c5
  		builder,
  		::Tele::kOptionGifVideo,
 diff --git a/Telegram/SourceFiles/storage/localimageloader.cpp b/Telegram/SourceFiles/storage/localimageloader.cpp
-index f87aa2f23193b5e8bb3360d7593eef4f723d554c..4bd091e04239c413cce00890b41476383c2735cb 100644
+index c4886e31a7ebf948adb224e1d28afa99a3c77662..64ee199a6d82322bfa5f61ae39b6b2ca5ee57c9e 100644
 --- a/Telegram/SourceFiles/storage/localimageloader.cpp
 +++ b/Telegram/SourceFiles/storage/localimageloader.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

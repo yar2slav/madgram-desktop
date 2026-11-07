@@ -17,10 +17,10 @@ Subject: [PATCH] feat: clear server data and explain custom verifications
  create mode 100644 Telegram/SourceFiles/tele/tele_verify_details.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 837ce4a6999614b90de08ce5f5e0912aa013856d..71af83da7802e086aea79124ca7c4227dad17c2e 100644
+index b15556e9319fb629fb3b0fad483dc4c568f7164a..7e9cea4c5ffd57ad803c479dd4ec0b31089ca214 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2584,6 +2584,8 @@ PRIVATE
+@@ -2740,6 +2740,8 @@ PRIVATE
      tele/tele_uploads.h
      tele/tele_username_aliases.cpp
      tele/tele_username_aliases.h
@@ -30,10 +30,10 @@ index 837ce4a6999614b90de08ce5f5e0912aa013856d..71af83da7802e086aea79124ca7c4227
      tele/tele_view_tl.h
  )
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index 315ac52e792ace5b3a7936c9dd145fc4670b5bfe..0037eadfc5610a21e9ced458c1368be7446ff813 100644
+index 428002b192b22f5edac0b7bb3a2e853c55027daa..eec70050dc2d122db0413d35545cb0a6b2d4cc2c 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -81,6 +81,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -82,6 +82,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_options.h"
  #include "tele/tele_peer_id.h"
  #include "tele/tele_username_aliases.h"
@@ -41,7 +41,7 @@ index 315ac52e792ace5b3a7936c9dd145fc4670b5bfe..0037eadfc5610a21e9ced458c1368be7
  #include "ui/boxes/peer_qr_box.h"
  #include "ui/boxes/report_box_graphics.h"
  #include "ui/controls/userpic_button.h"
-@@ -2391,7 +2392,10 @@ void DetailsFiller::addBotVerify() {
+@@ -2396,7 +2397,10 @@ void DetailsFiller::addBotVerify() {
  		return info ? info->description : TextWithEntities();
  	});
  
@@ -54,10 +54,10 @@ index 315ac52e792ace5b3a7936c9dd145fc4670b5bfe..0037eadfc5610a21e9ced458c1368be7
  
  void DetailsFiller::addManagedBotFooter(not_null<UserData*> managerUser) {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index c70df1177f01d27e1c2545a8abbe45c255ad103d..930d7dc60ea056eccd69133af950324d5928b767 100644
+index 75721e6058581bfc8fa0127291148e1ff627ee6a..26e5b695b40a5e52240c69b840f4925ff720d6f7 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -104,6 +104,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/sticker_set_box.h"
  #include "tele/tele_calls.h"
  #include "tele/tele_options.h"
@@ -65,7 +65,7 @@ index c70df1177f01d27e1c2545a8abbe45c255ad103d..930d7dc60ea056eccd69133af950324d
  #include "styles/style_chat.h"
  #include "styles/style_info.h"
  #include "styles/style_info_profile_top_bar.h"
-@@ -545,6 +546,7 @@ TopBar::TopBar(
+@@ -553,6 +554,7 @@ TopBar::TopBar(
  	}, _title->lifetime());
  
  	setupUniqueBadgeTooltip();

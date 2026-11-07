@@ -4,17 +4,17 @@ Date: Sun, 27 Sep 2026 05:03:47 +0300
 Subject: [PATCH] feat: hide sponsored messages
 
 ---
- Telegram/SourceFiles/api/api_peer_search.cpp  |  3 ++-
+ Telegram/SourceFiles/api/api_peer_search.cpp  |  4 +++-
  .../data/components/promo_suggestions.cpp     |  6 ++++-
  .../data/components/sponsored_messages.cpp    | 15 ++++++++++--
  .../data/components/sponsored_messages.h      |  1 +
  .../SourceFiles/settings/settings_tele.cpp    |  1 +
  Telegram/SourceFiles/tele/tele_options.cpp    | 23 +++++++++++++++++++
  Telegram/SourceFiles/tele/tele_options.h      |  3 +++
- 7 files changed, 48 insertions(+), 4 deletions(-)
+ 7 files changed, 49 insertions(+), 4 deletions(-)
 
 diff --git a/Telegram/SourceFiles/api/api_peer_search.cpp b/Telegram/SourceFiles/api/api_peer_search.cpp
-index 73a252ab12ce8fc368cb028f542c5ab113ffbf02..3ff331c1982964c0226be10f0572460e5bfcdeef 100644
+index 636d4bc8f29575e82b3d9a32160098b8b70b26c7..89bf865345ec5e5b29f0922d65aea664e2820299 100644
 --- a/Telegram/SourceFiles/api/api_peer_search.cpp
 +++ b/Telegram/SourceFiles/api/api_peer_search.cpp
 @@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -25,14 +25,15 @@ index 73a252ab12ce8fc368cb028f542c5ab113ffbf02..3ff331c1982964c0226be10f0572460e
  
  namespace Api {
  namespace {
-@@ -53,7 +54,7 @@ void PeerSearch::request(
- 	}
+@@ -55,7 +56,8 @@ void PeerSearch::request(
  	cache.requested = true;
  	cache.result.query = _query;
--	if (_query.size() < kMinSponsoredQueryLength) {
-+	if (_query.size() < kMinSponsoredQueryLength || Tele::HideSponsored()) {
+ 	if (_type != Type::WithSponsored
+-		|| _query.size() < kMinSponsoredQueryLength) {
++		|| _query.size() < kMinSponsoredQueryLength
++		|| Tele::HideSponsored()) {
  		cache.sponsoredReady = true;
- 	} else if (_type == Type::WithSponsored) {
+ 	} else {
  		requestSponsored();
 diff --git a/Telegram/SourceFiles/data/components/promo_suggestions.cpp b/Telegram/SourceFiles/data/components/promo_suggestions.cpp
 index 9b91f8dbf3e4e4423317c5ca37f379daf9792a8c..4f8dfdf000a0fe8936edc8e43155546d8163e120 100644

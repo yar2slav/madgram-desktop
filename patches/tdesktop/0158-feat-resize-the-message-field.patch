@@ -21,10 +21,10 @@ Subject: [PATCH] feat: resize the message field
  create mode 100644 Telegram/SourceFiles/tele/tele_field_resize.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b940ca6c386054b09b1f202ded8851f163d98f49..61f64ce44dab862f281d3289495c6b97947173c8 100644
+index dcd89b259d791b0acf0f7b822487b989071fd983..f3b3544bd23a285ff6ee36fa0bd26b0b4dd66e38 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2569,6 +2569,8 @@ PRIVATE
+@@ -2725,6 +2725,8 @@ PRIVATE
      tele/tele_emoji_panel.h
      tele/tele_edit_history_section.cpp
      tele/tele_edit_history_section.h
@@ -34,10 +34,10 @@ index b940ca6c386054b09b1f202ded8851f163d98f49..61f64ce44dab862f281d3289495c6b97
      tele/tele_folders.h
      tele/tele_gif_video.cpp
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916076f0e19 100644
+index 911f605a6c134db15ede78e7752c10f709d0aff4..b008d2530d03ee45324742d2e3d1b62f399759fc 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -178,6 +178,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -181,6 +181,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_drafts_compose.h"
  #include "tele/tele_docked_media.h"
  #include "tele/tele_audio_voice.h"
@@ -45,7 +45,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
-@@ -597,6 +598,26 @@ HistoryWidget::HistoryWidget(
+@@ -616,6 +617,26 @@ HistoryWidget::HistoryWidget(
  			},
  			.sendMenuDetails = [=] { return sendMenuDetails(); },
  		});
@@ -72,7 +72,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  	Data::AmPremiumValue(&session()) | rpl::on_next([=] {
  		checkCharsLimitation();
  		updateAiButtonVisibility();
-@@ -7281,7 +7302,10 @@ void HistoryWidget::toggleKeyboard(bool manual) {
+@@ -7404,7 +7425,10 @@ void HistoryWidget::toggleKeyboard(bool manual) {
  			_kbScroll->hide();
  			_kbShown = false;
  
@@ -84,7 +84,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  
  			_kbReplyTo = nullptr;
  			if (!readyToForward()
-@@ -7308,7 +7332,10 @@ void HistoryWidget::toggleKeyboard(bool manual) {
+@@ -7431,7 +7455,10 @@ void HistoryWidget::toggleKeyboard(bool manual) {
  		_kbScroll->hide();
  		_kbShown = false;
  
@@ -96,7 +96,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  
  		_kbReplyTo = (false
  			|| _peer->isChat()
-@@ -7333,7 +7360,10 @@ void HistoryWidget::toggleKeyboard(bool manual) {
+@@ -7456,7 +7483,10 @@ void HistoryWidget::toggleKeyboard(bool manual) {
  		const auto kbheight = std::min(
  			_keyboard->height(),
  			maxheight - (maxheight / 2));
@@ -108,7 +108,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  
  		_kbReplyTo = (false
  			|| _peer->isChat()
-@@ -9109,7 +9139,10 @@ void HistoryWidget::updateBotKeyboard(History *h, bool force) {
+@@ -9354,7 +9384,10 @@ void HistoryWidget::updateBotKeyboard(History *h, bool force) {
  			const auto kbheight = hasMarkup
  				? std::min(_keyboard->height(), maxheight - (maxheight / 2))
  				: 0;
@@ -120,7 +120,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  			_kbShown = hasMarkup;
  			_kbReplyTo = (_peer->isChat()
  					|| _peer->isChannel()
-@@ -9128,7 +9161,10 @@ void HistoryWidget::updateBotKeyboard(History *h, bool force) {
+@@ -9373,7 +9406,10 @@ void HistoryWidget::updateBotKeyboard(History *h, bool force) {
  				_botKeyboardShow->show();
  				_botCommandStart->hide();
  			}
@@ -132,7 +132,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  			_kbShown = false;
  			_kbReplyTo = nullptr;
  			if (!readyToForward()
-@@ -9147,7 +9183,10 @@ void HistoryWidget::updateBotKeyboard(History *h, bool force) {
+@@ -9392,7 +9428,10 @@ void HistoryWidget::updateBotKeyboard(History *h, bool force) {
  			_botKeyboardShow->hide();
  			_botCommandStart->setVisible(!_editMsgId);
  		}
@@ -144,7 +144,7 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  		_kbShown = false;
  		_kbReplyTo = nullptr;
  		if (!readyToForward()
-@@ -9210,7 +9249,7 @@ int HistoryWidget::computeMaxFieldHeight() const {
+@@ -9455,7 +9494,7 @@ int HistoryWidget::computeMaxFieldHeight() const {
  		- Tele::ComposeDockedHeight(_teleDocked.get())
  		- (2 * st::historySendPadding)
  		- st::historyReplyHeight; // at least this height for history.
@@ -154,10 +154,10 @@ index b93b69d414192a4d35fae2ee273bd90021520420..2c3d71d90a315026ba5d9e5a64d90916
  
  bool HistoryWidget::cornerButtonsIgnoreVisibility() {
 diff --git a/Telegram/SourceFiles/history/history_widget.h b/Telegram/SourceFiles/history/history_widget.h
-index 049ad60853d16db15c0ee9a1256f656d1773b187..a70f01c5940fad2f3a52abc66603a3df11cfe439 100644
+index e43bdf6dfddf6e62c74c61abfc2e6f484a67cc82..b6e28a4e4bdfebc78626242176108d29518c4e81 100644
 --- a/Telegram/SourceFiles/history/history_widget.h
 +++ b/Telegram/SourceFiles/history/history_widget.h
-@@ -148,6 +148,7 @@ struct VoiceToSend;
+@@ -151,6 +151,7 @@ struct VoiceToSend;
  namespace Tele {
  class ComposeDrafts;
  class ComposeDocked;
@@ -165,7 +165,7 @@ index 049ad60853d16db15c0ee9a1256f656d1773b187..a70f01c5940fad2f3a52abc66603a3df
  } // namespace Tele
  
  class BotKeyboard;
-@@ -1044,5 +1045,6 @@ private:
+@@ -1059,5 +1060,6 @@ private:
  
  	std::unique_ptr<Tele::ComposeDrafts> _teleDrafts;
  	std::unique_ptr<Tele::ComposeDocked> _teleDocked;
@@ -173,7 +173,7 @@ index 049ad60853d16db15c0ee9a1256f656d1773b187..a70f01c5940fad2f3a52abc66603a3df
  
  };
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 024df378ee59f3316cf97e67b2377df2bf5cfd43..9d288309eb2be27521dbdc0be736b85b7ff3200b 100644
+index 36fb2e016c987ddd2c41ffba7fd2ed7512746795..54815a02221133318b94c9e228c0783d7a76784e 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -193,7 +193,7 @@ index 024df378ee59f3316cf97e67b2377df2bf5cfd43..9d288309eb2be27521dbdc0be736b85b
  	updateControlsGeometry(_wrap->size());
  	if (_field->height() != oldFieldHeight) {
  		updateControlsGeometry(_wrap->size());
-@@ -2529,6 +2530,7 @@ void ComposeControls::showFinished() {
+@@ -2544,6 +2545,7 @@ void ComposeControls::showFinished() {
  }
  
  void ComposeControls::raisePanels() {
@@ -201,7 +201,7 @@ index 024df378ee59f3316cf97e67b2377df2bf5cfd43..9d288309eb2be27521dbdc0be736b85b
  	if (_autocomplete) {
  		_autocomplete->raise();
  	}
-@@ -2931,6 +2933,26 @@ void ComposeControls::init() {
+@@ -2946,6 +2948,26 @@ void ComposeControls::init() {
  	_tabbedSelectorToggle->setAccessibleName(tr::lng_emoji_sticker_gif(tr::now));
  
  	initField();
@@ -228,7 +228,7 @@ index 024df378ee59f3316cf97e67b2377df2bf5cfd43..9d288309eb2be27521dbdc0be736b85b
  	initTabbedSelector();
  	initSendButton();
  	initAiButton();
-@@ -5215,7 +5237,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
+@@ -5236,7 +5258,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
  				= _richDraftPreview->resizeGetHeight(
  				fieldWidth,
  				_st.field.heightMin,
@@ -238,7 +238,7 @@ index 024df378ee59f3316cf97e67b2377df2bf5cfd43..9d288309eb2be27521dbdc0be736b85b
  		const auto newComposeHeight = composeFieldHeight();
  		if (oldComposeHeight != newComposeHeight) {
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.h b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.h
-index 24f1d77f2758b53326a1db299973f96bc75aff1e..0c918e86ad0b1e46285c6229a551ea70b24a2911 100644
+index 1853e285655ed45968cf7ce6496c46343905a83c..b99181100a3a32d60246e8849779f73dbc19d73e 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.h
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.h
 @@ -110,6 +110,7 @@ enum class SendProgressType;
@@ -249,7 +249,7 @@ index 24f1d77f2758b53326a1db299973f96bc75aff1e..0c918e86ad0b1e46285c6229a551ea70
  } // namespace Tele
  
  namespace HistoryView::Controls {
-@@ -696,6 +697,7 @@ private:
+@@ -698,6 +699,7 @@ private:
  
  	std::unique_ptr<Tele::ComposeDrafts> _teleDrafts;
  	std::unique_ptr<Tele::ComposeDocked> _teleDocked;
@@ -258,10 +258,10 @@ index 24f1d77f2758b53326a1db299973f96bc75aff1e..0c918e86ad0b1e46285c6229a551ea70
  };
  
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-index 0eede5be8d5820c2815b14261068ca2c58ea670d..6b29f7097d510d2e83980a352da20971a2500ee3 100644
+index 8a1ec8eb57501f3391b97069221a6aaf50edd82d..1d0a57bc53e7afd25ae26074d1fbfb52bad25625 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-@@ -123,6 +123,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -125,6 +125,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
@@ -269,7 +269,7 @@ index 0eede5be8d5820c2815b14261068ca2c58ea670d..6b29f7097d510d2e83980a352da20971
  #include "tele/tele_silent.h"
  #include "tele/tele_options.h"
  #include "inline_bots/inline_bot_result.h"
-@@ -3551,7 +3552,7 @@ int ChatWidget::computeMaxFieldHeightForKeyboard(
+@@ -3641,7 +3642,7 @@ int ChatWidget::computeMaxFieldHeightForKeyboard(
  		- (2 * st::historySendPadding)
  		- st::historyReplyHeight;
  	return std::min(
@@ -278,7 +278,7 @@ index 0eede5be8d5820c2815b14261068ca2c58ea670d..6b29f7097d510d2e83980a352da20971
  		std::max(0, available));
  }
  
-@@ -4442,7 +4443,7 @@ void ChatWidget::updateControlsGeometry() {
+@@ -4580,7 +4581,7 @@ void ChatWidget::updateControlsGeometry() {
  			bottom -= kbHeight;
  		} else {
  			_composeControls->setFieldMaxHeight(

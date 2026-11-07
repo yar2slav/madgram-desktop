@@ -18,10 +18,10 @@ Subject: [PATCH] feat: set your own app and tray icons
  create mode 100644 Telegram/SourceFiles/tele/tele_app_icons.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a450dfe11214dc6f67ab201b69a78e366c4a0bcb..001c6585b501fee459d9b043aed76da787c0cf19 100644
+index ce1f85b1cc0b333a2908af53e14f27ae7ea84c82..59dcaf29835bbc88bd659e2d515e13eefaa174d3 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2485,6 +2485,8 @@ PRIVATE
+@@ -2641,6 +2641,8 @@ PRIVATE
      settings/settings_tele.h
      tele/tele_account_badges.cpp
      tele/tele_account_badges.h
@@ -580,7 +580,7 @@ index e54a94749195c2f5e0258644ea513dd32c7d84c9..bad61335f0e9a10c4f59bccbed3bf061
  
  } // namespace Tele
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 239c20c7ef203371b0c90fc6b8aba7caf2a180d5..565c46bd73c18590402ce48193602e6a45ee2692 100644
+index 43a0fc1e4813027c14edb6b659b856bb86b2c01a..26e529442a4899c1ebeacf22fd418f52cf638c2c 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
 @@ -48,6 +48,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

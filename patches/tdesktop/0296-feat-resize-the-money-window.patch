@@ -9,10 +9,10 @@ Subject: [PATCH] feat: resize the money window
  2 files changed, 63 insertions(+), 13 deletions(-)
 
 diff --git a/Telegram/SourceFiles/wallet/wallet_content.cpp b/Telegram/SourceFiles/wallet/wallet_content.cpp
-index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a126b9546bd 100644
+index ea95e5ad61267591dabc474b749c1b9fb43166af..3fff0a1e7e5d63f2271725765e119c554570db73 100644
 --- a/Telegram/SourceFiles/wallet/wallet_content.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_content.cpp
-@@ -1118,6 +1118,46 @@ QString EncryptedCommentLabel::accessibilityName() {
+@@ -1119,6 +1119,46 @@ QString EncryptedCommentLabel::accessibilityName() {
  		- st::walletCardMargin.right();
  }
  
@@ -59,7 +59,7 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  [[nodiscard]] QRect TransferCardInfoRect(int cardWidth) {
  	return QRect(
  		cardWidth - st::walletCardContentLeft - st::walletCardQrSize.width(),
-@@ -14379,7 +14419,8 @@ void Content::setupContent() {
+@@ -14398,7 +14438,8 @@ void Content::setupContent() {
  	setupProtectRow();
  
  	const auto media = std::make_shared<CollectibleMedia>(&_show->session());
@@ -69,7 +69,7 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  		object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
  			column,
  			object_ptr<Ui::VerticalLayout>(column)));
-@@ -14456,7 +14497,8 @@ void Content::setupContent() {
+@@ -14475,7 +14516,8 @@ void Content::setupContent() {
  		rpl::mappers::_1 == EmptyFace::About));
  	wrap->finishAnimating();
  
@@ -79,7 +79,7 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  		object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
  			column,
  			object_ptr<Ui::VerticalLayout>(column)));
-@@ -14896,11 +14938,14 @@ void Content::setupPinned() {
+@@ -14915,11 +14957,14 @@ void Content::setupPinned() {
  	setupInfoIsland();
  
  	Ui::AddSkip(_pinnedInner, st::walletCardTopSkip);
@@ -98,7 +98,7 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  	_card = Ui::CreateChild<Card>(
  		this,
  		_show,
-@@ -14918,12 +14963,16 @@ void Content::setupPinned() {
+@@ -14937,12 +14982,16 @@ void Content::setupPinned() {
  	});
  	_cardButton->show();
  
@@ -119,7 +119,7 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  	const auto addPill = [&](
  			rpl::producer<QString> text,
  			Fn<void()> callback) {
-@@ -15050,7 +15099,8 @@ void AddIslandRowLabel(
+@@ -15069,7 +15118,8 @@ void AddIslandRowLabel(
  void Content::setupInfoIsland() {
  	auto owned = object_ptr<InfoIsland>(_pinnedInner);
  	const auto island = owned.data();
@@ -129,7 +129,7 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  		object_ptr<Ui::SlideWrap<InfoIsland>>(
  			_pinnedInner,
  			std::move(owned),
-@@ -15290,7 +15340,7 @@ void Content::setupBalance() {
+@@ -15309,7 +15359,7 @@ void Content::setupBalance() {
  	widthValue(
  	) | rpl::on_next([=](int width) {
  		const auto scope = WindowPaletteScope(this);
@@ -139,10 +139,10 @@ index f069df1d57512b408d7a42c9d79eecad2033c8c0..714d254e3d262fb5f872035ab5b81a12
  	}, lifetime());
  
 diff --git a/Telegram/SourceFiles/wallet/wallet_panel.cpp b/Telegram/SourceFiles/wallet/wallet_panel.cpp
-index 1b692f292c24fe70a1603421633f0fb21ac9f6f2..e84815c2f121f315a1faf674f70ca51491681ef1 100644
+index 0c0cc14a1a668e6eadb9c3f11c6b364db6a22f8e..4bc56ca95a4f364546b18adbf3a357c90e031909 100644
 --- a/Telegram/SourceFiles/wallet/wallet_panel.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_panel.cpp
-@@ -82,7 +82,7 @@ not_null<Ui::SeparatePanel*> ShowWallet(not_null<Main::Session*> session) {
+@@ -87,7 +87,7 @@ not_null<Ui::SeparatePanel*> ShowWallet(not_null<Main::Session*> session) {
  	const auto show = Main::MakeSessionShow(panel->uiShow(), session);
  	panel->setWindowFlag(Qt::WindowStaysOnTopHint, false);
  	Shortcuts::Listen(panel); // Main window may be hidden to tray.

@@ -16,10 +16,10 @@ Subject: [PATCH] feat: send quick replies by their exact name
  9 files changed, 147 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
-index 74678a13a218531bf3672a2ae8b0c51227f3e527..c17be12c12155caf82bff8e06c0a56433ac243dc 100644
+index 2ebf7d3b03140e42daa670639c3fd718f68bdf21..920f36a02b71bbe22934da1cdbd9dadc6ef33bcc 100644
 --- a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
-@@ -828,6 +828,7 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
+@@ -830,6 +830,7 @@ void FieldAutocomplete::updateFiltered(bool resetScroll) {
  			}
  			if (int(brows.size()) > from) {
  				brows.insert(begin(brows) + from, { .user = self }); // Edit.
@@ -27,7 +27,7 @@ index 74678a13a218531bf3672a2ae8b0c51227f3e527..c17be12c12155caf82bff8e06c0a5643
  			}
  		}
  	}
-@@ -2083,7 +2084,7 @@ void InitFieldAutocomplete(
+@@ -2111,7 +2112,7 @@ void InitFieldAutocomplete(
  		? &peer->owner().shortcutMessages()
  		: nullptr;
  	if (processShortcut) {
@@ -37,10 +37,10 @@ index 74678a13a218531bf3672a2ae8b0c51227f3e527..c17be12c12155caf82bff8e06c0a5643
  	raw->botCommandChosen(
  	) | rpl::on_next([=](FieldAutocomplete::BotCommandChosen data) {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 90d3ca19701f32a01b871ccd1a71a40dc8d9365a..3f90a47286dbb258eb75b2a602ed9105b8073958 100644
+index 2b6a60a04a335523130ee3d06e7a2dc748106974..8eb5a51ef78e305617d52f176b834ea871632698 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -5999,6 +5999,8 @@ void HistoryWidget::send(Api::SendOptions options) {
+@@ -6090,6 +6090,8 @@ void HistoryWidget::send(Api::SendOptions options) {
  	} else if (const auto page = shownRichMessage()) {
  		sendRichDraft(page, options);
  		return;
@@ -50,11 +50,11 @@ index 90d3ca19701f32a01b871ccd1a71a40dc8d9365a..3f90a47286dbb258eb75b2a602ed9105
  	if (!options.scheduled) {
  		auto action = Api::SendAction(_history, options);
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-index ecea0d1c8b48157a2bcbd7eb529e90ab9956bf65..9d09fab2195ea403fc1167a063979d24913d5714 100644
+index 27ab906b5ea034bde4ed8e3c39a7641299625858..2658ebc13d62f2f0d119b2c44821d9f889b232c3 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-@@ -2393,6 +2393,11 @@ void ChatWidget::send(Api::SendOptions options) {
- 	if (const auto page = _composeControls->shownRichMessage()) {
+@@ -2465,6 +2465,11 @@ void ChatWidget::send(Api::SendOptions options) {
+ 	} else if (const auto page = _composeControls->shownRichMessage()) {
  		sendRichDraft(page, options);
  		return;
 +	} else if (Tele::SendShortcutByName(

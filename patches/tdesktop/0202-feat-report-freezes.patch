@@ -18,10 +18,10 @@ Subject: [PATCH] feat: report freezes
  create mode 100644 Telegram/SourceFiles/tele/tele_freeze_watchdog.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 41f9ca95abac3b80bca4b2ef9d4a2238760c9f7f..ba663cafc34b0888aaef2e7905ade33c13348ee6 100644
+index c7d7ae5f10935f7f3ef5761eb21416cd64ee1787..07931dbf479d835eef6fe137cfa34ea32ddedc7e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2579,6 +2579,8 @@ PRIVATE
+@@ -2735,6 +2735,8 @@ PRIVATE
      tele/tele_field_resize.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -31,10 +31,10 @@ index 41f9ca95abac3b80bca4b2ef9d4a2238760c9f7f..ba663cafc34b0888aaef2e7905ade33c
      tele/tele_full_preview.h
      tele/tele_gif_video.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 30b07dfff9d92bc2bb116520abff9b0be6d2e194..265b617382028ca60d1fd6399562cb9c4d2cd289 100644
+index 2acdcd6f5a5d8bb1822f15a2f1e4f2c343f606e6..d1cb4151d8b89a6903d52fccccccfa02ad22ecf8 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -112,6 +112,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_list_keys.h"
  #include "tele/tele_mtp_console.h"
  #include "tele/tele_counters.h"
@@ -42,7 +42,7 @@ index 30b07dfff9d92bc2bb116520abff9b0be6d2e194..265b617382028ca60d1fd6399562cb9c
  
  #include <QtCore/QStandardPaths>
  #include <QtCore/QMimeDatabase>
-@@ -368,6 +369,7 @@ void Application::run() {
+@@ -369,6 +370,7 @@ void Application::run() {
  	Tele::StartReduceMotion();
  	Tele::StartListKeys();
  	Tele::StartMtpConsole();
@@ -80,10 +80,10 @@ index 5a2a33c6969a0deb37928d091303a9fa0af5314c..413ebcaf95ff90dd347ea8da2f42e37c
  	if (CrashReports::Restart() == CrashReports::CantOpen) {
  		new NotStartedWindow();
 diff --git a/Telegram/SourceFiles/core/sandbox.cpp b/Telegram/SourceFiles/core/sandbox.cpp
-index 5276241e8499b5bab9c5bc6c7d8f64b8110b8f3c..67c24a17f6505381f2184d60320f8b83e9028050 100644
+index bdbb6626aac9fbda2b30d1b2058d14b68050dfea..06a961b7e43cc9418d53c542986402fbef1671a2 100644
 --- a/Telegram/SourceFiles/core/sandbox.cpp
 +++ b/Telegram/SourceFiles/core/sandbox.cpp
-@@ -32,6 +32,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -33,6 +33,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/ui_utility.h"
  #include "ui/window_palette.h"
  #include "ui/effects/animations.h"
@@ -91,7 +91,7 @@ index 5276241e8499b5bab9c5bc6c7d8f64b8110b8f3c..67c24a17f6505381f2184d60320f8b83
  #include "ui/style/style_core_palette.h"
  
  #ifdef Q_OS_MAC
-@@ -478,7 +479,7 @@ void Sandbox::singleInstanceChecked() {
+@@ -492,7 +493,7 @@ void Sandbox::singleInstanceChecked() {
  		new NotStartedWindow();
  		return;
  	}

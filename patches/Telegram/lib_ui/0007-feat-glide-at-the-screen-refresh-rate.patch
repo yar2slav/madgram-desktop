@@ -134,10 +134,10 @@ index bb268d6a0ff6ab3c2109c852603315854aba3b8d..b60b959ef868dac9023a7bfbf5d4bb2d
  } // namespace Animations
  } // namespace Ui
 diff --git a/ui/effects/animations.h b/ui/effects/animations.h
-index 254bab9811e462471f901430140c9e8bf628603b..bb58087de83ae718281546521dcfa9b6b3f9a826 100644
+index a5447936123e8b4dd673bcd8c904838181dc8a6a..128b636f846f6dbb5259c1ed3748c290553b27d4 100644
 --- a/ui/effects/animations.h
 +++ b/ui/effects/animations.h
-@@ -151,6 +151,11 @@ public:
+@@ -170,6 +170,11 @@ public:
  
  	static void SetScheduleWithInvokeQueued(bool value);
  
@@ -150,10 +150,10 @@ index 254bab9811e462471f901430140c9e8bf628603b..bb58087de83ae718281546521dcfa9b6
  	class ActiveBasicPointer {
  	public:
 diff --git a/ui/widgets/elastic_scroll.cpp b/ui/widgets/elastic_scroll.cpp
-index c134b201f0d36e05ce0f797d4533e04dfe68c8c0..e1c8361e11b65c424bc9048bb3e31b8a3bf288a8 100644
+index adb6dd9a14ff97c1efba816dd001e4803756dbd7..909345d1453282320116dddde6d86bdf821c08b4 100644
 --- a/ui/widgets/elastic_scroll.cpp
 +++ b/ui/widgets/elastic_scroll.cpp
-@@ -418,6 +418,7 @@ ElasticScroll::ElasticScroll(
+@@ -382,6 +382,7 @@ ElasticScroll::ElasticScroll(
  , _position(Position{ 0, 0 })
  , _movement(Movement::None) {
  	setAttribute(Qt::WA_AcceptTouchEvents);
@@ -162,10 +162,10 @@ index c134b201f0d36e05ce0f797d4533e04dfe68c8c0..e1c8361e11b65c424bc9048bb3e31b8a
  	_bar->visibleFromDragged(
  	) | rpl::on_next([=](int from) {
 diff --git a/ui/widgets/scroll_area.cpp b/ui/widgets/scroll_area.cpp
-index 076facaa3318720bea321f0bc60df90da9b58153..8c26cab6a159993fd1f2d811480810c13c916a97 100644
+index f825c1d9579e265b2a0504f12b58e393f820f9f6..27e62fc3e6f4e1038817eadf0469ff62ea778a52 100644
 --- a/ui/widgets/scroll_area.cpp
 +++ b/ui/widgets/scroll_area.cpp
-@@ -417,6 +417,7 @@ ScrollArea::ScrollArea(
+@@ -415,6 +415,7 @@ ScrollArea::ScrollArea(
  , _touchEnabled(handleTouch) {
  	setLayoutDirection(style::LayoutDirection());
  	setFocusPolicy(Qt::NoFocus);

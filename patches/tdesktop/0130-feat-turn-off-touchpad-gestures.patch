@@ -14,10 +14,10 @@ Subject: [PATCH] feat: turn off touchpad gestures
  7 files changed, 60 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 3bb05fbc16961e154b53cbe6b7e74f152a9b3605..6dde07541280ac2a4bca78555f34f003fb5a8548 100644
+index 3d80ed0b44199961cfae0b03403f36c10ab96b32..cbb9cd2713efd818f45f09f45f9c94708591fb7a 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -753,6 +753,9 @@ void HistoryInner::setupSwipeReplyAndBack() {
+@@ -762,6 +762,9 @@ void HistoryInner::setupSwipeReplyAndBack() {
  		if (inSelectionMode().inSelectionMode) {
  			return result;
  		}
@@ -28,10 +28,10 @@ index 3bb05fbc16961e154b53cbe6b7e74f152a9b3605..6dde07541280ac2a4bca78555f34f003
  				not_null<Element*> view,
  				int itemtop,
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-index 9370fa1471dc93a732f90cc752a001a0df9bccda..0eede5be8d5820c2815b14261068ca2c58ea670d 100644
+index 1789bd1f7caab30ca672d84312ba5644bc1db061..8a1ec8eb57501f3391b97069221a6aaf50edd82d 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-@@ -124,6 +124,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -126,6 +126,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_silent.h"
@@ -39,7 +39,7 @@ index 9370fa1471dc93a732f90cc752a001a0df9bccda..0eede5be8d5820c2815b14261068ca2c
  #include "inline_bots/inline_bot_result.h"
  #include "info/profile/info_profile_values.h"
  #include "iv/editor/iv_editor_session.h"
-@@ -1897,6 +1898,9 @@ void ChatWidget::setupSwipeReplyAndBack() {
+@@ -1956,6 +1957,9 @@ void ChatWidget::setupSwipeReplyAndBack() {
  		if (_inner->elementInSelectionMode(nullptr).inSelectionMode) {
  			return result;
  		}
@@ -161,7 +161,7 @@ index eae5813f3fdced9d39d6c9a55c8c2bfef24167fa..50cb0df711ec66a6f9547100a869a924
  		Toggle(kOptionScreenshotSecretMedia),
  		Toggle(kOptionAllowScreenCapture),
 diff --git a/Telegram/SourceFiles/ui/controls/swipe_handler.cpp b/Telegram/SourceFiles/ui/controls/swipe_handler.cpp
-index c08438949a648953fb085894e8aca8f932731d95..4890531c8faa529ba3f4fa1f0381f41fdba0a9ca 100644
+index 7639b659fa7fb6448f789179122ffb7200971c0d..d3819561f77dfda98dfab4c30dbb46f0282f5e71 100644
 --- a/Telegram/SourceFiles/ui/controls/swipe_handler.cpp
 +++ b/Telegram/SourceFiles/ui/controls/swipe_handler.cpp
 @@ -13,6 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -172,7 +172,7 @@ index c08438949a648953fb085894e8aca8f932731d95..4890531c8faa529ba3f4fa1f0381f41f
  #include "ui/painter.h"
  #include "ui/rect.h"
  #include "ui/ui_utility.h"
-@@ -229,7 +230,9 @@ void SetupSwipeHandler(SwipeHandlerArgs &&args) {
+@@ -249,7 +250,9 @@ void SetupSwipeHandler(SwipeHandlerArgs &&args) {
  				* state->finishByTopData.speedRatio;
  			if (!state->finishByTopData.callback
  				|| (state->finishByTopData.msgBareId == kMsgBareIdSwipeBack

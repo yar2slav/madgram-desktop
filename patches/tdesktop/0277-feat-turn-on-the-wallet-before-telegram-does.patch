@@ -12,7 +12,7 @@ Subject: [PATCH] feat: turn on the wallet before telegram does
  5 files changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/main/main_app_config.cpp b/Telegram/SourceFiles/main/main_app_config.cpp
-index f1f59194b9b296be70bf7a8a08d0ea4b82aef269..c652243c88c6c97de840c4b676a522b280d600b2 100644
+index 1eb3184295c03b31ba0b2c410080729b8cce7539..c7e82aa9d9257ba8728a3cc6534af2678b36e5b4 100644
 --- a/Telegram/SourceFiles/main/main_app_config.cpp
 +++ b/Telegram/SourceFiles/main/main_app_config.cpp
 @@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -20,10 +20,10 @@ index f1f59194b9b296be70bf7a8a08d0ea4b82aef269..c652243c88c6c97de840c4b676a522b2
  #include "main/main_account.h"
  #include "main/main_session.h"
 +#include "tele/tele_options.h"
+ #include "test/test_l10n_seams.h"
  #include "ui/chat/chat_style.h"
  
- namespace Main {
-@@ -283,7 +284,7 @@ QString AppConfig::oldWalletBotUsername() const {
+@@ -276,7 +277,7 @@ QString AppConfig::oldWalletBotUsername() const {
  }
  
  bool AppConfig::walletAvailable() const {
@@ -31,7 +31,7 @@ index f1f59194b9b296be70bf7a8a08d0ea4b82aef269..c652243c88c6c97de840c4b676a522b2
 +	return Tele::ForceWallet() || get<bool>(u"wallet_available"_q, true);
  }
  
- int AppConfig::storiesAlbumsLimit() const {
+ int AppConfig::storiesAlbumLimit() const {
 diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
 index fb6187901d1b707f2c79f08dbd6a90ceb7bf0e00..938a5abb42c7896d5048b60a5dd2e12c64594791 100644
 --- a/Telegram/SourceFiles/settings/settings_tele.cpp

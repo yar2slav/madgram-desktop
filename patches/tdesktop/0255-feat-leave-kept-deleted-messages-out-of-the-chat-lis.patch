@@ -14,10 +14,10 @@ Subject: [PATCH] feat: leave kept deleted messages out of the chat list
  7 files changed, 158 insertions(+), 4 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history.cpp b/Telegram/SourceFiles/history/history.cpp
-index 2f011be449dc62dd9c64aa2538ef6ebdc05c7c7d..a8cf9f4f6a9f0f38b1e2431ed54552f934c7c48f 100644
+index 440237caadd132922105218947d35f31b09e196a..6e0310494ba0b1d082dae53dfa7f56228f8b22b3 100644
 --- a/Telegram/SourceFiles/history/history.cpp
 +++ b/Telegram/SourceFiles/history/history.cpp
-@@ -279,7 +279,8 @@ void History::itemVanished(not_null<HistoryItem*> item) {
+@@ -280,7 +280,8 @@ void History::itemVanished(not_null<HistoryItem*> item) {
  	}
  	if ((!item->out() || item->isPost())
  		&& item->unread(this)
@@ -27,7 +27,7 @@ index 2f011be449dc62dd9c64aa2538ef6ebdc05c7c7d..a8cf9f4f6a9f0f38b1e2431ed54552f9
  		setUnreadCount(unreadCount() - 1);
  	}
  	if (const auto media = item->media()) {
-@@ -2218,7 +2219,8 @@ std::optional<int> History::countStillUnreadLocal(MsgId readTillId) const {
+@@ -2220,7 +2221,8 @@ std::optional<int> History::countStillUnreadLocal(MsgId readTillId) const {
  				for (const auto &message : block->messages) {
  					const auto item = message->data();
  					if (!item->isRegular()
@@ -37,7 +37,7 @@ index 2f011be449dc62dd9c64aa2538ef6ebdc05c7c7d..a8cf9f4f6a9f0f38b1e2431ed54552f9
  						continue;
  					} else if (item->id > readTillId) {
  						break;
-@@ -2252,7 +2254,7 @@ std::optional<int> History::countStillUnreadLocal(MsgId readTillId) const {
+@@ -2254,7 +2256,7 @@ std::optional<int> History::countStillUnreadLocal(MsgId readTillId) const {
  			if (item->isRegular()) {
  				if (item->id <= readTillId) {
  					return result;
@@ -46,7 +46,7 @@ index 2f011be449dc62dd9c64aa2538ef6ebdc05c7c7d..a8cf9f4f6a9f0f38b1e2431ed54552f9
  					++result;
  				}
  			}
-@@ -2273,7 +2275,8 @@ std::optional<int> History::countStillUnreadLocalFromMessages(
+@@ -2275,7 +2277,8 @@ std::optional<int> History::countStillUnreadLocalFromMessages(
  		const auto item = owner().message(peer->id, id);
  		return item
  			&& item->isRegular()
@@ -56,7 +56,7 @@ index 2f011be449dc62dd9c64aa2538ef6ebdc05c7c7d..a8cf9f4f6a9f0f38b1e2431ed54552f9
  	});
  }
  
-@@ -2362,6 +2365,9 @@ MsgId History::outboxReadTillId() const {
+@@ -2364,6 +2367,9 @@ MsgId History::outboxReadTillId() const {
  }
  
  HistoryItem *History::lastAvailableMessage() const {

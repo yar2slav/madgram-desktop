@@ -18,10 +18,10 @@ Subject: [PATCH] feat: use the blurred profile photo as the profile background
  create mode 100644 Telegram/SourceFiles/tele/tele_profile_photo_bg.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 8312e6a57d0dc3065724446318ba15873ce4b62f..6a3e739aefc9fe5632f93893a0730399aeeaa6db 100644
+index 4088db5f3036bf6723779f6c3b5df8860bd5deec..dcc6ff9e8cf6b3c922d8cbdc5bd6b3519fa1661a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2785,6 +2785,8 @@ PRIVATE
+@@ -2941,6 +2941,8 @@ PRIVATE
      tele/tele_phones.h
      tele/tele_pin_sets.cpp
      tele/tele_pin_sets.h
@@ -31,10 +31,10 @@ index 8312e6a57d0dc3065724446318ba15873ce4b62f..6a3e739aefc9fe5632f93893a0730399
      tele/tele_profile_preview.h
      tele/tele_protected.cpp
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470fd54a70e 100644
+index e196ecf9afd1ab9796e5178af872af4b37e8aab6..a5931e43c6baa3f1dd3677041c55a465775ef697 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -107,6 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -106,6 +106,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_calls.h"
  #include "tele/tele_options.h"
  #include "tele/tele_onlines.h"
@@ -42,7 +42,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  #include "tele/tele_verify_details.h"
  #include "styles/style_chat.h"
  #include "styles/style_info.h"
-@@ -467,6 +468,9 @@ TopBar::TopBar(
+@@ -487,6 +488,9 @@ TopBar::TopBar(
  		broadcast->updateFull();
  	}
  	const auto controller = descriptor.controller;
@@ -52,7 +52,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  
  	if (_peer->isMegagroup() || _peer->isChat()) {
  		_statusLabel->setMembersLinkCallback([=, peer = _peer] {
-@@ -600,6 +604,7 @@ TopBar::TopBar(
+@@ -608,6 +612,7 @@ TopBar::TopBar(
  
  	rpl::merge(
  		style::PaletteChanged(),
@@ -60,7 +60,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  		_peer->session().data().giftUpdates() | rpl::filter([=](
  				const Data::GiftUpdate &update) {
  			if (update.action == Data::GiftUpdate::Action::Pin) {
-@@ -788,9 +793,11 @@ void TopBar::adjustColors(const std::optional<QColor> &edgeColor) {
+@@ -796,9 +801,11 @@ void TopBar::adjustColors(const std::optional<QColor> &edgeColor) {
  }
  
  void TopBar::updateCollectibleStatus() {
@@ -73,7 +73,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  		|| (colorProfile && colorProfile->bg.size() > 1);
  	_solidBg = (colorProfile && colorProfile->bg.size() == 1)
  		? std::make_optional(colorProfile->bg.front())
-@@ -804,7 +811,7 @@ void TopBar::updateCollectibleStatus() {
+@@ -812,7 +819,7 @@ void TopBar::updateCollectibleStatus() {
  		: collectible && collectible->patternDocumentId
  		? collectible->patternDocumentId
  		: _peer->profileBackgroundEmojiId();
@@ -82,7 +82,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  		const auto document = _peer->owner().document(patternEmojiId);
  		if (!_patternEmoji
  			|| _patternEmoji->entityData()
-@@ -824,7 +831,9 @@ void TopBar::updateCollectibleStatus() {
+@@ -832,7 +839,9 @@ void TopBar::updateCollectibleStatus() {
  		_pinnedToTopGifts.clear();
  	}
  	const auto verifiedFg = [&]() -> std::optional<QColor> {
@@ -93,7 +93,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  			return Ui::BlendColors(
  				collectible->edgeColor,
  				collectible->centerColor,
-@@ -864,7 +873,9 @@ void TopBar::updateCollectibleStatus() {
+@@ -876,7 +885,9 @@ void TopBar::updateCollectibleStatus() {
  		_verifiedSt = nullptr;
  	}
  	update();
@@ -104,7 +104,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  		? std::optional<QColor>(collectible->edgeColor)
  		: (colorProfile && !colorProfile->bg.empty())
  		? std::optional<QColor>(colorProfile->bg.front())
-@@ -1865,7 +1876,9 @@ void TopBar::setLocalEmojiStatusId(EmojiStatusId emojiStatusId) {
+@@ -1889,7 +1900,9 @@ void TopBar::setLocalEmojiStatusId(EmojiStatusId emojiStatusId) {
  }
  
  std::optional<Data::ColorProfileSet> TopBar::effectiveColorProfile() const {
@@ -115,7 +115,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  		? _peer->session().api().peerColors().colorProfileFor(
  			*_localColorProfileIndex)
  		: _source == Source::Preview
-@@ -1875,7 +1888,9 @@ std::optional<Data::ColorProfileSet> TopBar::effectiveColorProfile() const {
+@@ -1899,7 +1912,9 @@ std::optional<Data::ColorProfileSet> TopBar::effectiveColorProfile() const {
  
  auto TopBar::effectiveCollectible() const
  -> std::shared_ptr<Data::EmojiStatusCollectible> {
@@ -126,7 +126,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  		? _localCollectible
  		: _localColorProfileIndex
  		? nullptr
-@@ -2935,6 +2950,9 @@ void TopBar::paintEvent(QPaintEvent *e) {
+@@ -2921,6 +2936,9 @@ void TopBar::paintEvent(QPaintEvent *e) {
  				colorProfile->bg[0],
  				false,
  				offset);
@@ -137,7 +137,7 @@ index 402889090f1ce7944187cbda313c304b609e63f8..7bfaa1bbf21ed9bf0ed464769910a470
  	}
  	if (!_hasGradientBg) {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.h b/Telegram/SourceFiles/info/profile/info_profile_top_bar.h
-index 37db97706d7e4a74ad3642d93000d9ff2bd9d3a0..ea7d9686e9586e484029eabe663b32ec51297164 100644
+index ac0deb30790f37a590cba8f5e9dfef76a95ddc53..00a90f5dc231d7bef908bff272ee7ac294c9be8e 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.h
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.h
 @@ -83,6 +83,10 @@ namespace Ui::Menu {
@@ -151,7 +151,7 @@ index 37db97706d7e4a74ad3642d93000d9ff2bd9d3a0..ea7d9686e9586e484029eabe663b32ec
  namespace Info::Profile {
  
  class Badge;
-@@ -391,6 +395,7 @@ private:
+@@ -396,6 +400,7 @@ private:
  	std::optional<uint8> _localColorProfileIndex;
  	std::optional<DocumentId> _localPatternEmojiId;
  	std::shared_ptr<Data::EmojiStatusCollectible> _localCollectible;

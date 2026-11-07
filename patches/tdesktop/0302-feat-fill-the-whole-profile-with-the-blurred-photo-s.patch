@@ -53,10 +53,10 @@ index 4ad4fab661b3d10bbbfbd182f024ef9d8f43ab44..82229eed0638d0a37b34d24b8f789a7a
  	if (_contentWrap->animatingShow()) {
  		const auto top = QRect{ 0, 0, width(), radius };
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index 7bfaa1bbf21ed9bf0ed464769910a470fd54a70e..609280c81f706dfaadda9638fcab5931d7937645 100644
+index a5931e43c6baa3f1dd3677041c55a465775ef697..c496758d89aec43dfe46812c16510a539f4c14cc 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -471,6 +471,10 @@ TopBar::TopBar(
+@@ -491,6 +491,10 @@ TopBar::TopBar(
  	_photoBg = Tele::MakeProfilePhotoBg(
  		_peer,
  		!_topic && !_savedMessages && _source != Source::Preview);
@@ -67,7 +67,7 @@ index 7bfaa1bbf21ed9bf0ed464769910a470fd54a70e..609280c81f706dfaadda9638fcab5931
  
  	if (_peer->isMegagroup() || _peer->isChat()) {
  		_statusLabel->setMembersLinkCallback([=, peer = _peer] {
-@@ -2979,6 +2983,7 @@ void TopBar::paintEvent(QPaintEvent *e) {
+@@ -2965,6 +2969,7 @@ void TopBar::paintEvent(QPaintEvent *e) {
  		} else {
  			p.drawImage(x, y, _cachedGradient);
  		}
@@ -76,7 +76,7 @@ index 7bfaa1bbf21ed9bf0ed464769910a470fd54a70e..609280c81f706dfaadda9638fcab5931
  	if (_patternEmoji && _patternEmoji->ready()) {
  		paintAnimatedPattern(p, clipBounds, geometry);
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.h b/Telegram/SourceFiles/info/profile/info_profile_top_bar.h
-index ea7d9686e9586e484029eabe663b32ec51297164..15c632fba31c51d086bfc305fc3bbd452ef0e19f 100644
+index 00a90f5dc231d7bef908bff272ee7ac294c9be8e..9fc1d6339f8438e227c854d425c36688d3502ea3 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.h
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.h
 @@ -85,6 +85,7 @@ struct MenuCallback;
@@ -87,7 +87,7 @@ index ea7d9686e9586e484029eabe663b32ec51297164..15c632fba31c51d086bfc305fc3bbd45
  } // namespace Tele
  
  namespace Info::Profile {
-@@ -396,6 +397,7 @@ private:
+@@ -401,6 +402,7 @@ private:
  	std::optional<DocumentId> _localPatternEmojiId;
  	std::shared_ptr<Data::EmojiStatusCollectible> _localCollectible;
  	std::unique_ptr<Tele::ProfilePhotoBg> _photoBg;

@@ -19,10 +19,10 @@ Subject: [PATCH] feat: show online members in big groups
  create mode 100644 Telegram/SourceFiles/tele/tele_onlines.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 66787e93c78d882c0b4aeaab2a39d5c62b4739e9..15ad5024946144e326e737beea771c385bdd1247 100644
+index e04c2f3e7e6f51b8f5db2d8c4f81a8389db0feee..1d6930835e2610f9b1381f20957d5c1462be157c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2724,6 +2724,8 @@ PRIVATE
+@@ -2880,6 +2880,8 @@ PRIVATE
      tele/tele_notices_section.h
      tele/tele_online_notify.cpp
      tele/tele_online_notify.h
@@ -32,7 +32,7 @@ index 66787e93c78d882c0b4aeaab2a39d5c62b4739e9..15ad5024946144e326e737beea771c38
      tele/tele_jump_to_first.h
      tele/tele_link_previews.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 5e50a3f5f5fd00e8057b4e4ffe1aa6a79630babf..10911f2ad01de11ea7ffd9f51ad7e2144f83877a 100644
+index b2ca7a57d689501d05d56036ab71f7fdec1a527b..9d62a8b9351130aeaa31828c4de7bebbebead6b8 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 @@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -43,7 +43,7 @@ index 5e50a3f5f5fd00e8057b4e4ffe1aa6a79630babf..10911f2ad01de11ea7ffd9f51ad7e214
  #include "tele/tele_phones.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -952,6 +953,13 @@ void TopBarWidget::setActiveChat(
+@@ -953,6 +954,13 @@ void TopBarWidget::setActiveChat(
  						Data::kStoriesAlbumIdArchive);
  				}
  			}
@@ -57,7 +57,7 @@ index 5e50a3f5f5fd00e8057b4e4ffe1aa6a79630babf..10911f2ad01de11ea7ffd9f51ad7e214
  		}
  
  		if (const auto history = _activeChat.key.history()) {
-@@ -2011,6 +2019,10 @@ void TopBarWidget::updateOnlineDisplay() {
+@@ -2022,6 +2030,10 @@ void TopBarWidget::updateOnlineDisplay() {
  			} else {
  				text = tr::lng_group_status(tr::now);
  			}
@@ -92,10 +92,10 @@ index 13c646bfc69611a23cf0dc21f499558c008b27c7..abc32cad4a0ee7f292517414d88663bf
  			auto result = ChatStatusText(
  				fullCount,
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index bc00bf9a467ba6f605b51d0b0326f9909c577a4d..e92ad84384b813d3cc672fa9754e0b4fb132ff5d 100644
+index 83077159c7eb4b1541ae34916119a4bd927a5a92..61424cf72a752a9b9fdc79e8c9fcd96c7f662f46 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -104,6 +104,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/sticker_set_box.h"
  #include "tele/tele_calls.h"
  #include "tele/tele_options.h"
@@ -103,7 +103,7 @@ index bc00bf9a467ba6f605b51d0b0326f9909c577a4d..e92ad84384b813d3cc672fa9754e0b4f
  #include "tele/tele_verify_details.h"
  #include "styles/style_chat.h"
  #include "styles/style_info.h"
-@@ -3969,6 +3970,11 @@ void TopBar::bindStatus() {
+@@ -3955,6 +3956,11 @@ void TopBar::bindStatus() {
  	) | rpl::on_next([=] {
  		_statusLabel->refresh();
  	}, lifetime());

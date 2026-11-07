@@ -18,10 +18,10 @@ Subject: [PATCH] feat: retry failed messages
  create mode 100644 Telegram/SourceFiles/tele/tele_failed_sends.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 699c4b4bc468ff1ac4413d998388632d59477b32..f1f5436c36520e76d87ce4680066df6467b8dcc0 100644
+index 3522aa72186a82ce5e6347f35dc521a9c8518066..4169657579daa376c65e2b8cc90220e17435e19e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2577,6 +2577,8 @@ PRIVATE
+@@ -2733,6 +2733,8 @@ PRIVATE
      tele/tele_emoji_panel.h
      tele/tele_edit_history_section.cpp
      tele/tele_edit_history_section.h
@@ -58,10 +58,10 @@ index f121b15f1b54950a09fb546f1b29b2c2f6c5046f..9b73173b0d1effaca246a3cceb353f9d
  
  	p.setFont(st::semiboldFont);
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 1582f0545bc064ee8c72024a10ccf47c87622c43..ef2452a0a0b472ebe5925a0709d955e41909b19a 100644
+index e29a1619c2fff8b3cb4c6e784cb49bafffb9127f..6df800ecca518f92cae3d2c6cdf40909b9d63772 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -139,6 +139,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_copy_markdown.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
@@ -69,7 +69,7 @@ index 1582f0545bc064ee8c72024a10ccf47c87622c43..ef2452a0a0b472ebe5925a0709d955e4
  #include "tele/tele_ghost.h"
  #include "tele/tele_gif_video.h"
  #include "tele/tele_ignored.h"
-@@ -3915,6 +3916,9 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3970,6 +3971,9 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  		(isUponSelected != -2) ? _dragStateItem : nullptr,
  		width(),
  		crl::guard(this, [=] { _widget->clearSelected(); }));
@@ -80,7 +80,7 @@ index 1582f0545bc064ee8c72024a10ccf47c87622c43..ef2452a0a0b472ebe5925a0709d955e4
  		_menu.get(),
  		controller,
 diff --git a/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp b/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp
-index a11d755f807fb4a1f2cdc2d572612f8c6cd9ac33..fc8c132170be979a7132bde54cb49a1ff6b823c4 100644
+index ca4df975857d4c3f5f1de2cc953ed0f2652fd14b..9fbd02ced3d4c9130e3bc97df1c124b4b7413673 100644
 --- a/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp
 @@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -91,37 +91,37 @@ index a11d755f807fb4a1f2cdc2d572612f8c6cd9ac33..fc8c132170be979a7132bde54cb49a1f
  #include "tele/tele_time.h"
  #include "styles/style_chat.h"
  #include "styles/style_credits.h"
-@@ -299,6 +300,14 @@ void BottomInfo::paint(
+@@ -304,6 +305,14 @@ void BottomInfo::paint(
  			p,
  			QPoint(right, firstLineBottom) + st::historySendStatePosition,
- 			outerWidth);
+ 			outer(right + st::historySendStatePosition.x(), icon));
 +		if (_data.flags & Data::Flag::Failed) {
 +			Tele::PaintFailedIcon(
 +				p,
 +				icon,
 +				QPoint(right, firstLineBottom) + st::historySendStatePosition,
 +				{ 5, 5 },
-+				outerWidth);
++				outer(right + st::historySendStatePosition.x(), icon));
 +		}
  		right -= st::historySendStateSpace;
  	}
  
-@@ -392,6 +401,14 @@ void BottomInfo::paint(
+@@ -397,6 +406,14 @@ void BottomInfo::paint(
  			right,
  			firstLineBottom + st::historyViewsTop,
- 			outerWidth);
+ 			outer(right, icon));
 +		if (_data.flags & Data::Flag::Failed) {
 +			Tele::PaintFailedIcon(
 +				p,
 +				icon,
 +				QPoint(right, firstLineBottom + st::historyViewsTop),
 +				{ 3, 0 },
-+				outerWidth);
++				outer(right, icon));
 +		}
  	}
  	if (_effect) {
  		auto left = position.x();
-@@ -742,6 +759,9 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
+@@ -747,6 +764,9 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
  	if (item->isSending() || item->hasFailed()) {
  		result.flags |= Flag::Sending;
  	}
@@ -132,7 +132,7 @@ index a11d755f807fb4a1f2cdc2d572612f8c6cd9ac33..fc8c132170be979a7132bde54cb49a1f
  		&& !message->hasBubble()
  		&& (!message->media()
 diff --git a/Telegram/SourceFiles/history/view/history_view_bottom_info.h b/Telegram/SourceFiles/history/view/history_view_bottom_info.h
-index 86160af6ea12b966803b32196210df08e2604178..e66ccd326d94b5ab668e5abd4b6d8f5a172684a0 100644
+index b11bea42e4e283950e184320ea08962f9da2e1c1..50bba788b66cdab472e45afea9d1c0b62ec0b71a 100644
 --- a/Telegram/SourceFiles/history/view/history_view_bottom_info.h
 +++ b/Telegram/SourceFiles/history/view/history_view_bottom_info.h
 @@ -50,6 +50,7 @@ public:
@@ -144,10 +144,10 @@ index 86160af6ea12b966803b32196210df08e2604178..e66ccd326d94b5ab668e5abd4b6d8f5a
  		};
  		friend inline constexpr bool is_flag_type(Flag) { return true; };
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 1a7d215c7bea57a258ef0269455977cd61883cdc..96e975172fdfc6b3096d22bf96d2928727ee30b0 100644
+index b72ef9d61a6da3b60786a13c0e01fb28b0e95856..c51f2ac2c30e2e76d31f5693be87b0e1d6335c9b 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_drafts_section.h"
  #include "tele/tele_edit_history.h"
@@ -155,7 +155,7 @@ index 1a7d215c7bea57a258ef0269455977cd61883cdc..96e975172fdfc6b3096d22bf96d29287
  #include "tele/tele_gif_video.h"
  #include "tele/tele_secret_media.h"
  #include "tele/tele_shot.h"
-@@ -2015,6 +2016,7 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
+@@ -2028,6 +2029,7 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
  		}
  	}
  	Tele::AddShotAction(result.get(), list, request);
@@ -390,7 +390,7 @@ index 0000000000000000000000000000000000000000..e1b1c531d664ae70b060697158c962e0
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index 50d4a2baa3667d8735ecc6b3fdfe046c8f774726..184c2c6b6132d9cc8aab82da7da727ba49969bee 100644
+index b17925603c042bc12e2b72dc96ba31a59282938f..d41a3f3c981390e3ebfda01222e7798776aa7702 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 @@ -329,6 +329,14 @@ constexpr auto kFieldText = uint32(1 << 0);

@@ -12,10 +12,10 @@ Subject: [PATCH] feat: skip the mini app terms box for trusted apps
  5 files changed, 22 insertions(+)
 
 diff --git a/Telegram/SourceFiles/inline_bots/bot_attach_web_view.cpp b/Telegram/SourceFiles/inline_bots/bot_attach_web_view.cpp
-index a99e6c7ec3aae8ab2db77b74ce387f33794d584e..4aa6a3f63ca0d47d3d198cb8c14ae0fd03d7cead 100644
+index 3debccb5e7a7f83bb03daac93608ebfa17f5945e..3d47e6fe4222f0b26e61d56f83a188f9f2f5dbf7 100644
 --- a/Telegram/SourceFiles/inline_bots/bot_attach_web_view.cpp
 +++ b/Telegram/SourceFiles/inline_bots/bot_attach_web_view.cpp
-@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "payments/payments_non_panel_process.h"
  #include "settings/sections/settings_premium.h"
  #include "storage/storage_account.h"
@@ -23,7 +23,7 @@ index a99e6c7ec3aae8ab2db77b74ce387f33794d584e..4aa6a3f63ca0d47d3d198cb8c14ae0fd
  #include "storage/storage_domain.h"
  #include "ui/basic_click_handlers.h"
  #include "ui/boxes/confirm_box.h"
-@@ -1007,6 +1008,9 @@ void WebViewInstance::resolve() {
+@@ -1046,6 +1047,9 @@ void WebViewInstance::resolve() {
  			data.token,
  			(_context.maySkipConfirmation
  				? ConfirmType::None

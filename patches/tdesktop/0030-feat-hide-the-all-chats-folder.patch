@@ -20,10 +20,10 @@ Subject: [PATCH] feat: hide the all chats folder
  create mode 100644 Telegram/SourceFiles/tele/tele_folders.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4604685e1dd1ba83d31b85b81f278f3c9dde4fa3..3756f8337da3b9d799499c803ab21a5716f9e01e 100644
+index 643070c786044cf2c106784d8e8cd805e5a94460..812982d2595e1a4b1e9cb26d945617cdfa28c3cb 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2499,6 +2499,8 @@ PRIVATE
+@@ -2655,6 +2655,8 @@ PRIVATE
      tele/tele_deleted_section.h
      tele/tele_edit_history.cpp
      tele/tele_edit_history.h
@@ -55,7 +55,7 @@ index f85bc2d413b9486f4b54d538e9d1e79758818784..7eba8addc7a361eee5e5e806d6836d25
  		return _list[index].id();
  	}
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 4e716d2abd26b89b0b9c328518a45f0ff8d3c176..30db3e00e6dd95eda3cc86bde0ebc5abcc670cc6 100644
+index 70353e5a723f579e6639fe09b3c8fc96a8d2db21..a56ec4c629e8595c1c618467dfd34d32fdb7596f 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 @@ -95,6 +95,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -66,7 +66,7 @@ index 4e716d2abd26b89b0b9c328518a45f0ff8d3c176..30db3e00e6dd95eda3cc86bde0ebc5ab
  #include "tele/tele_updater.h"
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
-@@ -3045,8 +3046,7 @@ void Widget::escape() {
+@@ -3126,8 +3127,7 @@ void Widget::escape(CancelSearchOptions options) {
  		} else if (controller()->activeChatEntryCurrent().key) {
  			controller()->content()->dialogsCancelled();
  		} else if (controller()->isPrimary()) {
@@ -567,10 +567,10 @@ index 8e7505935ad27feb03e1d643e0f3b0e1a484257c..47629b8ab7064bdf8f2cc3aae163373b
  	_ignoreRefresh = true;
  	filters->saveOrder(order);
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 1ba4e91464ffb0d59916107e935c8ceac9d05dd7..c1a5818603c5c552c07895e7e3a9393109ce68d6 100644
+index b82712d4ac3a3e7b62c98601fd9c9b69fcebd2e9..5c5fa7002867090a035fb1993d91a5e95c620b9b 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -126,6 +126,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "settings/sections/settings_main.h"
  #include "settings/sections/settings_premium.h"
  #include "settings/sections/settings_privacy_security.h"
@@ -578,7 +578,7 @@ index 1ba4e91464ffb0d59916107e935c8ceac9d05dd7..c1a5818603c5c552c07895e7e3a93931
  #include "styles/style_chat_helpers.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -1699,6 +1700,7 @@ SessionController::SessionController(
+@@ -1852,6 +1853,7 @@ SessionController::SessionController(
  		checkOpenedFilter();
  		crl::on_main(this, processFiltersMenu);
  	}, lifetime());
@@ -586,7 +586,7 @@ index 1ba4e91464ffb0d59916107e935c8ceac9d05dd7..c1a5818603c5c552c07895e7e3a93931
  
  	session->data().itemIdChanged(
  	) | rpl::on_next([=](Data::Session::IdChange change) {
-@@ -4159,7 +4161,7 @@ bool CheckAndJumpToNearChatsFilter(
+@@ -4338,7 +4340,7 @@ bool CheckAndJumpToNearChatsFilter(
  		bool jump) {
  	const auto id = controller->activeChatsFilterCurrent();
  	const auto session = &controller->session();
@@ -595,7 +595,7 @@ index 1ba4e91464ffb0d59916107e935c8ceac9d05dd7..c1a5818603c5c552c07895e7e3a93931
  	const auto index = int(ranges::find(
  		*list,
  		id,
-@@ -4172,7 +4174,8 @@ bool CheckAndJumpToNearChatsFilter(
+@@ -4351,7 +4353,8 @@ bool CheckAndJumpToNearChatsFilter(
  	if (changed >= int(list->size()) || changed < 0) {
  		return false;
  	}

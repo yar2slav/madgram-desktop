@@ -19,10 +19,10 @@ Subject: [PATCH] feat: copy messages as markdown or html
  create mode 100644 Telegram/SourceFiles/tele/tele_copy_markdown.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1462fdf233d80ce3b6d3b9d6d3b32f51e7eacc26..e78f606ef381f69663a1fab848c464bdd6b30f50 100644
+index 5e73906d92e80c010b7b3c97b118ef4e6d39d21d..e6479b72ed5002199f46dee34244f0c5fb52dea9 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2525,6 +2525,8 @@ PRIVATE
+@@ -2681,6 +2681,8 @@ PRIVATE
      tele/tele_confirm_send.h
      tele/tele_communities.cpp
      tele/tele_communities.h
@@ -32,10 +32,10 @@ index 1462fdf233d80ce3b6d3b9d6d3b32f51e7eacc26..e78f606ef381f69663a1fab848c464bd
      tele/tele_corner_buttons.h
      tele/tele_counters.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 6dde07541280ac2a4bca78555f34f003fb5a8548..bc5274f1524f1983be03771e4673eb02d0f513f6 100644
+index cbb9cd2713efd818f45f09f45f9c94708591fb7a..83d6131da9b4018a555823e0e5308c45477e4c52 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -136,6 +136,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "dialogs/ui/dialogs_video_userpic.h"
  #include "tele/tele_bookmarks.h"
  #include "tele/tele_button_payload.h"
@@ -43,23 +43,23 @@ index 6dde07541280ac2a4bca78555f34f003fb5a8548..bc5274f1524f1983be03771e4673eb02
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
  #include "tele/tele_ghost.h"
-@@ -3432,6 +3433,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
- 						: tr::lng_context_copy_selected(tr::now)),
- 					[=] { copySelectedText(); },
+@@ -3478,6 +3479,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+ 						}
+ 					},
  					&st::menuIconCopy);
 +				Tele::AddCopyMarkupActions(_menu.get(), selectedText.rich);
  			}
  			if (item && !Ui::SkipTranslate(selectedText.rich)) {
  				const auto peer = item->history()->peer;
-@@ -3594,6 +3596,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
- 						: tr::lng_context_copy_selected(tr::now)),
- 					[=] { copySelectedText(); },
+@@ -3645,6 +3647,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+ 						}
+ 					},
  					&st::menuIconCopy);
 +				Tele::AddCopyMarkupActions(_menu.get(), selectedText.rich);
  			}
  			if (item && !Ui::SkipTranslate(selectedText.rich)) {
  				const auto peer = item->history()->peer;
-@@ -3699,6 +3702,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3751,6 +3754,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  							tr::lng_context_copy_text(tr::now),
  							[=] { copyContextText(itemId); },
  							&st::menuIconCopy);
@@ -68,10 +68,10 @@ index 6dde07541280ac2a4bca78555f34f003fb5a8548..bc5274f1524f1983be03771e4673eb02
  					if ((!item->translation() || !_history->translatedTo())
  						&& (view->hasVisibleText() || mediaHasTextForCopy)) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 4efb005785d60424e3492c07aa745429b090bfcb..e73d1b218da78e5d35953fedf49625a6b15fcd4b 100644
+index 56faedf11473509a8899913dec7c4820e5d56dfa..fef4994a294430264787a1db9aad0ac5d0ef70b6 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "tele/tele_bookmarks.h"
  #include "tele/tele_button_payload.h"
@@ -79,15 +79,15 @@ index 4efb005785d60424e3492c07aa745429b090bfcb..e73d1b218da78e5d35953fedf49625a6
  #include "tele/tele_custom_emoji.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_drafts_section.h"
-@@ -1840,6 +1841,7 @@ void FillContextMenuItems(
- 		result->addAction(text, [=] {
+@@ -1852,6 +1853,7 @@ void FillContextMenuItems(
  			list->copySelectedText();
+ 			list->clearSelected();
  		}, &st::menuIconCopy);
 +		Tele::AddCopyMarkupActions(result, list->getSelectedText().rich);
  	}
  	if (request.overSelection
  		&& view
-@@ -1917,6 +1919,7 @@ void FillContextMenuItems(
+@@ -1929,6 +1931,7 @@ void FillContextMenuItems(
  						}
  					}
  				}, &st::menuIconCopy);

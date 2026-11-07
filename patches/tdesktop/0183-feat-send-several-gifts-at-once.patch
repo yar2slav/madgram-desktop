@@ -17,10 +17,10 @@ Subject: [PATCH] feat: send several gifts at once
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_quantity.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ec6329cba9be91f489ec6dc92cecff38e672e91b..7e392e72a640de0de4f479598b6b21fdb894154f 100644
+index 8b559bda7141aedee30e2bb6d0df0d05f8ff39f6..99e364d7227dcf98f44e4a031be2d0eda7fad2b2 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2583,6 +2583,8 @@ PRIVATE
+@@ -2739,6 +2739,8 @@ PRIVATE
      tele/tele_full_preview.h
      tele/tele_gif_video.cpp
      tele/tele_gif_video.h

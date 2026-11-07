@@ -22,10 +22,10 @@ Subject: [PATCH] feat: hide or confirm call and voice chat buttons
  create mode 100644 Telegram/SourceFiles/tele/tele_calls.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index d40aa2d8c71bce7b0b8a816c368dd146215e8b63..b377cbd59d23b3052a6f9c3a61cd1c5896d998c1 100644
+index 5d6b675cd7bd6637d9b6a237318bfa3755f4671c..814c48139c0dfeb73c315f0a2acdb75f2c65e96b 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2499,6 +2499,8 @@ PRIVATE
+@@ -2655,6 +2655,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_calcmula.cpp
      tele/tele_calcmula.h
@@ -35,7 +35,7 @@ index d40aa2d8c71bce7b0b8a816c368dd146215e8b63..b377cbd59d23b3052a6f9c3a61cd1c58
      tele/tele_changelog.h
      tele/tele_crash.cpp
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 30db3e00e6dd95eda3cc86bde0ebc5abcc670cc6..4a637542ea0f7acb6e678d84bfdd6f157b3e19fa 100644
+index a56ec4c629e8595c1c618467dfd34d32fdb7596f..687c99ab3c9a1817634ab3f5218f0258bf078889 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 @@ -95,6 +95,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -46,7 +46,7 @@ index 30db3e00e6dd95eda3cc86bde0ebc5abcc670cc6..4a637542ea0f7acb6e678d84bfdd6f15
  #include "tele/tele_folders.h"
  #include "tele/tele_updater.h"
  #include "styles/style_dialogs.h"
-@@ -2499,7 +2500,9 @@ void Widget::refreshTopBars() {
+@@ -2576,7 +2577,9 @@ void Widget::refreshTopBars() {
  			_forumGroupCallBar->joinClicks()
  		) | rpl::on_next([=] {
  			if (peer->groupCall()) {
@@ -58,10 +58,10 @@ index 30db3e00e6dd95eda3cc86bde0ebc5abcc670cc6..4a637542ea0f7acb6e678d84bfdd6f15
  		}, _forumGroupCallBar->lifetime());
  
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index eda90f965fb0a9c6aa2c6f504ea09694551ef9c0..7d950c4f8becde249796904db255c9086f7623e5 100644
+index 11f82317952d90ccd8ebcefdcf4bb897cc4b76a8..5d53892862e2743f5d930e008a8f28efd8103bff 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -171,6 +171,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -174,6 +174,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "storage/file_upload.h"
  #include "storage/storage_folder_archive.h"
  #include "storage/storage_media_prepare.h"
@@ -69,7 +69,7 @@ index eda90f965fb0a9c6aa2c6f504ea09694551ef9c0..7d950c4f8becde249796904db255c908
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "media/audio/media_audio.h"
-@@ -9924,7 +9925,9 @@ void HistoryWidget::setupGroupCallBar() {
+@@ -10173,7 +10174,9 @@ void HistoryWidget::setupGroupCallBar() {
  	) | rpl::on_next([=] {
  		const auto peer = _history->peer;
  		if (peer->groupCall()) {
@@ -81,7 +81,7 @@ index eda90f965fb0a9c6aa2c6f504ea09694551ef9c0..7d950c4f8becde249796904db255c908
  	}, _groupCallBar->lifetime());
  
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_top_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_top_controls.cpp
-index ddd3324c45574586daf56dc8bf0462c4c9e79107..43a56238cf47774886d7d24abf858ca693cece30 100644
+index 6febf180586ce26916c0e0421a75e1e813353e8c..b0e37b74ccbecb28760db6b5893f5bedf697445c 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_top_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_top_controls.cpp
 @@ -36,6 +36,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -92,7 +92,7 @@ index ddd3324c45574586daf56dc8bf0462c4c9e79107..43a56238cf47774886d7d24abf858ca6
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "ui/chat/group_call_bar.h"
-@@ -493,7 +494,9 @@ void TopControls::setupGroupCallBar() {
+@@ -507,7 +508,9 @@ void TopControls::setupGroupCallBar() {
  		_groupCallBar->joinClicks()
  	) | rpl::on_next([=] {
  		if (const auto peer = _history->peer; peer->groupCall()) {
@@ -134,7 +134,7 @@ index 565f0d83799b6a693d048906a238d09655b4f034..a09fb575e84a44cb0b83965f85d4ae72
  
  } // namespace HistoryView
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 8370efaa6bf70c08b9547d763ac3f28f4fe2a18a..6cb499b61bbecb6e64a8e844b2ad6c82bb7ecc66 100644
+index 9377b9427bb9658703dcc5f039ba307d2d3c15cf..97a604743937c1ddfe22426089192d1b19d462ad 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 @@ -66,7 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -159,7 +159,7 @@ index 8370efaa6bf70c08b9547d763ac3f28f4fe2a18a..6cb499b61bbecb6e64a8e844b2ad6c82
  	_call->setAcceptBoth(true, true);
  	_call->addClickHandler([=](Qt::MouseButton button) {
  		if (button == Qt::RightButton) {
-@@ -259,7 +263,7 @@ TopBarWidget::TopBarWidget(
+@@ -260,7 +264,7 @@ TopBarWidget::TopBarWidget(
  		updateConnectingState();
  	}, lifetime());
  
@@ -168,7 +168,7 @@ index 8370efaa6bf70c08b9547d763ac3f28f4fe2a18a..6cb499b61bbecb6e64a8e844b2ad6c82
  	) | rpl::on_next([=] {
  		updateControlsVisibility();
  	}, lifetime());
-@@ -326,7 +330,9 @@ void TopBarWidget::groupCall() {
+@@ -327,7 +331,9 @@ void TopBarWidget::groupCall() {
  		if (HasGroupCallMenu(peer)) {
  			showGroupCallMenu(peer);
  		} else {
@@ -179,7 +179,7 @@ index 8370efaa6bf70c08b9547d763ac3f28f4fe2a18a..6cb499b61bbecb6e64a8e844b2ad6c82
  		}
  	}
  }
-@@ -1433,7 +1439,7 @@ void TopBarWidget::updateControlsVisibility() {
+@@ -1444,7 +1450,7 @@ void TopBarWidget::updateControlsVisibility() {
  	_call->setVisible(historyMode
  		&& callsEnabled
  		&& !_chooseForReportReason
@@ -188,7 +188,7 @@ index 8370efaa6bf70c08b9547d763ac3f28f4fe2a18a..6cb499b61bbecb6e64a8e844b2ad6c82
  	const auto groupCallsEnabled = [&] {
  		if (const auto peer = _activeChat.key.peer()) {
  			if (!peer->isUser() && peer->canManageGroupCall()) {
-@@ -1447,7 +1453,8 @@ void TopBarWidget::updateControlsVisibility() {
+@@ -1458,7 +1464,8 @@ void TopBarWidget::updateControlsVisibility() {
  	}();
  	_groupCall->setVisible(historyMode
  		&& groupCallsEnabled
@@ -199,7 +199,7 @@ index 8370efaa6bf70c08b9547d763ac3f28f4fe2a18a..6cb499b61bbecb6e64a8e844b2ad6c82
  	if (_membersShowArea) {
  		_membersShowArea->setVisible(!_chooseForReportReason);
 diff --git a/Telegram/SourceFiles/info/info_wrap_widget.cpp b/Telegram/SourceFiles/info/info_wrap_widget.cpp
-index 0a17f5a114d9d37fc40d9e759851b97b67620100..7b973cb8d64e84b3b5df3bb31c0a7fa3c2dec024 100644
+index 4a00a9a598ac4f55b1ef3c3efa37819bc7be4aef..c2ea2e186bfd0b8b8f7b24eb2cbc84d36835e276 100644
 --- a/Telegram/SourceFiles/info/info_wrap_widget.cpp
 +++ b/Telegram/SourceFiles/info/info_wrap_widget.cpp
 @@ -54,7 +54,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -211,7 +211,7 @@ index 0a17f5a114d9d37fc40d9e759851b97b67620100..7b973cb8d64e84b3b5df3bb31c0a7fa3
  #include "styles/style_chat.h" // popupMenuExpandedSeparator
  #include "styles/style_info.h"
  #include "styles/style_layers.h"
-@@ -604,7 +604,7 @@ void WrapWidget::addProfileCallsButton() {
+@@ -672,7 +672,7 @@ void WrapWidget::addProfileCallsButton() {
  	if (!user
  		|| user->sharedMediaInfo()
  		|| user->isInaccessible()
@@ -220,7 +220,7 @@ index 0a17f5a114d9d37fc40d9e759851b97b67620100..7b973cb8d64e84b3b5df3bb31c0a7fa3
  		return;
  	}
  
-@@ -623,7 +623,9 @@ void WrapWidget::addProfileCallsButton() {
+@@ -691,7 +691,9 @@ void WrapWidget::addProfileCallsButton() {
  					? st::infoLayerTopBarCall
  					: st::infoTopBarCall))
  		)->addClickHandler([=] {
@@ -232,10 +232,10 @@ index 0a17f5a114d9d37fc40d9e759851b97b67620100..7b973cb8d64e84b3b5df3bb31c0a7fa3
  	}, _topBar->lifetime());
  
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index 12bdf642ddef283b7ee1064c0a905f9ad04469c3..9fb079f6318b0a7819d27fdce53d96ab8ea59e8e 100644
+index 0d5474c0d5ac163cf4070cb512e52d94957b8b8e..da0cedb03f13ab8c9824de5a70579045a1b5dd65 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -103,6 +103,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "window/window_session_controller.h"
  #include "ui/toast/toast.h"
  #include "boxes/sticker_set_box.h"
@@ -243,7 +243,7 @@ index 12bdf642ddef283b7ee1064c0a905f9ad04469c3..9fb079f6318b0a7819d27fdce53d96ab
  #include "tele/tele_options.h"
  #include "styles/style_chat.h"
  #include "styles/style_info.h"
-@@ -555,6 +556,10 @@ TopBar::TopBar(
+@@ -563,6 +564,10 @@ TopBar::TopBar(
  		) | rpl::on_next([=] {
  			setupActions(controller);
  		}, lifetime());
@@ -254,7 +254,7 @@ index 12bdf642ddef283b7ee1064c0a905f9ad04469c3..9fb079f6318b0a7819d27fdce53d96ab
  	}
  	if (_source == Source::Community) {
  		Shortcuts::Requests(
-@@ -1134,13 +1139,15 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
+@@ -1156,13 +1161,15 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
  		&& !user->sharedMediaInfo()
  		&& !user->isInaccessible()
  		&& user->callsStatus() != UserData::CallsStatus::Disabled
@@ -272,7 +272,7 @@ index 12bdf642ddef283b7ee1064c0a905f9ad04469c3..9fb079f6318b0a7819d27fdce53d96ab
  		});
  		call->setAccessibleName(tr::lng_profile_action_short_call(tr::now));
  		buttons.push_back(call);
-@@ -1196,8 +1203,9 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
+@@ -1218,8 +1225,9 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
  	if (chechMax()) {
  		return;
  	}
@@ -284,7 +284,7 @@ index 12bdf642ddef283b7ee1064c0a905f9ad04469c3..9fb079f6318b0a7819d27fdce53d96ab
  		const auto broadcast = peer->isBroadcast();
  		const auto text = broadcast
  			? tr::lng_profile_action_short_live_stream(tr::now)
-@@ -1207,7 +1215,9 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
+@@ -1229,7 +1237,9 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
  			text,
  			st::infoProfileTopBarActionLiveStream);
  		liveStream->setClickedCallback([=] {

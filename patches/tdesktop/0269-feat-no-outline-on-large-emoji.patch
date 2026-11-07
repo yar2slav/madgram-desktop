@@ -18,10 +18,10 @@ Subject: [PATCH] feat: no outline on large emoji
  create mode 100644 Telegram/SourceFiles/tele/tele_emoji_outline.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 44a74c12e645c977c55c4f312755aadaa34d3fbe..98ae948ea729e3bab9fd0f5ad558bff1093147fd 100644
+index 7871e9fdbc04589c2d197887fd766bf608e7149d..2504ec3da49948097aec23939b1737d8fe86ef03 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2579,6 +2579,8 @@ PRIVATE
+@@ -2735,6 +2735,8 @@ PRIVATE
      tele/tele_editor_brush.h
      tele/tele_editor_eyedropper.cpp
      tele/tele_editor_eyedropper.h
@@ -31,7 +31,7 @@ index 44a74c12e645c977c55c4f312755aadaa34d3fbe..98ae948ea729e3bab9fd0f5ad558bff1
      tele/tele_emoji_panel.h
      tele/tele_export.cpp
 diff --git a/Telegram/SourceFiles/chat_helpers/stickers_emoji_image_loader.cpp b/Telegram/SourceFiles/chat_helpers/stickers_emoji_image_loader.cpp
-index b5f0b20f967c6153934ca6a6a659fd2b3f974139..3ca80539dbf12420df7b222e2821529f11ffd0af 100644
+index 74fdf75c08a05706e7c3b776f0b9bd114dcf5ca2..4084b6194ad551520995be58e94bbfa8b8122cdd 100644
 --- a/Telegram/SourceFiles/chat_helpers/stickers_emoji_image_loader.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/stickers_emoji_image_loader.cpp
 @@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

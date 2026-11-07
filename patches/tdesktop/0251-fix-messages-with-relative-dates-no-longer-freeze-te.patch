@@ -8,10 +8,10 @@ Subject: [PATCH] fix: messages with relative dates no longer freeze tele
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/data/data_session.cpp b/Telegram/SourceFiles/data/data_session.cpp
-index dd82011ab17ba5be8d8483023c7f328a852dc00e..d149434d68688d6e6fb44bbe8ac92bb6f4025f0c 100644
+index 87c279e9864960ef90fe411c063a1c65f8565542..cd96dd66002991c441a8dd466bb3b54ac4d95e16 100644
 --- a/Telegram/SourceFiles/data/data_session.cpp
 +++ b/Telegram/SourceFiles/data/data_session.cpp
-@@ -3328,11 +3328,15 @@ void Session::checkFormattedDateUpdates() {
+@@ -3338,11 +3338,15 @@ void Session::checkFormattedDateUpdates() {
  		expired.insert(expired.end(), list.begin(), list.end());
  		_formattedDateUpdates.erase(_formattedDateUpdates.begin());
  	}

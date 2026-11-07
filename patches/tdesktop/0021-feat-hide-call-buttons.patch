@@ -13,7 +13,7 @@ Subject: [PATCH] feat: hide call buttons
  6 files changed, 36 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 2b246572396c7d95c89c80ad51573931d055cdaa..8370efaa6bf70c08b9547d763ac3f28f4fe2a18a 100644
+index 3ce5d330893839ca6ed9b84f5cfdbf6622428b64..9377b9427bb9658703dcc5f039ba307d2d3c15cf 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 @@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -24,7 +24,7 @@ index 2b246572396c7d95c89c80ad51573931d055cdaa..8370efaa6bf70c08b9547d763ac3f28f
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
-@@ -258,6 +259,11 @@ TopBarWidget::TopBarWidget(
+@@ -259,6 +260,11 @@ TopBarWidget::TopBarWidget(
  		updateConnectingState();
  	}, lifetime());
  
@@ -36,7 +36,7 @@ index 2b246572396c7d95c89c80ad51573931d055cdaa..8370efaa6bf70c08b9547d763ac3f28f
  	setCursor(style::cur_pointer);
  	_call->setAccessibleName(tr::lng_profile_action_short_call(tr::now));
  	_groupCall->setAccessibleName(tr::lng_group_call_title(tr::now));
-@@ -1426,7 +1432,8 @@ void TopBarWidget::updateControlsVisibility() {
+@@ -1437,7 +1443,8 @@ void TopBarWidget::updateControlsVisibility() {
  	}();
  	_call->setVisible(historyMode
  		&& callsEnabled
@@ -47,7 +47,7 @@ index 2b246572396c7d95c89c80ad51573931d055cdaa..8370efaa6bf70c08b9547d763ac3f28f
  		if (const auto peer = _activeChat.key.peer()) {
  			if (!peer->isUser() && peer->canManageGroupCall()) {
 diff --git a/Telegram/SourceFiles/info/info_wrap_widget.cpp b/Telegram/SourceFiles/info/info_wrap_widget.cpp
-index 953e4b4fee46910d9e50b04926cc5639728c47b4..0a17f5a114d9d37fc40d9e759851b97b67620100 100644
+index 60d27d7ce2454d2d61199879cbeecb5c4ded341e..4a00a9a598ac4f55b1ef3c3efa37819bc7be4aef 100644
 --- a/Telegram/SourceFiles/info/info_wrap_widget.cpp
 +++ b/Telegram/SourceFiles/info/info_wrap_widget.cpp
 @@ -54,6 +54,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -58,7 +58,7 @@ index 953e4b4fee46910d9e50b04926cc5639728c47b4..0a17f5a114d9d37fc40d9e759851b97b
  #include "styles/style_chat.h" // popupMenuExpandedSeparator
  #include "styles/style_info.h"
  #include "styles/style_layers.h"
-@@ -600,7 +601,10 @@ void WrapWidget::addProfileCallsButton() {
+@@ -668,7 +669,10 @@ void WrapWidget::addProfileCallsButton() {
  
  	const auto peer = key().peer();
  	const auto user = peer ? peer->asUser() : nullptr;
@@ -71,10 +71,10 @@ index 953e4b4fee46910d9e50b04926cc5639728c47b4..0a17f5a114d9d37fc40d9e759851b97b
  	}
  
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index 1355b902f60313fa2ab91b5eef3c7a02dc78b31c..ed8fb09070c40052ddf925120b1c97d04f500c59 100644
+index 304a36fde5fd0bed9d4887469dcc0a2265cff7aa..463bb75921dc0cd2d55be0ffb16b44efadd71c50 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -103,6 +103,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "window/window_session_controller.h"
  #include "ui/toast/toast.h"
  #include "boxes/sticker_set_box.h"
@@ -82,7 +82,7 @@ index 1355b902f60313fa2ab91b5eef3c7a02dc78b31c..ed8fb09070c40052ddf925120b1c97d0
  #include "styles/style_chat.h"
  #include "styles/style_info.h"
  #include "styles/style_info_profile_top_bar.h"
-@@ -1127,7 +1128,8 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
+@@ -1149,7 +1150,8 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
  		&& user
  		&& !user->sharedMediaInfo()
  		&& !user->isInaccessible()

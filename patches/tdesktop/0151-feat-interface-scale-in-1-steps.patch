@@ -12,7 +12,7 @@ Subject: [PATCH] feat: interface scale in 1% steps
  5 files changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/settings/sections/settings_main.cpp b/Telegram/SourceFiles/settings/sections/settings_main.cpp
-index 93794d648979383b1e231dc3c8a8c1a649485551..f3114fd61ea6d3301e2f3be63d1ee73f5fe9c8ea 100644
+index 83abcc6b3b9b2b0037fb92461651b2e6b9e1eaeb..7bdbb32993d422f5a6e41868fd11b4c98099eec9 100644
 --- a/Telegram/SourceFiles/settings/sections/settings_main.cpp
 +++ b/Telegram/SourceFiles/settings/sections/settings_main.cpp
 @@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -23,7 +23,7 @@ index 93794d648979383b1e231dc3c8a8c1a649485551..f3114fd61ea6d3301e2f3be63d1ee73f
  
  #include "api/api_cloud_password.h"
  #include "api/api_credits.h"
-@@ -1095,7 +1096,7 @@ void SetupInterfaceScale(
+@@ -1094,7 +1095,7 @@ void SetupInterfaceScale(
  	const auto scaleMin = style::kScaleMin;
  	const auto scaleMax = style::MaxScaleForRatio(ratio);
  	const auto scaleConfig = cConfigScale();

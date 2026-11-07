@@ -15,7 +15,7 @@ Subject: [PATCH] feat: choose what shots show
  8 files changed, 381 insertions(+), 69 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index c26d83bb67a30125893f1e141f6008361bf8cad2..79635e1c3628f7c470052cdb0b5cb8655348178b 100644
+index aef115b9bb8fec693397975b46e714f45e5d517d..306bb9c95251ccb31c79ca2c68dc99c9bf222f04 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
 @@ -90,6 +90,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -23,10 +23,10 @@ index c26d83bb67a30125893f1e141f6008361bf8cad2..79635e1c3628f7c470052cdb0b5cb865
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
 +#include "tele/tele_shot.h"
+ #include "tgw/tgw_media.h"
  
  #include "styles/style_chat.h"
- #include "styles/style_credits.h"
-@@ -1536,7 +1537,9 @@ void HistoryItem::updateStoryMentionText() {
+@@ -1578,7 +1579,9 @@ void HistoryItem::updateStoryMentionText() {
  }
  
  HistoryMessageReplyMarkup *HistoryItem::inlineReplyMarkup() {
@@ -38,7 +38,7 @@ index c26d83bb67a30125893f1e141f6008361bf8cad2..79635e1c3628f7c470052cdb0b5cb865
  			return markup;
  		}
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index 8ed73b8630020d4a1eb782067e09b2b9bfa07708..e0ac2b2a7b1563733bc9c26dbb216cc7d4a107f1 100644
+index 42e4eb24dfae6a15302227284e6d1b5fd48f5e99..2805e52912789fc4d04e5cf7b14422ce94c2dbbe 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -1599,7 +1599,7 @@ bool Element::hidesBottomInfo() const {
@@ -62,7 +62,7 @@ index 8ed73b8630020d4a1eb782067e09b2b9bfa07708..e0ac2b2a7b1563733bc9c26dbb216cc7
  	} else if (item->Has<HistoryServiceGramTransfer>()) {
  		_media = CreateGramTransferMedia(this, replacing);
  	} else if (item->showSimilarChannels()) {
-@@ -2979,7 +2982,8 @@ void Element::refreshReactions() {
+@@ -2995,7 +2998,8 @@ void Element::refreshReactions() {
  	using namespace Reactions;
  	auto reactionsData = InlineListDataFromMessage(this);
  	if (reactionsData.reactions.empty()
@@ -73,10 +73,10 @@ index 8ed73b8630020d4a1eb782067e09b2b9bfa07708..e0ac2b2a7b1563733bc9c26dbb216cc7
  		return;
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 2286f0031387d685981d13eae026f509a3eca3e6..a824bf7a1a05b4120deda15e477005adaec16526 100644
+index 8c0a9e0342906038582aff7fbfffe823e4e58f76..16783ab495ba9851e9c86d0a87e91608b01d4935 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -3868,7 +3868,7 @@ void Message::unloadHeavyPart() {
+@@ -3877,7 +3877,7 @@ void Message::unloadHeavyPart() {
  }
  
  bool Message::hasFromPhoto() const {
@@ -85,7 +85,7 @@ index 2286f0031387d685981d13eae026f509a3eca3e6..a824bf7a1a05b4120deda15e477005ad
  		return false;
  	}
  	switch (context()) {
-@@ -5870,13 +5870,19 @@ bool Message::hasFromName() const {
+@@ -5834,13 +5834,19 @@ bool Message::hasFromName() const {
  }
  
  bool Message::displayFromName() const {

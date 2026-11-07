@@ -18,10 +18,10 @@ Subject: [PATCH] feat: keep the edit history of messages
  create mode 100644 Telegram/SourceFiles/tele/tele_edit_history.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index cfbd8d685437555baebafee8c64ae175200a4cba..fcad34810b1d5b367d1eef6906d318d7267dd505 100644
+index 01fb63ca962e1e0dd359944e62d1ca126a951708..d51a629616f1351c01b15c843c410d7a5a38966f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2493,6 +2493,8 @@ PRIVATE
+@@ -2649,6 +2649,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -31,10 +31,10 @@ index cfbd8d685437555baebafee8c64ae175200a4cba..fcad34810b1d5b367d1eef6906d318d7
      tele/tele_gifts.h
      tele/tele_ignored.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index dd11a7df62750166f84047cd1bed5072dc0ef136..5f4d18f7e4a13329c60af57779b11af9504f5067 100644
+index c0deb139d88e3394abb72b372a69c78622898e7f..7d172b4ffcbb538f619cb9f071e58bed8704af05 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_histories.h"
  #include "data/data_changes.h"
  #include "dialogs/ui/dialogs_video_userpic.h"
@@ -42,7 +42,7 @@ index dd11a7df62750166f84047cd1bed5072dc0ef136..5f4d18f7e4a13329c60af57779b11af9
  #include "tele/tele_ignored.h"
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
-@@ -3046,6 +3047,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3087,6 +3088,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  				}
  			}, &st::menuIconEdit);
  		}
@@ -54,7 +54,7 @@ index dd11a7df62750166f84047cd1bed5072dc0ef136..5f4d18f7e4a13329c60af57779b11af9
  			const auto text = item->factcheckText();
  			const auto phrase = text.empty()
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index b753d3ea7bd5fde15cdad206d17ab3eee6d68cab..0466ddc1fbac0339a25c731a77233e24a9abf3bd 100644
+index 823e058643afba90210f9661342789d1fc649e50..d44898dc6aeb2e356cc2a9c1ce216f5d60521f65 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
 @@ -87,6 +87,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -62,30 +62,30 @@ index b753d3ea7bd5fde15cdad206d17ab3eee6d68cab..0466ddc1fbac0339a25c731a77233e24
  #include "platform/platform_notifications_manager.h"
  #include "spellcheck/spellcheck_highlight_syntax.h"
 +#include "tele/tele_edit_history.h"
+ #include "tgw/tgw_media.h"
  
  #include "styles/style_chat.h"
- #include "styles/style_credits.h"
-@@ -2383,6 +2384,7 @@ void HistoryItem::clearMainView() {
- 
- void HistoryItem::applyEdition(HistoryMessageEdition &&edition) {
+@@ -2445,6 +2446,7 @@ void HistoryItem::applyEdition(HistoryMessageEdition &&edition) {
+ 		return;
+ 	}
  	history()->session().ephemeralMessages().revertAnchored(this);
 +	const auto teleEdit = Tele::EditCapture(this);
  
  	int keyboardTop = -1;
  	//if (!pendingResize()) {// #TODO edit bot message
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 40bebfea33ac5f1c7ea67f0da8ce8861e79a95e9..1fc9802f47f3afddc25673558ce4f4733f153818 100644
+index 5e6d2e171a1ffe065dd68b83b309d5b95935659b..51b8e2cbed48a74a7bf00e2ce5c8b481e97bb722 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "media/player/media_player_instance.h"
- #include "spellcheck/spellcheck_types.h"
+@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tgw/tgw_log_box.h"
+ #include "tgw/tgw_selection.h"
  #include "apiwrap.h"
 +#include "tele/tele_edit_history.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_layers.h"
-@@ -1394,6 +1395,7 @@ void AddTopMessageActions(
+@@ -1388,6 +1389,7 @@ void AddTopMessageActions(
  	AddGoToMessageAction(menu, request, list);
  	AddViewRepliesAction(menu, request, list);
  	AddEditMessageAction(menu, request, list);

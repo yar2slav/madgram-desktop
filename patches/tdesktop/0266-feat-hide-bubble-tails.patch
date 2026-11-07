@@ -17,10 +17,10 @@ Subject: [PATCH] feat: hide bubble tails
  10 files changed, 58 insertions(+), 7 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 8561423e3ab31cd6b372207cf49c805de3fa3c19..a138f53c18041f7951679d72c35d8de952004b56 100644
+index 8eae6e95edc19cdf6b4ef2e5758fd875ca943a78..ef78ce3117132317b9ade942ce659a877e009939 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -6691,7 +6691,8 @@ Ui::BubbleRounding Message::countMessageRounding() const {
+@@ -6655,7 +6655,8 @@ Ui::BubbleRounding Message::countMessageRounding() const {
  		|| (rich && richMediaAtBottom())
  		|| (keyboard != nullptr)
  		|| item->isFakeAboutView()
@@ -225,7 +225,7 @@ index 56a7386cb666bac9412bdfafc9e9a2f02e20598e..bb80debe10aa6df760550dc7e3653dda
  		= Ui::PrepareCornerPixmaps(radius, _msgShadow.color()).p[3];
  }
 diff --git a/Telegram/SourceFiles/window/themes/window_theme_preview.cpp b/Telegram/SourceFiles/window/themes/window_theme_preview.cpp
-index df6755bfa0515414fef2e091f4a4622aade42a79..4614f3600697397013e29e41f134f425c7e79a3e 100644
+index e6e36389bf06ce4f812610d6819a1bf2854843ad..97d0a0252814eb3b6a7c744b654bd843c59023bf 100644
 --- a/Telegram/SourceFiles/window/themes/window_theme_preview.cpp
 +++ b/Telegram/SourceFiles/window/themes/window_theme_preview.cpp
 @@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -236,7 +236,7 @@ index df6755bfa0515414fef2e091f4a4622aade42a79..4614f3600697397013e29e41f134f425
  #include "styles/style_media_view.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
-@@ -870,7 +871,7 @@ void Generator::paintBubble(const Bubble &bubble) {
+@@ -878,7 +879,7 @@ void Generator::paintBubble(const Bubble &bubble) {
  		}
  		if (bubble.attachToBottom) {
  			rounding.bottomRight = Corner::Small;
@@ -245,7 +245,7 @@ index df6755bfa0515414fef2e091f4a4622aade42a79..4614f3600697397013e29e41f134f425
  			rounding.bottomRight = Corner::Tail;
  		}
  	} else {
-@@ -879,7 +880,7 @@ void Generator::paintBubble(const Bubble &bubble) {
+@@ -887,7 +888,7 @@ void Generator::paintBubble(const Bubble &bubble) {
  		}
  		if (bubble.attachToBottom) {
  			rounding.bottomLeft = Corner::Small;

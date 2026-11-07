@@ -20,10 +20,10 @@ Subject: [PATCH] feat: clean tracking parameters from links
  create mode 100644 Telegram/SourceFiles/tele/tele_links.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 2e5fa14ce0a54fe6ae50da304096a9c0288c4553..674aecbc123568e6a3c631fd48e37c9e9869a8d0 100644
+index aafe46490419139ccbd1ece4f195c115955e7e9a..08df45b19adadf44e252aa7d0ea06eef776a79a1 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2523,6 +2523,8 @@ PRIVATE
+@@ -2679,6 +2679,8 @@ PRIVATE
      tele/tele_message_menu.h
      tele/tele_jump_to_first.cpp
      tele/tele_jump_to_first.h
@@ -33,10 +33,10 @@ index 2e5fa14ce0a54fe6ae50da304096a9c0288c4553..674aecbc123568e6a3c631fd48e37c9e
      tele/tele_options.h
      tele/tele_peer_id.cpp
 diff --git a/Telegram/SourceFiles/api/api_sending.cpp b/Telegram/SourceFiles/api/api_sending.cpp
-index 38ce94efec594427baf02b37c18fc27624a4e214..de2267135ca96df78a7da2fe66c7cf4a324547a9 100644
+index 460a81edc5c2dce50c47750fe5d991f5f4532b3a..509995fe5a8bf515ca5801f87d01ff98b1daf87e 100644
 --- a/Telegram/SourceFiles/api/api_sending.cpp
 +++ b/Telegram/SourceFiles/api/api_sending.cpp
-@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_calcmula.h"
@@ -44,7 +44,7 @@ index 38ce94efec594427baf02b37c18fc27624a4e214..de2267135ca96df78a7da2fe66c7cf4a
  
  namespace Api {
  namespace {
-@@ -257,6 +258,7 @@ void SendExistingMedia(
+@@ -271,6 +272,7 @@ void SendExistingMedia(
  		TextUtilities::ConvertTextTagsToEntities(message.textWithTags.tags)
  	};
  	TextUtilities::Trim(caption);
@@ -52,7 +52,7 @@ index 38ce94efec594427baf02b37c18fc27624a4e214..de2267135ca96df78a7da2fe66c7cf4a
  	auto sentEntities = EntitiesToMTP(
  		session,
  		caption.entities,
-@@ -750,6 +752,7 @@ void SendMusicSelection(
+@@ -741,6 +743,7 @@ void SendMusicSelection(
  		TextUtilities::ConvertTextTagsToEntities(message.textWithTags.tags)
  	};
  	TextUtilities::Trim(caption);
@@ -60,7 +60,7 @@ index 38ce94efec594427baf02b37c18fc27624a4e214..de2267135ca96df78a7da2fe66c7cf4a
  
  	const auto api = &message.action.history->session().api();
  
-@@ -1191,6 +1194,9 @@ struct ConfirmedLocalFile {
+@@ -1223,6 +1226,9 @@ struct ConfirmedLocalFile {
  	action.replaceMediaOf = file->to.replaceMediaOf;
  
  	auto caption = PrepareConfirmedFileCaption(history, session, file);
@@ -71,7 +71,7 @@ index 38ce94efec594427baf02b37c18fc27624a4e214..de2267135ca96df78a7da2fe66c7cf4a
  		session,
  		action,
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index bfe792e482c7228e638b23549bee5457e12db22c..07fe89ed6a7d3f7b0d0aaa025896fb775fe518ee 100644
+index bac24da82c8b247420bcff4a1e505e979fab0406..6a1568b6ba5b83ee2f389aa9bb54290647ec4c5e 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -79,10 +79,10 @@ index bfe792e482c7228e638b23549bee5457e12db22c..07fe89ed6a7d3f7b0d0aaa025896fb77
  #include "tele/tele_ghost.h"
  #include "tele/tele_calcmula.h"
 +#include "tele/tele_links.h"
+ #include "tgw/tgw_storage.h"
  
  namespace {
- 
-@@ -4825,6 +4826,7 @@ void ApiWrap::sendMessage(
+@@ -4817,6 +4818,7 @@ void ApiWrap::sendMessage(
  		history,
  		_session->user()).flags;
  	TextUtilities::PrepareForSending(left, prepareFlags);
@@ -91,10 +91,10 @@ index bfe792e482c7228e638b23549bee5457e12db22c..07fe89ed6a7d3f7b0d0aaa025896fb77
  	HistoryItem *lastMessage = nullptr;
  
 diff --git a/Telegram/SourceFiles/core/click_handler_types.cpp b/Telegram/SourceFiles/core/click_handler_types.cpp
-index 50881b2f7ea4998e40386e07b7d242804f38fc41..ed8dda8920929406ac5debcec5dda59c9f156303 100644
+index e3afff4949c820979ea3bb3abe5cfc7cc156d0ca..8f1d0908af1863774dbfc7c850a76a1559fd2268 100644
 --- a/Telegram/SourceFiles/core/click_handler_types.cpp
 +++ b/Telegram/SourceFiles/core/click_handler_types.cpp
-@@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -36,6 +36,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_session.h"
  #include "window/window_controller.h"
  #include "window/window_session_controller.h"
@@ -102,7 +102,7 @@ index 50881b2f7ea4998e40386e07b7d242804f38fc41..ed8dda8920929406ac5debcec5dda59c
  #include "tele/tele_options.h"
  #include "window/window_session_controller_link_info.h"
  #include "apiwrap.h"
-@@ -471,6 +472,7 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
+@@ -511,6 +512,7 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
  		url = external;
  	}
  	url = Core::TryConvertUrlToLocal(url);
@@ -111,7 +111,7 @@ index 50881b2f7ea4998e40386e07b7d242804f38fc41..ed8dda8920929406ac5debcec5dda59c
  		return;
  	}
 diff --git a/Telegram/SourceFiles/core/ui_integration.cpp b/Telegram/SourceFiles/core/ui_integration.cpp
-index 5e247cfbc4b2347c2073aed57010fda4d77bc289..c97f808fea9b05c8090cace43f83c414f3a360a8 100644
+index 5708b55270a4745e97a1f4d66d8c49447a7c5eaf..834ec54e68dd65e2e97f6dd0948ffbee2c8bc573 100644
 --- a/Telegram/SourceFiles/core/ui_integration.cpp
 +++ b/Telegram/SourceFiles/core/ui_integration.cpp
 @@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -122,7 +122,7 @@ index 5e247cfbc4b2347c2073aed57010fda4d77bc289..c97f808fea9b05c8090cace43f83c414
  #include "styles/style_chat_helpers.h"
  
  #include <QtCore/QDateTime>
-@@ -420,7 +421,7 @@ bool UiIntegration::handleUrlClick(
+@@ -463,7 +464,7 @@ bool UiIntegration::handleUrlClick(
  	// unless the url itself was given to us by the server for this login.
  	const auto url = context.value<ClickHandlerContext>().keepWebAuthTokens
  		? original

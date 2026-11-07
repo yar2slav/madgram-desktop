@@ -10,7 +10,7 @@ Subject: [PATCH] fix: late-sent messages show their real sent time
  3 files changed, 32 insertions(+)
 
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index 12d78fa6fe5403e56db2c5855b08d4a986ffe902..92e93c8627b4dcdc00eb2fb06300845b543a5163 100644
+index af994db2dbc34a31420700e60118524c8ab03ee5..00b811b2abd399423113ce4fd49a7818d3c04ef6 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
 @@ -90,6 +90,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -19,9 +19,9 @@ index 12d78fa6fe5403e56db2c5855b08d4a986ffe902..92e93c8627b4dcdc00eb2fb06300845b
  #include "tele/tele_edit_history.h"
 +#include "tele/tele_send_order.h"
  #include "tele/tele_shot.h"
+ #include "tgw/tgw_media.h"
  
- #include "styles/style_chat.h"
-@@ -2832,6 +2833,7 @@ void HistoryItem::applySentMessage(const MTPDmessage &data) {
+@@ -2904,6 +2905,7 @@ void HistoryItem::applySentMessage(const MTPDmessage &data) {
  	}
  	setPostAuthor(data.vpost_author().value_or_empty());
  	contributeToSlowmode(data.vdate().v);
@@ -29,7 +29,7 @@ index 12d78fa6fe5403e56db2c5855b08d4a986ffe902..92e93c8627b4dcdc00eb2fb06300845b
  	if (isRegular() && wasTypes) {
  		// addToSharedMediaIndex() below writes the message's current
  		// (key, mask); this is its inverse. A type the message keeps at
-@@ -2904,6 +2906,7 @@ void HistoryItem::applySentMessage(
+@@ -2982,6 +2984,7 @@ void HistoryItem::applySentMessage(
  			? existingRichPage->fullPage
  			: nullptr);
  	contributeToSlowmode(data.vdate().v);

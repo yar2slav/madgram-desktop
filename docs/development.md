@@ -50,7 +50,6 @@ follow upstream's build doc for your platform, starting from the "prepare librar
 - to test crash reports, add `-D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF`, like ci.
 - the binary is called `tele`: `out/Debug/tele.exe` on windows, `out/Debug/tele.app` on macos, `out/Debug/tele` on linux (or `Release`). an old `Telegram.exe` in `out` is from a build before the rename.
 - after moving tdesktop to another tag, run upstream's prepare script again: each tag's `Telegram/build/prepare/prepare.py` can pin other library versions. tele's own patches change it too (money's wallet engine comes from gettele/money), so also run it after a `tele.py checkout` that brings a new `prepare.py`. on windows `win.bat skip-release silent wallet-engine tdesktop_rust` redoes only the wallet stages.
-- the first configure downloads litehtml for html bubbles, so it needs network once.
 
 ### windows
 

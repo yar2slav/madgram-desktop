@@ -2697,7 +2697,7 @@ index 0cb04b7cdd915dbb70efe36850117f6c2659190d..41a80d836a38aeb9608ebd5a5955f349
  			]
  		}
 diff --git a/Telegram/SourceFiles/history/history_item_components.cpp b/Telegram/SourceFiles/history/history_item_components.cpp
-index 219b4a47717a3527af5bc86941bd9333ee7ed106..68dfaf559ad57be9fa099c6dd961a3cf15c518e7 100644
+index 1d296ca713c079f98d3debc50cca4e4b1df41f62..edc1c5972c2c4040da38dcf337b359a5c2c4a840 100644
 --- a/Telegram/SourceFiles/history/history_item_components.cpp
 +++ b/Telegram/SourceFiles/history/history_item_components.cpp
 @@ -6,6 +6,7 @@ For license and copyright information please follow this link:
@@ -2755,7 +2755,7 @@ index 1174c2b9020a222340616de7623322b20a87a083..eb112c10b33c9d66643377aa249ea348
  	[[nodiscard]] bool forwardOfForward() const {
  		return savedFromSender || savedFromHiddenSenderInfo;
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index a138f53c18041f7951679d72c35d8de952004b56..7a25c9626950d5f44ea9317561c6cf854733871f 100644
+index ef78ce3117132317b9ade942ce659a877e009939..e6f70499589b82fa365bc6efc6ca57c272a0828e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
 @@ -1391,6 +1391,11 @@ QRect Message::effectIconGeometry() const {
@@ -2770,7 +2770,7 @@ index a138f53c18041f7951679d72c35d8de952004b56..7a25c9626950d5f44ea9317561c6cf85
  
  	const auto replyData = item->Get<HistoryMessageReply>();
  	const auto &summary = item->summaryEntry();
-@@ -2323,6 +2328,18 @@ void Message::draw(Painter &p, const PaintContext &context) const {
+@@ -2326,6 +2331,18 @@ void Message::draw(Painter &p, const PaintContext &context) const {
  			}
  		}
  	}
@@ -2790,10 +2790,10 @@ index a138f53c18041f7951679d72c35d8de952004b56..7a25c9626950d5f44ea9317561c6cf85
  		p.translate(-gestureShift, 0);
  		if (context.reactionInfo && context.reactionInfo->effectPaint) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.h b/Telegram/SourceFiles/history/view/history_view_message.h
-index eb44f213890018f6ed67d3f522cac0e0dd3ec04f..b7d891f73ab2ac8565561738b262cc86d1e1515d 100644
+index f6d5c5ec72c25e92f84f5fe5884b801ab94a8263..b189be8de9ffacb07fc56a4c7b612d5f5966eea4 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.h
 +++ b/Telegram/SourceFiles/history/view/history_view_message.h
-@@ -547,6 +547,7 @@ private:
+@@ -552,6 +552,7 @@ private:
  	mutable Ui::Text::String _fromName;
  	mutable std::unique_ptr<FromNameStatus> _fromNameStatus;
  	mutable uint64 _fromNameBadges = 0;

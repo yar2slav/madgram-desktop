@@ -14,10 +14,10 @@ Subject: [PATCH] fix: who reacted list matches the reaction count
  create mode 100644 Telegram/SourceFiles/tele/tele_who_reacted.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b5e52beaccf17f1b593c472f85ac287e017bcdbe..ec6329cba9be91f489ec6dc92cecff38e672e91b 100644
+index 7532abcb7039e456d4dc99d2c0690fea106a16d0..8b559bda7141aedee30e2bb6d0df0d05f8ff39f6 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2732,6 +2732,8 @@ PRIVATE
+@@ -2888,6 +2888,8 @@ PRIVATE
      tele/tele_view_tl_window.h
      tele/tele_voice_fade.cpp
      tele/tele_voice_fade.h
@@ -97,7 +97,7 @@ index 6c8c4ad8df8e580706167c38e7807db9de7d9267..1c2c5eb471ba533c3a95788e61aba7d1
  			}
  		}, lifetime);
 diff --git a/Telegram/SourceFiles/data/data_message_reactions.cpp b/Telegram/SourceFiles/data/data_message_reactions.cpp
-index 42fc948a584bc05c72a59bb0794ac7f224d000d6..bd65570cecf33ae0ee752c554cc35f8b26afa474 100644
+index 09dde131b8addb3c0146669c661a1278344e9be4..5f1328451c1e443f351a01d08aefb905966ed7fb 100644
 --- a/Telegram/SourceFiles/data/data_message_reactions.cpp
 +++ b/Telegram/SourceFiles/data/data_message_reactions.cpp
 @@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -108,7 +108,7 @@ index 42fc948a584bc05c72a59bb0794ac7f224d000d6..bd65570cecf33ae0ee752c554cc35f8b
  #include "styles/style_chat.h"
  
  #include "base/random.h"
-@@ -1523,8 +1524,10 @@ void Reactions::send(not_null<HistoryItem*> item, bool addToRecent) {
+@@ -1505,8 +1506,10 @@ void Reactions::send(not_null<HistoryItem*> item, bool addToRecent) {
  	)).done([=](const MTPUpdates &result) {
  		_sentRequests.remove(id);
  		_owner->session().api().applyUpdates(result);

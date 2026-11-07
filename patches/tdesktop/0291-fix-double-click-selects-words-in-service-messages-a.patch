@@ -11,10 +11,10 @@ Subject: [PATCH] fix: double-click selects words in service messages and
  3 files changed, 34 insertions(+), 5 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index b638c4593ab99a44a85a6f50e09b229aa4e10ad8..490ef0ba9afcb1056c4accdcbaa8a74a9654e2ca 100644
+index 96a0fcab02c06282bcd7b84e7e9788eb477babc4..7e6126408cc0900d9b218b1032e99838f1c09e60 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
-@@ -3276,11 +3276,15 @@ MessageSelection Element::selectionFromStates(
+@@ -3292,11 +3292,15 @@ MessageSelection Element::selectionFromStates(
  		|| current.selectionCursor.isRichPage()) {
  		return {};
  	}
@@ -69,10 +69,10 @@ index 3e2af3a74b28fa52ec8979d7cf3b9462860fd40d..4c8401abb466afadafb05bf5bde2bcf7
  	auto offset = uint16(0);
  	auto firstFrom = std::optional<uint16>();
 diff --git a/Telegram/SourceFiles/wallet/wallet_content.cpp b/Telegram/SourceFiles/wallet/wallet_content.cpp
-index 9279215d903f0ca50d05cfc5bb7b16ab25a982b2..f069df1d57512b408d7a42c9d79eecad2033c8c0 100644
+index 553cf2f5c23504954705404132076db77f7d72b3..ea95e5ad61267591dabc474b749c1b9fb43166af 100644
 --- a/Telegram/SourceFiles/wallet/wallet_content.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_content.cpp
-@@ -3828,6 +3828,9 @@ void AddDetailsComment(
+@@ -3847,6 +3847,9 @@ void AddDetailsComment(
  			item,
  			std::move(originCurrent)))
  		: object_ptr<Ui::FlatLabel>(layout, comment, st::walletCommentLabel);

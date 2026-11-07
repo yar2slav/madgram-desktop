@@ -8,7 +8,7 @@ Subject: [PATCH] fix: stop the chat list repainting while idle
  1 file changed, 18 insertions(+), 15 deletions(-)
 
 diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
-index 3a6a441e897e8128a79a6d52ce0443cd91c1ff3d..a82057470250ef0a27068b544cc033f63ebbc1ca 100644
+index 245397d3a463ce38840383de7fa71c6709f0d9a7..811a3765fd940e38aaca28e8e450afba1c42cea1 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.cpp
 +++ b/Telegram/SourceFiles/ui/unread_badge.cpp
 @@ -46,6 +46,7 @@ private:
@@ -62,7 +62,7 @@ index 3a6a441e897e8128a79a6d52ce0443cd91c1ff3d..a82057470250ef0a27068b544cc033f6
  	const auto skip = (_outerSize - _innerSize) / 2;
  	auto hq = PainterHighQualityEnabler(p);
  	p.drawImage(
-@@ -471,7 +475,6 @@ int PeerBadge::drawVerified(
+@@ -472,7 +476,6 @@ int PeerBadge::drawVerified(
  			.textColor = st.color->c,
  			.now = crl::now(),
  			.position = position + st.position,

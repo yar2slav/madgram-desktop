@@ -16,10 +16,10 @@ Subject: [PATCH] fix: deletions that fail on the server come back
  create mode 100644 Telegram/SourceFiles/tele/tele_delete_fail.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a535838c0c0dbf27e372bbb1e3a70db80825f713..699c4b4bc468ff1ac4413d998388632d59477b32 100644
+index ed7f01d4b5bd1f24d752a142c3e6efbfdb7348cc..3522aa72186a82ce5e6347f35dc521a9c8518066 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2561,6 +2561,8 @@ PRIVATE
+@@ -2717,6 +2717,8 @@ PRIVATE
      tele/tele_drafts_rich.h
      tele/tele_drafts_section.cpp
      tele/tele_drafts_section.h
@@ -29,7 +29,7 @@ index a535838c0c0dbf27e372bbb1e3a70db80825f713..699c4b4bc468ff1ac4413d998388632d
      tele/tele_deleted.h
      tele/tele_deleted_reply.cpp
 diff --git a/Telegram/SourceFiles/data/data_histories.cpp b/Telegram/SourceFiles/data/data_histories.cpp
-index f2634549c37b55e9040ca881bec62313699cdba8..6214ea81e5f673b747f9113ec999eca5990aa806 100644
+index 1e518e38c585aa7be24cc24a22c286502a06c03f..fb6819fee7ecec42137564d2750e059ec9c4b0fd 100644
 --- a/Telegram/SourceFiles/data/data_histories.cpp
 +++ b/Telegram/SourceFiles/data/data_histories.cpp
 @@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

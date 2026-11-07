@@ -26,10 +26,10 @@ Subject: [PATCH] feat: unsorted folder
  create mode 100644 Telegram/SourceFiles/tele/tele_unsorted_folder.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b284c01a7c4784d950c401ddc696216fd1cdbb01..7dfaaad8e8a296e0596138790f1834910783971d 100644
+index 6c407fbb9a0765522e2524c276e0a4dd5784e713..81e81edd73394c3086dfa1c0292af6b95449407a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2691,6 +2691,8 @@ PRIVATE
+@@ -2847,6 +2847,8 @@ PRIVATE
      tele/tele_title_template.h
      tele/tele_translate_out.cpp
      tele/tele_translate_out.h
@@ -39,7 +39,7 @@ index b284c01a7c4784d950c401ddc696216fd1cdbb01..7dfaaad8e8a296e0596138790f183491
      tele/tele_updater.h
      tele/tele_uploads.h
 diff --git a/Telegram/SourceFiles/boxes/choose_filter_box.cpp b/Telegram/SourceFiles/boxes/choose_filter_box.cpp
-index 24f01cf53cd56a0f6476132ec016563ef62c901e..4cad85b25d2f8c61dc8f7dc18da7d966df04eb37 100644
+index 9a0525fbcb2a5f2fac2a0ae3bda6e579f090ff04..fac3ddfa7eaabae83903934c0467c656ee531aaf 100644
 --- a/Telegram/SourceFiles/boxes/choose_filter_box.cpp
 +++ b/Telegram/SourceFiles/boxes/choose_filter_box.cpp
 @@ -34,6 +34,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -136,10 +136,10 @@ index 294e6eaeec48901b977d75a4efc5f2af0e12ebd3..2a8ff52576354c20079eccf8b76cb681
  		const auto peer = history->peer;
  		if (const auto user = peer->asUser()) {
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 4e018ea12908dce3d78682e31325791c08c37125..6ed66685ab7aa07bcb3b168f1932717453425271 100644
+index 53c4562fb7b3ac0b6f5754e4901e76481df8ae0b..3ee3c198355c8e8f047b4c620ac6f550dde06b37 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -91,6 +91,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -100,6 +100,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_list_previews.h"
  #include "tele/tele_local_pins.h"
  #include "tele/tele_options.h"
@@ -147,7 +147,7 @@ index 4e018ea12908dce3d78682e31325791c08c37125..6ed66685ab7aa07bcb3b168f19327174
  #include "tele/tele_username_aliases.h"
  #include "api/api_chat_filters.h"
  #include "base/qt/qt_common_adapters.h"
-@@ -5150,7 +5151,8 @@ void InnerWidget::refreshEmpty() {
+@@ -5276,7 +5277,8 @@ void InnerWidget::refreshEmpty() {
  		: tr::lng_contacts_loading();
  	auto link = (state == EmptyState::NoContacts)
  		? tr::lng_add_contact_button()
@@ -158,7 +158,7 @@ index 4e018ea12908dce3d78682e31325791c08c37125..6ed66685ab7aa07bcb3b168f19327174
  		: (state == EmptyState::EmptyForum)
  		? tr::lng_forum_create_topic()
 diff --git a/Telegram/SourceFiles/settings/sections/settings_folders.cpp b/Telegram/SourceFiles/settings/sections/settings_folders.cpp
-index 52c07598e03cfcc88bc331d5985ab1e59860c65e..b8242ff8e8a77e8a1e7406fd209e342b1f27be8a 100644
+index 61543548678aaa23f2681f17ced07ca9fe84f95a..75f5baa6333169d659b94a492b3c3b9787bb9f21 100644
 --- a/Telegram/SourceFiles/settings/sections/settings_folders.cpp
 +++ b/Telegram/SourceFiles/settings/sections/settings_folders.cpp
 @@ -46,6 +46,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -169,7 +169,7 @@ index 52c07598e03cfcc88bc331d5985ab1e59860c65e..b8242ff8e8a77e8a1e7406fd209e342b
  #include "styles/style_boxes.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_layers.h"
-@@ -544,7 +545,7 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
+@@ -553,7 +554,7 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
  	};
  	const auto &list = session->data().chatsFilters().list();
  	for (const auto &filter : list) {
@@ -717,7 +717,7 @@ index 104315f7c2cef4c23976b4d0272d0f12f7e0ae66..025162dd89c7e94cb078cee39b6e3d68
  			tr::lng_filters_context_edit(tr::now),
  			crl::guard(&_outer, [=] { EditExistingFilter(_session, id); }),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index e2063ce5bff8ccd5e165b2234db5f37c0fbe12a0..6bae23a579ff149f3192c2ae5fbc7125aafbe689 100644
+index bc8c9901d4e7b0c34d84cdcff50965e8311984a2..d2e7f331bf51c8bb1265f0f69494a8a7d2177f1d 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -141,6 +141,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

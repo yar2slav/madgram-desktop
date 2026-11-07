@@ -30,10 +30,10 @@ Subject: [PATCH] feat: bookmark messages and return to where you were reading
  create mode 100644 Telegram/SourceFiles/tele/tele_bookmarks_box.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a11d7f7c508671cb1fd79f42c2907c2bfcbb8108..bb5ea4fbf80fe8995458281f0317bb963375539a 100644
+index 25fa92abd3129904aacd35783aea515cd02b5ccd..115f5426db74b20dcce23a1aa6d9b9a3a4a3abc0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2495,6 +2495,10 @@ PRIVATE
+@@ -2651,6 +2651,10 @@ PRIVATE
      tele/tele_app_name.h
      tele/tele_badges.cpp
      tele/tele_badges.h
@@ -45,7 +45,7 @@ index a11d7f7c508671cb1fd79f42c2907c2bfcbb8108..bb5ea4fbf80fe8995458281f0317bb96
      tele/tele_build.h
      tele/tele_bubble_badges.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 9c1facd63307dfc3b6489ec5d45bb528b7e23ce0..2e0498737dbb933d84a8b4c425227791e9849530 100644
+index 8288c7d1cf932d9ad01c31c9fdc13941c4033063..898be571b03e90cdf14910495adb86d09c9c5a2d 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -119,6 +119,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -53,10 +53,10 @@ index 9c1facd63307dfc3b6489ec5d45bb528b7e23ce0..2e0498737dbb933d84a8b4c425227791
  #include "tele/tele_protected.h"
  #include "tele/tele_docked_media.h"
 +#include "tele/tele_bookmarks.h"
+ #include "tgw/tgw_storage.h"
  
  namespace {
- 
-@@ -3864,6 +3865,7 @@ mtpRequestId ApiWrap::requestGlobalMedia(
+@@ -3888,6 +3889,7 @@ mtpRequestId ApiWrap::requestGlobalMedia(
  }
  
  void ApiWrap::sendAction(const SendAction &action) {
@@ -65,10 +65,10 @@ index 9c1facd63307dfc3b6489ec5d45bb528b7e23ce0..2e0498737dbb933d84a8b4c425227791
  		&& !action.options.shortcutId
  		&& !action.replaceMediaOf) {
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 4c415c94bc5da55d4883ced6b71cf0ce02d6418a..3bb05fbc16961e154b53cbe6b7e74f152a9b3605 100644
+index 0e4a029f7da45d950d2a466c2f910a28379de8e7..3d80ed0b44199961cfae0b03403f36c10ab96b32 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_histories.h"
  #include "data/data_changes.h"
  #include "dialogs/ui/dialogs_video_userpic.h"
@@ -76,7 +76,7 @@ index 4c415c94bc5da55d4883ced6b71cf0ce02d6418a..3bb05fbc16961e154b53cbe6b7e74f15
  #include "tele/tele_button_payload.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_edit_history.h"
-@@ -3067,6 +3068,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3108,6 +3109,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  			albumPartItem ? albumPartItem : item);
  		Tele::AddMarkViewedAction(_menu.get(), item);
  		Tele::AddMarkReadAction(_menu.get(), item);
@@ -85,7 +85,7 @@ index 4c415c94bc5da55d4883ced6b71cf0ce02d6418a..3bb05fbc16961e154b53cbe6b7e74f15
  			const auto text = item->factcheckText();
  			const auto phrase = text.empty()
 diff --git a/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp b/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp
-index 00b28706dc8e18ed305470e28ad42e7540af7b43..a11d755f807fb4a1f2cdc2d572612f8c6cd9ac33 100644
+index cd8094f2423390fdce30dd25907308a36ed21cd2..ca4df975857d4c3f5f1de2cc953ed0f2652fd14b 100644
 --- a/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_bottom_info.cpp
 @@ -33,6 +33,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -106,7 +106,7 @@ index 00b28706dc8e18ed305470e28ad42e7540af7b43..a11d755f807fb4a1f2cdc2d572612f8c
  			- st::historyViewsSpace
  			- st::historyViewsWidth
  			- viewsWidth;
-@@ -309,6 +313,9 @@ void BottomInfo::paint(
+@@ -314,6 +318,9 @@ void BottomInfo::paint(
  	if (_data.flags & Data::Flag::Deleted) {
  		right = Tele::PaintDeletedIcon(p, right, position.y());
  	}
@@ -116,7 +116,7 @@ index 00b28706dc8e18ed305470e28ad42e7540af7b43..a11d755f807fb4a1f2cdc2d572612f8c
  
  	if (_data.flags & Data::Flag::Silent) {
  		const auto &icon = inverted
-@@ -618,6 +625,9 @@ QSize BottomInfo::countOptimalSize() {
+@@ -623,6 +630,9 @@ QSize BottomInfo::countOptimalSize() {
  	if (_data.flags & Data::Flag::Deleted) {
  		width += Tele::DeletedIconWidth();
  	}
@@ -126,7 +126,7 @@ index 00b28706dc8e18ed305470e28ad42e7540af7b43..a11d755f807fb4a1f2cdc2d572612f8c
  	if (_data.flags & Data::Flag::Silent) {
  		width += st::historySilentWidth;
  	}
-@@ -691,6 +701,9 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
+@@ -696,6 +706,9 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
  	if (Tele::DeletedIconShown(item)) {
  		result.flags |= Flag::Deleted;
  	}
@@ -137,7 +137,7 @@ index 00b28706dc8e18ed305470e28ad42e7540af7b43..a11d755f807fb4a1f2cdc2d572612f8c
  		result.flags |= Flag::Shortcut;
  	} else if (message->context() == Context::MediaEditor) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_bottom_info.h b/Telegram/SourceFiles/history/view/history_view_bottom_info.h
-index cbb3811b739938cd0a978c36bf3a5a8f1bc325aa..86160af6ea12b966803b32196210df08e2604178 100644
+index e1883e0dda41915a5588c9cd821a8429118eac15..b11bea42e4e283950e184320ea08962f9da2e1c1 100644
 --- a/Telegram/SourceFiles/history/view/history_view_bottom_info.h
 +++ b/Telegram/SourceFiles/history/view/history_view_bottom_info.h
 @@ -32,7 +32,7 @@ struct TextState;
@@ -158,18 +158,18 @@ index cbb3811b739938cd0a978c36bf3a5a8f1bc325aa..86160af6ea12b966803b32196210df08
  		};
  		friend inline constexpr bool is_flag_type(Flag) { return true; };
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 54f2e0a566c839ac44b04586961b60a85b51ab9a..4efb005785d60424e3492c07aa745429b090bfcb 100644
+index c6b783bc17119203e34886f5f361a499d334fcf3..56faedf11473509a8899913dec7c4820e5d56dfa 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "media/player/media_player_instance.h"
- #include "spellcheck/spellcheck_types.h"
+@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tgw/tgw_log_box.h"
+ #include "tgw/tgw_selection.h"
  #include "apiwrap.h"
 +#include "tele/tele_bookmarks.h"
  #include "tele/tele_button_payload.h"
  #include "tele/tele_custom_emoji.h"
  #include "tele/tele_deleted_reply.h"
-@@ -1409,6 +1410,10 @@ void AddTopMessageActions(
+@@ -1403,6 +1404,10 @@ void AddTopMessageActions(
  	Tele::AddEditHistoryAction(menu, request.navigation, request.item);
  	Tele::AddMarkViewedAction(menu, request.item);
  	Tele::AddMarkReadAction(menu, request.item);
@@ -246,18 +246,18 @@ index d77c28886abe7983354eceafcbf4bcd2acfa60fb..69f5cb1b864ec7a66b3a55106747b656
  	paintHighlight(p, context, g.height());
  
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index a4fbb74d398e3c92c68e88e8be16f8ac6a667d31..f0e6f2a007ce962365cef1bdd467d7f2c08de383 100644
+index 25d13f7ce410c18d9182f3d962b812868fb69df5..e30b55b2e878f3aa4cb10c7d5da233560a7aded1 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -63,6 +63,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "core/application.h"
+@@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tgw/tgw_storage.h"
  #include "ui/text/text_utilities.h"
  #include "ui/layers/generic_box.h"
 +#include "tele/tele_bookmarks.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_local_pins.h"
  #include "tele/tele_protected.h"
-@@ -286,6 +287,7 @@ Session::Session(
+@@ -288,6 +289,7 @@ Session::Session(
  	Tele::SetupProtectedCopies(this);
  	Tele::SetupCommunities(this);
  	Tele::SetupLocalPins(this);
@@ -1843,7 +1843,7 @@ index 776d5b6b40034f79f05cb14d3c225197cba22612..aa4469beb7d8a5af437d98b3f9cb7496
  		Toggle(kOptionScreenshotSecretMedia),
  		Toggle(kOptionAllowScreenCapture),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index d7075ac651076e59a429f20e3d03b9d4c6535406..031e6d70bc5a2b98b30df7851723fd828f754b37 100644
+index 3208cdcf53125f0145a9c1665ea246680fd00132..911b5dfa864978724c5ee50ff3790322c2e7cdfc 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

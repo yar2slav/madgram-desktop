@@ -14,10 +14,10 @@ Subject: [PATCH] feat: hide phone numbers in profiles
  7 files changed, 38 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index 574127067df54949dbdbfe15e578fdadd9649094..1e5c38c4e52e21ef9abeae982bc4abb4411c47ea 100644
+index 4a5799441081920511c86971947448c6e03e1537..15ab06dbbd59e1fc31b13478d0745343722b4cb7 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -82,6 +82,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -83,6 +83,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_name_badges.h"
  #include "tele/tele_options.h"
  #include "tele/tele_peer_id.h"
@@ -25,7 +25,7 @@ index 574127067df54949dbdbfe15e578fdadd9649094..1e5c38c4e52e21ef9abeae982bc4abb4
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_verify_details.h"
  #include "ui/boxes/peer_qr_box.h"
-@@ -1643,7 +1644,8 @@ Section DetailsFiller::makeInfo() {
+@@ -1644,7 +1645,8 @@ Section DetailsFiller::makeInfo() {
  
  		const auto phoneLine = addInfoOneLine(
  			tr::lng_info_mobile_label(),

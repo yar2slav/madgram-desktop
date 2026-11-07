@@ -20,10 +20,10 @@ Subject: [PATCH] feat: choose when links get previews and set your own
  create mode 100644 Telegram/SourceFiles/tele/tele_link_previews.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 001c6585b501fee459d9b043aed76da787c0cf19..d3fb30d7465097040801e9705685678acec5023a 100644
+index 59dcaf29835bbc88bd659e2d515e13eefaa174d3..ea0871d302a8858ba01545a58c9a3328555c9769 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2553,6 +2553,8 @@ PRIVATE
+@@ -2709,6 +2709,8 @@ PRIVATE
      tele/tele_message_menu.h
      tele/tele_jump_to_first.cpp
      tele/tele_jump_to_first.h
@@ -33,10 +33,10 @@ index 001c6585b501fee459d9b043aed76da787c0cf19..d3fb30d7465097040801e9705685678a
      tele/tele_link_rewrites.h
      tele/tele_link_rewrites_box.cpp
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 494143aea448efbd4e1ba59712c1cd13c44aaf16..74a714a165f88a7307c2120222839aaf8369591a 100644
+index 5b4946c59d556c348af10ea59bb5b164f13cc869..b8418f8d28528e08d46eb619f3373770a31e5c22 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -172,6 +172,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -175,6 +175,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "storage/storage_folder_archive.h"
  #include "storage/storage_media_prepare.h"
  #include "tele/tele_calcmula_preview.h"
@@ -44,7 +44,7 @@ index 494143aea448efbd4e1ba59712c1cd13c44aaf16..74a714a165f88a7307c2120222839aaf
  #include "tele/tele_calls.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
-@@ -520,6 +521,16 @@ HistoryWidget::HistoryWidget(
+@@ -539,6 +540,16 @@ HistoryWidget::HistoryWidget(
  		},
  		.send = [=] { sendWithModifiers(Qt::KeyboardModifiers()); },
  	});
@@ -62,7 +62,7 @@ index 494143aea448efbd4e1ba59712c1cd13c44aaf16..74a714a165f88a7307c2120222839aaf
  		checkCharsLimitation();
  		updateAiButtonVisibility();
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 9406bf2dc391c2edfa8cadad031b697dddc46407..c6f8a1cd8a16089b51363ece80ab4d29cf1ad5df 100644
+index 14e15b1dbeb72f1b23d812587f2fd85266a1da48..8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -114,6 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -73,7 +73,7 @@ index 9406bf2dc391c2edfa8cadad031b697dddc46407..c6f8a1cd8a16089b51363ece80ab4d29
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_emoji_panel.h"
  #include "support/support_helper.h"
-@@ -3264,6 +3265,12 @@ void ComposeControls::initField() {
+@@ -3279,6 +3280,12 @@ void ComposeControls::initField() {
  		},
  		.send = [=] { _fieldSubmits.fire({}); },
  	});
@@ -87,7 +87,7 @@ index 9406bf2dc391c2edfa8cadad031b697dddc46407..c6f8a1cd8a16089b51363ece80ab4d29
  		checkCharsLimitation();
  		updateAiButtonVisibility();
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_draft_options.cpp b/Telegram/SourceFiles/history/view/controls/history_view_draft_options.cpp
-index 5bdc9891bb130433a30cf4add1c72bb0cfb973b9..5cf6de5e1c0ff44d06f6802fddb353cf28c9a436 100644
+index a6d40aadda055eb0c04111256296370360740993..2c0aab97453eb89ec656690c833d883770826b61 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_draft_options.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_draft_options.cpp
 @@ -34,6 +34,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -98,7 +98,7 @@ index 5bdc9891bb130433a30cf4add1c72bb0cfb973b9..5cf6de5e1c0ff44d06f6802fddb353cf
  #include "ui/chat/chat_style.h"
  #include "ui/chat/chat_theme.h"
  #include "ui/effects/path_shift_gradient.h"
-@@ -1211,6 +1212,20 @@ void DraftOptionsBox(
+@@ -1216,6 +1217,20 @@ void DraftOptionsBox(
  			});
  		}
  
@@ -120,7 +120,7 @@ index 5bdc9891bb130433a30cf4add1c72bb0cfb973b9..5cf6de5e1c0ff44d06f6802fddb353cf
  			bottom,
  			tr::lng_link_remove(),
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_webpage_processor.cpp b/Telegram/SourceFiles/history/view/controls/history_view_webpage_processor.cpp
-index ad09615245a7680ca36a320e2da58bcfb89edfce..90a72cbaeac086e5ce866ca4394b40917a6600de 100644
+index bf7f4e69288ad916259c7630b9ad373ff5cf27c1..b7f790d702df19c0f34ff4fb5fce616c17f93cdb 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_webpage_processor.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_webpage_processor.cpp
 @@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -148,8 +148,8 @@ index ad09615245a7680ca36a320e2da58bcfb89edfce..90a72cbaeac086e5ce866ca4394b4091
 +	return Tele::LinkPreviewDraft(this, _draft);
  }
  
- std::shared_ptr<WebpageResolver> WebpageProcessor::resolver() const {
-@@ -260,6 +263,7 @@ QString WebpageProcessor::link() const {
+ bool WebpageProcessor::disabled() const {
+@@ -264,6 +267,7 @@ QString WebpageProcessor::link() const {
  }
  
  void WebpageProcessor::apply(Data::WebPageDraft draft, bool reparse) {
@@ -157,7 +157,7 @@ index ad09615245a7680ca36a320e2da58bcfb89edfce..90a72cbaeac086e5ce866ca4394b4091
  	const auto was = _link;
  	if (draft.removed) {
  		_draft = draft;
-@@ -363,7 +367,7 @@ void WebpageProcessor::checkPreview() {
+@@ -367,7 +371,7 @@ void WebpageProcessor::checkPreview() {
  		apply({ .removed = true });
  		_draft.removed = false;
  		return;

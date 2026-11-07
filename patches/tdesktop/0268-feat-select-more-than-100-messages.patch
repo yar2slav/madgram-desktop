@@ -25,10 +25,10 @@ Subject: [PATCH] feat: select more than 100 messages
  create mode 100644 Telegram/SourceFiles/tele/tele_select_many.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 15ad5024946144e326e737beea771c385bdd1247..44a74c12e645c977c55c4f312755aadaa34d3fbe 100644
+index 1d6930835e2610f9b1381f20957d5c1462be157c..7871e9fdbc04589c2d197887fd766bf608e7149d 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2788,6 +2788,8 @@ PRIVATE
+@@ -2944,6 +2944,8 @@ PRIVATE
      tele/tele_screen_capture.h
      tele/tele_secret_media.cpp
      tele/tele_secret_media.h
@@ -69,7 +69,7 @@ index 79981978a013561062c99d52fc1a525cfd504125..46f5064ed5460cb850a8809baaca06a7
  
  } // namespace Api
 diff --git a/Telegram/SourceFiles/data/data_histories.cpp b/Telegram/SourceFiles/data/data_histories.cpp
-index 6214ea81e5f673b747f9113ec999eca5990aa806..bb69bb3599d173e5dfdf0a941b6b0902053e5e4c 100644
+index fb6819fee7ecec42137564d2750e059ec9c4b0fd..7eafc794aec60de96dcb2e608e22c9ca8bd4f5ad 100644
 --- a/Telegram/SourceFiles/data/data_histories.cpp
 +++ b/Telegram/SourceFiles/data/data_histories.cpp
 @@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -94,10 +94,10 @@ index 6214ea81e5f673b747f9113ec999eca5990aa806..bb69bb3599d173e5dfdf0a941b6b0902
  		const auto done = [=](const MTPmessages_AffectedMessages &result) {
  			session().api().applyAffectedMessages(history->peer, result);
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 07afd229e05e8a5c865bc2e5d375a719e938eb32..891c364ce617fb6265b34ba0458b9ffbccacdd56 100644
+index 4b4ed955fdd348c10ad2eef41d5c83cb1fbcc58d..ce58b88e49e5df5e7b02acb4d8cf11437dea7d56 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -140,6 +140,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -145,6 +145,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_gif_video.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_secret_media.h"
@@ -105,7 +105,7 @@ index 07afd229e05e8a5c865bc2e5d375a719e938eb32..891c364ce617fb6265b34ba0458b9ffb
  #include "tele/tele_shot.h"
  #include "tele/tele_message_menu.h"
  #include "tele/tele_options.h"
-@@ -3308,7 +3309,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3349,7 +3350,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  				}
  				const auto start = (topToBottom ? nearestItem : toItem);
  				const auto end = (topToBottom ? toItem : nearestItem);
@@ -114,7 +114,7 @@ index 07afd229e05e8a5c865bc2e5d375a719e938eb32..891c364ce617fb6265b34ba0458b9ffb
  					- selectedState.count
  					+ (topToBottom ? 0 : 1);
  				if (collectBetween(start, end, left).empty()) {
-@@ -6134,7 +6135,7 @@ void HistoryInner::changeSelection(
+@@ -6196,7 +6197,7 @@ void HistoryInner::changeSelection(
  	const auto add = (action == SelectAction::Select);
  	if (add
  		&& goodForSelection(toItems, item, total)
@@ -123,7 +123,7 @@ index 07afd229e05e8a5c865bc2e5d375a719e938eb32..891c364ce617fb6265b34ba0458b9ffb
  		addToSelection(toItems, item);
  	} else {
  		removeFromSelection(toItems, item);
-@@ -6161,7 +6162,7 @@ void HistoryInner::changeSelectionAsGroup(
+@@ -6223,7 +6224,7 @@ void HistoryInner::changeSelectionAsGroup(
  				return false;
  			}
  		}
@@ -132,7 +132,7 @@ index 07afd229e05e8a5c865bc2e5d375a719e938eb32..891c364ce617fb6265b34ba0458b9ffb
  	}();
  	if (action == SelectAction::Select && canSelect) {
  		for (const auto &other : group->items) {
-@@ -6429,7 +6430,7 @@ void HistoryInner::addSelectionRange(
+@@ -6491,7 +6492,7 @@ void HistoryInner::addSelectionRange(
  				auto item = block->messages[fromitem]->data();
  				changeSelectionAsGroup(toItems, item, SelectAction::Select);
  			}
@@ -142,10 +142,10 @@ index 07afd229e05e8a5c865bc2e5d375a719e938eb32..891c364ce617fb6265b34ba0458b9ffb
  		}
  	}
 diff --git a/Telegram/SourceFiles/history/history_item_helpers.cpp b/Telegram/SourceFiles/history/history_item_helpers.cpp
-index cd8d2bf9b4000f3ae5e80184ce02a01fd1f682ee..5c7f272b782e8c09edc13c7ea05ecbeb535a24bc 100644
+index 54424351a2cef906c8026fc82c95228c4db55e0e..b30b994629cb8e0853ef438af391be744b0e6b18 100644
 --- a/Telegram/SourceFiles/history/history_item_helpers.cpp
 +++ b/Telegram/SourceFiles/history/history_item_helpers.cpp
-@@ -58,6 +58,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -59,6 +59,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "lang/lang_keys.h"
  #include "tele/tele_forward.h"
  #include "tele/tele_local_password.h"
@@ -153,7 +153,7 @@ index cd8d2bf9b4000f3ae5e80184ce02a01fd1f682ee..5c7f272b782e8c09edc13c7ea05ecbeb
  #include "tele/tele_silent.h"
  
  #include "styles/style_layers.h"
-@@ -690,7 +691,11 @@ std::vector<ForwardRange> CollectForwardRanges(
+@@ -691,7 +692,11 @@ std::vector<ForwardRange> CollectForwardRanges(
  		}
  		if (result.empty()
  			|| result.back().fromEphemeral != fromEphemeral
@@ -167,10 +167,10 @@ index cd8d2bf9b4000f3ae5e80184ce02a01fd1f682ee..5c7f272b782e8c09edc13c7ea05ecbeb
  		}
  		result.back().items.push_back(item);
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 3a253e2d8e065cf5af7b3031d53f7274cb8cf957..23aa29789c5a94c7808c9b933d18e90479ae3677 100644
+index eacf553a15ca7a9ee685a773fea50fc6cbcd2b32..13e5f1782c285763cbe9e8671160559dcbd13b1b 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -107,6 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_full_preview.h"
  #include "tele/tele_protected.h"
  #include "tele/tele_rmb_beside_bubble.h"
@@ -178,7 +178,7 @@ index 3a253e2d8e065cf5af7b3031d53f7274cb8cf957..23aa29789c5a94c7808c9b933d18e904
  #include "tele/tele_select_service.h"
  #include "styles/style_chat.h"
  #include "styles/style_window.h" // columnMaximalWidthLeft
-@@ -1767,7 +1768,7 @@ bool ListWidget::isGoodForSelection(
+@@ -2014,7 +2015,7 @@ bool ListWidget::isGoodForSelection(
  	if (!applyTo.contains(item->fullId())) {
  		++totalCount;
  	}
@@ -187,7 +187,7 @@ index 3a253e2d8e065cf5af7b3031d53f7274cb8cf957..23aa29789c5a94c7808c9b933d18e904
  }
  
  bool ListWidget::addToSelection(
-@@ -2008,7 +2009,7 @@ std::vector<not_null<HistoryItem*>> ListWidget::selectionUpTo(
+@@ -2259,7 +2260,7 @@ std::vector<not_null<HistoryItem*>> ListWidget::selectionUpTo(
  	}
  	const auto startItem = topToBottom ? nearestItem : toItem.get();
  	const auto endItem = topToBottom ? toItem.get() : nearestItem;
@@ -196,7 +196,7 @@ index 3a253e2d8e065cf5af7b3031d53f7274cb8cf957..23aa29789c5a94c7808c9b933d18e904
  		- int(_selected.size())
  		+ (topToBottom ? 0 : 1);
  	return collectBetween(startItem, endItem, left);
-@@ -3466,7 +3467,7 @@ void ListWidget::applyDragSelection(SelectedMap &applyTo) const {
+@@ -3916,7 +3917,7 @@ void ListWidget::applyDragSelection(SelectedMap &applyTo) const {
  	if (_dragSelectAction == DragSelectAction::Selecting) {
  		auto already = int(applyTo.size());
  		for (const auto &itemId : _dragSelected) {
@@ -206,7 +206,7 @@ index 3a253e2d8e065cf5af7b3031d53f7274cb8cf957..23aa29789c5a94c7808c9b933d18e904
  			} else if (!applyTo.contains(itemId)) {
  				if (const auto item = session().data().message(itemId)) {
 diff --git a/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp b/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp
-index e1204491090a92c1c7e0fe7ff02e860270b7c3c8..f3d415dea82c1831672d8bb4eaacd31909a68a7e 100644
+index 616801e36b282564831feae1529ad5e157d73565..338782018507faf482fe7b9185d34e0186d3cdd1 100644
 --- a/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp
 +++ b/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -217,7 +217,7 @@ index e1204491090a92c1c7e0fe7ff02e860270b7c3c8..f3d415dea82c1831672d8bb4eaacd319
  #include "layout/layout_selection.h"
  #include "styles/style_overview.h"
  
-@@ -519,7 +520,7 @@ void Provider::applyDragSelection(
+@@ -522,7 +523,7 @@ void Provider::applyDragSelection(
  	const auto search = !_queryWords.isEmpty();
  	const auto selectLimit = _storiesAddToAlbumId
  		? _controller->session().appConfig().storiesAlbumLimit()
@@ -248,10 +248,10 @@ index a26cdf558560c7ff0864120ce2a271276bdd480d..9307de91d68246cd5f7aa90e6c2afbc1
  	const auto changeExisting = [&](auto it) {
  		if (it == selected.cend()) {
 diff --git a/Telegram/SourceFiles/info/media/info_media_list_widget.cpp b/Telegram/SourceFiles/info/media/info_media_list_widget.cpp
-index 7b14ab7b06aa82f472e341859ca3f700f64b7e1d..91597ade2fdf4684cab441d54fef1ee86463c339 100644
+index a5fb2f97a31c1eb9ad918adc9f3ed592be905e06..1386f4e95c7a7db71870b902a0fe64c3f092610c 100644
 --- a/Telegram/SourceFiles/info/media/info_media_list_widget.cpp
 +++ b/Telegram/SourceFiles/info/media/info_media_list_widget.cpp
-@@ -74,6 +74,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -75,6 +75,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "core/application.h"
  #include "ui/toast/toast.h"
  #include "tele/tele_list_dates.h"
@@ -259,7 +259,7 @@ index 7b14ab7b06aa82f472e341859ca3f700f64b7e1d..91597ade2fdf4684cab441d54fef1ee8
  #include "styles/style_info.h"
  #include "styles/style_layers.h"
  #include "styles/style_menu_icons.h"
-@@ -173,7 +174,7 @@ ListWidget::ListWidget(
+@@ -174,7 +175,7 @@ ListWidget::ListWidget(
  	_provider->type(),
  	[=] { scrollDateCheck(); },
  	[=] { scrollDateHide(); }))

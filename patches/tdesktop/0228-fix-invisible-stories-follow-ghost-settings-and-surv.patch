@@ -21,10 +21,10 @@ Subject: [PATCH] fix: invisible stories follow ghost settings and survive a
  create mode 100644 Telegram/SourceFiles/tele/tele_invisible_stories.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e755fafc9c476bd0ca0add9f28a1b0f89c74964c..17ef5969c3f284861ede5f306b5c3fb8171afe86 100644
+index 327111684a01eb7da545b387b13ad0fa6c02d650..9cbe669c290584b5297c30c66f20c5ed853a0a98 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2652,6 +2652,8 @@ PRIVATE
+@@ -2808,6 +2808,8 @@ PRIVATE
      tele/tele_inline_via.h
      tele/tele_invisible.cpp
      tele/tele_invisible.h
@@ -34,7 +34,7 @@ index e755fafc9c476bd0ca0add9f28a1b0f89c74964c..17ef5969c3f284861ede5f306b5c3fb8
      tele/tele_kept_store.h
      tele/tele_list_keys.cpp
 diff --git a/Telegram/SourceFiles/data/data_stories.cpp b/Telegram/SourceFiles/data/data_stories.cpp
-index b88ba7e336a9bfe01ab9e3aedfcbe4d4ec936412..a5fa27c120a6db04e3089c9d91644e3849be636c 100644
+index 3a4486fcdf7ff97f8a5710048252c104bffc0802..67553eba5b76d240da491d61f3ecc1e0a931cce9 100644
 --- a/Telegram/SourceFiles/data/data_stories.cpp
 +++ b/Telegram/SourceFiles/data/data_stories.cpp
 @@ -26,6 +26,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -60,7 +60,7 @@ index b88ba7e336a9bfe01ab9e3aedfcbe4d4ec936412..a5fa27c120a6db04e3089c9d91644e38
  	const auto peer = _owner->peer(peerId);
  	auto result = StoriesSource{
  		.peer = peer,
-@@ -1242,13 +1246,16 @@ void Stories::markAsRead(FullStoryId id, bool viewed) {
+@@ -1238,13 +1242,16 @@ void Stories::markAsRead(FullStoryId id, bool viewed) {
  		return;
  	}
  	const auto story = *maybeStory;
@@ -78,7 +78,7 @@ index b88ba7e336a9bfe01ab9e3aedfcbe4d4ec936412..a5fa27c120a6db04e3089c9d91644e38
  	if (!bumpReadTill(id.peer, id.story) || invisible) {
  		return;
  	}
-@@ -2384,6 +2391,10 @@ void Stories::requestReadTills() {
+@@ -2352,6 +2359,10 @@ void Stories::requestReadTills() {
  	)).done([=](const MTPUpdates &result) {
  		_readTillReceived = true;
  		api->applyUpdates(result);
@@ -90,10 +90,10 @@ index b88ba7e336a9bfe01ab9e3aedfcbe4d4ec936412..a5fa27c120a6db04e3089c9d91644e38
  			updatePeerStoriesState(peer, recent);
  		}
 diff --git a/Telegram/SourceFiles/media/stories/media_stories_controller.cpp b/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
-index c1ba9a7a69887a2d50c2dc114160f8fa30e0bedf..488e01cc55cbd7587ef78dc396ed483e16254769 100644
+index 02fffe7085ed1b8b6cbc5814f1000b2c51c7cbad..5017566660f9b36f03de33b9a1df3a85d8dc4587 100644
 --- a/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
 +++ b/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
-@@ -49,6 +49,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -50,6 +50,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "info/stories/info_stories_common.h"
  #include "payments/payments_reaction_process.h"
  #include "settings/settings_credits_graphics.h"
@@ -101,7 +101,7 @@ index c1ba9a7a69887a2d50c2dc114160f8fa30e0bedf..488e01cc55cbd7587ef78dc396ed483e
  #include "tele/tele_peer_id.h"
  #include "ui/boxes/confirm_box.h"
  #include "ui/boxes/report_box_graphics.h"
-@@ -667,6 +668,14 @@ void Controller::toggleLiked() {
+@@ -668,6 +669,14 @@ void Controller::toggleLiked() {
  }
  
  bool Controller::reactionChosen(ReactionsMode mode, ChosenReaction chosen) {
@@ -116,7 +116,7 @@ index c1ba9a7a69887a2d50c2dc114160f8fa30e0bedf..488e01cc55cbd7587ef78dc396ed483e
  	auto result = true;
  	if (mode == ReactionsMode::Message) {
  		result = _replyArea->sendReaction(chosen.id);
-@@ -1276,9 +1285,7 @@ ClickHandlerPtr Controller::lookupAreaHandler(QPoint point) const {
+@@ -1277,9 +1286,7 @@ ClickHandlerPtr Controller::lookupAreaHandler(QPoint point) const {
  					raw->playEffect();
  					if (const auto now = story()) {
  						if (now->sentReactionId() != id) {
@@ -128,7 +128,7 @@ index c1ba9a7a69887a2d50c2dc114160f8fa30e0bedf..488e01cc55cbd7587ef78dc396ed483e
  					}
  				}),
 diff --git a/Telegram/SourceFiles/media/stories/media_stories_reply.cpp b/Telegram/SourceFiles/media/stories/media_stories_reply.cpp
-index bca7823440fa3a20b5153ec36e706c99a2a931b1..efa1754963a54b1996a39bca6d0d43844fcdb0d2 100644
+index f78ac5280d7a380aab11691a938090a0bef497c3..a154a66abbb5e50adbf1b9eeceecbd1606de2383 100644
 --- a/Telegram/SourceFiles/media/stories/media_stories_reply.cpp
 +++ b/Telegram/SourceFiles/media/stories/media_stories_reply.cpp
 @@ -51,6 +51,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -155,10 +155,10 @@ index bca7823440fa3a20b5153ec36e706c99a2a931b1..efa1754963a54b1996a39bca6d0d4384
  	const auto st2 = st1.shareBox.get();
  	const auto st3 = st2 ? st2->scheduleBox.get() : nullptr;
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 3ba56522260e85496b7fa79dcd8a91a8a8b69304..b0b246f1b5055976df9e0b8c3b130484b621b24c 100644
+index 965c9f802ab605cb5f1e9a086601f3c2f1eb8082..e4b124689eca282682979091ad40e9c5d6894c46 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "styles/style_ttl_media.h"
  #include "platform/platform_text_recognition.h"
  #include "tele/tele_download_folders.h"
@@ -166,7 +166,7 @@ index 3ba56522260e85496b7fa79dcd8a91a8a8b69304..b0b246f1b5055976df9e0b8c3b130484
  #include "tele/tele_lowercase.h"
  #include "tele/tele_options.h"
  #include "tele/tele_peer_id.h"
-@@ -4558,8 +4559,11 @@ void OverlayWidget::show(OpenRequest request) {
+@@ -4603,8 +4604,11 @@ void OverlayWidget::show(OpenRequest request) {
  	const auto story = request.story();
  	if (story && Tele::HideStories()) {
  		return;
@@ -180,7 +180,7 @@ index 3ba56522260e85496b7fa79dcd8a91a8a8b69304..b0b246f1b5055976df9e0b8c3b130484
  		return;
  	}
  	const auto document = story ? story->document() : request.document();
-@@ -4919,9 +4923,11 @@ void OverlayWidget::displayDocument(
+@@ -4966,9 +4970,11 @@ void OverlayWidget::displayDocument(
  void OverlayWidget::displayVideoStream(
  		const std::shared_ptr<Data::GroupCall> &call,
  		anim::activation activation) {

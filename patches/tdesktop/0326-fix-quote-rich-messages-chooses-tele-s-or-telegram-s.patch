@@ -1,0 +1,177 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Sun, 25 Oct 2026 02:31:11 +0300
+Subject: [PATCH] fix: quote rich messages chooses tele's or telegram's quotes
+
+---
+ .../history/history_inner_widget.cpp          | 13 +++++++--
+ .../view/history_view_chat_section.cpp        | 10 ++++++-
+ .../view/history_view_context_menu.cpp        |  4 +--
+ Telegram/SourceFiles/tele/tele_rich_quote.cpp | 28 +++++++++++++------
+ Telegram/SourceFiles/tele/tele_rich_quote.h   |  7 +++--
+ 5 files changed, 44 insertions(+), 18 deletions(-)
+
+diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
+index 8412101b3b95da2d572e59af59468ae3dc590db5..cfdabb5ca44d3ab30c44a2797e45440c77e5f23b 100644
+--- a/Telegram/SourceFiles/history/history_inner_widget.cpp
++++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
+@@ -835,15 +835,22 @@ void HistoryInner::setupSwipeReplyAndBack() {
+ 			result.msgBareId = viewItemId.msg.bare;
+ 			result.callback = [=] {
+ 				const auto still = show->session().data().message(viewItemId);
+-				const auto selected = still
++				auto selected = still
+ 					? selectedQuote(still)
+ 					: HistoryView::SelectedQuote();
++				const auto rich = Tele::TakeRichQuote(
++					selected,
++					(still && _selectedTextItem == still)
++						? still->mainView()
++						: nullptr,
++					_selectedTextSelection);
+ 				const auto exact = selected.item
+ 					? selected.item
+ 					: show->session().data().message(itemId);
+ 				if (!exact) {
+ 					return;
+ 				}
++				Tele::RequestRichQuote(exact->fullId(), rich);
+ 				Window::ActivateWindow(_controller);
+ 				_widget->replyToMessage({
+ 					.messageId = exact->fullId(),
+@@ -3524,8 +3531,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+ 		const auto canSendReply = CanSendReply(item);
+ 		const auto canReply = canSendReply || item->allowsForward();
+ 		if (canReply) {
+-			const auto selected = selectedQuote(item);
+-			const auto rich = Tele::RichQuoteBlocks(
++			auto selected = selectedQuote(item);
++			const auto rich = Tele::TakeRichQuote(
+ 				selected,
+ 				(_selectedTextItem == item) ? item->mainView() : nullptr,
+ 				_selectedTextSelection);
+diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
+index ee8b1d00147ff807d99fe5f2f2d6090ec083edc5..45cad4b236c1cf7fe392d3db842ee96c0587e2c8 100644
+--- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
+@@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_ghost.h"
+ #include "tele/tele_shortcuts.h"
+ #include "tele/tele_deleted_reply.h"
++#include "tele/tele_rich_quote.h"
+ #include "tele/tele_field_resize.h"
+ #include "tele/tele_kept_chats.h"
+ #include "tele/tele_silent.h"
+@@ -2007,16 +2008,23 @@ void ChatWidget::setupSwipeReplyAndBack() {
+ 			const auto view = still
+ 				? _inner->viewByPosition(still->position())
+ 				: nullptr;
+-			const auto selected = (still && view)
++			auto selected = (still && view)
+ 				? view->selectedReplyQuote(
+ 					_inner->getSelectedTextSelection(still))
+ 				: SelectedQuote();
++			const auto rich = Tele::TakeRichQuote(
++				selected,
++				view,
++				still
++					? _inner->getSelectedTextSelection(still)
++					: MessageSelection());
+ 			const auto exact = selected.item
+ 				? selected.item
+ 				: show->session().data().message(itemId);
+ 			if (!exact) {
+ 				return;
+ 			}
++			Tele::RequestRichQuote(exact->fullId(), rich);
+ 			Window::ActivateWindow(controller());
+ 			_inner->replyToMessageRequestNotify({
+ 				.messageId = exact->fullId(),
+diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
+index 79d5b70b6eef0617b203881614e31a0e0755bada..08d9bc2bbb9410f2029933b9eb23fd81fc02ce97 100644
+--- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
+@@ -871,8 +871,8 @@ bool AddReplyToMessageAction(
+ 	const auto todoListTaskId = request.link
+ 		? request.link->property(kTodoListItemIdProperty).toInt()
+ 		: 0;
+-	const auto &quote = request.quote;
+-	const auto rich = Tele::RichQuoteBlocks(list, request);
++	auto quote = request.quote;
++	const auto rich = Tele::TakeRichQuote(quote, list, request);
+ 	auto text = (todoListTaskId
+ 		? tr::lng_context_reply_to_task
+ 		: (!quote && rich.empty())
+diff --git a/Telegram/SourceFiles/tele/tele_rich_quote.cpp b/Telegram/SourceFiles/tele/tele_rich_quote.cpp
+index bdac507303ddc873b146ed21995a14f25f285736..3be9021beb80080ec84435ca317f559f4388d084 100644
+--- a/Telegram/SourceFiles/tele/tele_rich_quote.cpp
++++ b/Telegram/SourceFiles/tele/tele_rich_quote.cpp
+@@ -335,29 +335,39 @@ void AppendToEditor(
+ 
+ } // namespace
+ 
+-QuoteRequest RichQuoteBlocks(
+-		const HistoryView::SelectedQuote &quote,
++QuoteRequest TakeRichQuote(
++		HistoryView::SelectedQuote &quote,
+ 		HistoryView::Element *view,
+ 		const HistoryView::MessageSelection &selection) {
+-	if (quote || !view) {
++	if (!view) {
+ 		return {};
+ 	} else if (selection.isRichPage()) {
+-		return RichQuote()
+-			? QuoteRequest{ .slice = view->selectedRichBlocks(selection) }
+-			: QuoteRequest();
++		if (!RichQuote()) {
++			return {};
++		}
++		auto result = QuoteRequest{
++			.slice = view->selectedRichBlocks(selection),
++		};
++		if (!result.empty()) {
++			quote = HistoryView::SelectedQuote();
++		}
++		return result;
++	} else if (quote) {
++		return {};
+ 	}
+ 	return { .text = TranscriptionQuote(view, selection.flatSelection()) };
+ }
+ 
+-QuoteRequest RichQuoteBlocks(
++QuoteRequest TakeRichQuote(
++		HistoryView::SelectedQuote &quote,
+ 		not_null<HistoryView::ListWidget*> list,
+ 		const HistoryView::ContextMenuRequest &request) {
+ 	const auto view = request.view;
+ 	if (!view || request.item != view->data()) {
+ 		return {};
+ 	}
+-	return RichQuoteBlocks(
+-		request.quote,
++	return TakeRichQuote(
++		quote,
+ 		view,
+ 		list->getSelectedTextSelection(view->data()));
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_rich_quote.h b/Telegram/SourceFiles/tele/tele_rich_quote.h
+index 1f264d9be4571c14e2da73f054add0a4cd2f93ce..b7a6f20f4daf250b392dfbce1c21a0299fa49a95 100644
+--- a/Telegram/SourceFiles/tele/tele_rich_quote.h
++++ b/Telegram/SourceFiles/tele/tele_rich_quote.h
+@@ -42,11 +42,12 @@ struct MultiQuoteCompose {
+ 	not_null<Ui::InputField*> field;
+ };
+ 
+-[[nodiscard]] QuoteRequest RichQuoteBlocks(
+-	const HistoryView::SelectedQuote &quote,
++[[nodiscard]] QuoteRequest TakeRichQuote(
++	HistoryView::SelectedQuote &quote,
+ 	HistoryView::Element *view,
+ 	const HistoryView::MessageSelection &selection);
+-[[nodiscard]] QuoteRequest RichQuoteBlocks(
++[[nodiscard]] QuoteRequest TakeRichQuote(
++	HistoryView::SelectedQuote &quote,
+ 	not_null<HistoryView::ListWidget*> list,
+ 	const HistoryView::ContextMenuRequest &request);
+ void RequestRichQuote(FullMsgId itemId, QuoteRequest request);

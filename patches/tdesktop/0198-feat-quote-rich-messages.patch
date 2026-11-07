@@ -21,10 +21,10 @@ Subject: [PATCH] feat: quote rich messages
  create mode 100644 Telegram/SourceFiles/tele/tele_rich_quote.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 0f5fe01212c4b5edd1f415b90200f6138b0c81d2..4d0d4f60fae4efeb1118491cdc2f1dbe89847b68 100644
+index 006ee8f634298e40b81140479b298d9af6c3ca9a..28b9ca52fd59ca2501e83cb3ca62e70de7510b1c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2711,6 +2711,8 @@ PRIVATE
+@@ -2867,6 +2867,8 @@ PRIVATE
      tele/tele_reduce_motion.h
      tele/tele_regex_search.cpp
      tele/tele_regex_search.h
@@ -34,10 +34,10 @@ index 0f5fe01212c4b5edd1f415b90200f6138b0c81d2..4d0d4f60fae4efeb1118491cdc2f1dbe
      tele/tele_rich_timestamps.h
      tele/tele_rmb_beside_bubble.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index f1f3c41c2d46f77d50deff2593df69b242b7906f..5ab3f258ef60b28f5a149c1867c9fc2d58b9b17c 100644
+index 0fe1870aebeb07bf4398719ac48d24fa1da2eb16..2d6e429ec6bf51c553c710ac03e72883bb80aa70 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -142,6 +142,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -147,6 +147,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_message_menu.h"
  #include "tele/tele_options.h"
  #include "tele/tele_protected.h"
@@ -45,7 +45,7 @@ index f1f3c41c2d46f77d50deff2593df69b242b7906f..5ab3f258ef60b28f5a149c1867c9fc2d
  #include "tele/tele_rmb_beside_bubble.h"
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
-@@ -3344,7 +3345,11 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3385,7 +3386,11 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  		const auto canReply = canSendReply || item->allowsForward();
  		if (canReply) {
  			const auto selected = selectedQuote(item);
@@ -58,7 +58,7 @@ index f1f3c41c2d46f77d50deff2593df69b242b7906f..5ab3f258ef60b28f5a149c1867c9fc2d
  				? tr::lng_context_quote_and_reply
  				: todoListTaskId
  				? tr::lng_context_reply_to_task
-@@ -3354,6 +3359,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3395,6 +3400,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  			const auto replyToItem = selected.item ? selected.item : item;
  			const auto itemId = replyToItem->fullId();
  			_menu->addAction(std::move(text), [=] {
@@ -67,10 +67,10 @@ index f1f3c41c2d46f77d50deff2593df69b242b7906f..5ab3f258ef60b28f5a149c1867c9fc2d
  					.messageId = itemId,
  					.quote = selected.highlight.quote,
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index f317cb9e7be95efe550ec23070f9dfda56aaab9a..f0b26e936a9e7ef78608a1fc96ceec0954057c96 100644
+index 794614b053b2a8d6e981256e2e0f13d21c194877..50e70abf1b56baf3f78b9201aee8ea8a617227c1 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -184,6 +184,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -187,6 +187,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
@@ -78,7 +78,7 @@ index f317cb9e7be95efe550ec23070f9dfda56aaab9a..f0b26e936a9e7ef78608a1fc96ceec09
  #include "tele/tele_emoji_panel.h"
  #include "tele/tele_inline_text.h"
  #include "tele/tele_send_order.h"
-@@ -10744,6 +10745,12 @@ void HistoryWidget::setReplyFieldsFromProcessing() {
+@@ -10983,6 +10984,12 @@ void HistoryWidget::setReplyFieldsFromProcessing() {
  
  	saveDraftWithTextNow();
  	setInnerFocus();
@@ -92,7 +92,7 @@ index f317cb9e7be95efe550ec23070f9dfda56aaab9a..f0b26e936a9e7ef78608a1fc96ceec09
  
  void HistoryWidget::editMessage(
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index d639b4c0fc9aa976c6b9fa681693b5849a1d5ec7..550feae2913843c8bf53bf2244f67145490b0869 100644
+index 4d543a8033538baf32c1e7630a5fa0cc0fb0506a..6e8ca7a002dbbc694d6438eda4fec436e1a7a034 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -118,6 +118,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -103,7 +103,7 @@ index d639b4c0fc9aa976c6b9fa681693b5849a1d5ec7..550feae2913843c8bf53bf2244f67145
  #include "tele/tele_confirm_send.h"
  #include "tele/tele_drafts_compose.h"
  #include "tele/tele_docked_media.h"
-@@ -6224,6 +6225,12 @@ void ComposeControls::replyToMessage(FullReplyTo id) {
+@@ -6259,6 +6260,12 @@ void ComposeControls::replyToMessage(FullReplyTo id) {
  		_header->replyToMessage(id);
  	}
  	saveDraftWithTextNow();
@@ -117,10 +117,10 @@ index d639b4c0fc9aa976c6b9fa681693b5849a1d5ec7..550feae2913843c8bf53bf2244f67145
  
  void ComposeControls::replyToMessageExternal(FullReplyTo id) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 629f0a8f9352bb5d7330ece1922df6b3c72873e6..8c32f8ccb6c8fe2dd41f9aca0822f7d8f0c94210 100644
+index ed8e5a0e79ebef1d6ffd6b8958992144f9ee3237..b8c363e638dbe6d21523f434a52a77d8196f9d32 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -130,6 +130,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_protected.h"
  #include "tele/tele_read_log.h"
@@ -128,7 +128,7 @@ index 629f0a8f9352bb5d7330ece1922df6b3c72873e6..8c32f8ccb6c8fe2dd41f9aca0822f7d8
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_layers.h"
-@@ -869,14 +870,16 @@ bool AddReplyToMessageAction(
+@@ -865,14 +866,16 @@ bool AddReplyToMessageAction(
  		? request.link->property(kTodoListItemIdProperty).toInt()
  		: 0;
  	const auto &quote = request.quote;
@@ -147,18 +147,18 @@ index 629f0a8f9352bb5d7330ece1922df6b3c72873e6..8c32f8ccb6c8fe2dd41f9aca0822f7d8
  			.messageId = itemId,
  			.quote = quote.highlight.quote,
 diff --git a/Telegram/SourceFiles/iv/iv_rich_page.cpp b/Telegram/SourceFiles/iv/iv_rich_page.cpp
-index a34a24032cf72dcd7d3908bf3f3ad80815211a14..7d929ef96b198dd07d0a5fe1910aff44feb3f6b7 100644
+index 29562a9bb94bfb1661a7487017616c340079b50d..9cd318d92df67890a3bffa60b9030a8e911acb7a 100644
 --- a/Telegram/SourceFiles/iv/iv_rich_page.cpp
 +++ b/Telegram/SourceFiles/iv/iv_rich_page.cpp
-@@ -2338,7 +2338,7 @@ bool AppendSimpleBlock(
- 		return false;
- 	}
+@@ -2334,7 +2334,7 @@ bool AppendSimpleBlock(
+ 		const QString &wrapData = QString(),
+ 		int emptyLinesBefore = 0) {
  	if (wrap != EntityType::Invalid) {
 -		block.entities.push_back(
 +		block.entities.push_front(
  			EntityInText(wrap, 0, int(block.text.size()), wrapData));
  	}
- 	if (!result->empty()) {
+ 	TextUtilities::Trim(block);
 diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
 index e2e4ebe9f76903de44e1fbbf455eb50c38223977..28492e60224e2968568cb102ce5c91bb7fa4a491 100644
 --- a/Telegram/SourceFiles/settings/settings_tele.cpp

@@ -5,7 +5,7 @@ Subject: [PATCH] feat: download folders per chat
 
 ---
  Telegram/CMakeLists.txt                       |   2 +
- Telegram/SourceFiles/data/data_document.cpp   |   2 +
+ Telegram/SourceFiles/data/data_document.cpp   |   7 +-
  .../SourceFiles/data/data_document_media.cpp  |   7 +-
  .../data/data_file_click_handler.cpp          |   2 +
  .../media/view/media_view_overlay_widget.cpp  |   5 +
@@ -18,15 +18,15 @@ Subject: [PATCH] feat: download folders per chat
  Telegram/SourceFiles/tele/tele_options.h      |   2 +
  .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
  .../SourceFiles/window/window_peer_menu.cpp   |   2 +
- 14 files changed, 486 insertions(+), 2 deletions(-)
+ 14 files changed, 488 insertions(+), 5 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_download_folders.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_download_folders.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 0515310bdb57c9fb535a843daa102404f06634af..b940ca6c386054b09b1f202ded8851f163d98f49 100644
+index aae47a9825116c33d5be77b82b6633dbdfa9a813..dcd89b259d791b0acf0f7b822487b989071fd983 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2543,6 +2543,8 @@ PRIVATE
+@@ -2699,6 +2699,8 @@ PRIVATE
      tele/tele_debug_logs.h
      tele/tele_docked_media.cpp
      tele/tele_docked_media.h
@@ -36,10 +36,10 @@ index 0515310bdb57c9fb535a843daa102404f06634af..b940ca6c386054b09b1f202ded8851f1
      tele/tele_drafts.h
      tele/tele_drafts_box.cpp
 diff --git a/Telegram/SourceFiles/data/data_document.cpp b/Telegram/SourceFiles/data/data_document.cpp
-index 742d471e8b8018422c95861d0a267ea597e1e7e6..67dd11d8f8c680d37af347c213a139e02d2a8051 100644
+index 2caa31b01aa3b8a3ce8f7506922e361305911c74..727b3f7daa321507e7ce034a8cc74bf565884bd0 100644
 --- a/Telegram/SourceFiles/data/data_document.cpp
 +++ b/Telegram/SourceFiles/data/data_document.cpp
-@@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "core/application.h"
  #include "lottie/lottie_animation.h"
  #include "boxes/abstract_box.h" // Ui::hideLayer().
@@ -47,27 +47,32 @@ index 742d471e8b8018422c95861d0a267ea597e1e7e6..67dd11d8f8c680d37af347c213a139e0
  
  #include <QtCore/QBuffer>
  #include <QtCore/QMimeType>
-@@ -173,6 +174,7 @@ QString FileNameUnsafe(
+@@ -184,9 +185,9 @@ QString FileNameUnsafe(
  			return path;
  		}
  	}();
-+	path = Tele::ChatDownloadPath(session, path);
+-	if (toDirectory) {
+-		path = dir.absolutePath() + '/';
+-	}
++	path = toDirectory
++		? (dir.absolutePath() + '/')
++		: Tele::ChatDownloadPath(session, path);
  	if (path.isEmpty()) return QString();
  	if (name.isEmpty()) name = u".unknown"_q;
  	if (name.at(0) == QChar::fromLatin1('.')) {
 diff --git a/Telegram/SourceFiles/data/data_document_media.cpp b/Telegram/SourceFiles/data/data_document_media.cpp
-index e6419e7c6ddc02d2c313540f7f3576cc8609d96b..a7dc981198e4fc61cb908be401ff6c249796ae25 100644
+index b81454f2672b386eaad111afc427251c100fc26f..c97607518456b24f6ceedb992932eef98cc38bfe 100644
 --- a/Telegram/SourceFiles/data/data_document_media.cpp
 +++ b/Telegram/SourceFiles/data/data_document_media.cpp
-@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "ui/chat/attach/attach_prepare.h"
+@@ -28,6 +28,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "ui/image/image_prepare.h"
  #include "ui/image/svg_preview.h"
  #include "ui/rect.h"
 +#include "tele/tele_download_folders.h"
  
  #include <QtCore/QBuffer>
  #include <QtGui/QImageReader>
-@@ -344,7 +345,11 @@ void DocumentMedia::automaticLoad(
+@@ -349,7 +350,11 @@ void DocumentMedia::automaticLoad(
  	}
  	_owner->save(
  		origin,
@@ -81,10 +86,10 @@ index e6419e7c6ddc02d2c313540f7f3576cc8609d96b..a7dc981198e4fc61cb908be401ff6c24
  		true);
  }
 diff --git a/Telegram/SourceFiles/data/data_file_click_handler.cpp b/Telegram/SourceFiles/data/data_file_click_handler.cpp
-index 1eb7369bd5c63f46e3876c3bce2cc0bf2973a2c5..7fa28472fdf58411067fa8a611f1c631d546c953 100644
+index 70b020e9fa7873bb735a8eb6bd456244e8e2faa7..528527729c7a77f9e200c399766a77685a9e1948 100644
 --- a/Telegram/SourceFiles/data/data_file_click_handler.cpp
 +++ b/Telegram/SourceFiles/data/data_file_click_handler.cpp
-@@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_download_manager.h"
  #include "data/data_photo.h"
  #include "main/main_session.h"
@@ -92,7 +97,7 @@ index 1eb7369bd5c63f46e3876c3bce2cc0bf2973a2c5..7fa28472fdf58411067fa8a611f1c631
  
  FileClickHandler::FileClickHandler(FullMsgId context)
  : _context(context) {
-@@ -92,6 +93,7 @@ void DocumentSaveClickHandler::Save(
+@@ -93,6 +94,7 @@ void DocumentSaveClickHandler::Save(
  		// If we call file dialog synchronously, it will stop
  		// background thread timers from working which would
  		// stop audio playback in voice chats / live streams.
@@ -101,10 +106,10 @@ index 1eb7369bd5c63f46e3876c3bce2cc0bf2973a2c5..7fa28472fdf58411067fa8a611f1c631
  			if (started) {
  				started();
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 96ca293b69e4602c4c456358f36419e0f2d0ef69..20fb9d920b31307ac6fb14eb75bcaf5c732c5497 100644
+index 6f595b7e0f48cbf10a4f4d49395a859816c99586..c8216b22f9b8c267aa0e45f242f3ba9521f735fc 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -119,6 +119,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "styles/style_menu_icons.h"
  #include "styles/style_ttl_media.h"
  #include "platform/platform_text_recognition.h"
@@ -112,7 +117,7 @@ index 96ca293b69e4602c4c456358f36419e0f2d0ef69..20fb9d920b31307ac6fb14eb75bcaf5c
  #include "tele/tele_lowercase.h"
  #include "tele/tele_options.h"
  #include "tele/tele_protected.h"
-@@ -3498,6 +3499,10 @@ void OverlayWidget::downloadMedia() {
+@@ -3538,6 +3539,10 @@ void OverlayWidget::downloadMedia() {
  	} else {
  		path = Core::App().settings().downloadPath();
  	}
@@ -124,7 +129,7 @@ index 96ca293b69e4602c4c456358f36419e0f2d0ef69..20fb9d920b31307ac6fb14eb75bcaf5c
  	QString toName;
  	if (_document) {
 diff --git a/Telegram/SourceFiles/menu/menu_item_download_files.cpp b/Telegram/SourceFiles/menu/menu_item_download_files.cpp
-index e515e79159e75b73a3c421ef86d0f30ceb28d886..c5c3c26c11e4a1736b89ae8d7dbd5f132e975c41 100644
+index 4df2b269816f46dc80a5d6aa5c09dbc465d7bad6..dd18622ae69beebaa76741b0e647aec2c1134641 100644
 --- a/Telegram/SourceFiles/menu/menu_item_download_files.cpp
 +++ b/Telegram/SourceFiles/menu/menu_item_download_files.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -172,7 +177,7 @@ index a6f1e61f39e97f1b95aaf5fece80aeb15a11f9c7..2845dd7216774fbe76313cee92d5f59b
  	AddOptionToggle(
  		builder,
 diff --git a/Telegram/SourceFiles/storage/file_upload.cpp b/Telegram/SourceFiles/storage/file_upload.cpp
-index d8b3c0e5b8fcaf429e277641557d06ea41669e10..b157815de096189c9d57c28aae32719a191c73ab 100644
+index f3a1c8384e824182d1c049ccdf3b9a66da403e66..83dad7f3d3d9275b206e2f4a1ae242e6d859cccd 100644
 --- a/Telegram/SourceFiles/storage/file_upload.cpp
 +++ b/Telegram/SourceFiles/storage/file_upload.cpp
 @@ -31,6 +31,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -709,7 +714,7 @@ index 386c0ff2bfb069fa5377485d21854a28f5a67ad4..ef75640bde4e8d5ffc49026752b46eef
  		Toggle(kOptionDockedGrid),
  		Toggle(kOptionNoPhoneInHeader),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index e2d636e9dc705d05acba32e8338015fa91551255..e2063ce5bff8ccd5e165b2234db5f37c0fbe12a0 100644
+index 3743b5bbd9498b3dcc527bbd0f49a60685b5c2bb..bc8c9901d4e7b0c34d84cdcff50965e8311984a2 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

@@ -1,0 +1,184 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 04:10:47 +0200
+Subject: [PATCH] feat: guide history sync setup step by step
+
+---
+ Telegram/Resources/langs/mad_ru.json          | 17 +++-
+ .../SourceFiles/tele/tele_history_sync.cpp    | 97 +++++++++++++------
+ 2 files changed, 86 insertions(+), 28 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index f2d71c1d7d7fe59297e119db359fdca28079ebb8..43c615408275b639064fa85b6fb54fc3ffbc9016 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2053,5 +2053,20 @@
+   "Message history": "история сообщений",
+   "This mad link is invalid or unsupported.": "эта ссылка mad неверная или пока не поддерживается.",
+   "Open mad settings": "открыть настройки mad",
+-  "Telegram Desktop with extra privacy, chat and appearance options.": "telegram desktop с дополнительными настройками приватности, чатов и оформления."
++  "Telegram Desktop with extra privacy, chat and appearance options.": "telegram desktop с дополнительными настройками приватности, чатов и оформления.",
++  "Keeps deleted messages and edit history the same on all your PCs. Everything is encrypted on this PC before it leaves it, so the server stores only data it can't read. Media files are not synced.": "Делает сохранённые удалённые сообщения и историю правок одинаковыми на всех твоих ПК. Всё шифруется на этом ПК ещё до отправки, поэтому сервер хранит только то, что сам прочитать не может. Медиафайлы не синхронизируются.",
++  "Connecting your first PC": "Подключаешь первый ПК",
++  "1. Get a connection file, connection.json. It's a pass to your own storage on the server, one file for one Telegram account.\n• sync.mad.tg: ask the mad author in the channel t.me/maadgram, you'll get the file in reply.\n• your own server: run node admin.mjs create-vault connection.json on it, see server/README.md in the mad repository.\n2. Press the button below and choose this file. The server address is filled in by itself.\n3. Then this window shows the next steps.": "1. Получи файл подключения connection.json. Это пропуск в твоё личное хранилище на сервере, один файл на один аккаунт Telegram.\n• sync.mad.tg: напиши автору mad в канале t.me/maadgram, файл пришлют в ответ.\n• свой сервер: выполни на нём node admin.mjs create-vault connection.json, подробнее в server/README.md в репозитории mad.\n2. Нажми кнопку ниже и выбери этот файл. Адрес сервера подставится сам.\n3. Дальше это окно покажет следующие шаги.",
++  "Choose connection.json...": "Выбрать connection.json…",
++  "Adding another PC": "Добавляешь ещё один ПК",
++  "1. On the PC that's already connected, open this window and press \"Save transfer file\".\n2. Move mad-transfer.json to this PC with a USB drive or your own cloud. Don't send it in chats: it holds your decryption key.\n3. Sign in to the same Telegram account here, press the button below and choose the file.": "1. На уже подключённом ПК открой это окно и нажми «Сохранить файл переноса».\n2. Перенеси mad-transfer.json на этот ПК флешкой или через своё облако. Не отправляй его в чаты: в нём ключ расшифровки.\n3. Войди здесь в тот же аккаунт Telegram, нажми кнопку ниже и выбери файл.",
++  "Choose transfer file...": "Выбрать файл переноса…",
++  "No file, only text": "Нет файла, есть только текст",
++  "Paste the contents of connection.json or the transfer file": "Вставь содержимое connection.json или файла переноса",
++  "This PC is connected": "Этот ПК подключён",
++  "Step 1 of 2. Save the transfer file. It holds the decryption key: without it nobody, you included, can read the synced history, and another PC can't connect. Keep it like a password, for example in a password manager.": "Шаг 1 из 2. Сохрани файл переноса. В нём ключ расшифровки: без него никто, включая тебя, не прочитает синхронизированную историю, и другой ПК не подключится. Храни его как пароль, например в менеджере паролей.",
++  "Step 2 of 2. Turn on sync for this account. Saving deleted messages and edit history turns on with it.": "Шаг 2 из 2. Включи синхронизацию для этого аккаунта. Вместе с ней включится сохранение удалённых сообщений и истории правок.",
++  "Sync this account": "Синхронизировать этот аккаунт",
++  "To add another PC, open this window on it and choose the transfer file saved here.": "Чтобы добавить ещё один ПК, открой на нём это окно и выбери файл переноса, сохранённый здесь.",
++  "Open transfer file": "Открыть файл переноса"
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_history_sync.cpp b/Telegram/SourceFiles/tele/tele_history_sync.cpp
+index ead791468234d1070fae9c4802a73995a379821f..d690d82fd45bcb715709b12f8e5ddce638302cd1 100644
+--- a/Telegram/SourceFiles/tele/tele_history_sync.cpp
++++ b/Telegram/SourceFiles/tele/tele_history_sync.cpp
+@@ -16,6 +16,10 @@
+ #include "ui/widgets/buttons.h"
+ #include "ui/widgets/fields/input_field.h"
+ #include "ui/widgets/checkbox.h"
++#include "ui/text/text_utilities.h"
++#include "ui/vertical_list.h"
++#include "ui/wrap/slide_wrap.h"
++#include "ui/wrap/vertical_layout.h"
+ #include "styles/style_boxes.h"
+ #include "styles/style_layers.h"
+ #include "styles/style_widgets.h"
+@@ -401,39 +405,76 @@ void HistorySyncChanged(not_null<Main::Session*> session) {
+ void HistorySyncBox(not_null<Ui::GenericBox*> box, not_null<Main::Session*> session) {
+ 	const auto sync = QPointer<Sync>(Instances.value(session));
+ 	box->setTitle(rpl::single(Tr(u"History sync"_q)));
++	box->setWidth(st::boxWideWidth);
+ 	if (!sync) return;
+ 	if (ServerUrl().isEmpty()) {
+ 		SetServerUrl(base::options::lookup<QString>(kOptionServerUrl).defaultValue());
+ 	}
+-	box->addRow(object_ptr<Ui::FlatLabel>(box,
+-		Tr(u"Deleted messages and edit history are encrypted on this device before upload. Media files are not uploaded."_q), st::boxLabel));
+-	box->addRow(object_ptr<Ui::FlatLabel>(box,
++	const auto text = [](not_null<Ui::VerticalLayout*> layout, const QString &value) {
++		return layout->add(object_ptr<Ui::FlatLabel>(layout, value, st::boxLabel), st::boxRowPadding);
++	};
++	const auto title = [](not_null<Ui::VerticalLayout*> layout, const QString &value) {
++		Ui::AddSkip(layout);
++		return layout->add(object_ptr<Ui::FlatLabel>(layout,
++			rpl::single(Ui::Text::Bold(value)), st::boxLabel), st::boxRowPadding);
++	};
++	const auto link = [](not_null<Ui::VerticalLayout*> layout, const QString &value) {
++		return layout->add(object_ptr<Ui::LinkButton>(layout, value), st::boxRowPadding);
++	};
++	const auto content = box->verticalLayout();
++	text(content, Tr(u"Keeps deleted messages and edit history the same on all your PCs. Everything is encrypted on this PC before it leaves it, so the server stores only data it can't read. Media files are not synced."_q));
++	content->add(object_ptr<Ui::FlatLabel>(content,
+ 		ServerUrlValue() | rpl::map([](const QString &url) {
+ 			return Tr(u"Server: %1"_q).arg(url);
+-		}), st::boxLabel));
+-	const auto steps = box->addRow(object_ptr<Ui::FlatLabel>(box, QString(), st::boxLabel));
+-	const auto load = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Open connection file..."_q)));
+-	const auto field = box->addRow(object_ptr<Ui::InputField>(box, st::defaultInputField,
+-		rpl::single(Tr(u"Or paste a connection or transfer code"_q))));
++		}), st::boxDividerLabel), st::boxRowPadding);
++
++	const auto wrap = [&] {
++		return content->add(object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
++			content,
++			object_ptr<Ui::VerticalLayout>(content)), style::margins());
++	};
++	const auto setupWrap = wrap();
++	const auto readyWrap = wrap();
++	const auto setup = setupWrap->entity();
++	const auto ready = readyWrap->entity();
++
++	title(setup, Tr(u"Connecting your first PC"_q));
++	text(setup, Tr(u"1. Get a connection file, connection.json. It's a pass to your own storage on the server, one file for one Telegram account.\n• sync.mad.tg: ask the mad author in the channel t.me/maadgram, you'll get the file in reply.\n• your own server: run node admin.mjs create-vault connection.json on it, see server/README.md in the mad repository.\n2. Press the button below and choose this file. The server address is filled in by itself.\n3. Then this window shows the next steps."_q));
++	const auto loadConnection = link(setup, Tr(u"Choose connection.json..."_q));
++
++	title(setup, Tr(u"Adding another PC"_q));
++	text(setup, Tr(u"1. On the PC that's already connected, open this window and press \"Save transfer file\".\n2. Move mad-transfer.json to this PC with a USB drive or your own cloud. Don't send it in chats: it holds your decryption key.\n3. Sign in to the same Telegram account here, press the button below and choose the file."_q));
++	const auto loadTransfer = link(setup, Tr(u"Choose transfer file..."_q));
++
++	title(setup, Tr(u"No file, only text"_q));
++	const auto field = setup->add(object_ptr<Ui::InputField>(setup, st::defaultInputField,
++		rpl::single(Tr(u"Paste the contents of connection.json or the transfer file"_q))), st::boxRowPadding);
+ 	field->setInputMethodHints(Qt::ImhSensitiveData | Qt::ImhNoPredictiveText | Qt::ImhNoAutoUppercase);
+-	box->addRow(object_ptr<Ui::FlatLabel>(box, sync->status.value(), st::boxLabel));
+-	const auto transfer = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Save transfer file..."_q)));
+-	const auto check = box->addRow(object_ptr<Ui::Checkbox>(box,
+-		Tr(u"Enable for this account"_q), base::options::lookup<QString>(kOptionHistorySyncAccounts).value().split(',').contains(Owner(session)), st::defaultCheckbox, st::defaultToggle));
+-	const auto rescan = box->addRow(object_ptr<Ui::LinkButton>(box, Tr(u"Download history again"_q)));
++	const auto connect = link(setup, Tr(u"Connect"_q));
++
++	title(ready, Tr(u"This PC is connected"_q));
++	text(ready, Tr(u"Step 1 of 2. Save the transfer file. It holds the decryption key: without it nobody, you included, can read the synced history, and another PC can't connect. Keep it like a password, for example in a password manager."_q));
++	const auto transfer = link(ready, Tr(u"Save transfer file..."_q));
++	Ui::AddSkip(ready);
++	text(ready, Tr(u"Step 2 of 2. Turn on sync for this account. Saving deleted messages and edit history turns on with it."_q));
++	const auto check = ready->add(object_ptr<Ui::Checkbox>(ready,
++		Tr(u"Sync this account"_q), base::options::lookup<QString>(kOptionHistorySyncAccounts).value().split(',').contains(Owner(session)), st::defaultCheckbox, st::defaultToggle), st::boxRowPadding);
++	Ui::AddSkip(ready);
++	text(ready, Tr(u"To add another PC, open this window on it and choose the transfer file saved here."_q));
++	const auto rescan = link(ready, Tr(u"Download history again"_q));
++
++	Ui::AddSkip(content);
++	content->add(object_ptr<Ui::FlatLabel>(content, sync->status.value(), st::boxDividerLabel), st::boxRowPadding);
++
+ 	const auto refresh = [=] {
+ 		if (!sync) return;
+-		const auto ready = sync->config.contains(u"key"_q) && !session->isTestMode();
+-		check->setEnabled(ready);
+-		transfer->setEnabled(ready);
+-		rescan->setEnabled(ready);
+-		steps->setText(ready
+-			? Tr(u"2. Save the transfer file: it contains your decryption key. Use it on another PC with the same Telegram account.\n3. Turn on sync below. The toggle saves immediately."_q)
+-			: Tr(u"1. Open connection.json to connect this PC. On another PC, open the transfer file saved by your first PC. The server address is filled in automatically."_q));
++		const auto connected = sync->config.contains(u"key"_q) && !session->isTestMode();
++		setupWrap->toggle(!connected, anim::type::instant);
++		readyWrap->toggle(connected, anim::type::instant);
+ 	};
+-	const auto connectCode = [=](const QString &text) {
++	const auto connectCode = [=](const QString &code) {
+ 		if (!sync) return;
+-		if (!sync->configure(text)) {
++		if (!sync->configure(code)) {
+ 			field->showError();
+ 			sync->status = Tr(u"Couldn't connect. Choose connection.json or a transfer file for this Telegram account."_q);
+ 			return;
+@@ -442,8 +483,8 @@ void HistorySyncBox(not_null<Ui::GenericBox*> box, not_null<Main::Session*> sess
+ 		field->setText(QString());
+ 		refresh();
+ 	};
+-	load->setClickedCallback([=] {
+-		FileDialog::GetOpenPath(box.get(), Tr(u"Open connection file"_q),
++	const auto open = [=](const QString &caption) {
++		FileDialog::GetOpenPath(box.get(), caption,
+ 			u"JSON (*.json);;"_q + FileDialog::AllFilesFilter(),
+ 			crl::guard(box, [=](FileDialog::OpenResult &&result) {
+ 				if (!sync) return;
+@@ -462,7 +503,10 @@ void HistorySyncBox(not_null<Ui::GenericBox*> box, not_null<Main::Session*> sess
+ 					sync->status = Tr(u"Couldn't read the connection file. Choose a JSON file smaller than 8 KB."_q);
+ 				}
+ 			}));
+-	});
++	};
++	loadConnection->setClickedCallback([=] { open(Tr(u"Open connection file"_q)); });
++	loadTransfer->setClickedCallback([=] { open(Tr(u"Open transfer file"_q)); });
++	connect->setClickedCallback([=] { connectCode(field->getLastText()); });
+ 	transfer->setClickedCallback([=] {
+ 		if (!sync || !sync->config.contains(u"key"_q)) return;
+ 		const auto data = sync->transfer().toUtf8();
+@@ -493,9 +537,8 @@ void HistorySyncBox(not_null<Ui::GenericBox*> box, not_null<Main::Session*> sess
+ 			base::options::lookup<bool>(kOptionEditHistoryPersist).set(true);
+ 		}
+ 		option.set(accounts.join(','));
+-		if (enabled && !accounts.contains(Owner(session))) { check->setChecked(false); field->showError(); }
++		if (enabled && !accounts.contains(Owner(session))) check->setChecked(false);
+ 	}, box->lifetime());
+-	box->addButton(rpl::single(Tr(u"Connect"_q)), [=] { connectCode(field->getLastText()); });
+ 	rescan->setClickedCallback([=] { if (sync) sync->rescan(); });
+ 	box->addButton(rpl::single(Tr(u"Close"_q)), [=] { box->closeBox(); });
+ 	refresh();

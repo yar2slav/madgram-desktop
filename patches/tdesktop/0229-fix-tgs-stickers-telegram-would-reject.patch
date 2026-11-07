@@ -13,7 +13,7 @@ Subject: [PATCH] fix: tgs stickers telegram would reject
  6 files changed, 51 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/storage/localimageloader.cpp b/Telegram/SourceFiles/storage/localimageloader.cpp
-index 2f581d6f7b4bceac01590b0b82d2c2dd3f381069..f87aa2f23193b5e8bb3360d7593eef4f723d554c 100644
+index 3935c191ca48f105a322c9599c704975885fdb1f..c4886e31a7ebf948adb224e1d28afa99a3c77662 100644
 --- a/Telegram/SourceFiles/storage/localimageloader.cpp
 +++ b/Telegram/SourceFiles/storage/localimageloader.cpp
 @@ -799,6 +799,7 @@ void FileLoadTask::process(ProcessArgs &&args) {

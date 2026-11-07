@@ -24,10 +24,10 @@ Subject: [PATCH] feat: hide birthday banners and effects
  create mode 100644 Telegram/SourceFiles/tele/tele_birthdays.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 6e1dddfb4a352a11e75c6c7896ed426c91a5183c..b544e9c860c90b59577522d88b14d3baa05f7da1 100644
+index 67422d610b46d76e000e37156b6965ea29807df9..0a3028da01d673584ef6b1d4f149f8cb379e6fca 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2497,6 +2497,8 @@ PRIVATE
+@@ -2653,6 +2653,8 @@ PRIVATE
      tele/tele_audio_voice.h
      tele/tele_badges.cpp
      tele/tele_badges.h
@@ -103,10 +103,10 @@ index fe4cefd82cf6ef292927ad48ea5a777ad480baa1..46d4154e8357d8498aa454cfbc199594
  }
  
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 3f90a47286dbb258eb75b2a602ed9105b8073958..92506ce45f33b00c11798641c9c7084a9be71b3d 100644
+index 8eb5a51ef78e305617d52f176b834ea871632698..32256e08be7c56d955e6c22f980ea497ff28999d 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -182,6 +182,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -185,6 +185,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_drafts_compose.h"
  #include "tele/tele_docked_media.h"
  #include "tele/tele_audio_voice.h"
@@ -114,7 +114,7 @@ index 3f90a47286dbb258eb75b2a602ed9105b8073958..92506ce45f33b00c11798641c9c7084a
  #include "tele/tele_field_resize.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
-@@ -3759,7 +3760,7 @@ void HistoryWidget::showHistory(
+@@ -3825,7 +3826,7 @@ void HistoryWidget::showHistory(
  				Info::Profile::BirthdayValue(
  					user
  				) | rpl::map(
@@ -123,7 +123,7 @@ index 3f90a47286dbb258eb75b2a602ed9105b8073958..92506ce45f33b00c11798641c9c7084a
  				) | rpl::flatten_latest(
  				) | rpl::distinct_until_changed(
  				) | rpl::on_next([=] {
-@@ -4244,7 +4245,7 @@ void HistoryWidget::refreshSendGiftToggle() {
+@@ -4312,7 +4313,7 @@ void HistoryWidget::refreshSendGiftToggle() {
  		&& !user->isBot()
  		&& ((disallowed & Type::SendHide)
  			|| (session().user()->disallowedGiftTypes() & Type::SendHide)
@@ -133,7 +133,7 @@ index 3f90a47286dbb258eb75b2a602ed9105b8073958..92506ce45f33b00c11798641c9c7084a
  	if (!_giftToUser && has) {
  		_giftToUser.create(this, st::historyGiftToUser);
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 80224aa98e63fd78e7d779e83920f7a0a6a69270..cbfc987c36d3925245f304d3f8bf0b53118f2ad1 100644
+index 7e504f5ca7a2fb1d1e6b54be4849c06d7eb43e11..b5ae8d3edba8cba299dfd1b9576b1c33d9b6dedf 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -124,6 +124,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -144,7 +144,7 @@ index 80224aa98e63fd78e7d779e83920f7a0a6a69270..cbfc987c36d3925245f304d3f8bf0b53
  #include "tele/tele_emoji_panel.h"
  #include "tele/tele_field_resize.h"
  #include "tele/tele_inline_text.h"
-@@ -5834,7 +5835,7 @@ void ComposeControls::refreshSendGiftToggle() {
+@@ -5869,7 +5870,7 @@ void ComposeControls::refreshSendGiftToggle() {
  		&& !user->isBot()
  		&& ((disallowed & Type::SendHide)
  			|| (session().user()->disallowedGiftTypes() & Type::SendHide)
@@ -153,7 +153,7 @@ index 80224aa98e63fd78e7d779e83920f7a0a6a69270..cbfc987c36d3925245f304d3f8bf0b53
  		&& ((disallowed & all) != all);
  	if (!_giftToUser && has) {
  		_giftToUser = base::make_unique_q<Ui::IconButton>(
-@@ -6436,7 +6437,7 @@ void ComposeControls::initWebpageProcess() {
+@@ -6471,7 +6472,7 @@ void ComposeControls::initWebpageProcess() {
  		Info::Profile::BirthdayValue(
  			user
  		) | rpl::map(
@@ -163,10 +163,10 @@ index 80224aa98e63fd78e7d779e83920f7a0a6a69270..cbfc987c36d3925245f304d3f8bf0b53
  		) | rpl::distinct_until_changed(
  		) | rpl::on_next([=] {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index 1e5c38c4e52e21ef9abeae982bc4abb4411c47ea..a016fa2e76ef071e88fcd7e5362a6c7cbb63d352 100644
+index 15ab06dbbd59e1fc31b13478d0745343722b4cb7..82fd07ac03d0356e2582c68007ae0b1075cbfdee 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -76,6 +76,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "menu/menu_mute.h"
  #include "settings/settings_common.h"
  #include "support/support_helper.h"
@@ -174,7 +174,7 @@ index 1e5c38c4e52e21ef9abeae982bc4abb4411c47ea..a016fa2e76ef071e88fcd7e5362a6c7c
  #include "tele/tele_communities.h"
  #include "tele/tele_local_names.h"
  #include "tele/tele_lowercase.h"
-@@ -933,7 +934,7 @@ void DeleteContactNote(
+@@ -934,7 +935,7 @@ void DeleteContactNote(
  	rpl::duplicate(
  		birthday
  	) | rpl::map([](Data::Birthday value) {
@@ -184,10 +184,10 @@ index 1e5c38c4e52e21ef9abeae982bc4abb4411c47ea..a016fa2e76ef071e88fcd7e5362a6c7c
  	) | rpl::distinct_until_changed(
  	) | rpl::on_next([=](bool today) {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index e92ad84384b813d3cc672fa9754e0b4fb132ff5d..402889090f1ce7944187cbda313c304b609e63f8 100644
+index 61424cf72a752a9b9fdc79e8c9fcd96c7f662f46..e196ecf9afd1ab9796e5178af872af4b37e8aab6 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -103,6 +103,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -102,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "window/window_session_controller.h"
  #include "ui/toast/toast.h"
  #include "boxes/sticker_set_box.h"
@@ -195,7 +195,7 @@ index e92ad84384b813d3cc672fa9754e0b4fb132ff5d..402889090f1ce7944187cbda313c304b
  #include "tele/tele_calls.h"
  #include "tele/tele_options.h"
  #include "tele/tele_onlines.h"
-@@ -645,7 +646,7 @@ TopBar::TopBar(
+@@ -653,7 +654,7 @@ TopBar::TopBar(
  
  void TopBar::setupBirthdayEffect() {
  	const auto user = _peer->asUser();
@@ -205,10 +205,10 @@ index e92ad84384b813d3cc672fa9754e0b4fb132ff5d..402889090f1ce7944187cbda313c304b
  	} else if (_wrap.current() == Wrap::Side) {
  		return;
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_values.cpp b/Telegram/SourceFiles/info/profile/info_profile_values.cpp
-index 821841816ed2ac289c9b7c0969a8baf1b838d167..609eab5b890020565f7a3bf472b047ad1e90ecee 100644
+index 01e692c51a1cb58c54b059cfe57771d557ecb75f..d5df0145c07b11ee6ad135dabbb701b547dcb0bf 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_values.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_values.cpp
-@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_premium_limits.h"
  #include "boxes/peers/edit_peer_permissions_box.h"
  #include "base/unixtime.h"
@@ -216,7 +216,7 @@ index 821841816ed2ac289c9b7c0969a8baf1b838d167..609eab5b890020565f7a3bf472b047ad
  #include "tele/tele_streamer_mode.h"
  #include "tele/tele_username_aliases.h"
  
-@@ -772,7 +773,7 @@ rpl::producer<QString> BirthdayLabelText(
+@@ -779,7 +780,7 @@ rpl::producer<QString> BirthdayLabelText(
  		rpl::producer<Data::Birthday> birthday) {
  	return std::move(birthday) | rpl::map([](Data::Birthday value) {
  		return rpl::conditional(
@@ -225,7 +225,7 @@ index 821841816ed2ac289c9b7c0969a8baf1b838d167..609eab5b890020565f7a3bf472b047ad
  			tr::lng_info_birthday_today_label(),
  			tr::lng_info_birthday_label());
  	}) | rpl::flatten_latest();
-@@ -817,7 +818,7 @@ rpl::producer<QString> BirthdayValueText(
+@@ -824,7 +825,7 @@ rpl::producer<QString> BirthdayValueText(
  		if (!value) {
  			return rpl::single(QString());
  		}

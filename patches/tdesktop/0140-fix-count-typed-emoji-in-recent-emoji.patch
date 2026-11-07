@@ -16,10 +16,10 @@ Subject: [PATCH] fix: count typed emoji in recent emoji
  create mode 100644 Telegram/SourceFiles/tele/tele_recent_emoji.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 84b2c24dfa22baffb5d02efd3e57ea9d0bf7b5e7..8ecbf1d9e604481efb9de96f2bac10bf0617ab40 100644
+index ac15f97b5f21e752b27f402598b179bf8011d661..370b701e0fdb232739566fcca53e480b976fd7b8 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2631,6 +2631,8 @@ PRIVATE
+@@ -2787,6 +2787,8 @@ PRIVATE
      tele/tele_protected.h
      tele/tele_punctual_scheduled.cpp
      tele/tele_punctual_scheduled.h
@@ -29,7 +29,7 @@ index 84b2c24dfa22baffb5d02efd3e57ea9d0bf7b5e7..8ecbf1d9e604481efb9de96f2bac10bf
      tele/tele_rich_timestamps.h
      tele/tele_screen_capture.cpp
 diff --git a/Telegram/SourceFiles/api/api_bot.cpp b/Telegram/SourceFiles/api/api_bot.cpp
-index 16f7a18af21f87e7025eb79f9447f3f333458df3..10141215fb97b156703c20781ea3e22652cdac04 100644
+index f4ff1f7fae9e97bdf2f00efd60f5a51559576e33..8d53ae2ed847e0b013fbb5aa7846ca3d32a5b047 100644
 --- a/Telegram/SourceFiles/api/api_bot.cpp
 +++ b/Telegram/SourceFiles/api/api_bot.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -49,10 +49,10 @@ index 16f7a18af21f87e7025eb79f9447f3f333458df3..10141215fb97b156703c20781ea3e226
  			.peer = item->history()->peer,
  			.command = QString(button->text),
 diff --git a/Telegram/SourceFiles/api/api_sending.cpp b/Telegram/SourceFiles/api/api_sending.cpp
-index 05ea4710eed8d31906426001f4908d01b5415838..47ca35a597ee875ffd2cb51e9e24e8fe354a068f 100644
+index af9da8a6edc0b54762662806d5619cde205eccdc..f67a6ccf0007a19177a025fa1dcbc2f2a9913eb2 100644
 --- a/Telegram/SourceFiles/api/api_sending.cpp
 +++ b/Telegram/SourceFiles/api/api_sending.cpp
-@@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_links.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_username_aliases.h"
@@ -60,7 +60,7 @@ index 05ea4710eed8d31906426001f4908d01b5415838..47ca35a597ee875ffd2cb51e9e24e8fe
  
  namespace Api {
  namespace {
-@@ -201,6 +202,7 @@ void SendExistingMedia(
+@@ -215,6 +216,7 @@ void SendExistingMedia(
  	})) {
  		return;
  	}
@@ -68,7 +68,7 @@ index 05ea4710eed8d31906426001f4908d01b5415838..47ca35a597ee875ffd2cb51e9e24e8fe
  	Tele::QuoteDeletedCaption(message, media);
  	const auto history = message.action.history;
  	const auto peer = history->peer;
-@@ -751,6 +753,7 @@ void SendMusicSelection(
+@@ -742,6 +744,7 @@ void SendMusicSelection(
  	if (items.empty()) {
  		return;
  	}
@@ -77,7 +77,7 @@ index 05ea4710eed8d31906426001f4908d01b5415838..47ca35a597ee875ffd2cb51e9e24e8fe
  
  	auto caption = TextWithEntities{
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 5dcda40d190b34f1d18ee2c37a75bf8b7649a7c5..d39934526fe4326bb59c08e103efae9db02d1884 100644
+index 04b5f86d727be08c5b42a6fdea0f647b5f43f2c5..7b992076685b3ceeebd733b3fabb5aa7950ceb05 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -85,10 +85,10 @@ index 5dcda40d190b34f1d18ee2c37a75bf8b7649a7c5..d39934526fe4326bb59c08e103efae9d
  #include "tele/tele_docked_media.h"
  #include "tele/tele_bookmarks.h"
 +#include "tele/tele_recent_emoji.h"
+ #include "tgw/tgw_storage.h"
  
  namespace {
- 
-@@ -4374,6 +4375,7 @@ void ApiWrap::sendFiles(
+@@ -4382,6 +4383,7 @@ void ApiWrap::sendFiles(
  	if (Tele::CalcmulaFiles(list, type, album, action)) {
  		return;
  	}
@@ -96,7 +96,7 @@ index 5dcda40d190b34f1d18ee2c37a75bf8b7649a7c5..d39934526fe4326bb59c08e103efae9d
  	Tele::QuoteDeletedFiles(list, action);
  	const auto &ephemeral = _session->ephemeralMessages();
  	if (album && !ephemeral.isEphemeralBotReply(action.replyTo.messageId)) {
-@@ -4804,6 +4806,7 @@ void ApiWrap::sendMessage(
+@@ -4796,6 +4798,7 @@ void ApiWrap::sendMessage(
  	if (Tele::CalcmulaMessage(message)) {
  		return;
  	}
@@ -105,10 +105,10 @@ index 5dcda40d190b34f1d18ee2c37a75bf8b7649a7c5..d39934526fe4326bb59c08e103efae9d
  	const auto history = message.action.history;
  	const auto peer = history->peer;
 diff --git a/Telegram/SourceFiles/core/core_settings.cpp b/Telegram/SourceFiles/core/core_settings.cpp
-index 6ef88cd5f0b946b0b92512d1a94e42a0f5c1fabb..e18eb144afb29916eac9287e8112cfb3931ea089 100644
+index 698a01b05d88b54c2306ae10dbc242d0ba7f1c44..bed70e227dd0b7f1ff1bcd3091516dd6b4b46cd0 100644
 --- a/Telegram/SourceFiles/core/core_settings.cpp
 +++ b/Telegram/SourceFiles/core/core_settings.cpp
-@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -20,6 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "webrtc/webrtc_create_adm.h"
  #include "webrtc/webrtc_device_common.h"
  #include "window/section_widget.h"
@@ -116,7 +116,7 @@ index 6ef88cd5f0b946b0b92512d1a94e42a0f5c1fabb..e18eb144afb29916eac9287e8112cfb3
  
  namespace Core {
  namespace {
-@@ -1544,6 +1545,7 @@ void Settings::resolveRecentEmoji() const {
+@@ -1722,6 +1723,7 @@ void Settings::resolveRecentEmoji() const {
  }
  
  void Settings::incrementRecentEmoji(RecentEmojiId id) {

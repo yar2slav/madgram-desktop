@@ -22,10 +22,10 @@ Subject: [PATCH] feat: turn off money
  create mode 100644 Telegram/SourceFiles/tele/tele_no_money.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 831dbb5b4a5919d2a20c357bdc1b21d2587735b8..5dfb865e080ef2bdf902c81c0a6648c4f1577f48 100644
+index 6d4820ca69b2205e9d77ab96c4ee3412e7ae5603..e3c76ea344765ba4b26027b4af6b3aef450f4da1 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2741,6 +2741,8 @@ PRIVATE
+@@ -2897,6 +2897,8 @@ PRIVATE
      tele/tele_new_settings.h
      tele/tele_no_ai.cpp
      tele/tele_no_ai.h
@@ -35,7 +35,7 @@ index 831dbb5b4a5919d2a20c357bdc1b21d2587735b8..5dfb865e080ef2bdf902c81c0a6648c4
      tele/tele_notices.h
      tele/tele_notices_mentions.cpp
 diff --git a/Telegram/SourceFiles/history/history_item.cpp b/Telegram/SourceFiles/history/history_item.cpp
-index 56949f1134d11343f65c8072f0771da722e2e08c..3802dc631ad948e23280fdb10d912847fd69c18f 100644
+index c6a3a7e200b4c3b4d7b7a330d243295c1736b4dd..5d9239d898c6349f6d6e05c54c4c959a2359defa 100644
 --- a/Telegram/SourceFiles/history/history_item.cpp
 +++ b/Telegram/SourceFiles/history/history_item.cpp
 @@ -91,6 +91,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -45,8 +45,8 @@ index 56949f1134d11343f65c8072f0771da722e2e08c..3802dc631ad948e23280fdb10d912847
 +#include "tele/tele_options.h"
  #include "tele/tele_send_order.h"
  #include "tele/tele_shot.h"
- 
-@@ -8901,7 +8902,7 @@ PreparedServiceText HistoryItem::prepareTonConnectRequestText() {
+ #include "tgw/tgw_media.h"
+@@ -8928,7 +8929,7 @@ PreparedServiceText HistoryItem::prepareTonConnectRequestText() {
  			tr::lng_action_ton_connect_expired_unknown);
  	} else {
  		const auto text = Wallet::TonConnectRequestText(request->topic, name);
@@ -55,7 +55,7 @@ index 56949f1134d11343f65c8072f0771da722e2e08c..3802dc631ad948e23280fdb10d912847
  			request->notificationText = text;
  			result.text = tr::lng_action_ton_connect_review(
  				tr::now,
-@@ -9211,7 +9212,9 @@ void HistoryItem::setupTonConnectRequest() {
+@@ -9238,7 +9239,9 @@ void HistoryItem::setupTonConnectRequest() {
  	const auto sessionId = request->sessionId;
  	auto &wallet = _history->session().wallet();
  	if (TonConnectRequestPending(request)) {
@@ -67,7 +67,7 @@ index 56949f1134d11343f65c8072f0771da722e2e08c..3802dc631ad948e23280fdb10d912847
  		// the store that names the dApp fills only once the wallet is
  		// Ready, so the first pending request asks for that one load.
 diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
-index f93c85bb2f70c46937b644c019bf29564bb40440..b638c4593ab99a44a85a6f50e09b229aa4e10ad8 100644
+index 70b90df3ccfb5105c0d8dcb61be89cb37e23d963..96a0fcab02c06282bcd7b84e7e9788eb477babc4 100644
 --- a/Telegram/SourceFiles/history/view/history_view_element.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
 @@ -1765,7 +1765,9 @@ void Element::refreshMedia(Element *replacing) {
@@ -114,10 +114,10 @@ index 00f468f53c101fdb1dbac31fee87988b36c8db4d..8c8a8fe0d03e3c1e6f732cb18c63020f
  		? selection
  		: (selection == FullSelection)
 diff --git a/Telegram/SourceFiles/main/main_app_config.cpp b/Telegram/SourceFiles/main/main_app_config.cpp
-index c652243c88c6c97de840c4b676a522b280d600b2..dbb68c06103b87068db4c755c3f01d8c762548bc 100644
+index c7e82aa9d9257ba8728a3cc6534af2678b36e5b4..e5a62632a07b5ea16866d1390811b463efb093b5 100644
 --- a/Telegram/SourceFiles/main/main_app_config.cpp
 +++ b/Telegram/SourceFiles/main/main_app_config.cpp
-@@ -284,7 +284,8 @@ QString AppConfig::oldWalletBotUsername() const {
+@@ -277,7 +277,8 @@ QString AppConfig::oldWalletBotUsername() const {
  }
  
  bool AppConfig::walletAvailable() const {
@@ -126,7 +126,7 @@ index c652243c88c6c97de840c4b676a522b280d600b2..dbb68c06103b87068db4c755c3f01d8c
 +		&& (Tele::ForceWallet() || get<bool>(u"wallet_available"_q, true));
  }
  
- int AppConfig::storiesAlbumsLimit() const {
+ int AppConfig::storiesAlbumLimit() const {
 diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
 index fee70b1cd5f8994734ee6bfc6a171281400a7f31..37bd702260184aa8b30042109c1fce90b3741479 100644
 --- a/Telegram/SourceFiles/settings/settings_tele.cpp
@@ -252,7 +252,7 @@ index ff213c1fcceb8fd43494585160a33767e596ed41..00ff6402cc4630025c08547ab7fd1c38
  		Toggle(kOptionAttachMenuClick),
  		Toggle(kOptionPinSets),
 diff --git a/Telegram/SourceFiles/wallet/wallet_panel.cpp b/Telegram/SourceFiles/wallet/wallet_panel.cpp
-index fce4b4f7857a473603482233fc6a2b0fee595675..1b692f292c24fe70a1603421633f0fb21ac9f6f2 100644
+index 053df8ece40f59fed4c04c10543dfdd67f2962a5..0c0cc14a1a668e6eadb9c3f11c6b364db6a22f8e 100644
 --- a/Telegram/SourceFiles/wallet/wallet_panel.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_panel.cpp
 @@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -263,7 +263,7 @@ index fce4b4f7857a473603482233fc6a2b0fee595675..1b692f292c24fe70a1603421633f0fb2
  #include "ui/controls/ton_common.h"
  #include "ui/widgets/menu/menu_add_action_callback.h"
  #include "ui/widgets/separate_panel.h"
-@@ -145,6 +146,9 @@ bool MinimizeActiveWindow() {
+@@ -150,6 +151,9 @@ bool MinimizeActiveWindow() {
  void OpenTransferLink(
  		not_null<Window::SessionController*> controller,
  		const QString &url) {
@@ -273,7 +273,7 @@ index fce4b4f7857a473603482233fc6a2b0fee595675..1b692f292c24fe70a1603421633f0fb2
  	if (!TransferLinkValid(url)) {
  		controller->showToast(tr::lng_wallet_send_invalid_address(tr::now));
  		return;
-@@ -163,6 +167,9 @@ void OpenSendGramsLink(
+@@ -168,6 +172,9 @@ void OpenSendGramsLink(
  		not_null<Window::SessionController*> controller,
  		const QString &to,
  		const QString &amount) {
@@ -283,7 +283,7 @@ index fce4b4f7857a473603482233fc6a2b0fee595675..1b692f292c24fe70a1603421633f0fb2
  	const auto amountNano = ParseLinkAmount(amount);
  	if (!amountNano || (to.isEmpty() && !amount.isEmpty())) {
  		controller->showToast(tr::lng_wallet_send_link_invalid(tr::now));
-@@ -224,6 +231,9 @@ void OpenSendMoney(
+@@ -261,6 +268,9 @@ void OpenSendMoney(
  void OpenTonConnectLink(
  		not_null<Window::SessionController*> controller,
  		const TonConnectLink &link) {
@@ -293,7 +293,7 @@ index fce4b4f7857a473603482233fc6a2b0fee595675..1b692f292c24fe70a1603421633f0fb2
  	auto &tonConnect = controller->session().wallet().tonConnect();
  	if (link.kind == TonConnectLinkKind::OpenPending) {
  		tonConnect.requests().openPending(controller, link.clientId);
-@@ -237,6 +247,9 @@ void OpenTonConnectLink(
+@@ -274,6 +284,9 @@ void OpenTonConnectLink(
  void OpenTonConnectRequest(
  		not_null<Window::SessionController*> controller,
  		FullMsgId itemId) {
@@ -304,10 +304,10 @@ index fce4b4f7857a473603482233fc6a2b0fee595675..1b692f292c24fe70a1603421633f0fb2
  		controller,
  		itemId);
 diff --git a/Telegram/SourceFiles/wallet/wallet_session.cpp b/Telegram/SourceFiles/wallet/wallet_session.cpp
-index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13a8278987 100644
+index bb3b75e3fc42e788fad9d2c595afa05f67c19db1..ea353d5fdb978030009f39fd3cf267ad2dbc30a9 100644
 --- a/Telegram/SourceFiles/wallet/wallet_session.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_session.cpp
-@@ -2369,6 +2369,9 @@ Session::Session(not_null<Main::Session*> session)
+@@ -2263,6 +2263,9 @@ Session::Session(not_null<Main::Session*> session)
  		refreshGaslessInfo();
  	}, _lifetime);
  	resetGaslessInfo();
@@ -317,7 +317,7 @@ index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13
  }
  
  Session::~Session() {
-@@ -2438,6 +2441,9 @@ void Session::setPanel(std::unique_ptr<Ui::SeparatePanel> panel) {
+@@ -2332,6 +2335,9 @@ void Session::setPanel(std::unique_ptr<Ui::SeparatePanel> panel) {
  }
  
  void Session::ensureLoaded() {
@@ -327,7 +327,7 @@ index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13
  	if (_loaded) {
  		return;
  	}
-@@ -2531,6 +2537,9 @@ rpl::producer<> Session::transferWalletIdentityChanges() const {
+@@ -2425,6 +2431,9 @@ rpl::producer<> Session::transferWalletIdentityChanges() const {
  }
  
  void Session::refreshState() {
@@ -337,7 +337,7 @@ index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13
  	if ((_presence.current() == Presence::Unavailable) || _stateRequestId) {
  		return;
  	}
-@@ -3100,10 +3109,16 @@ void Session::applyState(const MTPWalletState &state, bool pushed) {
+@@ -2994,10 +3003,16 @@ void Session::applyState(const MTPWalletState &state, bool pushed) {
  }
  
  void Session::applyUpdate(const MTPDupdateWalletState &data) {
@@ -354,7 +354,7 @@ index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13
  	const auto &hash = data.vmsg_hash().v;
  	if (hash.isEmpty()) {
  		return;
-@@ -3139,6 +3154,9 @@ void Session::applyUpdate(const MTPDupdateSentWalletTransaction &data) {
+@@ -3033,6 +3048,9 @@ void Session::applyUpdate(const MTPDupdateSentWalletTransaction &data) {
  }
  
  void Session::applyUpdate(const MTPDupdateWalletGaslessInfo &data) {
@@ -364,7 +364,7 @@ index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13
  	const auto weak = base::make_weak(_engine.get());
  	applyGaslessInfo(GaslessInfoFromServer(data), true);
  	if (weak) {
-@@ -3147,11 +3165,17 @@ void Session::applyUpdate(const MTPDupdateWalletGaslessInfo &data) {
+@@ -3041,11 +3059,17 @@ void Session::applyUpdate(const MTPDupdateWalletGaslessInfo &data) {
  }
  
  void Session::applyUpdate(const MTPDupdateWalletTonConnectSession &data) {
@@ -382,7 +382,7 @@ index 4659f0e3f9c594c6b6ea5137e44b5d46cedb3c93..59fd6096aecd8e8457ba45fe817a5a13
  	_tonConnect->applyPendingDisconnect(data.vsession_ids().v);
  }
  
-@@ -8165,6 +8189,9 @@ void Session::stopPolling() {
+@@ -8075,6 +8099,9 @@ void Session::stopPolling() {
  }
  
  void Session::updatePollingState() {

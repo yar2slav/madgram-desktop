@@ -46,10 +46,10 @@ index e2d4aa8a76b68d2fcfe6337daf50724a89b9f969..5b968bc452c5d6d6428b09666c6794af
  	const auto originOther = peer->isUser()
  		? Data::FileOriginUserPhoto(peerToUser(peer->id), photo->id)
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 61fb42f73e4936a00bcf87b9034a21a057a4f697..180de85b0e67f0e9c2e91ea095d28da2c9d50f96 100644
+index 935f0eb0a0822adec2cf5fa48ba5219078ec3608..bd9b2431c6c26c88a39a922372106168cb8142ec 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -86,6 +86,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -95,6 +95,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/filters/edit_filter_box.h"
  #include "boxes/peers/edit_forum_topic_box.h"
  #include "boxes/peer_list_box.h"
@@ -57,7 +57,7 @@ index 61fb42f73e4936a00bcf87b9034a21a057a4f697..180de85b0e67f0e9c2e91ea095d28da2
  #include "api/api_chat_filters.h"
  #include "base/qt/qt_common_adapters.h"
  #include "styles/style_dialogs.h"
-@@ -315,6 +316,11 @@ InnerWidget::InnerWidget(
+@@ -325,6 +326,11 @@ InnerWidget::InnerWidget(
  
  	_communityViewable.setRepaint([=] { update(); });
  
@@ -69,7 +69,7 @@ index 61fb42f73e4936a00bcf87b9034a21a057a4f697..180de85b0e67f0e9c2e91ea095d28da2
  	style::PaletteChanged(
  	) | rpl::on_next([=] {
  		_topicJumpCache = nullptr;
-@@ -1797,7 +1803,8 @@ Ui::VideoUserpic *InnerWidget::validateVideoUserpic(
+@@ -1823,7 +1829,8 @@ Ui::VideoUserpic *InnerWidget::validateVideoUserpic(
  		|| peer->userpicPhotoUnknown()
  		|| !peer->userpicHasVideo()
  		|| peer->isSelf()
@@ -80,10 +80,10 @@ index 61fb42f73e4936a00bcf87b9034a21a057a4f697..180de85b0e67f0e9c2e91ea095d28da2
  		return nullptr;
  	}
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 1d112c6b845826470bde1748c647c99bd95fcd37..135d0d56ee686bda199a1d840320bddc7e3c25ac 100644
+index 5c5ed8d90f0911244b5747f7d6bfff5e45088f29..c5d157e67032d161f751e7a34f71a4da7a414c69 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -136,6 +136,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -141,6 +141,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ignored.h"
  #include "tele/tele_secret_media.h"
  #include "tele/tele_message_menu.h"
@@ -91,7 +91,7 @@ index 1d112c6b845826470bde1748c647c99bd95fcd37..135d0d56ee686bda199a1d840320bddc
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
  
-@@ -442,6 +443,10 @@ HistoryInner::HistoryInner(
+@@ -451,6 +452,10 @@ HistoryInner::HistoryInner(
  			update();
  		}
  	}, lifetime());
@@ -102,7 +102,7 @@ index 1d112c6b845826470bde1748c647c99bd95fcd37..135d0d56ee686bda199a1d840320bddc
  
  	using PlayRequest = ChatHelpers::EmojiInteractionPlayRequest;
  	_controller->emojiInteractions().playRequests(
-@@ -1889,7 +1894,8 @@ HistoryInner::VideoUserpic *HistoryInner::validateVideoUserpic(
+@@ -1905,7 +1910,8 @@ HistoryInner::VideoUserpic *HistoryInner::validateVideoUserpic(
  		not_null<PeerData*> peer) {
  	if (!peer->isPremium()
  		|| peer->userpicPhotoUnknown()
@@ -113,10 +113,10 @@ index 1d112c6b845826470bde1748c647c99bd95fcd37..135d0d56ee686bda199a1d840320bddc
  		return nullptr;
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 75e1041d401a295bf707db4aa0635a39d6cd1642..ec7922895b2b417ba930877367d94f7c747ed869 100644
+index 6e1a57db9edc3beed0c40570d35a80899543c8e1..f79075df78b2e80b37f72028e7527d4938c5436a 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -101,6 +101,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "data/data_message_reactions.h"
  #include "data/data_peer_values.h"
  #include "tele/tele_ignored.h"
@@ -124,7 +124,7 @@ index 75e1041d401a295bf707db4aa0635a39d6cd1642..ec7922895b2b417ba930877367d94f7c
  #include "styles/style_chat.h"
  #include "styles/style_window.h" // columnMaximalWidthLeft
  
-@@ -664,6 +665,11 @@ ListWidget::ListWidget(
+@@ -708,6 +709,11 @@ ListWidget::ListWidget(
  		update();
  	}, lifetime());
  
@@ -136,7 +136,7 @@ index 75e1041d401a295bf707db4aa0635a39d6cd1642..ec7922895b2b417ba930877367d94f7c
  	_session->data().peerDecorationsUpdated(
  	) | rpl::on_next([=] {
  		update();
-@@ -3283,7 +3289,8 @@ ListWidget::VideoUserpic *ListWidget::validateVideoUserpic(
+@@ -3729,7 +3735,8 @@ ListWidget::VideoUserpic *ListWidget::validateVideoUserpic(
  		not_null<PeerData*> peer) {
  	if (!peer->isPremium()
  		|| peer->userpicPhotoUnknown()
@@ -147,10 +147,10 @@ index 75e1041d401a295bf707db4aa0635a39d6cd1642..ec7922895b2b417ba930877367d94f7c
  		return nullptr;
  	}
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-index ed8fb09070c40052ddf925120b1c97d04f500c59..12bdf642ddef283b7ee1064c0a905f9ad04469c3 100644
+index 463bb75921dc0cd2d55be0ffb16b44efadd71c50..0d5474c0d5ac163cf4070cb512e52d94957b8b8e 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
-@@ -576,6 +576,11 @@ TopBar::TopBar(
+@@ -584,6 +584,11 @@ TopBar::TopBar(
  			[=] { update(); });
  	} else if (!_savedMessages) {
  		updateVideoUserpic();
@@ -162,7 +162,7 @@ index ed8fb09070c40052ddf925120b1c97d04f500c59..12bdf642ddef283b7ee1064c0a905f9a
  	}
  	rpl::merge(
  		windowActiveValue() | rpl::to_empty,
-@@ -3214,7 +3219,9 @@ void TopBar::updateVideoUserpic() {
+@@ -3200,7 +3205,9 @@ void TopBar::updateVideoUserpic() {
  		return;
  	}
  	const auto photo = _peer->owner().photo(id);
@@ -269,10 +269,10 @@ index 5e3233b8828f44e56fcf10f681cb04eccad3f717..ef996ff5bde12f6bf9a11857779a8c35
  [[nodiscard]] bool PeerIdsWithoutSpaces();
  [[nodiscard]] bool BotApiPeerIds();
 diff --git a/Telegram/SourceFiles/ui/controls/userpic_button.cpp b/Telegram/SourceFiles/ui/controls/userpic_button.cpp
-index cc76eac5ea71fb3e2bbab42adfea90f47589e80f..ef39e4684c4885b7d8a19a3ec10cefbffcf5d3fb 100644
+index 85dcb5fb4cca56a9ad54e44a8fd2ab78ab3628ee..18c8b39bda1f25713ad255bd6145d57014901fae 100644
 --- a/Telegram/SourceFiles/ui/controls/userpic_button.cpp
 +++ b/Telegram/SourceFiles/ui/controls/userpic_button.cpp
-@@ -44,6 +44,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -45,6 +45,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "media/streaming/media_streaming_document.h"
  #include "settings/sections/settings_calls.h" // AddCameraSubsection.
  #include "settings/settings_privacy_controllers.h"
@@ -280,7 +280,7 @@ index cc76eac5ea71fb3e2bbab42adfea90f47589e80f..ef39e4684c4885b7d8a19a3ec10cefbf
  #include "webrtc/webrtc_environment.h"
  #include "webrtc/webrtc_video_track.h"
  #include "ui/widgets/popup_menu.h"
-@@ -922,7 +923,9 @@ void UserpicButton::updateVideo() {
+@@ -935,7 +936,9 @@ void UserpicButton::updateVideo() {
  		return;
  	}
  	const auto photo = _peer->owner().photo(id);

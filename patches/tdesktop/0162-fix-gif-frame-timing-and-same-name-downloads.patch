@@ -16,10 +16,10 @@ Subject: [PATCH] fix: gif frame timing and same-name downloads
  create mode 100644 Telegram/SourceFiles/tele/tele_download_paths.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7dfaaad8e8a296e0596138790f1834910783971d..a9b39f695368e043ccfe17e6d5fa86fab9f8943a 100644
+index 81e81edd73394c3086dfa1c0292af6b95449407a..f7c100387b466f745206ba0dcc872e6d0a4600b5 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2545,6 +2545,8 @@ PRIVATE
+@@ -2701,6 +2701,8 @@ PRIVATE
      tele/tele_docked_media.h
      tele/tele_download_folders.cpp
      tele/tele_download_folders.h
@@ -29,18 +29,18 @@ index 7dfaaad8e8a296e0596138790f1834910783971d..a9b39f695368e043ccfe17e6d5fa86fa
      tele/tele_drafts.h
      tele/tele_drafts_box.cpp
 diff --git a/Telegram/SourceFiles/core/file_utilities.cpp b/Telegram/SourceFiles/core/file_utilities.cpp
-index 648dc30f0193d66c3af66be0c5f7f88529561707..697b8b5342e83f17395d46e8c5292d06ce03a632 100644
+index b9c5ad5efc97b8853832bbe91b8a51474c5a2615..1ca919bb30162cce5da740a6565235d7b416734d 100644
 --- a/Telegram/SourceFiles/core/file_utilities.cpp
 +++ b/Telegram/SourceFiles/core/file_utilities.cpp
-@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "ui/chat/attach/attach_extensions.h"
- #include "main/main_session.h"
+@@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "ui/toast/toast.h"
+ #include "ui/delayed_activation.h"
  #include "mainwindow.h"
 +#include "tele/tele_download_paths.h"
  
- #include <QtWidgets/QFileDialog>
  #include <QtCore/QCoreApplication>
-@@ -95,7 +96,7 @@ QString filedialogDefaultName(
+ #include <QtCore/QStandardPaths>
+@@ -103,7 +104,7 @@ QString filedialogDefaultName(
  		const auto nameBase = (dir.endsWith('/') ? dir : (dir + '/'))
  			+ base;
  		name = nameBase + extension;
@@ -50,10 +50,10 @@ index 648dc30f0193d66c3af66be0c5f7f88529561707..697b8b5342e83f17395d46e8c5292d06
  		}
  	}
 diff --git a/Telegram/SourceFiles/data/data_document.cpp b/Telegram/SourceFiles/data/data_document.cpp
-index 67dd11d8f8c680d37af347c213a139e02d2a8051..4fb3a8d7e9a6888b5ffe934cf509a1d4ffcd6005 100644
+index 727b3f7daa321507e7ce034a8cc74bf565884bd0..9b7206427fe5c1db5c955e806adfc7f9f6f7fcca 100644
 --- a/Telegram/SourceFiles/data/data_document.cpp
 +++ b/Telegram/SourceFiles/data/data_document.cpp
-@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "lottie/lottie_animation.h"
  #include "boxes/abstract_box.h" // Ui::hideLayer().
  #include "tele/tele_download_folders.h"
@@ -61,7 +61,7 @@ index 67dd11d8f8c680d37af347c213a139e02d2a8051..4fb3a8d7e9a6888b5ffe934cf509a1d4
  
  #include <QtCore/QBuffer>
  #include <QtCore/QMimeType>
-@@ -195,7 +196,7 @@ QString FileNameUnsafe(
+@@ -204,7 +205,7 @@ QString FileNameUnsafe(
  	}
  	QString nameBase = path + nameStart;
  	name = nameBase + extension;
@@ -71,10 +71,10 @@ index 67dd11d8f8c680d37af347c213a139e02d2a8051..4fb3a8d7e9a6888b5ffe934cf509a1d4
  	}
  
 diff --git a/Telegram/SourceFiles/media/streaming/media_streaming_video_track.cpp b/Telegram/SourceFiles/media/streaming/media_streaming_video_track.cpp
-index 587270eeb952d9de94f024909e9c314974001772..26aaadc965df6c5fe8fb09403b82693681d9854a 100644
+index 77bdcb9d3fde17551d988c1fe345e2ece27bd3e3..b8ace7696ae7f705081f4fee50a52752ed9ae620 100644
 --- a/Telegram/SourceFiles/media/streaming/media_streaming_video_track.cpp
 +++ b/Telegram/SourceFiles/media/streaming/media_streaming_video_track.cpp
-@@ -1130,8 +1130,11 @@ not_null<VideoTrack::Frame*> VideoTrack::Shared::frameForPaint() {
+@@ -1132,8 +1132,11 @@ not_null<VideoTrack::Frame*> VideoTrack::Shared::frameForPaint() {
  }
  
  VideoTrack::FrameWithIndex VideoTrack::Shared::frameForPaintWithIndex() {
@@ -89,7 +89,7 @@ index 587270eeb952d9de94f024909e9c314974001772..26aaadc965df6c5fe8fb09403b826936
  	Assert(frame->position != kTimeUnknown);
  	Assert(frame->displayed != kTimeUnknown);
 diff --git a/Telegram/SourceFiles/storage/file_download.cpp b/Telegram/SourceFiles/storage/file_download.cpp
-index d468b15618212346fd7746d1849d52d6be7bf857..e02954924ca6cf1a54e19bc28af517437ae23c6f 100644
+index c97fdd0819d2cf85036bdb52f9d0bcc5e7fee0cf..b18fbcb30070381432b222d52a2bebd82dc80253 100644
 --- a/Telegram/SourceFiles/storage/file_download.cpp
 +++ b/Telegram/SourceFiles/storage/file_download.cpp
 @@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

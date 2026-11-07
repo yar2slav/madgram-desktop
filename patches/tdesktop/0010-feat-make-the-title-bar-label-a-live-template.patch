@@ -17,10 +17,10 @@ Subject: [PATCH] feat: make the title bar label a live template
  create mode 100644 Telegram/SourceFiles/tele/tele_title.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index fcd47f838e5583431a3097b00765129f479090a1..5e8044c0ebb859d60c0072b020da30798ae55a42 100644
+index 43c6684f7e86a437a686cb88ff383c95db214fbe..27f5a046e84bc69b1aa8c6a2e05d570099e2bb63 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2493,6 +2493,8 @@ PRIVATE
+@@ -2649,6 +2649,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_shortcuts.cpp
      tele/tele_shortcuts.h
@@ -587,7 +587,7 @@ index f469c8cda38471623fb6b02ef4e65976373424f0..c5365571e3ab23a66bbfb46a09d5a52f
  
  	rpl::merge(
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 8ee493902c78a3cbf19c2be5d420dacba010b950..46755f395bb5012a84b3dd2c858cc21d1d401ed6 100644
+index f8260bb5d80265a8c1f225a1478ac9455a7c9660..0aef2a3b150101a937faf07e2bc293ace61ddcad 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
 @@ -48,7 +48,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

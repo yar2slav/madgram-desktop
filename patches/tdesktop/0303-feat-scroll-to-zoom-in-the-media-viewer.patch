@@ -12,10 +12,10 @@ Subject: [PATCH] feat: scroll to zoom in the media viewer
  5 files changed, 22 insertions(+), 2 deletions(-)
 
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index d51a11792428d925d48808f94b82d10bebf6d281..3668f0c15e2b07d08eb27b068ca6a9b8acea8e73 100644
+index 7106d64fae4ccb5d2570b034419b0490f514e938..a4789941f02fdda72e5ea152d41e20fbe6b8c803 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -7581,18 +7581,20 @@ void OverlayWidget::handleWheelEvent(not_null<QWheelEvent*> e) {
+@@ -7652,18 +7652,20 @@ void OverlayWidget::handleWheelEvent(not_null<QWheelEvent*> e) {
  		&& ((e->source() == Qt::MouseEventNotSynthesized)
  			|| (e->source() == Qt::MouseEventSynthesizedBySystem));
  	const auto anchor = zoomAnchor(e->globalPosition());

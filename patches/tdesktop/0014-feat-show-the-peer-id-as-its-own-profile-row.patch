@@ -16,10 +16,10 @@ Subject: [PATCH] feat: show the peer id as its own profile row
  create mode 100644 Telegram/SourceFiles/tele/tele_peer_id.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1e35d36f2d8cfea9c199e26cf6583eb5fd36c133..c33e38f77547085f5cf26b2560cedec24529b9e9 100644
+index fff4a5079574bf17a5b875ed90c0d9133ab8a4ca..be5be7bd349f3421db6ba7236433c2dca2ccb270 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2497,6 +2497,8 @@ PRIVATE
+@@ -2653,6 +2653,8 @@ PRIVATE
      tele/tele_gifts.h
      tele/tele_options.cpp
      tele/tele_options.h
@@ -29,10 +29,10 @@ index 1e35d36f2d8cfea9c199e26cf6583eb5fd36c133..c33e38f77547085f5cf26b2560cedec2
      tele/tele_shortcuts.h
      tele/tele_title.cpp
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40ae7fbb6f8 100644
+index 533ddfac570f0557d432f4ce83cb5720560aca2d..271db7a6d4a6662f056079bd44c5b387241e3443 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -76,6 +76,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "menu/menu_mute.h"
  #include "settings/settings_common.h"
  #include "support/support_helper.h"
@@ -40,7 +40,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  #include "ui/boxes/peer_qr_box.h"
  #include "ui/boxes/report_box_graphics.h"
  #include "ui/controls/userpic_button.h"
-@@ -122,7 +123,6 @@ namespace Profile {
+@@ -123,7 +124,6 @@ namespace Profile {
  namespace {
  
  constexpr auto kDay = Data::WorkingInterval::kDay;
@@ -48,7 +48,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  
  class DraggableUrlClickHandler final : public UrlClickHandler {
  public:
-@@ -142,8 +142,8 @@ private:
+@@ -143,8 +143,8 @@ private:
  base::options::toggle ShowPeerIdBelowAbout({
  	.id = kOptionShowPeerIdBelowAbout,
  	.name = "Show Peer IDs in Profile",
@@ -59,7 +59,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  });
  
  base::options::toggle ShowChannelJoinedBelowAbout({
-@@ -234,26 +234,11 @@ base::options::toggle ShowChannelJoinedBelowAbout({
+@@ -235,26 +235,11 @@ base::options::toggle ShowChannelJoinedBelowAbout({
  	return AboutValue(
  		peer
  	) | rpl::map([=](TextWithEntities &&value) {
@@ -87,7 +87,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  					}
  					using namespace Ui::Text;
  					value.append((channel->isMegagroup()
-@@ -273,24 +258,6 @@ base::options::toggle ShowChannelJoinedBelowAbout({
+@@ -274,24 +259,6 @@ base::options::toggle ShowChannelJoinedBelowAbout({
  	});
  }
  
@@ -112,7 +112,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  [[nodiscard]] bool AreNonTrivialHours(const Data::WorkingHours &hours) {
  	if (!hours) {
  		return false;
-@@ -1475,20 +1442,6 @@ Section DetailsFiller::makeInfo() {
+@@ -1476,20 +1443,6 @@ Section DetailsFiller::makeInfo() {
  		state->aboutText = AboutValue(peer);
  		label->setContextMenuHook([=](
  				Ui::FlatLabel::ContextMenuRequest request) {
@@ -133,7 +133,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  			const auto selected = !request.selection.empty();
  			const auto full = state->labelText.current();
  			const auto about = state->aboutText.current();
-@@ -1713,7 +1666,6 @@ Section DetailsFiller::makeInfo() {
+@@ -1714,7 +1667,6 @@ Section DetailsFiller::makeInfo() {
  			std::move(label),
  			AboutWithAdvancedValue(user));
  		setupAboutContextMenu(about.text, AboutWithAdvancedValue(user));
@@ -141,7 +141,7 @@ index 00d680d5f5795f93fe9b1cd9f58eca27629ddea3..1cb98ad677c909fcc677f466ca29c40a
  
  		const auto usernameLine = addInfoOneLine(
  			UsernamesSubtext(_peer, tr::lng_info_username_label()),
-@@ -1895,9 +1847,17 @@ Section DetailsFiller::makeInfo() {
+@@ -1896,9 +1848,17 @@ Section DetailsFiller::makeInfo() {
  			: AboutWithAdvancedValue(_peer));
  		if (!_topic) {
  			setupAboutContextMenu(about.text, AboutWithAdvancedValue(_peer));

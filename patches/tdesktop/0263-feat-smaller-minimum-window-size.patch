@@ -17,10 +17,10 @@ Subject: [PATCH] feat: smaller minimum window size
  create mode 100644 Telegram/SourceFiles/tele/tele_window_size.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 0c7d4918ff961e8db6e9a34c2fbbbb376bd0e4d7..66787e93c78d882c0b4aeaab2a39d5c62b4739e9 100644
+index 15ed6b496fd5960d4d0031a3050bc584bfeb4f98..e04c2f3e7e6f51b8f5db2d8c4f81a8389db0feee 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2861,6 +2861,8 @@ PRIVATE
+@@ -3017,6 +3017,8 @@ PRIVATE
      tele/tele_who_reacted.h
      tele/tele_who_read.cpp
      tele/tele_who_read.h
@@ -163,7 +163,7 @@ index 0000000000000000000000000000000000000000..43bb40079cd077f011ca6ecf75df577d
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index c849c8e4768f5df7d97f935387081cc9568c9877..12d180c2ac6b660d495c877b13a181498ac26073 100644
+index aa95130f12115d88ca63c83bd4175fc82275503d..1f8c907bddd615fa2fe82697e1246471b1d57b98 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
 @@ -49,7 +49,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

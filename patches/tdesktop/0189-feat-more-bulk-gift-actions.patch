@@ -88,7 +88,7 @@ index 2f6fa8e733963930cd355af1191312a8c95fd8b2..b7c41ddbb5d40068a7e2afe245a496dd
  	std::shared_ptr<ChatHelpers::Show> show,
  	std::shared_ptr<Data::UniqueGift> unique,
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index c088af4b02098082b9f8435adc65893940d008b2..0ea3b1494c7fa2d1c4910fbc0d1b7815434cfd48 100644
+index 1ce63f292762d9780ba5026f629de45ee02ae4fb..8dcf800843ff400ce27a4fb28b6d4f3b71a50688 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -369,7 +369,16 @@ InnerWidget::InnerWidget(
@@ -110,7 +110,7 @@ index c088af4b02098082b9f8435adc65893940d008b2..0ea3b1494c7fa2d1c4910fbc0d1b7815
  	if (peer->canManageGifts()) {
  		subscribeToUpdates();
 diff --git a/Telegram/SourceFiles/settings/settings_credits_graphics.cpp b/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
-index c79911d023a762bf06124bdc2d0d61b26cd77fc9..84de8df90cf647a82fdb27c8459e7615daf97eec 100644
+index c28eeb3742526ee1051c896b3275760e3d2a493d..93050800cf02321ddb676c62513043b0ab8ceea7 100644
 --- a/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
 +++ b/Telegram/SourceFiles/settings/settings_credits_graphics.cpp
 @@ -261,11 +261,12 @@ void ConvertStarGift(
@@ -139,7 +139,7 @@ index c79911d023a762bf06124bdc2d0d61b26cd77fc9..84de8df90cf647a82fdb27c8459e7615
  		if (const auto window = show->resolveWindow()) {
  			if (const auto channel = savedId.chat()) {
  				window->showSection(Info::ChannelEarn::Make(channel));
-@@ -3934,4 +3939,20 @@ void AddUniqueCloseMoreButton(
+@@ -3920,4 +3925,20 @@ void AddUniqueCloseMoreButton(
  	}
  }
  

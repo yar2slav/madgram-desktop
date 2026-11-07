@@ -18,10 +18,10 @@ Subject: [PATCH] feat: send scheduled messages on time
  create mode 100644 Telegram/SourceFiles/tele/tele_punctual_scheduled.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e7e600ef40ac4388be3b5fb4fbf946b605fa0672..517d1f7fdb4fdd233a3b2775f2049a27a5d928e4 100644
+index d9d3941a0724e551225d85cb5ea37f4fae94218d..5e2c550736bd42c2466feecbefaa981f36aedac2 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2583,6 +2583,8 @@ PRIVATE
+@@ -2739,6 +2739,8 @@ PRIVATE
      tele/tele_peer_id.h
      tele/tele_phones.cpp
      tele/tele_phones.h
@@ -31,10 +31,10 @@ index e7e600ef40ac4388be3b5fb4fbf946b605fa0672..517d1f7fdb4fdd233a3b2775f2049a27
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
 diff --git a/Telegram/SourceFiles/data/components/scheduled_messages.cpp b/Telegram/SourceFiles/data/components/scheduled_messages.cpp
-index 52c7158ab0d7723b3c23c3acaec6c1215693f196..282ac4b3952bf79ca59f94be40fe6269486ef23c 100644
+index 8e764d56e76820f46473bad2928704b71312c99d..642d6330f177fda231cf1d40960abfb8f68529d6 100644
 --- a/Telegram/SourceFiles/data/components/scheduled_messages.cpp
 +++ b/Telegram/SourceFiles/data/components/scheduled_messages.cpp
-@@ -437,6 +437,10 @@ rpl::producer<> ScheduledMessages::updates(not_null<History*> history) {
+@@ -438,6 +438,10 @@ rpl::producer<> ScheduledMessages::updates(not_null<History*> history) {
  	}) | rpl::to_empty;
  }
  
@@ -58,18 +58,18 @@ index 90d5b04151157a81a4cfcbe41baf0634926e6aba..ebae6c7d564b23f76296d6b997c13952
  	[[nodiscard]] Data::MessagesSlice list(
  		not_null<const Data::ForumTopic*> topic) const;
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index e84a90c65de656b38940c9a705bc4a7760ba8ce4..60b3003cef2fe7c8e6e21a466298f993d2e9f516 100644
+index 6c4c6f569b74fac89cdb09b325a215d9dfb34ba8..8566e085724038e47c8d2b9658f87d33c0c3322b 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -63,6 +63,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "core/application.h"
+@@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tgw/tgw_storage.h"
  #include "ui/text/text_utilities.h"
  #include "ui/layers/generic_box.h"
 +#include "tele/tele_punctual_scheduled.h"
  #include "styles/style_layers.h"
  
  #ifndef TDESKTOP_DISABLE_SPELLCHECK
-@@ -277,6 +278,8 @@ Session::Session(
+@@ -279,6 +280,8 @@ Session::Session(
  	) | rpl::on_next([=] {
  		appConfigRefreshed();
  	}, _lifetime);

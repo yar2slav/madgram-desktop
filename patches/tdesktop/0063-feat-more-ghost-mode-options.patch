@@ -15,10 +15,10 @@ Subject: [PATCH] feat: more ghost mode options
  8 files changed, 172 insertions(+), 6 deletions(-)
 
 diff --git a/Telegram/SourceFiles/api/api_updates.cpp b/Telegram/SourceFiles/api/api_updates.cpp
-index 5a379e8abcb3215b10876496d745fc8107c85847..19f5fb4af05ae3207f2a0f1a31e228736406bf5a 100644
+index 793065a25756940bdd01c4dd3c27119bfbbdf0f2..5c3272da9e681d6ea818e8f40923cc540a9a1981 100644
 --- a/Telegram/SourceFiles/api/api_updates.cpp
 +++ b/Telegram/SourceFiles/api/api_updates.cpp
-@@ -1705,6 +1705,7 @@ void Updates::feedUpdate(const MTPUpdate &update) {
+@@ -1721,6 +1721,7 @@ void Updates::feedUpdate(const MTPUpdate &update) {
  					// registerMessageSentData.
  					return;
  				} else {
@@ -27,10 +27,10 @@ index 5a379e8abcb3215b10876496d745fc8107c85847..19f5fb4af05ae3207f2a0f1a31e22873
  						id.peer,
  						newId);
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 07fe89ed6a7d3f7b0d0aaa025896fb775fe518ee..f91d10ad06029f0a3d0ff96c85b6796e410e06b5 100644
+index 6a1568b6ba5b83ee2f389aa9bb54290647ec4c5e..dfbacbe9f006bc7d556cb3ef23c3e1bf34f85337 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
-@@ -1451,7 +1451,7 @@ void ApiWrap::markContentsRead(
+@@ -1475,7 +1475,7 @@ void ApiWrap::markContentsRead(
  		if (Tele::KeepsSecretMedia(item)
  			|| !item->markContentsRead(true)
  			|| !item->isRegular()
@@ -39,7 +39,7 @@ index 07fe89ed6a7d3f7b0d0aaa025896fb775fe518ee..f91d10ad06029f0a3d0ff96c85b6796e
  			continue;
  		}
  		if (const auto channel = item->history()->peer->asChannel()) {
-@@ -1479,7 +1479,7 @@ void ApiWrap::markContentsRead(not_null<HistoryItem*> item) {
+@@ -1503,7 +1503,7 @@ void ApiWrap::markContentsRead(not_null<HistoryItem*> item) {
  	if (Tele::KeepsSecretMedia(item)
  		|| !item->markContentsRead(true)
  		|| !item->isRegular()
@@ -49,7 +49,7 @@ index 07fe89ed6a7d3f7b0d0aaa025896fb775fe518ee..f91d10ad06029f0a3d0ff96c85b6796e
  	}
  	const auto ids = MTP_vector<MTPint>(1, MTP_int(item->id));
 diff --git a/Telegram/SourceFiles/data/data_message_reactions.cpp b/Telegram/SourceFiles/data/data_message_reactions.cpp
-index ce05de5fadc5caf73bf3cf31f4a7d35a4e0b63dc..42fc948a584bc05c72a59bb0794ac7f224d000d6 100644
+index 4b98ce6179d814a0450214523a9fc2dc75b4ae07..09dde131b8addb3c0146669c661a1278344e9be4 100644
 --- a/Telegram/SourceFiles/data/data_message_reactions.cpp
 +++ b/Telegram/SourceFiles/data/data_message_reactions.cpp
 @@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -60,7 +60,7 @@ index ce05de5fadc5caf73bf3cf31f4a7d35a4e0b63dc..42fc948a584bc05c72a59bb0794ac7f2
  #include "styles/style_chat.h"
  
  #include "base/random.h"
-@@ -2269,6 +2270,7 @@ bool MessageReactions::change(
+@@ -2251,6 +2252,7 @@ bool MessageReactions::change(
  			});
  		});
  	}

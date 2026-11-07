@@ -18,10 +18,10 @@ Subject: [PATCH] feat: select several chats in the list
  create mode 100644 Telegram/SourceFiles/tele/tele_chats_selection.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index c586227e379e684c3bbcc56b8844666e6a19eeec..7edd0e65f4a9cd78a1fa0b59c14945b9c47d7cde 100644
+index e3409cdd4330d59a4e5863e2ac56493f53da9913..9cd17b373274e0f33434e77ea929b3cf5dc3e36d 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2521,6 +2521,8 @@ PRIVATE
+@@ -2677,6 +2677,8 @@ PRIVATE
      tele/tele_changelog_section.h
      tele/tele_chat_backgrounds.cpp
      tele/tele_chat_backgrounds.h
@@ -31,10 +31,10 @@ index c586227e379e684c3bbcc56b8844666e6a19eeec..7edd0e65f4a9cd78a1fa0b59c14945b9
      tele/tele_code_lines.h
      tele/tele_collectible_price.cpp
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 6ed66685ab7aa07bcb3b168f1932717453425271..9aef2d6085d31042288a7213e50bcf08cf38a814 100644
+index 3ee3c198355c8e8f047b4c620ac6f550dde06b37..49d7370c31b863648b0a4ca2ab35567060182c35 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -86,6 +86,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -95,6 +95,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/filters/edit_filter_box.h"
  #include "boxes/peers/edit_forum_topic_box.h"
  #include "boxes/peer_list_box.h"
@@ -42,7 +42,7 @@ index 6ed66685ab7aa07bcb3b168f1932717453425271..9aef2d6085d31042288a7213e50bcf08
  #include "tele/tele_communities.h"
  #include "tele/tele_corner_buttons.h"
  #include "tele/tele_list_previews.h"
-@@ -1114,7 +1115,10 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
+@@ -1137,7 +1138,10 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
  			bool selected,
  			bool mayBeActive) {
  		const auto &key = row->key();
@@ -54,7 +54,7 @@ index 6ed66685ab7aa07bcb3b168f1932717453425271..9aef2d6085d31042288a7213e50bcf08
  		const auto history = key.history();
  		const auto forum = history && history->peer->displayAsForum();
  		const auto monoforum = history && history->amMonoforumAdmin();
-@@ -2530,6 +2534,14 @@ void InnerWidget::processGlobalForceClick(QPoint globalPosition) {
+@@ -2556,6 +2560,14 @@ void InnerWidget::processGlobalForceClick(QPoint globalPosition) {
  
  void InnerWidget::mousePressEvent(QMouseEvent *e) {
  	selectByMouse(e->globalPos());
@@ -69,15 +69,15 @@ index 6ed66685ab7aa07bcb3b168f1932717453425271..9aef2d6085d31042288a7213e50bcf08
  
  	_pressButton = e->button();
  	setPressed(_selected, _selectedTopicJump, _selectedRightButton);
-@@ -3917,6 +3929,7 @@ void InnerWidget::refreshShownList() {
- 		? session().data().chatsFilters().chatsList(_filterId)->indexed()
+@@ -3944,6 +3956,7 @@ void InnerWidget::refreshShownList() {
  		: session().data().chatsList(_openedFolder)->indexed();
  	if (_shownList != list) {
+ 		clearPressed();
 +		::Tele::ClearChatsSelection(this);
  		_shownList->unfreeze();
  		_shownList = list;
  		_shownList->updateHeights(_narrowRatio);
-@@ -5471,6 +5484,9 @@ void InnerWidget::clearFilter() {
+@@ -5598,6 +5611,9 @@ void InnerWidget::clearFilter() {
  }
  
  void InnerWidget::setState(WidgetState state) {
@@ -88,7 +88,7 @@ index 6ed66685ab7aa07bcb3b168f1932717453425271..9aef2d6085d31042288a7213e50bcf08
  	updateCommunityRequestableGeometry();
  }
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 5d5c23345949a0e297ec1aec55e8fa67bb7a0675..9da03d7fd3c9cd8a636d16fd45292e71db0ad164 100644
+index 28c2526440d48e2a50c9dcc50ce6c15d87018c7e..99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 @@ -96,6 +96,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -99,7 +99,7 @@ index 5d5c23345949a0e297ec1aec55e8fa67bb7a0675..9da03d7fd3c9cd8a636d16fd45292e71
  #include "tele/tele_communities.h"
  #include "tele/tele_folders.h"
  #include "tele/tele_updater.h"
-@@ -452,6 +453,7 @@ Widget::Widget(
+@@ -486,6 +487,7 @@ Widget::Widget(
  			_childListPeerId.value(),
  			_childListShown.value(),
  			makeChildListShown)));

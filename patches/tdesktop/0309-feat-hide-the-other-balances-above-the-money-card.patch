@@ -118,10 +118,10 @@ index 69b6edc3e8caa3992a70e5d0c531014e2421a1bb..8a58b351cc34139d406915c3ea4537ea
  		Toggle(kOptionAttachMenuClick),
  		Toggle(kOptionPinSets),
 diff --git a/Telegram/SourceFiles/wallet/wallet_content.cpp b/Telegram/SourceFiles/wallet/wallet_content.cpp
-index c006284916a7ee8bd8a7ed48b90f55fa2ea0d231..49f06c2fa6aabe0b6f13991c43a264477bf9b814 100644
+index 4e574fb71fb1346d50aafc589ea0de141fe6329e..6e75226051953ffc689f2172914a4de1f91b06e7 100644
 --- a/Telegram/SourceFiles/wallet/wallet_content.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_content.cpp
-@@ -15283,10 +15283,11 @@ void Content::setupWaltEntry(not_null<InfoIsland*> island) {
+@@ -15302,10 +15302,11 @@ void Content::setupWaltEntry(not_null<InfoIsland*> island) {
  			OpenWalletUrl(session, _show, url);
  		}
  	});
@@ -137,7 +137,7 @@ index c006284916a7ee8bd8a7ed48b90f55fa2ea0d231..49f06c2fa6aabe0b6f13991c43a26447
  }
  
  void Content::setupEarningsEntry(not_null<InfoIsland*> island) {
-@@ -15317,10 +15318,11 @@ void Content::setupEarningsEntry(not_null<InfoIsland*> island) {
+@@ -15336,10 +15337,11 @@ void Content::setupEarningsEntry(not_null<InfoIsland*> island) {
  	});
  
  	session->credits().tonLoad();
@@ -153,7 +153,7 @@ index c006284916a7ee8bd8a7ed48b90f55fa2ea0d231..49f06c2fa6aabe0b6f13991c43a26447
  }
  
  void Content::setupProtectRow() {
-@@ -15868,12 +15870,12 @@ void Content::setupOldWalletEntry(not_null<InfoIsland*> island) {
+@@ -15887,12 +15889,12 @@ void Content::setupOldWalletEntry(not_null<InfoIsland*> island) {
  		_show->showBox(Box(WalletConflictBox, _show, nullptr));
  	});
  

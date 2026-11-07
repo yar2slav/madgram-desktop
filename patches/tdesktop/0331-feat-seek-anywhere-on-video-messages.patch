@@ -1,0 +1,151 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Sun, 25 Oct 2026 03:14:00 +0300
+Subject: [PATCH] feat: seek anywhere on video messages
+
+---
+ .../history/view/media/history_view_gif.cpp         |  3 ++-
+ Telegram/SourceFiles/settings/settings_tele.cpp     |  4 ++++
+ Telegram/SourceFiles/tele/tele_options.cpp          | 10 ++++++++++
+ Telegram/SourceFiles/tele/tele_options.h            |  2 ++
+ Telegram/SourceFiles/tele/tele_round_videos.cpp     | 13 +++++++++++++
+ Telegram/SourceFiles/tele/tele_round_videos.h       |  1 +
+ Telegram/SourceFiles/tele/tele_settings_io.cpp      |  1 +
+ 7 files changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+index a1ad04a2ae70e8b878853ca93482c96ab54f9fc3..3c9ead768a8287ec5deb1a34f770520bbd42d868 100644
+--- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
++++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+@@ -1788,7 +1788,8 @@ void Gif::updatePressed(QPoint point) {
+ 		} else if ((point - _seekPressPoint).manhattanLength()
+ 				<= QApplication::startDragDistance()) {
+ 			return;
+-		} else if (!_roundSeek->grabPoint(rthumb, _seekPressPoint)) {
++		} else if (!_roundSeek->grabPoint(rthumb, _seekPressPoint)
++			&& !Tele::RoundSeekDragGrab(rthumb, _seekPressPoint)) {
+ 			// Angle from near the center jumps on the smallest move.
+ 			_seekPressPoint = QPoint();
+ 			return;
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index ee43cbab5038744a8e2b137555d29feabdb0bd7a..0c5be48c73615f40fd42f4620a0257848a3447d8 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3175,6 +3175,10 @@ void FillMessages(SectionBuilder &builder) {
+ 		builder,
+ 		::Tele::kOptionBiggerRoundVideos,
+ 		{ u"round"_q, u"circle"_q, u"enlarge"_q, u"size"_q });
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionRoundSeekAnywhere,
++		{ u"round"_q, u"circle"_q, u"seek"_q, u"rewind"_q });
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Bookmarks"_q);
+ 	AddOptionToggle(
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index c1f3c7750574cdd5801da5ea4910ebbc96ff545b..9776eb2f24cccf2f5dc00eeeeaa048fb3e58c637 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -128,6 +128,7 @@ const char kOptionHideBubbleTails[] = "tele-hide-bubble-tails";
+ const char kOptionBubblePadding[] = "tele-bubble-padding";
+ const char kOptionNoEmojiOutline[] = "tele-no-emoji-outline";
+ const char kOptionBiggerRoundVideos[] = "tele-bigger-round-videos";
++const char kOptionRoundSeekAnywhere[] = "tele-round-seek-anywhere";
+ const char kOptionCopyProtected[] = "tele-copy-protected";
+ const char kOptionRichQuote[] = "tele-rich-quote";
+ const char kOptionMultiQuote[] = "tele-multi-quote";
+@@ -1016,6 +1017,11 @@ base::options::toggle BiggerRoundVideosOption({
+ 	.name = "Bigger video messages while playing",
+ });
+ 
++base::options::toggle RoundSeekAnywhereOption({
++	.id = kOptionRoundSeekAnywhere,
++	.name = "Seek anywhere on video messages",
++});
++
+ base::options::toggle CopyProtectedOption({
+ 	.id = kOptionCopyProtected,
+ 	.name = "Forward protected messages as copies",
+@@ -2900,6 +2906,10 @@ rpl::producer<bool> BiggerRoundVideosValue() {
+ 	});
+ }
+ 
++bool RoundSeekAnywhere() {
++	return RoundSeekAnywhereOption.value();
++}
++
+ bool CopyProtected() {
+ 	return CopyProtectedOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index ea8414325c0b12d486e4c5c28334da5ae0ab4464..9642b4171fdb6aa39ebc2218a49c4e8263ad537e 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -123,6 +123,7 @@ extern const char kOptionHideBubbleTails[];
+ extern const char kOptionBubblePadding[];
+ extern const char kOptionNoEmojiOutline[];
+ extern const char kOptionBiggerRoundVideos[];
++extern const char kOptionRoundSeekAnywhere[];
+ extern const char kOptionCopyProtected[];
+ extern const char kOptionRichQuote[];
+ extern const char kOptionMultiQuote[];
+@@ -453,6 +454,7 @@ void SetSavedHistoryPeriod(const QString &value);
+ [[nodiscard]] rpl::producer<> NoEmojiOutlineChanges();
+ [[nodiscard]] bool BiggerRoundVideos();
+ [[nodiscard]] rpl::producer<bool> BiggerRoundVideosValue();
++[[nodiscard]] bool RoundSeekAnywhere();
+ [[nodiscard]] rpl::producer<> CodeLineNumbersChanges();
+ [[nodiscard]] bool CopyProtected();
+ [[nodiscard]] bool RichQuote();
+diff --git a/Telegram/SourceFiles/tele/tele_round_videos.cpp b/Telegram/SourceFiles/tele/tele_round_videos.cpp
+index 3a733d2e92b7197f2122d21a448138a13f600614..e8eec73c43a961d16ef46b4ba061768ee00b9ea7 100644
+--- a/Telegram/SourceFiles/tele/tele_round_videos.cpp
++++ b/Telegram/SourceFiles/tele/tele_round_videos.cpp
+@@ -26,6 +26,7 @@ using namespace HistoryView;
+ constexpr auto kDuration = crl::time(200);
+ constexpr auto kPlayingSize = 400;
+ constexpr auto kMinGain = 40;
++constexpr auto kSeekCenter = 0.2;
+ 
+ struct Entry {
+ 	Ui::Animations::Simple animation;
+@@ -276,4 +277,16 @@ QSize RoundVideoSource(
+ 	return size.scaled(maxSize, maxSize, Qt::KeepAspectRatio);
+ }
+ 
++bool RoundSeekDragGrab(QRect rthumb, QPoint point) {
++	if (!RoundSeekAnywhere()) {
++		return false;
++	}
++	const auto radius = rthumb.width() / 2.;
++	const auto center = rthumb.center();
++	const auto dx = float64(point.x() - center.x());
++	const auto dy = float64(point.y() - center.y());
++	const auto distance = std::sqrt(dx * dx + dy * dy);
++	return (distance >= radius * kSeekCenter) && (distance <= radius);
++}
++
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_round_videos.h b/Telegram/SourceFiles/tele/tele_round_videos.h
+index f5f698bb24a473792e98ef29c8c9709061a066ac..59405d50d52f39b5cc3d6e2aec69d917a5061771 100644
+--- a/Telegram/SourceFiles/tele/tele_round_videos.h
++++ b/Telegram/SourceFiles/tele/tele_round_videos.h
+@@ -25,5 +25,6 @@ namespace Tele {
+ 	not_null<const HistoryView::Media*> media,
+ 	QSize size,
+ 	int maxSize);
++[[nodiscard]] bool RoundSeekDragGrab(QRect rthumb, QPoint point);
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index 00c20768b0a8bdede7096be58f501ad58801d6a2..77713a333f9630c381eb43e1087ca928accba68e 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -212,6 +212,7 @@ struct Spec {
+ 		Toggle(kOptionBubblePadding),
+ 		Toggle(kOptionNoEmojiOutline),
+ 		Toggle(kOptionBiggerRoundVideos),
++		Toggle(kOptionRoundSeekAnywhere),
+ 		Toggle(kOptionCopyProtected),
+ 		Toggle(kOptionRichQuote),
+ 		Toggle(kOptionMultiQuote),

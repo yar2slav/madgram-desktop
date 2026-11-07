@@ -36,7 +36,7 @@ index 22adf16049e36753dd3974dca974bce22365a5ca..b9d33d7db237ec6cc6207a52f70fcbf3
  	_mediaEditManager.start(item, spoilered, invertCaption);
  
 diff --git a/Telegram/SourceFiles/boxes/send_files_box.cpp b/Telegram/SourceFiles/boxes/send_files_box.cpp
-index 8c8a838288aa8fb9f3512d6d6176dc8c9184d907..a4ff592c0e5c7075ea3dadc2da1978a520ee5342 100644
+index 18db7ac3473d0c2385196a5523144c631a405c0e..f4fd954eff0e33774c46fb888ca0f25f4c6aca6c 100644
 --- a/Telegram/SourceFiles/boxes/send_files_box.cpp
 +++ b/Telegram/SourceFiles/boxes/send_files_box.cpp
 @@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -47,7 +47,7 @@ index 8c8a838288aa8fb9f3512d6d6176dc8c9184d907..a4ff592c0e5c7075ea3dadc2da1978a5
  #include "base/event_filter.h"
  #include "base/call_delayed.h"
  #include "boxes/premium_limits_box.h"
-@@ -1511,7 +1512,7 @@ void SendFilesBox::addMenuButton() {
+@@ -1514,7 +1515,7 @@ void SendFilesBox::addMenuButton() {
  
  void SendFilesBox::initSendWay() {
  	_sendWay = [&] {

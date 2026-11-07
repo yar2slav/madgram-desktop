@@ -11,7 +11,7 @@ Subject: [PATCH] feat: keep messages you delete yourself
  4 files changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/Telegram/SourceFiles/data/data_histories.cpp b/Telegram/SourceFiles/data/data_histories.cpp
-index 2ceaf52f45798265ef9b8e699f14e765c584f351..0a54edd4a7bc14863a64e944e12e2a7509f8ed70 100644
+index dbab84a581125bf309d44fede97af0e79c1f2140..c3c284d68d7ddd6ff43ba3d13ab7071a217f107a 100644
 --- a/Telegram/SourceFiles/data/data_histories.cpp
 +++ b/Telegram/SourceFiles/data/data_histories.cpp
 @@ -1055,6 +1055,7 @@ void Histories::deleteMessages(const MessageIdsList &ids, bool revoke) {

@@ -21,10 +21,10 @@ Subject: [PATCH] feat: notify when people come online
  create mode 100644 Telegram/SourceFiles/tele/tele_online_notify.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index c50742b9d7e673a38edeb7bb1bc276d3da1a58df..afbd3205facd733e003705379bb83cd331fe3609 100644
+index b8411ad2cdc3804f7732214773f30a903deb68e2..fc258aa5aabe0b764f9c9362f7be72ceffc17954 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2605,6 +2605,8 @@ PRIVATE
+@@ -2761,6 +2761,8 @@ PRIVATE
      tele/tele_new_settings.h
      tele/tele_no_ai.cpp
      tele/tele_no_ai.h
@@ -34,10 +34,10 @@ index c50742b9d7e673a38edeb7bb1bc276d3da1a58df..afbd3205facd733e003705379bb83cd3
      tele/tele_jump_to_first.h
      tele/tele_link_previews.cpp
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 160535b80ccaddf98bf60aba7a7b878ae60a5175..475967df096996e746695bd8fb2aa5856078aa6c 100644
+index c1fed3e032ba54b8a9c03ba120763428f3949fe9..610d9b2095cf2984e1f3c9cbb50f33910516442a 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_communities.h"
  #include "tele/tele_local_pins.h"
  #include "tele/tele_no_ai.h"
@@ -45,7 +45,7 @@ index 160535b80ccaddf98bf60aba7a7b878ae60a5175..475967df096996e746695bd8fb2aa585
  #include "tele/tele_protected.h"
  #include "tele/tele_punctual_scheduled.h"
  #include "styles/style_layers.h"
-@@ -290,6 +291,7 @@ Session::Session(
+@@ -292,6 +293,7 @@ Session::Session(
  	Tele::SetupLocalPins(this);
  	Tele::SetupBookmarks(this);
  	Tele::SetupNoAi(this);
@@ -604,10 +604,10 @@ index 9cc1ad360ac4b428ad802144323843ad16a8ef52..386c0ff2bfb069fa5377485d21854a28
  		Toggle(kOptionConfirmSend),
  		Toggle(kOptionConfirmStickers),
 diff --git a/Telegram/SourceFiles/window/notifications_manager.h b/Telegram/SourceFiles/window/notifications_manager.h
-index cd36b671795afa49b282b1609380cf7e5c3473ed..ec5ff5560808f2f8a291718a8301c195a2854dce 100644
+index 76f08a4c2bd5b44724b137d2ac4b4d8362712dbf..59e5bd264f32968def47df2ab751c6e041b21f22 100644
 --- a/Telegram/SourceFiles/window/notifications_manager.h
 +++ b/Telegram/SourceFiles/window/notifications_manager.h
-@@ -417,6 +417,12 @@ public:
+@@ -436,6 +436,12 @@ public:
  		std::vector<NotificationAction> actions;
  	};
  
@@ -621,10 +621,10 @@ index cd36b671795afa49b282b1609380cf7e5c3473ed..ec5ff5560808f2f8a291718a8301c195
  	using Manager::Manager;
  
 diff --git a/Telegram/SourceFiles/window/notifications_manager_default.cpp b/Telegram/SourceFiles/window/notifications_manager_default.cpp
-index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6f0b8bcfe 100644
+index 558777f609f9a7da466983012f4c7dc0ab9da780..dd43ad18fdd9669aa13f7cbefa2dc771d55e5b7c 100644
 --- a/Telegram/SourceFiles/window/notifications_manager_default.cpp
 +++ b/Telegram/SourceFiles/window/notifications_manager_default.cpp
-@@ -110,6 +110,14 @@ Manager::QueuedNotification::QueuedNotification(NotificationFields &&fields)
+@@ -111,6 +111,14 @@ Manager::QueuedNotification::QueuedNotification(NotificationFields &&fields)
  	&& fields.item->isFromScheduled()) {
  }
  
@@ -639,7 +639,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  QPixmap Manager::hiddenUserpicPlaceholder() const {
  	if (_hiddenUserpicPlaceholder.isNull()) {
  		const auto ratio = style::DevicePixelRatio();
-@@ -258,6 +266,7 @@ void Manager::showNextFromQueue() {
+@@ -259,6 +267,7 @@ void Manager::showNextFromQueue() {
  			queued.reaction,
  			queued.forwardedCount,
  			queued.fromScheduled,
@@ -647,7 +647,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  			startPosition,
  			startShift,
  			shiftDirection));
-@@ -374,6 +383,13 @@ void Manager::doShowNotification(NotificationFields &&fields) {
+@@ -375,6 +384,13 @@ void Manager::doShowNotification(NotificationFields &&fields) {
  	showNextFromQueue();
  }
  
@@ -661,7 +661,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  void Manager::doClearAll() {
  	_queuedNotifications.clear();
  	for (const auto &notification : _notifications) {
-@@ -659,6 +675,7 @@ Notification::Notification(
+@@ -674,6 +690,7 @@ Notification::Notification(
  	const Data::ReactionId &reaction,
  	int forwardedCount,
  	bool fromScheduled,
@@ -669,7 +669,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  	QPoint startPosition,
  	int shift,
  	Direction shiftDirection)
-@@ -676,6 +693,7 @@ Notification::Notification(
+@@ -691,6 +708,7 @@ Notification::Notification(
  , _item(item)
  , _forwardedCount(forwardedCount)
  , _fromScheduled(fromScheduled)
@@ -677,7 +677,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  , _close(this, st::notifyClose)
  , _reply(this, tr::lng_notification_reply(), st::defaultBoxButton) {
  	_reply->setTextTransform(Ui::RoundButtonTextTransform::ToUpper);
-@@ -881,7 +899,7 @@ void Notification::paintText(Painter &p) {
+@@ -896,7 +914,7 @@ void Notification::paintText(Painter &p) {
  }
  
  void Notification::updateNotifyDisplay() {
@@ -686,7 +686,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  		return;
  	}
  
-@@ -948,7 +966,8 @@ void Notification::updateNotifyDisplay() {
+@@ -963,7 +981,8 @@ void Notification::updateNotifyDisplay() {
  		}
  
  		const auto composeText = !options.hideMessageText
@@ -696,7 +696,7 @@ index 6d0c2fa8f97dcda6c47af38b6d0c3b7956562b85..d730cb18ec1ec8ee456128b19cfb70d6
  		if (composeText) {
  			auto old = base::take(_textCache);
  			_textCache = Ui::Text::String(itemWidth);
-@@ -965,6 +984,8 @@ void Notification::updateNotifyDisplay() {
+@@ -980,6 +999,8 @@ void Notification::updateNotifyDisplay() {
  					_item,
  					_reaction,
  					options.hideMessageText))
@@ -753,7 +753,7 @@ index 7a2356101d1d082ac8d86c5b6791f96a022dbf16..6d29842413b5a608b055836f193ab530
  	object_ptr<Ui::RoundButton> _reply;
  	object_ptr<Background> _background = { nullptr };
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 04bc47d345914f2cf7866131e06ac0781a7e08a7..e2d636e9dc705d05acba32e8338015fa91551255 100644
+index a4864e3576228e8561d0fe328ddcf9f7386cc634..3743b5bbd9498b3dcc527bbd0f49a60685b5c2bb 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -137,6 +137,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

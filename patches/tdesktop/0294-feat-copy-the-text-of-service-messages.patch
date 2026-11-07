@@ -12,12 +12,12 @@ Subject: [PATCH] feat: copy the text of service messages
  5 files changed, 54 insertions(+), 8 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 891c364ce617fb6265b34ba0458b9ffbccacdd56..bed589ffb1ce3e848a7754ca607940785c847f10 100644
+index ce58b88e49e5df5e7b02acb4d8cf11437dea7d56..924a1953dbc8d5a89bb63d71fe4f087e0d222cce 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -3743,6 +3743,12 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
- 						}
- 					}
+@@ -3798,6 +3798,12 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+ 				if (view) {
+ 					Tgw::AddLogAction(_menu, view, controller->uiShow());
  				}
 +				if (view && actionText.isEmpty() && !hasCopyRestriction(item)) {
 +					Tele::AddCopyServiceTextAction(_menu.get(), view, [=] {
@@ -29,10 +29,10 @@ index 891c364ce617fb6265b34ba0458b9ffbccacdd56..bed589ffb1ce3e848a7754ca60794078
  		}
  		if (!actionText.isEmpty()) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 509eeb784e17b578c228356bccfa69e17f63a0e2..d69527558c5675b34a84a014c50c9b59172f0d0e 100644
+index d19bc5167096acb7be273a5f92dfb7ca5fe1b159..30edb282ab3de9a8900bf466ab19c4f499363f0f 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -1910,8 +1910,13 @@ void FillContextMenuItems(
+@@ -1922,8 +1922,13 @@ void FillContextMenuItems(
  		if (const auto document = media ? media->getDocument() : nullptr) {
  			AddDocumentActions(result, document, view->data(), list);
  		}
@@ -48,7 +48,7 @@ index 509eeb784e17b578c228356bccfa69e17f63a0e2..d69527558c5675b34a84a014c50c9b59
  				result->addAction(tr::lng_context_copy_text(tr::now), [=] {
  					if (const auto item = owner->message(itemId)) {
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc1462e560 100644
+index 4f3e60fc816265b96fbc3d05399e25cc24308327..6b82c260e4d8e3b5cdfec8cd5d8c602a33014c3d 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 @@ -7,6 +7,7 @@
@@ -59,7 +59,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  
  namespace Tele {
  namespace {
-@@ -550,10 +551,14 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -548,10 +549,14 @@ constexpr auto kFieldText = uint32(1 << 0);
  			P([](int) { return tr::lng_context_gift_send(tr::now); },
  				st::menuIconGiftPremium),
  		}, .contexts = kOwn | kService },
@@ -75,7 +75,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		{ .key = u"copy_markdown"_q, .phrases = {
  			P([](int) { return Lower(u"Copy as Markdown"_q); },
  				st::menuIconCopy),
-@@ -774,7 +779,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -772,7 +777,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"attached_stickers,send_as_gif,open_gif,save_gif,save_sound,"
  		"cancel_download,edit_caption,cancel_upload,download_selected,"
  		"save_html,|,"
@@ -84,7 +84,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		"view_replies,factcheck,statistics,add_offer,|,"
  		"copy_selected,copy_text,[Copy#copy:copy_markdown,copy_html,"
  		"copy_link,alias_copy,copy_message_link,copy_id,copy_emoji_id,"
-@@ -797,7 +802,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -795,7 +800,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"open_gif,save_gif,sticker_set,fave_sticker,show_in_folder,"
  		"save_sound,save_as,copy_image,copy_filename,copy_file_path,"
  		"attached_stickers,"
@@ -93,7 +93,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		"open_uncleaned,open_username,alias_copy,alias_open,alias_delete,"
  		"copy_button_data,copy_message_link,"
  		"forward,add_offer,send_now,ghost_cancel,edit_caption,cancel_upload,"
-@@ -824,7 +829,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -822,7 +827,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"attached_stickers,send_as_gif,open_gif,save_gif,save_sound,"
  		"cancel_download,edit_caption,cancel_upload,download_selected,"
  		"save_html,|,"
@@ -102,7 +102,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		"view_replies,factcheck,statistics,add_offer,|,"
  		"copy_selected,copy_text,copy_markdown,copy_html,copy_link,"
  		"alias_copy,copy_message_link,copy_id,copy_emoji_id,"
-@@ -1220,6 +1225,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1218,6 +1223,10 @@ constexpr auto kFieldText = uint32(1 << 0);
  			P([](int) { return tr::lng_profile_gift_premium(tr::now); },
  				st::menuIconGiftPremium),
  		}, .contexts = kPrivate | kChannel },
@@ -113,7 +113,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		{ .key = u"statistics"_q, .phrases = {
  			P([](int) { return tr::lng_stats_title(tr::now); },
  				st::menuIconStats),
-@@ -1290,7 +1299,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1288,7 +1297,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  	result.defaults = u""
  		"ttl,|,"
  		"add_contact,share_contact,edit_contact,secret_start,send_gift,"
@@ -122,7 +122,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		"online_notify,peek_last_seen,pinned_bar,[For me#forme:alias,"
  		"local_name,"
  		"hidden_words,background,download_folder],|,"
-@@ -1305,7 +1314,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1303,7 +1312,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"alias,"
  		"local_name,hidden_words,background,download_folder,"
  		"online_notify,peek_last_seen,pinned_bar,bot_to_group,add_members,"
@@ -131,7 +131,7 @@ index 4fc230d37c26c3f4421c8743148d25fb6aa78d1c..efb82dd54daf2abbc06e00b9e1e9aabc
  		"statistics,boosts,earn,story_archive,manage,personal_channel,"
  		"topic_link,manage_topic,close_topic,discussion,direct_messages,"
  		"export,no_forwards,add_to_folder,block,ban,report,leave,"
-@@ -1317,7 +1326,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1315,7 +1324,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  	result.power = u""
  		"ttl,|,"
  		"add_contact,share_contact,edit_contact,secret_start,send_gift,"

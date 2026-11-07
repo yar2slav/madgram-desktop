@@ -13,10 +13,10 @@ Subject: [PATCH] feat: copy and open transaction links from money transfer
  5 files changed, 75 insertions(+), 11 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index bed589ffb1ce3e848a7754ca607940785c847f10..a3f5dd0ce12a21e4b2a557d2397096895c09ceea 100644
+index 924a1953dbc8d5a89bb63d71fe4f087e0d222cce..3f59e44ecbb5a2e1e738ea6498da0dd1b7ebb527 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -149,6 +149,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -154,6 +154,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_rmb_beside_bubble.h"
  #include "tele/tele_select_service.h"
  #include "tele/tele_send_order.h"
@@ -24,7 +24,7 @@ index bed589ffb1ce3e848a7754ca607940785c847f10..a3f5dd0ce12a21e4b2a557d239709689
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
  
-@@ -3711,6 +3712,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3763,6 +3764,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  							Ui::Menu::CreateAddActionCallback(_menu));
  					}
  				}
@@ -36,10 +36,10 @@ index bed589ffb1ce3e848a7754ca607940785c847f10..a3f5dd0ce12a21e4b2a557d239709689
  					const auto hasRestriction = hasCopyRestriction(item);
  					if (!hasRestriction
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index d69527558c5675b34a84a014c50c9b59172f0d0e..90170328cee5ece2093870d0a67e5881dd266ea7 100644
+index 30edb282ab3de9a8900bf466ab19c4f499363f0f..aa394d06c1fb66ac5fb7dae1f4a55e09d5085c3e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -133,6 +133,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -135,6 +135,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_read_log.h"
  #include "tele/tele_rich_quote.h"
  #include "tele/tele_send_order.h"
@@ -47,7 +47,7 @@ index d69527558c5675b34a84a014c50c9b59172f0d0e..90170328cee5ece2093870d0a67e5881
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_layers.h"
-@@ -1907,6 +1908,10 @@ void FillContextMenuItems(
+@@ -1919,6 +1920,10 @@ void FillContextMenuItems(
  					Ui::Menu::CreateAddActionCallback(result));
  			}
  		}
@@ -59,10 +59,10 @@ index d69527558c5675b34a84a014c50c9b59172f0d0e..90170328cee5ece2093870d0a67e5881
  			AddDocumentActions(result, document, view->data(), list);
  		}
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index efb82dd54daf2abbc06e00b9e1e9aabc1462e560..b061beb1683e4551b7882553ac3c62788f09d509 100644
+index 6b82c260e4d8e3b5cdfec8cd5d8c602a33014c3d..3447aa28b268b50aa814116a08fea535cc2c5283 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-@@ -555,6 +555,15 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -553,6 +553,15 @@ constexpr auto kFieldText = uint32(1 << 0);
  			P([](int) { return tr::lng_wallet_profile_send_money(tr::now); },
  				st::walletMenuIcon),
  		}, .contexts = kService },
@@ -78,7 +78,7 @@ index efb82dd54daf2abbc06e00b9e1e9aabc1462e560..b061beb1683e4551b7882553ac3c6278
  		{ .key = u"copy_text"_q, .phrases = {
  			P([](int) { return tr::lng_context_copy_text(tr::now); },
  				st::menuIconCopy),
-@@ -780,9 +789,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -778,9 +787,10 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"cancel_download,edit_caption,cancel_upload,download_selected,"
  		"save_html,|,"
  		"poll_results,poll_retract,poll_stop,add_tasks,send_gift,send_money,"
@@ -91,7 +91,7 @@ index efb82dd54daf2abbc06e00b9e1e9aabc1462e560..b061beb1683e4551b7882553ac3c6278
  		"copy_button_data,copy_filename,copy_file_path,copy_phone],"
  		"translate_selected,"
  		"translate,open_uncleaned,open_username,alias_open,alias_delete,|,"
-@@ -802,7 +812,8 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -800,7 +810,8 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"open_gif,save_gif,sticker_set,fave_sticker,show_in_folder,"
  		"save_sound,save_as,copy_image,copy_filename,copy_file_path,"
  		"attached_stickers,"
@@ -101,7 +101,7 @@ index efb82dd54daf2abbc06e00b9e1e9aabc1462e560..b061beb1683e4551b7882553ac3c6278
  		"open_uncleaned,open_username,alias_copy,alias_open,alias_delete,"
  		"copy_button_data,copy_message_link,"
  		"forward,add_offer,send_now,ghost_cancel,edit_caption,cancel_upload,"
-@@ -830,9 +841,9 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -828,9 +839,9 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"cancel_download,edit_caption,cancel_upload,download_selected,"
  		"save_html,|,"
  		"poll_results,poll_retract,poll_stop,add_tasks,send_gift,send_money,"

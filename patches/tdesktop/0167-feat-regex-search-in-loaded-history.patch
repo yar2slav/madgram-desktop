@@ -18,10 +18,10 @@ Subject: [PATCH] feat: regex search in loaded history
  create mode 100644 Telegram/SourceFiles/tele/tele_regex_search.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1f458293d6aad57fe5cb48f49b16895dae051810..a4f4df880eddea1a4c3cd400939ae1df7860f361 100644
+index 1bc2bc1dc21eaa6d140a7a73f5ea5a4f3d9b2dc6..d836c20ff3cc04fa51031ec84f387f82da7d0d5e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2657,6 +2657,8 @@ PRIVATE
+@@ -2813,6 +2813,8 @@ PRIVATE
      tele/tele_recent_emoji.h
      tele/tele_reduce_motion.cpp
      tele/tele_reduce_motion.h
@@ -31,7 +31,7 @@ index 1f458293d6aad57fe5cb48f49b16895dae051810..a4f4df880eddea1a4c3cd400939ae1df
      tele/tele_rich_timestamps.h
      tele/tele_rmb_beside_bubble.cpp
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e168a5b5ed 100644
+index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f113b89d4d4 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 @@ -99,6 +99,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -42,7 +42,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  #include "tele/tele_updater.h"
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
-@@ -684,6 +685,27 @@ Widget::Widget(
+@@ -718,6 +719,27 @@ Widget::Widget(
  	_chooseFromUser->entity()->setClickedCallback([=] { showSearchFrom(); });
  	_chooseFromUser->entity()->setAccessibleName(
  		tr::lng_search_messages_from(tr::now));
@@ -70,7 +70,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  	rpl::single(rpl::empty) | rpl::then(
  		session().domain().local().localPasscodeChanged()
  	) | rpl::on_next([=] {
-@@ -1056,7 +1078,10 @@ void Widget::chosenRow(const ChosenRow &row) {
+@@ -1099,7 +1121,10 @@ void Widget::chosenRow(const ChosenRow &row) {
  	} else if (const auto topic = row.key.topic()) {
  		auto params = Window::SectionShow(
  			Window::SectionShow::Way::ClearStack);
@@ -82,7 +82,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  		if (row.newWindow) {
  			controller()->showInNewWindow(
  				Window::SeparateId(topic),
-@@ -1148,7 +1173,10 @@ void Widget::chosenRow(const ChosenRow &row) {
+@@ -1191,7 +1216,10 @@ void Widget::chosenRow(const ChosenRow &row) {
  		) ? ShowAtUnreadMsgId : row.message.fullId.msg;
  		auto params = Window::SectionShow(
  			Window::SectionShow::Way::ClearStack);
@@ -94,7 +94,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  		if (row.newWindow) {
  			controller()->showInNewWindow(peer, showAtMsgId);
  			closeSuggestions();
-@@ -3123,6 +3151,9 @@ void Widget::loadMoreBlockedByDate() {
+@@ -3204,6 +3232,9 @@ void Widget::loadMoreBlockedByDate() {
  }
  
  bool Widget::search(bool inCache, SearchRequestDelay delay) {
@@ -104,7 +104,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  	_processingSearch = true;
  	const auto guard = gsl::finally([&] {
  		_processingSearch = false;
-@@ -3422,6 +3453,9 @@ void Widget::searchTopics() {
+@@ -3514,6 +3545,9 @@ void Widget::searchTopics() {
  }
  
  void Widget::searchMore() {
@@ -114,7 +114,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  	const auto process = currentSearchProcess();
  	if (process->requestId
  		|| _historiesRequest
-@@ -4550,6 +4584,7 @@ void Widget::updateSearchFromVisibility(bool fast) {
+@@ -4661,6 +4695,7 @@ void Widget::updateSearchFromVisibility(bool fast) {
  		}
  		_search->setAdditionalMargins(additional);
  	}
@@ -122,7 +122,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  }
  
  void Widget::updateControlsGeometry() {
-@@ -4665,6 +4700,8 @@ void Widget::updateControlsGeometry() {
+@@ -4776,6 +4811,8 @@ void Widget::updateControlsGeometry() {
  	putBottomButton(_updateTelegram);
  	putBottomButton(_downloadBar);
  	putBottomButton(_loadMoreChats);
@@ -132,7 +132,7 @@ index 9da03d7fd3c9cd8a636d16fd45292e71db0ad164..bcaeb5724924a622744d7e52b761e1e1
  		_connecting->setBottomSkip(bottomSkip);
  	}
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_search.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_search.cpp
-index 592ed6513f14ebebf96af1f6e30f1b9061c2498a..965e80e91aa8daca283e350e34995f146eb9e8b1 100644
+index ac8204d87fcda8679ebf5585939b93d3ecb9569a..52acce4d444152f46b75d0f940d07b42576adef8 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_search.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_search.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -143,7 +143,7 @@ index 592ed6513f14ebebf96af1f6e30f1b9061c2498a..965e80e91aa8daca283e350e34995f14
  #include "ui/effects/show_animation.h"
  #include "ui/widgets/buttons.h"
  #include "ui/widgets/labels.h"
-@@ -916,6 +917,8 @@ private:
+@@ -925,6 +926,8 @@ private:
  	rpl::event_stream<Activation> _activations;
  	rpl::event_stream<> _destroyRequests;
  
@@ -152,7 +152,7 @@ index 592ed6513f14ebebf96af1f6e30f1b9061c2498a..965e80e91aa8daca283e350e34995f14
  };
  
  ComposeSearch::Inner::Inner(
-@@ -939,6 +942,22 @@ ComposeSearch::Inner::Inner(
+@@ -948,6 +951,22 @@ ComposeSearch::Inner::Inner(
  , _calendarChat(history) {
  	showAnimated();
  
@@ -175,7 +175,7 @@ index 592ed6513f14ebebf96af1f6e30f1b9061c2498a..965e80e91aa8daca283e350e34995f14
  	rpl::combine(
  		_topBar->geometryValue(),
  		_bottomBar->geometryValue()
-@@ -955,8 +974,13 @@ ComposeSearch::Inner::Inner(
+@@ -964,8 +983,13 @@ ComposeSearch::Inner::Inner(
  		}
  	}, _topBar->lifetime());
  
@@ -190,7 +190,7 @@ index 592ed6513f14ebebf96af1f6e30f1b9061c2498a..965e80e91aa8daca283e350e34995f14
  		if (search.query.isEmpty() && search.tags.empty()) {
  			if (!search.from || _history->peer->isSelf()) {
  				return;
-@@ -1115,11 +1139,13 @@ void ComposeSearch::Inner::setTopMsgId(MsgId topMsgId) {
+@@ -1124,11 +1148,13 @@ void ComposeSearch::Inner::setTopMsgId(MsgId topMsgId) {
  		_apiSearch.disableMigrated();
  	}
  	_topMsgId = topMsgId;

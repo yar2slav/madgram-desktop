@@ -27,10 +27,10 @@ Subject: [PATCH] feat: send silently by default
  create mode 100644 Telegram/SourceFiles/tele/tele_silent.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b23a5d717887e50e6491249f85cf66f7dbdc5be2..4e0326948ca754e9d22ce749d9546e8d898f8102 100644
+index 5525723b77ce04273aee33187836e9be9282d50b..65b543594aac43edcc64b88026255cc1e94c754f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2639,6 +2639,8 @@ PRIVATE
+@@ -2795,6 +2795,8 @@ PRIVATE
      tele/tele_shot.h
      tele/tele_shot_sharp.cpp
      tele/tele_shot_sharp.h
@@ -66,10 +66,10 @@ index 2c639c8b0bcc14404243cf97727973becee069de..ff99054afbc38d3fcfd79c3494a57372
  		base.handleSupportSwitch = options.handleSupportSwitch;
  	}
 diff --git a/Telegram/SourceFiles/history/history_item_helpers.cpp b/Telegram/SourceFiles/history/history_item_helpers.cpp
-index adbef83347eaf0cbeadf53744567107874bff2d4..6679eb40c6aa1161de24f8be7d90c3b970ca5579 100644
+index 024506de0bcbdab4966154a45af0d5d214e31e21..e0e23979a394d9c9cd696ffd2f6a6d9236877cfa 100644
 --- a/Telegram/SourceFiles/history/history_item_helpers.cpp
 +++ b/Telegram/SourceFiles/history/history_item_helpers.cpp
-@@ -56,6 +56,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -57,6 +57,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/widgets/checkbox.h"
  #include "ui/item_text_options.h"
  #include "lang/lang_keys.h"
@@ -77,7 +77,7 @@ index adbef83347eaf0cbeadf53744567107874bff2d4..6679eb40c6aa1161de24f8be7d90c3b9
  
  #include "styles/style_layers.h"
  
-@@ -627,6 +628,9 @@ QString NewMessagePostAuthor(const Api::SendAction &action) {
+@@ -628,6 +629,9 @@ QString NewMessagePostAuthor(const Api::SendAction &action) {
  bool ShouldSendSilent(
  		not_null<PeerData*> peer,
  		const Api::SendOptions &options) {
@@ -88,10 +88,10 @@ index adbef83347eaf0cbeadf53744567107874bff2d4..6679eb40c6aa1161de24f8be7d90c3b9
  		|| (peer->isBroadcast()
  			&& peer->owner().notifySettings().silentPosts(peer))
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 9b565577cd6f5e91d266b754cac3a8250b3f6341..12998db5f17930be973e6655b51d7df9f68b29c2 100644
+index f530581436bbdd104964a366d264e9bdf74c2a86..c7af5cad3f05170d8a80f9b94ddc7805a73a4b1f 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -182,6 +182,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -185,6 +185,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_emoji_panel.h"
  #include "tele/tele_inline_text.h"
  #include "tele/tele_send_order.h"
@@ -99,7 +99,7 @@ index 9b565577cd6f5e91d266b754cac3a8250b3f6341..12998db5f17930be973e6655b51d7df9
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_options.h"
  #include "media/audio/media_audio.h"
-@@ -6215,6 +6216,7 @@ SendMenu::Details HistoryWidget::sendMenuDetails() const {
+@@ -6324,6 +6325,7 @@ SendMenu::Details HistoryWidget::sendMenuDetails() const {
  		.type = type,
  		.barePeerId = _peer ? _peer->id.value : 0,
  		.effectAllowed = effectAllowed,
@@ -107,7 +107,7 @@ index 9b565577cd6f5e91d266b754cac3a8250b3f6341..12998db5f17930be973e6655b51d7df9
  	};
  }
  
-@@ -7886,7 +7888,7 @@ void HistoryWidget::updateFieldPlaceholder() {
+@@ -8009,7 +8011,7 @@ void HistoryWidget::updateFieldPlaceholder() {
  
  	const auto ephemeralReply = session().ephemeralMessages()
  		.isEphemeralBotReply(replyTo().messageId);
@@ -116,7 +116,7 @@ index 9b565577cd6f5e91d266b754cac3a8250b3f6341..12998db5f17930be973e6655b51d7df9
  		const auto peer = _history ? _history->peer.get() : nullptr;
  		if (_editMsgId) {
  			return tr::lng_edit_message_text();
-@@ -7947,7 +7949,7 @@ void HistoryWidget::updateFieldPlaceholder() {
+@@ -8070,7 +8072,7 @@ void HistoryWidget::updateFieldPlaceholder() {
  		} else {
  			return tr::lng_message_ph();
  		}
@@ -126,7 +126,7 @@ index 9b565577cd6f5e91d266b754cac3a8250b3f6341..12998db5f17930be973e6655b51d7df9
  }
  
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 8533638d2813e373da7cc1f8eaf24f0b3c93c294..4d4fd1ae54e76540b2a1fe6f8070f43d4e6125fb 100644
+index b227d208eaec9f2aba9a0c01f6e8d3b3b4b45116..d54f7fc0566b300ec502866f9b3419368c8dadf8 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -137,7 +137,7 @@ index 8533638d2813e373da7cc1f8eaf24f0b3c93c294..4d4fd1ae54e76540b2a1fe6f8070f43d
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_options.h"
  #include "support/support_helper.h"
-@@ -3483,7 +3484,7 @@ void ComposeControls::updateFieldPlaceholder() {
+@@ -3498,7 +3499,7 @@ void ComposeControls::updateFieldPlaceholder() {
  
  	const auto ephemeralReply = session().ephemeralMessages()
  		.isEphemeralBotReply(replyingToMessage().messageId);
@@ -146,7 +146,7 @@ index 8533638d2813e373da7cc1f8eaf24f0b3c93c294..4d4fd1ae54e76540b2a1fe6f8070f43d
  		const auto peer = _history ? _history->peer.get() : nullptr;
  		if (isEditingMessage()) {
  			return tr::lng_edit_message_text();
-@@ -3547,7 +3548,7 @@ void ComposeControls::updateFieldPlaceholder() {
+@@ -3562,7 +3563,7 @@ void ComposeControls::updateFieldPlaceholder() {
  		} else {
  			return tr::lng_message_ph();
  		}
@@ -156,10 +156,10 @@ index 8533638d2813e373da7cc1f8eaf24f0b3c93c294..4d4fd1ae54e76540b2a1fe6f8070f43d
  		_fieldCustomPlaceholder.value(),
  		std::move(normal)
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-index 08cef4ac95c19b4a26bbc7e4df6fa89e770935a1..9370fa1471dc93a732f90cc752a001a0df9bccda 100644
+index a03b5651300dd126cee07688798727b8b25af009..1789bd1f7caab30ca672d84312ba5644bc1db061 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_section.cpp
-@@ -123,6 +123,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -125,6 +125,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
@@ -167,7 +167,7 @@ index 08cef4ac95c19b4a26bbc7e4df6fa89e770935a1..9370fa1471dc93a732f90cc752a001a0
  #include "inline_bots/inline_bot_result.h"
  #include "info/profile/info_profile_values.h"
  #include "iv/editor/iv_editor_session.h"
-@@ -3314,6 +3315,7 @@ SendMenu::Details ChatWidget::sendMenuDetails() const {
+@@ -3404,6 +3405,7 @@ SendMenu::Details ChatWidget::sendMenuDetails() const {
  			: _history)->peer->id.value,
  		.bareTopicRootId = _topic ? _topic->rootId().bare : 0,
  		.effectAllowed = _peer->isUser(),
@@ -198,10 +198,10 @@ index 86036fc2c171205d0031ec71f8dcf66e1f369a4a..40c0b4c9660d9685a277f6f38828231f
  			options.effectId = action.options.effectId;
  		}
 diff --git a/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp b/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp
-index 2db546fc333e1c56f0adecabf24b22c2304a9e41..edac904aef39604ab60329bef8d02526a50f9c3e 100644
+index d2824eea4a36bc696ae280d5d5e0285146f2bac8..e30334d66b911fe349ff47e2e11bd92571cc10a1 100644
 --- a/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp
-@@ -61,6 +61,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "storage/localimageloader.h"
  #include "inline_bots/inline_bot_result.h"
  #include "lang/lang_keys.h"
@@ -209,7 +209,7 @@ index 2db546fc333e1c56f0adecabf24b22c2304a9e41..edac904aef39604ab60329bef8d02526
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_boxes.h"
-@@ -984,6 +985,7 @@ SendMenu::Details ScheduledWidget::sendMenuDetails() const {
+@@ -1011,6 +1012,7 @@ SendMenu::Details ScheduledWidget::sendMenuDetails() const {
  		.barePeerId = _history->peer->id.value,
  		.bareTopicRootId = _forumTopic ? _forumTopic->rootId().bare : 0,
  		.effectAllowed = effectAllowed,
@@ -218,7 +218,7 @@ index 2db546fc333e1c56f0adecabf24b22c2304a9e41..edac904aef39604ab60329bef8d02526
  }
  
 diff --git a/Telegram/SourceFiles/menu/menu_send.cpp b/Telegram/SourceFiles/menu/menu_send.cpp
-index 9133cd9e0aa1a4ccd94b0d2bd70954c8c4447ae5..ce272085675ed4e345c5ed9b1f0aaadbe2ed7c9e 100644
+index 8f8fa47c5926e0219a30a8f55d4d7a595def6654..81112d6ed9f40399e8ca32bab992291c3aa0bf82 100644
 --- a/Telegram/SourceFiles/menu/menu_send.cpp
 +++ b/Telegram/SourceFiles/menu/menu_send.cpp
 @@ -54,6 +54,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -689,7 +689,7 @@ index 0000000000000000000000000000000000000000..55e5336a7040c7b099689661804f1785
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 031e6d70bc5a2b98b30df7851723fd828f754b37..b855753d31df69c167887a0d2edb86924d6a6587 100644
+index 911b5dfa864978724c5ee50ff3790322c2e7cdfc..4a3395a1de6524784c01aa2055d392895756d862 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
 @@ -137,6 +137,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

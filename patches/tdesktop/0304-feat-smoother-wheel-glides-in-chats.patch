@@ -26,10 +26,10 @@ Subject: [PATCH] feat: smoother wheel glides in chats
  create mode 100644 Telegram/SourceFiles/tele/tele_scroll_stats.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4d6da4bb8814f315698aae4edb9a50d9fbdd5ce8..25e7e690de107c00ff5c0e0b23cdbd4de9d0879a 100644
+index ba6ee7425b917dc3916c64d1d0c683b97f818f3c..503f6ef5d3124d2f3618f04c10d6299689fcef3c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2910,6 +2910,10 @@ PRIVATE
+@@ -3064,6 +3064,10 @@ PRIVATE
      tele/tele_rmb_beside_bubble.h
      tele/tele_screen_capture.cpp
      tele/tele_screen_capture.h
@@ -3238,10 +3238,10 @@ index d230bd04377109c51e64b69a8655a32cf4e24d6a..e9abfd45d7163b5ac148ff49ff2375ab
  			]
  		}
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-index 0eb39c0e24a5381cd2e836804bdddb1c5cf4fb26..4351a12565e929e7642e7325c531138fb80442bc 100644
+index 384e117649a3112403f5b5cdeac05da069c63f95..d1bd63a886cacf15ece22623ffac7f1595dbf9da 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_inner_widget.cpp
-@@ -94,6 +94,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -103,6 +103,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_local_pins.h"
  #include "tele/tele_options.h"
  #include "tele/tele_search_types.h"
@@ -3249,7 +3249,7 @@ index 0eb39c0e24a5381cd2e836804bdddb1c5cf4fb26..4351a12565e929e7642e7325c531138f
  #include "tele/tele_unsorted_folder.h"
  #include "tele/tele_username_aliases.h"
  #include "api/api_chat_filters.h"
-@@ -370,11 +371,11 @@ InnerWidget::InnerWidget(
+@@ -380,11 +381,11 @@ InnerWidget::InnerWidget(
  		}
  	}, lifetime());
  
@@ -3264,7 +3264,7 @@ index 0eb39c0e24a5381cd2e836804bdddb1c5cf4fb26..4351a12565e929e7642e7325c531138f
  
  	Core::App().notifications().settingsChanged(
  	) | rpl::on_next([=](Window::Notifications::ChangeType change) {
-@@ -1370,6 +1371,13 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
+@@ -1393,6 +1394,13 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
  				}
  			};
  
@@ -3278,7 +3278,7 @@ index 0eb39c0e24a5381cd2e836804bdddb1c5cf4fb26..4351a12565e929e7642e7325c531138f
  			auto i = list.findByY(dialogsClip.top() - skip);
  			if (_skipTopDialog && i != list.cend() && !(*i)->index()) {
  				++i;
-@@ -1392,7 +1400,8 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
+@@ -1415,7 +1423,8 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
  					}
  
  					// Skip currently dragged chat to paint it above others after.
@@ -3289,10 +3289,10 @@ index 0eb39c0e24a5381cd2e836804bdddb1c5cf4fb26..4351a12565e929e7642e7325c531138f
  					}
  
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814454e5cec 100644
+index 5b7c0e9d820e9f0c054bc449d66a308cbf343024..50d9276359c3972717e91d34fb2068aa4581aebb 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -60,6 +60,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "ui/controls/who_reacted_context_action.h"
  #include "ui/controls/swipe_handler.h"
  #include "ui/inactive_press.h"
@@ -3300,7 +3300,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  #include "ui/painter.h"
  #include "ui/rect.h"
  #include "ui/screen_reader_mode.h"
-@@ -143,11 +144,13 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -148,11 +149,13 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_secret_media.h"
  #include "tele/tele_select_many.h"
  #include "tele/tele_shot.h"
@@ -3314,7 +3314,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  #include "tele/tele_select_service.h"
  #include "tele/tele_send_order.h"
  #include "tele/tele_wallet_links.h"
-@@ -409,7 +412,12 @@ HistoryInner::HistoryInner(
+@@ -414,7 +417,12 @@ HistoryInner::HistoryInner(
  , _pathGradient(
  	HistoryView::MakePathShiftGradient(
  		controller->chatStyle(),
@@ -3328,7 +3328,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  , _reactionsManager(
  	std::make_unique<HistoryView::Reactions::Manager>(
  		this,
-@@ -425,7 +433,20 @@ HistoryInner::HistoryInner(
+@@ -433,8 +441,21 @@ HistoryInner::HistoryInner(
  	[=] { mouseActionUpdate(QCursor::pos()); setCursor(_cursor); },
  	[=] { return window()->isActiveWindow(); })
  , _scrollDateCheck([this] { scrollDateCheck(); })
@@ -3340,6 +3340,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
 +	[=](Painter &p, QRect clip) {
 +		paintChat(p, clip, ChatPaint::Messages);
 +	})) {
+ 	hide();
 +	rpl::merge(
 +		style::PaletteChanged(),
 +		controller->chatStyle()->paletteChanged()
@@ -3350,7 +3351,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  	_history->delegateMixin()->setCurrent(this);
  	if (_migrated) {
  		_migrated->delegateMixin()->setCurrent(this);
-@@ -454,6 +475,7 @@ HistoryInner::HistoryInner(
+@@ -463,6 +484,7 @@ HistoryInner::HistoryInner(
  	_controller->gifPauseLevelChanged(
  	) | rpl::on_next([=] {
  		if (!elementAnimationsPaused()) {
@@ -3358,7 +3359,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  			update();
  		}
  	}, lifetime());
-@@ -485,6 +507,7 @@ HistoryInner::HistoryInner(
+@@ -494,6 +516,7 @@ HistoryInner::HistoryInner(
  
  	session().data().peerDecorationsUpdated(
  	) | rpl::on_next([=] {
@@ -3366,7 +3367,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  		update();
  	}, lifetime());
  	session().data().itemRemoved(
-@@ -520,6 +543,10 @@ HistoryInner::HistoryInner(
+@@ -529,6 +552,10 @@ HistoryInner::HistoryInner(
  	) | rpl::filter([=](not_null<const Element*> view) {
  		return (view == viewByItem(view->data()));
  	}) | rpl::on_next([=](not_null<const Element*> view) {
@@ -3377,7 +3378,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  		markReadMetricsStale();
  		if (view->isUnderCursor()) {
  			mouseActionUpdate();
-@@ -538,6 +565,7 @@ HistoryInner::HistoryInner(
+@@ -547,6 +574,7 @@ HistoryInner::HistoryInner(
  		(Data::HistoryUpdate::Flag::OutboxRead
  			| Data::HistoryUpdate::Flag::TranslatedTo)
  	) | rpl::on_next([=] {
@@ -3385,7 +3386,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  		update();
  	}, lifetime());
  
-@@ -1450,15 +1478,94 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
+@@ -1464,15 +1492,94 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
  		&& !pendingResized
  		&& _widget->markingContentsRead());
  	if (overlapped || pendingResized) {
@@ -3481,7 +3482,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  	auto context = preparePaintContext(clip);
  	context.gestureHorizontal = _gestureHorizontal;
  	context.highlightPathCache = &_highlightPathCache;
-@@ -1469,34 +1576,48 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
+@@ -1483,34 +1590,48 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
  
  	const auto historyDisplayedEmpty = _history->isDisplayedEmpty()
  		&& (!_migrated || _migrated->isDisplayedEmpty());
@@ -3548,7 +3549,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  	if (metricsStale) {
  		_readMetricsTracker->startBatch(_visibleAreaTop, _visibleAreaBottom);
  	}
-@@ -1530,7 +1651,9 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
+@@ -1544,7 +1665,9 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
  		if (markingAsViewed && !readContents.empty()) {
  			session().api().markContentsRead(readContents);
  		}
@@ -3559,7 +3560,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  	});
  
  	const auto processPainted = [&](
-@@ -1741,7 +1864,15 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
+@@ -1757,7 +1880,15 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
  		context.translate(0, top);
  		p.translate(0, -top);
  	}
@@ -3575,7 +3576,7 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  	enumerateUserpics([&](not_null<Element*> view, int userpicTop) {
  		// stop the enumeration if the userpic is below the painted rect
  		if (userpicTop >= clip.top() + clip.height()) {
-@@ -4924,6 +5055,7 @@ void HistoryInner::updateSize() {
+@@ -4980,6 +5111,7 @@ void HistoryInner::updateSize() {
  			mouseActionUpdate(QCursor::pos());
  		}
  	} else {
@@ -3584,10 +3585,10 @@ index 3687173a0e0ce68f1574a435aefdd19ca7c203ae..b454789ac84e93e37178710dbff40814
  	}
  
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.h b/Telegram/SourceFiles/history/history_inner_widget.h
-index 56f7c2f00c1915108fec7df6ed0fdc1b0fd82a6c..949328129da4a05d24a51b7a621362ab6ea6dd92 100644
+index f7c738bb0cf1b3237e3de000fbb5ee85ca043f50..d204ecb2f2eb576bf971ed62d92e9bf1ade3cd00 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.h
 +++ b/Telegram/SourceFiles/history/history_inner_widget.h
-@@ -84,6 +84,10 @@ using namespace ::Ui;
+@@ -92,6 +92,10 @@ using namespace ::Ui;
  class VideoUserpic;
  } // namespace Dialogs::Ui
  
@@ -3598,7 +3599,7 @@ index 56f7c2f00c1915108fec7df6ed0fdc1b0fd82a6c..949328129da4a05d24a51b7a621362ab
  class HistoryInner;
  class HistoryMainElementDelegate;
  class HistoryMainElementDelegateMixin {
-@@ -430,6 +434,17 @@ private:
+@@ -443,6 +447,17 @@ private:
  		not_null<const Ui::ChatStyle*> st,
  		int width,
  		int height);
@@ -3616,7 +3617,7 @@ index 56f7c2f00c1915108fec7df6ed0fdc1b0fd82a6c..949328129da4a05d24a51b7a621362ab
  
  	QPoint mapPointToItem(QPoint p, const Element *view) const;
  	QPoint mapPointToItem(QPoint p, const HistoryItem *item) const;
-@@ -726,6 +741,8 @@ private:
+@@ -742,6 +757,8 @@ private:
  
  	std::unique_ptr<Ui::ThanosEffectController> _thanosController;
  

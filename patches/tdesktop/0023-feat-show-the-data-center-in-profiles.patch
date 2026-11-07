@@ -13,10 +13,10 @@ Subject: [PATCH] feat: show the data center in profiles
  6 files changed, 118 insertions(+), 6 deletions(-)
 
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-index 1cb98ad677c909fcc677f466ca29c40ae7fbb6f8..4a9f42226d836b2d7f902e665963b5c40def6c34 100644
+index 271db7a6d4a6662f056079bd44c5b387241e3443..64dace78252b2ade544ea553939f0017ac4d5881 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
-@@ -76,6 +76,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "menu/menu_mute.h"
  #include "settings/settings_common.h"
  #include "support/support_helper.h"
@@ -24,7 +24,7 @@ index 1cb98ad677c909fcc677f466ca29c40ae7fbb6f8..4a9f42226d836b2d7f902e665963b5c4
  #include "tele/tele_peer_id.h"
  #include "ui/boxes/peer_qr_box.h"
  #include "ui/boxes/report_box_graphics.h"
-@@ -1858,6 +1859,15 @@ Section DetailsFiller::makeInfo() {
+@@ -1859,6 +1860,15 @@ Section DetailsFiller::makeInfo() {
  			_peer,
  			controller);
  	}

@@ -5,18 +5,18 @@ Subject: [PATCH] fix: retry failed upload parts
 
 ---
  Telegram/CMakeLists.txt                       |  2 +
- Telegram/SourceFiles/storage/file_upload.cpp  | 38 ++++++++-
+ Telegram/SourceFiles/storage/file_upload.cpp  | 37 +++++++-
  .../SourceFiles/tele/tele_upload_retry.cpp    | 56 +++++++++++++
  Telegram/SourceFiles/tele/tele_upload_retry.h | 84 +++++++++++++++++++
- 4 files changed, 178 insertions(+), 2 deletions(-)
+ 4 files changed, 177 insertions(+), 2 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_upload_retry.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_upload_retry.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9d99d457636d527ea35b890e7888287b7b4fcea2..a535838c0c0dbf27e372bbb1e3a70db80825f713 100644
+index 72ff651f2e8c6d9522fe19004712890442862ff6..ed7f01d4b5bd1f24d752a142c3e6efbfdb7348cc 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2800,6 +2800,8 @@ PRIVATE
+@@ -2956,6 +2956,8 @@ PRIVATE
      tele/tele_unsorted_folder.h
      tele/tele_updater.cpp
      tele/tele_updater.h
@@ -26,7 +26,7 @@ index 9d99d457636d527ea35b890e7888287b7b4fcea2..a535838c0c0dbf27e372bbb1e3a70db8
      tele/tele_username_aliases.cpp
      tele/tele_username_aliases.h
 diff --git a/Telegram/SourceFiles/storage/file_upload.cpp b/Telegram/SourceFiles/storage/file_upload.cpp
-index b157815de096189c9d57c28aae32719a191c73ab..2087364bccd6ba07e5825089fc6f1e18118d16a1 100644
+index 83dad7f3d3d9275b206e2f4a1ae242e6d859cccd..2087364bccd6ba07e5825089fc6f1e18118d16a1 100644
 --- a/Telegram/SourceFiles/storage/file_upload.cpp
 +++ b/Telegram/SourceFiles/storage/file_upload.cpp
 @@ -31,7 +31,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -47,15 +47,7 @@ index b157815de096189c9d57c28aae32719a191c73ab..2087364bccd6ba07e5825089fc6f1e18
  };
  
  Uploader::Entry::Entry(
-@@ -868,6 +871,7 @@ auto Uploader::sendSlicedPart(not_null<Entry*> entry, uchar dcIndex)
- 	), {
- 		.itemId = itemId,
- 		.bytes = partBytes,
-+		.part = index,
- 		.dcIndex = dcIndex,
- 	});
- 	return SendResult::Success;
-@@ -1230,8 +1234,38 @@ void Uploader::finishFront() {
+@@ -1231,8 +1234,38 @@ void Uploader::finishFront() {
  }
  
  void Uploader::partFailed(const MTP::Error &error, mtpRequestId requestId) {

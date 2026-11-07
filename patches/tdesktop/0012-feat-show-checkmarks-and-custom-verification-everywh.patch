@@ -28,10 +28,10 @@ Subject: [PATCH] feat: show checkmarks and custom verification everywhere
  create mode 100644 Telegram/SourceFiles/tele/tele_bubble_badges.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5e8044c0ebb859d60c0072b020da30798ae55a42..626989d70e3dab67b6e6dfbefd7619cdb8e52cee 100644
+index 27f5a046e84bc69b1aa8c6a2e05d570099e2bb63..cfdd52a0034f0515a04f67aa0d719d1ea9b7aa6a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2483,10 +2483,14 @@ nice_target_sources(Telegram ${src_loc}
+@@ -2639,10 +2639,14 @@ nice_target_sources(Telegram ${src_loc}
  PRIVATE
      settings/settings_tele.cpp
      settings/settings_tele.h
@@ -47,7 +47,7 @@ index 5e8044c0ebb859d60c0072b020da30798ae55a42..626989d70e3dab67b6e6dfbefd7619cd
      tele/tele_button_payload.h
      tele/tele_options.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_chat_preview.cpp b/Telegram/SourceFiles/history/view/history_view_chat_preview.cpp
-index 7abf143eac7ce338874d15709a51fed965d96935..2478f1df6ed06d4cf3220eb895b41d25c85252cb 100644
+index ad73644d916bdc6ec6f39af559e9b9ab88373da2..28ca8b6f65722f30bcf30bca06820a0375cb8f1d 100644
 --- a/Telegram/SourceFiles/history/view/history_view_chat_preview.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_chat_preview.cpp
 @@ -204,6 +204,7 @@ private:
@@ -136,7 +136,7 @@ index 7abf143eac7ce338874d15709a51fed965d96935..2478f1df6ed06d4cf3220eb895b41d25
  
  	_top->geometryValue() | rpl::on_next([=](QRect geometry) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09c7932df5 100644
+index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7fd0365a1a 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
 @@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -147,7 +147,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_chat_style.h"
-@@ -1601,6 +1602,7 @@ QSize Message::performCountOptimalSize() {
+@@ -1604,6 +1605,7 @@ QSize Message::performCountOptimalSize() {
  					+ (_fromNameStatus
  						? st::dialogsPremiumIcon.icon.width()
  						: 0)
@@ -155,7 +155,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  					+ st::msgPadding.right();
  				if (via && !displayForwardedFrom()) {
  					namew += st::msgServiceFont->spacew + via->maxWidth
-@@ -2530,6 +2532,9 @@ void Message::paintFromName(
+@@ -2533,6 +2535,9 @@ void Message::paintFromName(
  	const auto statusWidth = _fromNameStatus
  		? st::dialogsPremiumIcon.icon.width()
  		: 0;
@@ -165,7 +165,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  	const auto via = item->Get<HistoryMessageVia>();
  	const auto viaShown = via && !displayForwardedFrom() && via->width;
  	const auto viaSkipWidth = viaShown
-@@ -2538,7 +2543,7 @@ void Message::paintFromName(
+@@ -2541,7 +2546,7 @@ void Message::paintFromName(
  	const auto nameAvailableWidth = std::max(
  		((statusWidth && availableWidth > statusWidth)
  			? (availableWidth - statusWidth)
@@ -174,7 +174,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  		0);
  	if (statusWidth && availableWidth > statusWidth) {
  		const auto x = availableLeft
-@@ -2577,6 +2582,17 @@ void Message::paintFromName(
+@@ -2580,6 +2585,17 @@ void Message::paintFromName(
  			st::dialogsPremiumIcon.icon.paint(p, x, y, width(), color);
  		}
  	}
@@ -192,7 +192,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  	p.setFont(st::msgNameFont);
  	p.setPen(nameFg);
  	const auto nameLinkHandler = fromLink();
-@@ -2597,9 +2613,12 @@ void Message::paintFromName(
+@@ -2600,9 +2616,12 @@ void Message::paintFromName(
  		nameLinkHandler,
  		QRect(availableLeft, trect.top(), nameWidth, st::msgNameFont->height),
  		trect.topLeft());
@@ -205,7 +205,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  		.elisionLines = 1,
  	});
  	const auto skipWidth = nameWidth
-@@ -2607,6 +2626,7 @@ void Message::paintFromName(
+@@ -2610,6 +2629,7 @@ void Message::paintFromName(
  			? (st::dialogsPremiumIcon.icon.width()
  				+ st::msgServiceFont->spacew)
  			: 0)
@@ -213,7 +213,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  		+ st::msgServiceFont->spacew;
  	availableLeft += skipWidth;
  	availableWidth -= skipWidth;
-@@ -3827,6 +3847,7 @@ bool Message::hasHeavyPart() const {
+@@ -3836,6 +3856,7 @@ bool Message::hasHeavyPart() const {
  void Message::unloadHeavyPart() {
  	Element::unloadHeavyPart();
  	_comments = nullptr;
@@ -221,7 +221,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  	if (_fromNameStatus) {
  		_fromNameStatus->custom = nullptr;
  		_fromNameStatus->id = EmojiStatusId();
-@@ -4246,6 +4267,9 @@ bool Message::getStateFromName(
+@@ -4255,6 +4276,9 @@ bool Message::getStateFromName(
  		const auto statusWidth = (from && _fromNameStatus)
  			? st::dialogsPremiumIcon.icon.width()
  			: 0;
@@ -231,7 +231,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  		const auto via = item->Get<HistoryMessageVia>();
  		const auto viaShown = via && !displayForwardedFrom() && via->width;
  		const auto viaSkipWidth = viaShown
-@@ -4254,7 +4278,7 @@ bool Message::getStateFromName(
+@@ -4263,7 +4287,7 @@ bool Message::getStateFromName(
  		const auto nameAvailableWidth = std::max(
  			((statusWidth && availableWidth > statusWidth)
  				? (availableWidth - statusWidth)
@@ -240,7 +240,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  			0);
  		const auto nameWidth = std::min(
  			nameText->maxWidth(),
-@@ -4286,6 +4310,7 @@ bool Message::getStateFromName(
+@@ -4297,6 +4321,7 @@ bool Message::getStateFromName(
  				? (st::dialogsPremiumIcon.icon.width()
  					+ st::msgServiceFont->spacew)
  				: 0)
@@ -248,7 +248,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  			+ st::msgServiceFont->spacew;
  		availableLeft += skipWidth;
  		availableWidth -= skipWidth;
-@@ -5514,12 +5539,21 @@ void Message::validateFromNameText(PeerData *from) const {
+@@ -5477,12 +5502,21 @@ void Message::validateFromNameText(PeerData *from) const {
  		return;
  	}
  	const auto version = from->nameVersion();
@@ -275,7 +275,7 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  	}
  	if (from->isPremium()
  		|| (from->isChannel()
-@@ -6433,7 +6467,8 @@ void Message::fromNameUpdated(int width) const {
+@@ -6397,7 +6431,8 @@ void Message::fromNameUpdated(int width) const {
  		- (_fromNameStatus
  			? (st::dialogsPremiumIcon.icon.width()
  				+ st::msgServiceFont->spacew)
@@ -286,10 +286,10 @@ index 260afe188640ac57fe29c48fd5c41330c03cd482..e1e3b0477fc35f1c3ae6cc3f4b9c8e09
  	if (via && !displayForwardedFrom()) {
  		via->resize(available - st::msgServiceFont->spacew);
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.h b/Telegram/SourceFiles/history/view/history_view_message.h
-index 2eb8118c30f7a1308f553db406a79fec2ff5f771..eb44f213890018f6ed67d3f522cac0e0dd3ec04f 100644
+index dfa1c27e4d4bf6bf0883688f1521986fbc9b411d..f6d5c5ec72c25e92f84f5fe5884b801ab94a8263 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.h
 +++ b/Telegram/SourceFiles/history/view/history_view_message.h
-@@ -546,6 +546,7 @@ private:
+@@ -551,6 +551,7 @@ private:
  
  	mutable Ui::Text::String _fromName;
  	mutable std::unique_ptr<FromNameStatus> _fromNameStatus;
@@ -298,7 +298,7 @@ index 2eb8118c30f7a1308f553db406a79fec2ff5f771..eb44f213890018f6ed67d3f522cac0e0
  	mutable uint32 _fromNameVersion : 16 = 0;
  	uint32 _nonTextMaxWidth : 16 = 0;
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_badge.cpp b/Telegram/SourceFiles/info/profile/info_profile_badge.cpp
-index 78acde4d2b78d1c3c331598082513585d944af96..fcebcc983f76506e4fc496dea6ee80d440750f5b 100644
+index 6bdfb5dcbcc6590c8a32b058a01d687159a4f4d4..5160162190325c12762e4e43f3539f6ec0c9b449 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_badge.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_badge.cpp
 @@ -282,7 +282,10 @@ rpl::producer<Badge::Content> BadgeContentForPeer(not_null<PeerData*> peer) {
@@ -422,7 +422,7 @@ index 8982b515b5a30600f5565c3b7e81dc5218c96950..41ba51ad2bc0466bf9e073795497c255
  	{
  		const auto container = Badge::AddRight(raw, st::mainMenuAccountLine);
 diff --git a/Telegram/SourceFiles/settings/sections/settings_main.cpp b/Telegram/SourceFiles/settings/sections/settings_main.cpp
-index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a649485551 100644
+index db7b733a2886383904e5789dd3bb015ae8530c6e..83abcc6b3b9b2b0037fb92461651b2e6b9e1eaeb 100644
 --- a/Telegram/SourceFiles/settings/sections/settings_main.cpp
 +++ b/Telegram/SourceFiles/settings/sections/settings_main.cpp
 @@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -433,7 +433,7 @@ index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a6
  
  #include "api/api_cloud_password.h"
  #include "api/api_credits.h"
-@@ -127,6 +128,7 @@ private:
+@@ -128,6 +129,7 @@ private:
  	const not_null<UserData*> _user;
  	Info::Profile::EmojiStatusPanel _emojiStatusPanel;
  	Info::Profile::Badge _badge;
@@ -441,7 +441,7 @@ index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a6
  
  	object_ptr<Ui::UserpicButton> _userpic;
  	object_ptr<Ui::FlatLabel> _name = { nullptr };
-@@ -160,6 +162,9 @@ Cover::Cover(
+@@ -161,6 +163,9 @@ Cover::Cover(
  	},
  	0, // customStatusLoopsLimit
  	Info::Profile::BadgeType::Premium)
@@ -451,7 +451,7 @@ index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a6
  , _userpic(
  	this,
  	controller,
-@@ -222,7 +227,7 @@ Cover::Cover(
+@@ -223,7 +228,7 @@ Cover::Cover(
  			_badge.widget(),
  			_badge.sizeTag());
  	});
@@ -460,7 +460,7 @@ index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a6
  		refreshNameGeometry(width());
  	}, _name->lifetime());
  
-@@ -302,7 +307,7 @@ void Cover::initViewers() {
+@@ -303,7 +308,7 @@ void Cover::initViewers() {
  }
  
  void Cover::refreshNameGeometry(int newWidth) {
@@ -469,7 +469,7 @@ index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a6
  	const auto nameTop = st::settingsNameTop;
  	const auto qrButtonWidth = (_qrButton && !_qrButton->isHidden())
  		? (_qrButton->width() + st::infoProfileCover.rightSkip)
-@@ -310,7 +315,8 @@ void Cover::refreshNameGeometry(int newWidth) {
+@@ -311,7 +316,8 @@ void Cover::refreshNameGeometry(int newWidth) {
  	auto nameWidth = newWidth
  		- nameLeft
  		- st::infoProfileCover.rightSkip
@@ -479,7 +479,7 @@ index d95edbe71e5e8871c68ca9f7b67e907c81567ccd..93794d648979383b1e231dc3c8a8c1a6
  	if (const auto width = _badge.widget() ? _badge.widget()->width() : 0) {
  		nameWidth -= st::infoVerifiedCheckPosition.x() + width;
  	}
-@@ -320,6 +326,13 @@ void Cover::refreshNameGeometry(int newWidth) {
+@@ -321,6 +327,13 @@ void Cover::refreshNameGeometry(int newWidth) {
  	const auto badgeTop = nameTop;
  	const auto badgeBottom = nameTop + _name->height();
  	_badge.move(badgeLeft, badgeTop, badgeBottom);
@@ -853,10 +853,10 @@ index e9c02d9d15db82825e0f07d17908db92e7fa0ed6..f331dae73618b0814fed9f6c9cce9f74
  void SetServerUrl(const QString &url);
  [[nodiscard]] rpl::producer<QString> ServerUrlValue();
 diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
-index 37bb050311647243b88629f3b9e10ad4adf55ad8..3a6a441e897e8128a79a6d52ce0443cd91c1ff3d 100644
+index 18df642360f66a7bcc50f034cf5f77f015f944e3..245397d3a463ce38840383de7fa71c6709f0d9a7 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.cpp
 +++ b/Telegram/SourceFiles/ui/unread_badge.cpp
-@@ -250,22 +250,20 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
+@@ -251,22 +251,20 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
  		&& !emojiStatus
  		&& peer->isPremium();
  
@@ -890,7 +890,7 @@ index 37bb050311647243b88629f3b9e10ad4adf55ad8..3a6a441e897e8128a79a6d52ce0443cd
  		if (!paintVerify) {
  			return result;
  		}
-@@ -276,11 +274,8 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
+@@ -277,11 +275,8 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
  	}
  	if (paintVerify) {
  		result += drawVerifyCheck(p, descriptor);

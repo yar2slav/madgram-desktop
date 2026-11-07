@@ -16,23 +16,23 @@ Subject: [PATCH] feat: forward protected messages as copies
  .../info_global_media_provider.cpp            |   5 +-
  .../info/media/info_media_provider.cpp        |   7 +-
  Telegram/SourceFiles/main/main_session.cpp    |   2 +
- .../media/view/media_view_overlay_widget.cpp  |  13 +-
+ .../media/view/media_view_overlay_widget.cpp  |  15 +-
  .../menu/menu_item_download_files.cpp         |   3 +-
  .../SourceFiles/settings/settings_tele.cpp    |   1 +
  Telegram/SourceFiles/tele/tele_options.cpp    |  12 +
  Telegram/SourceFiles/tele/tele_options.h      |   2 +
- Telegram/SourceFiles/tele/tele_protected.cpp  | 830 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_protected.cpp  | 835 ++++++++++++++++++
  Telegram/SourceFiles/tele/tele_protected.h    |  31 +
  .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
- 20 files changed, 947 insertions(+), 38 deletions(-)
+ 20 files changed, 953 insertions(+), 39 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_protected.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_protected.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5fad2143e6a6eaed6348e1c4ffd9521037a85e5b..cd112cdb8b8a8b6ad3544108240fa7c47467b18f 100644
+index 5213d45404575b9edee31b9b34b72537da288a70..984a388c2749f0cfe189b19690580634f30a3f93 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2603,6 +2603,8 @@ PRIVATE
+@@ -2759,6 +2759,8 @@ PRIVATE
      tele/tele_peer_id.h
      tele/tele_phones.cpp
      tele/tele_phones.h
@@ -42,7 +42,7 @@ index 5fad2143e6a6eaed6348e1c4ffd9521037a85e5b..cd112cdb8b8a8b6ad3544108240fa7c4
      tele/tele_punctual_scheduled.h
      tele/tele_rich_timestamps.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index b48d45f7a6d527a316ac24d24ecfb57f79cf9b33..9c1facd63307dfc3b6489ec5d45bb528b7e23ce0 100644
+index 8d6c1ad6d52b3ac3a9fff49390761ace7d3dd459..8288c7d1cf932d9ad01c31c9fdc13941c4033063 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -51,9 +51,9 @@ index b48d45f7a6d527a316ac24d24ecfb57f79cf9b33..9c1facd63307dfc3b6489ec5d45bb528
  #include "tele/tele_options.h"
 +#include "tele/tele_protected.h"
  #include "tele/tele_docked_media.h"
+ #include "tgw/tgw_storage.h"
  
- namespace {
-@@ -3927,6 +3928,7 @@ void ApiWrap::forwardMessages(
+@@ -3951,6 +3952,7 @@ void ApiWrap::forwardMessages(
  
  	auto &histories = _session->data().histories();
  
@@ -62,10 +62,10 @@ index b48d45f7a6d527a316ac24d24ecfb57f79cf9b33..9c1facd63307dfc3b6489ec5d45bb528
  		const auto item = *i;
  		if (item->isSavedMusicItem()) {
 diff --git a/Telegram/SourceFiles/core/click_handler_types.cpp b/Telegram/SourceFiles/core/click_handler_types.cpp
-index ed8dda8920929406ac5debcec5dda59c9f156303..f0c6cc867a53b47cf033ef3243f8b925a78e7332 100644
+index 8f1d0908af1863774dbfc7c850a76a1559fd2268..5c90d8d296f1b4915f5d8effc7e3b8b97263dc60 100644
 --- a/Telegram/SourceFiles/core/click_handler_types.cpp
 +++ b/Telegram/SourceFiles/core/click_handler_types.cpp
-@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "window/window_session_controller.h"
  #include "tele/tele_links.h"
  #include "tele/tele_options.h"
@@ -73,7 +73,7 @@ index ed8dda8920929406ac5debcec5dda59c9f156303..f0c6cc867a53b47cf033ef3243f8b925
  #include "window/window_session_controller_link_info.h"
  #include "apiwrap.h"
  #include "history/view/history_view_schedule_box.h"
-@@ -888,8 +889,8 @@ void FormattedDateClickHandler::onClick(ClickContext context) const {
+@@ -945,8 +946,8 @@ void FormattedDateClickHandler::onClick(ClickContext context) const {
  		&st::menuIconSchedule);
  
  	const auto canForward = item
@@ -109,10 +109,10 @@ index 8f1890c5e2bcfde1406ff751e730bf4543914ff4..b0d88a789a8167b325eb9be3d323d283
  	ItemPreview toPreview(ToPreviewOptions options) const override;
  	TextWithEntities notificationText() const override;
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce02d6418a 100644
+index 3c2e7426fa7842348434e39d1a0a30dd6a6d9160..0e4a029f7da45d950d2a466c2f910a28379de8e7 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
-@@ -139,6 +139,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -144,6 +144,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_shot.h"
  #include "tele/tele_message_menu.h"
  #include "tele/tele_options.h"
@@ -120,7 +120,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  #include "styles/style_chat.h"
  #include "styles/style_menu_icons.h"
  
-@@ -835,7 +836,7 @@ bool HistoryInner::hasSelectRestriction() const {
+@@ -845,7 +846,7 @@ bool HistoryInner::hasSelectRestriction() const {
  		return false;
  	} else if (session().frozen()) {
  		return true;
@@ -129,7 +129,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  		return false;
  	} else if (const auto chat = _peer->asChat()) {
  		return !chat->canDeleteMessages();
-@@ -2430,7 +2431,7 @@ std::unique_ptr<QMimeData> HistoryInner::prepareDrag() {
+@@ -2447,7 +2448,7 @@ std::unique_ptr<QMimeData> HistoryInner::prepareDrag() {
  			forwardIds = getSelectedForwardItems();
  		} else if (_mouseCursorState == CursorState::Date) {
  			const auto item = _mouseActionItem;
@@ -138,7 +138,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  				forwardIds = session().data().itemOrItsGroup(item);
  			}
  		} else if ((pressedView->isHiddenByGroup() && pressedHandler)
-@@ -2439,7 +2440,7 @@ std::unique_ptr<QMimeData> HistoryInner::prepareDrag() {
+@@ -2456,7 +2457,7 @@ std::unique_ptr<QMimeData> HistoryInner::prepareDrag() {
  			const auto item = _dragStateItem
  				? _dragStateItem
  				: _mouseActionItem;
@@ -147,7 +147,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  				forwardIds = MessageIdsList(1, item->fullId());
  			}
  		}
-@@ -3487,7 +3488,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3533,7 +3534,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  			const auto itemId = item->fullId();
  			const auto blockSender = item->history()->peer->isRepliesChat();
  			if (isUponSelected != -2) {
@@ -156,7 +156,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  					_menu->addAction(tr::lng_context_forward_msg(tr::now), [=] {
  						forwardItem(itemId);
  					}, &st::menuIconForward);
-@@ -3558,7 +3559,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -3604,7 +3605,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  			&& item->canDelete()
  			&& (item->isRegular() || !item->isService());
  		const auto canForward = item
@@ -165,7 +165,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  			&& !IsAnchoredEphemeral(item);
  		const auto canReport = item && item->suggestReport();
  		const auto canBlockSender = item && item->history()->peer->isRepliesChat();
-@@ -3967,12 +3968,13 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
+@@ -4022,12 +4023,13 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
  }
  
  bool HistoryInner::hasCopyRestriction(HistoryItem *item) const {
@@ -181,7 +181,7 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  }
  
  bool HistoryInner::showCopyRestriction(HistoryItem *item) {
-@@ -4004,13 +4006,13 @@ bool HistoryInner::hasCopyRestrictionForSelected() const {
+@@ -4059,14 +4061,14 @@ bool HistoryInner::hasCopyRestrictionForSelected() const {
  		return true;
  	}
  	for (const auto &item : _selected) {
@@ -190,14 +190,15 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  			return true;
  		}
  	}
- 	return hasSelectedText()
- 		&& _selectedTextItem
--		&& _selectedTextItem->forbidsForward();
-+		&& Tele::ForbidsForward(_selectedTextItem);
+ 	const auto textItem = hasSelectedText()
+ 		? _selectedTextItem
+ 		: _widgetSelection->item();
+-	return textItem && textItem->forbidsForward();
++	return textItem && Tele::ForbidsForward(textItem);
  }
  
  bool HistoryInner::showCopyRestrictionForSelected() {
-@@ -5320,7 +5322,7 @@ auto HistoryInner::getSelectionState() const
+@@ -5377,7 +5379,7 @@ auto HistoryInner::getSelectionState() const
  		if (item->isEphemeral() || item->canDelete()) {
  			++result.canDeleteCount;
  		}
@@ -207,10 +208,10 @@ index fab8f45efd6bf317002973e34e8570d43cf612a3..4c415c94bc5da55d4883ced6b71cf0ce
  		}
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-index 3e8670b7b405d1afad274145b98ec9a3942df198..54f2e0a566c839ac44b04586961b60a85b51ab9a 100644
+index a4b3223b1313e3181b0c9f23a69b4c02df711a8b..c6b783bc17119203e34886f5f361a499d334fcf3 100644
 --- a/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_context_menu.cpp
-@@ -123,6 +123,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -125,6 +125,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_shot.h"
  #include "tele/tele_message_menu.h"
  #include "tele/tele_ghost.h"
@@ -218,7 +219,7 @@ index 3e8670b7b405d1afad274145b98ec9a3942df198..54f2e0a566c839ac44b04586961b60a8
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_layers.h"
-@@ -605,7 +606,7 @@ bool AddForwardMessageAction(
+@@ -601,7 +602,7 @@ bool AddForwardMessageAction(
  	if (!request.selectedItems.empty()) {
  		return false;
  	} else if (!item
@@ -227,16 +228,16 @@ index 3e8670b7b405d1afad274145b98ec9a3942df198..54f2e0a566c839ac44b04586961b60a8
  		|| IsAnchoredEphemeral(item)) {
  		return false;
  	}
-@@ -2404,7 +2405,7 @@ void AddPollActions(
- 					item->history()->peer,
- 					MsgId(),
- 					std::move(text),
--					item->forbidsForward()));
-+					Tele::ForbidsForward(item)));
+@@ -2419,7 +2420,7 @@ void AddPollActions(
+ 						item->history()->peer,
+ 						MsgId(),
+ 						std::move(text),
+-						item->forbidsForward()));
++						Tele::ForbidsForward(item)));
+ 				}
  			}, &st::menuIconTranslate);
  		}
- 	}
-@@ -3005,7 +3006,7 @@ void AddSelectRestrictionAction(
+@@ -3007,7 +3008,7 @@ void AddSelectRestrictionAction(
  		not_null<HistoryItem*> item,
  		bool addIcon) {
  	const auto peer = item->history()->peer;
@@ -246,10 +247,10 @@ index 3e8670b7b405d1afad274145b98ec9a3942df198..54f2e0a566c839ac44b04586961b60a8
  		return;
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7abcab684 100644
+index f6c566fd890fe035076626eeadade95dcb2170c6..43bd8b7afa2a9ce3cb5b1ddda8aa9cafb4017d23 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-@@ -103,6 +103,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -107,6 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ignored.h"
  #include "tele/tele_options.h"
  #include "tele/tele_deleted_reply.h"
@@ -257,7 +258,7 @@ index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7
  #include "styles/style_chat.h"
  #include "styles/style_window.h" // columnMaximalWidthLeft
  
-@@ -1776,7 +1777,7 @@ bool ListWidget::addToSelection(
+@@ -2023,7 +2024,7 @@ bool ListWidget::addToSelection(
  		return false;
  	}
  	iterator->second.canDelete = item->canDelete() || item->isEphemeral();
@@ -266,12 +267,13 @@ index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7
  	iterator->second.canSendNow = item->allowsSendNow();
  	iterator->second.canReschedule = item->allowsReschedule();
  	iterator->second.ephemeral = item->isEphemeral();
-@@ -2165,13 +2166,13 @@ bool ListWidget::hasCopyRestrictionForSelected() const {
+@@ -2412,14 +2413,14 @@ bool ListWidget::hasCopyRestrictionForSelected() const {
  		return true;
  	}
  	if (_selected.empty()) {
--		if (_selectedTextItem && _selectedTextItem->forbidsForward()) {
-+		if (_selectedTextItem && Tele::ForbidsForward(_selectedTextItem)) {
+-		if ((_selectedTextItem && _selectedTextItem->forbidsForward())
++		if ((_selectedTextItem && Tele::ForbidsForward(_selectedTextItem))
+ 			|| _widgetSelection->copyRestricted()) {
  			return true;
  		}
  	}
@@ -282,7 +284,7 @@ index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7
  				return true;
  			}
  		}
-@@ -5409,22 +5410,23 @@ std::unique_ptr<QMimeData> ListWidget::prepareDrag() {
+@@ -5943,22 +5944,23 @@ std::unique_ptr<QMimeData> ListWidget::prepareDrag() {
  		const auto exactItem = _pressItemExact
  			? _pressItemExact
  			: pressedItem;
@@ -310,7 +312,7 @@ index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7
  				&& media->dragItemByHandler(pressedHandler)) {
  				forwardIds = MessageIdsList(1, exactItem->fullId());
  			}
-@@ -6777,7 +6779,8 @@ void ConfirmSendNowSelectedItems(not_null<ListWidget*> widget) {
+@@ -7303,7 +7305,8 @@ void ConfirmSendNowSelectedItems(not_null<ListWidget*> widget) {
  CopyRestrictionType CopyRestrictionTypeFor(
  		not_null<PeerData*> peer,
  		HistoryItem *item) {
@@ -320,7 +322,7 @@ index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7
  		? CopyRestrictionType::None
  		: peer->isUser()
  		? CopyRestrictionType::User
-@@ -6793,7 +6796,7 @@ CopyRestrictionType CopyMediaRestrictionTypeFor(
+@@ -7319,7 +7322,7 @@ CopyRestrictionType CopyMediaRestrictionTypeFor(
  		; all != CopyRestrictionType::None) {
  		return all;
  	}
@@ -330,7 +332,7 @@ index 539698407e24451b3ddf3d70c298725c8acb0104..2a72c1a883a09f96f4e9a497f4d979f7
  		: peer->isUser()
  		? CopyRestrictionType::User
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index a824bf7a1a05b4120deda15e477005adaec16526..7af15f4a28c5d63a26c832979f3184c91604e357 100644
+index 16783ab495ba9851e9c86d0a87e91608b01d4935..2e45b1b58dcb6d040a28ffdb65e0dcfb8bb73142 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
 @@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -341,7 +343,7 @@ index a824bf7a1a05b4120deda15e477005adaec16526..7af15f4a28c5d63a26c832979f3184c9
  #include "tele/tele_shot.h"
  #include "tele/tele_shot_sharp.h"
  #include "styles/style_chat.h"
-@@ -6064,7 +6065,7 @@ std::optional<QSize> Message::rightActionSize() const {
+@@ -6028,7 +6029,7 @@ std::optional<QSize> Message::rightActionSize() const {
  bool Message::displayFastShare() const {
  	const auto item = data();
  	const auto peer = item->history()->peer;
@@ -351,7 +353,7 @@ index a824bf7a1a05b4120deda15e477005adaec16526..7af15f4a28c5d63a26c832979f3184c9
  	} else if (peer->isChannel()) {
  		return !peer->isMegagroup();
 diff --git a/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp b/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp
-index 78cb2b1469af748857575b7411fc47ef4948d83a..e1204491090a92c1c7e0fe7ff02e860270b7c3c8 100644
+index 93b056156eca685be0b16c07931e75be935a5d51..616801e36b282564831feae1529ad5e157d73565 100644
 --- a/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp
 +++ b/Telegram/SourceFiles/info/downloads/info_downloads_provider.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -362,7 +364,7 @@ index 78cb2b1469af748857575b7411fc47ef4948d83a..e1204491090a92c1c7e0fe7ff02e8602
  #include "layout/layout_selection.h"
  #include "styles/style_overview.h"
  
-@@ -489,7 +490,7 @@ ListItemSelectionData Provider::computeSelectionData(
+@@ -492,7 +493,7 @@ ListItemSelectionData Provider::computeSelectionData(
  		TextSelection selection) {
  	auto result = ListItemSelectionData(selection);
  	result.canDelete = true;
@@ -372,7 +374,7 @@ index 78cb2b1469af748857575b7411fc47ef4948d83a..e1204491090a92c1c7e0fe7ff02e8602
  	return result;
  }
 diff --git a/Telegram/SourceFiles/info/global_media/info_global_media_provider.cpp b/Telegram/SourceFiles/info/global_media/info_global_media_provider.cpp
-index 55954b6c70eae52e09b40139a5a314da3ab060b2..dbfd4a8bb4221ca1854fb3b4301080d666b35c8b 100644
+index 168d33485ed439fccb084fc33542b90c32063244..9ab60ebdee7d9823ee70cf69415ded4e91bc4292 100644
 --- a/Telegram/SourceFiles/info/global_media/info_global_media_provider.cpp
 +++ b/Telegram/SourceFiles/info/global_media/info_global_media_provider.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -381,9 +383,9 @@ index 55954b6c70eae52e09b40139a5a314da3ab060b2..dbfd4a8bb4221ca1854fb3b4301080d6
  #include "storage/storage_shared_media.h"
 +#include "tele/tele_protected.h"
  #include "layout/layout_selection.h"
- #include "styles/style_overview.h"
  
-@@ -715,14 +716,14 @@ Media::ListItemSelectionData Provider::computeSelectionData(
+ namespace Info::GlobalMedia {
+@@ -658,14 +659,14 @@ Media::ListItemSelectionData Provider::computeSelectionData(
  		TextSelection selection) {
  	auto result = Media::ListItemSelectionData(selection);
  	result.canDelete = item->canDelete();
@@ -401,7 +403,7 @@ index 55954b6c70eae52e09b40139a5a314da3ab060b2..dbfd4a8bb4221ca1854fb3b4301080d6
  
  QString Provider::showInFolderPath(
 diff --git a/Telegram/SourceFiles/info/media/info_media_provider.cpp b/Telegram/SourceFiles/info/media/info_media_provider.cpp
-index 3d8acd456b951c78201cd059b45cd6988202cbca..efa94a7f2fa7254489e54e2ef9f5e488f047f472 100644
+index 43bfa6e1c577a4c621fb082e66df855b2796e5a6..314ac404613422f8a4356e3f0498a3f055671164 100644
 --- a/Telegram/SourceFiles/info/media/info_media_provider.cpp
 +++ b/Telegram/SourceFiles/info/media/info_media_provider.cpp
 @@ -28,6 +28,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -421,7 +423,7 @@ index 3d8acd456b951c78201cd059b45cd6988202cbca..efa94a7f2fa7254489e54e2ef9f5e488
  		return false;
  	} else if (const auto chat = _peer->asChat()) {
  		return !chat->canDeleteMessages();
-@@ -577,14 +578,14 @@ ListItemSelectionData Provider::computeSelectionData(
+@@ -584,14 +585,14 @@ ListItemSelectionData Provider::computeSelectionData(
  		TextSelection selection) {
  	auto result = ListItemSelectionData(selection);
  	result.canDelete = item->canDelete();
@@ -439,18 +441,18 @@ index 3d8acd456b951c78201cd059b45cd6988202cbca..efa94a7f2fa7254489e54e2ef9f5e488
  
  QString Provider::showInFolderPath(
 diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
-index 60b3003cef2fe7c8e6e21a466298f993d2e9f516..f2088ae16264b03a04cd21ae8c3225b5be429651 100644
+index 8566e085724038e47c8d2b9658f87d33c0c3322b..055535165d5e00d1b73b6488bc293d217d8c3e6e 100644
 --- a/Telegram/SourceFiles/main/main_session.cpp
 +++ b/Telegram/SourceFiles/main/main_session.cpp
-@@ -63,6 +63,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "core/application.h"
+@@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tgw/tgw_storage.h"
  #include "ui/text/text_utilities.h"
  #include "ui/layers/generic_box.h"
 +#include "tele/tele_protected.h"
  #include "tele/tele_punctual_scheduled.h"
  #include "styles/style_layers.h"
  
-@@ -280,6 +281,7 @@ Session::Session(
+@@ -282,6 +283,7 @@ Session::Session(
  	}, _lifetime);
  
  	Tele::SetupPunctualScheduled(this);
@@ -459,10 +461,10 @@ index 60b3003cef2fe7c8e6e21a466298f993d2e9f516..f2088ae16264b03a04cd21ae8c3225b5
  
  void Session::appConfigRefreshed() {
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 24ebd0073e97b87bfde5e5af086afc15ec710e24..a7bcb4eaf1d88e58f05229e4821bf6d62be9c1c6 100644
+index 5800d260a34c85c35cd79702a229ae6d12bd68dd..9cda1a0f82832f28fcf0d94a6f96998991489f93 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "platform/platform_text_recognition.h"
  #include "tele/tele_lowercase.h"
  #include "tele/tele_options.h"
@@ -470,18 +472,20 @@ index 24ebd0073e97b87bfde5e5af086afc15ec710e24..a7bcb4eaf1d88e58f05229e4821bf6d6
  #include "tele/tele_secret_media.h"
  #include "tele/tele_spoilers.h"
  #include "tele/tele_view_tl.h"
-@@ -1478,8 +1479,8 @@ bool OverlayWidget::hasCopyMediaRestriction(bool skipPremiumCheck) const {
+@@ -1488,9 +1489,9 @@ bool OverlayWidget::hasCopyMediaRestriction(bool skipPremiumCheck) const {
  			? !story->canDownloadIfPremium()
  			: !story->canDownloadChecked();
  	}
 -	return (_history && !_history->peer->allowsForwarding())
--		|| (_message && _message->forbidsSaving());
+-		|| (_message && _message->forbidsSaving())
+-		|| (_history && _screenshotProtected);
 +	return (_history && !Tele::AllowsForwarding(_history->peer))
-+		|| (_message && Tele::ForbidsSaving(_message));
++		|| (_message && Tele::ForbidsSaving(_message))
++		|| (_history && _screenshotProtected && !Tele::CopyProtected());
  }
  
  bool OverlayWidget::showCopyMediaRestriction(bool skipPRemiumCheck) {
-@@ -1609,7 +1610,7 @@ void OverlayWidget::documentUpdated(not_null<DocumentData*> document) {
+@@ -1628,7 +1629,7 @@ void OverlayWidget::documentUpdated(not_null<DocumentData*> document) {
  		return;
  	} else if (documentBubbleShown()) {
  		if (_message
@@ -490,7 +494,7 @@ index 24ebd0073e97b87bfde5e5af086afc15ec710e24..a7bcb4eaf1d88e58f05229e4821bf6d6
  			&& _documentMedia->loaded(true)) {
  			redisplayContent();
  		} else if ((_document->loading() && _docCancel->isHidden())
-@@ -2304,7 +2305,7 @@ void OverlayWidget::fillContextMenuActions(
+@@ -2323,7 +2324,7 @@ void OverlayWidget::fillContextMenuActions(
  	if ((!story || story->canDownloadChecked())
  		&& _document
  		&& !_document->filepath(true).isEmpty()
@@ -499,7 +503,7 @@ index 24ebd0073e97b87bfde5e5af086afc15ec710e24..a7bcb4eaf1d88e58f05229e4821bf6d6
  		const auto text = Platform::IsMac()
  			? tr::lng_context_show_in_finder(tr::now)
  			: tr::lng_context_show_in_folder(tr::now);
-@@ -2337,7 +2338,7 @@ void OverlayWidget::fillContextMenuActions(
+@@ -2356,7 +2357,7 @@ void OverlayWidget::fillContextMenuActions(
  			[=] { showAttachedStickers(); },
  			&st::mediaMenuIconStickers);
  	}
@@ -508,7 +512,7 @@ index 24ebd0073e97b87bfde5e5af086afc15ec710e24..a7bcb4eaf1d88e58f05229e4821bf6d6
  		addAction(
  			tr::lng_mediaview_forward(tr::now),
  			[=] { forwardMedia(); },
-@@ -3616,7 +3617,7 @@ void OverlayWidget::forwardMedia() {
+@@ -3656,7 +3657,7 @@ void OverlayWidget::forwardMedia() {
  	if (active.empty()) {
  		return;
  	}
@@ -518,7 +522,7 @@ index 24ebd0073e97b87bfde5e5af086afc15ec710e24..a7bcb4eaf1d88e58f05229e4821bf6d6
  		: FullMsgId();
  	if (id) {
 diff --git a/Telegram/SourceFiles/menu/menu_item_download_files.cpp b/Telegram/SourceFiles/menu/menu_item_download_files.cpp
-index 2d35114a47d12b164a36ca703807892d29115a0d..e515e79159e75b73a3c421ef86d0f30ceb28d886 100644
+index 610936d8558c31fe38cbc29a58dbb252774872fc..4df2b269816f46dc80a5d6aa5c09dbc465d7bad6 100644
 --- a/Telegram/SourceFiles/menu/menu_item_download_files.cpp
 +++ b/Telegram/SourceFiles/menu/menu_item_download_files.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -609,10 +613,10 @@ index 710d665f218a3db8cdcd84b171b7dd94240f0b9b..244e0844e82cc5f67becabc51c422a64
  [[nodiscard]] bool AllowScreenCapture();
 diff --git a/Telegram/SourceFiles/tele/tele_protected.cpp b/Telegram/SourceFiles/tele/tele_protected.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..28aea28062ab5a1ebd8a582fa9c70967e9bd3698
+index 0000000000000000000000000000000000000000..13fa732f673f0118bfeaeacf04ff8258fbb6770e
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_protected.cpp
-@@ -0,0 +1,830 @@
+@@ -0,0 +1,835 @@
 +#include "tele/tele_protected.h"
 +
 +#include "api/api_common.h"
@@ -1209,12 +1213,17 @@ index 0000000000000000000000000000000000000000..28aea28062ab5a1ebd8a582fa9c70967
 +		if (entry.kind == Kind::Location) {
 +			Api::SendLocation(action, point.lat(), point.lon());
 +		} else {
-+			Api::SendVenue(action, Data::InputVenue{
-+				.lat = point.lat(),
-+				.lon = point.lon(),
-+				.title = location->title(),
-+				.address = location->description(),
-+			});
++			Api::SendInputMedia(action, MTP_inputMediaVenue(
++				MTP_inputGeoPoint(
++					MTP_flags(0),
++					MTP_double(point.lat()),
++					MTP_double(point.lon()),
++					MTPint()),
++				MTP_string(location->title()),
++				MTP_string(location->description()),
++				MTPstring(),
++				MTPstring(),
++				MTPstring()));
 +		}
 +	} break;
 +	default:

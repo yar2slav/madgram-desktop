@@ -5,7 +5,7 @@ Subject: [PATCH] feat: apply verification and marks from the tele server
 
 ---
  Telegram/CMakeLists.txt                       |   2 +
- Telegram/SourceFiles/boxes/peer_list_box.cpp  |   7 +-
+ Telegram/SourceFiles/boxes/peer_list_box.cpp  |   3 +
  Telegram/SourceFiles/core/application.cpp     |   2 +
  Telegram/SourceFiles/data/data_channel.cpp    |   2 +
  .../SourceFiles/data/data_peer_values.cpp     |   5 +
@@ -18,15 +18,15 @@ Subject: [PATCH] feat: apply verification and marks from the tele server
  Telegram/SourceFiles/tele/tele_options.cpp    |  27 +
  Telegram/SourceFiles/tele/tele_options.h      |   4 +
  Telegram/SourceFiles/ui/unread_badge.cpp      |  43 +-
- 14 files changed, 1061 insertions(+), 35 deletions(-)
+ 14 files changed, 1058 insertions(+), 34 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_badges.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_badges.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4cfdd5f86cbeeb9b12480f09f29f605d35fdea8c..fcd47f838e5583431a3097b00765129f479090a1 100644
+index 2ed02b34cab2934c2ac426a0891b1fc30ed3fa87..43c6684f7e86a437a686cb88ff383c95db214fbe 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2483,6 +2483,8 @@ nice_target_sources(Telegram ${src_loc}
+@@ -2639,6 +2639,8 @@ nice_target_sources(Telegram ${src_loc}
  PRIVATE
      settings/settings_tele.cpp
      settings/settings_tele.h
@@ -36,35 +36,31 @@ index 4cfdd5f86cbeeb9b12480f09f29f605d35fdea8c..fcd47f838e5583431a3097b00765129f
      tele/tele_build.h
      tele/tele_button_payload.cpp
 diff --git a/Telegram/SourceFiles/boxes/peer_list_box.cpp b/Telegram/SourceFiles/boxes/peer_list_box.cpp
-index d3c1df50d87802d96d5b2a78abc1f3ddd8b04777..c040923da3bd7c98b9649cab76312a7e5b6c02a6 100644
+index f0a3ef7b3d0e1f4c2d536c282d9eaf2deb45660e..ba5c76cdfab45ab90b605bbcb9fbbdc651a5c639 100644
 --- a/Telegram/SourceFiles/boxes/peer_list_box.cpp
 +++ b/Telegram/SourceFiles/boxes/peer_list_box.cpp
-@@ -1201,7 +1201,10 @@ PeerListContent::PeerListContent(
- 
- 	using UpdateFlag = Data::PeerUpdate::Flag;
- 	_controller->session().changes().peerUpdates(
--		UpdateFlag::Name | UpdateFlag::Photo | UpdateFlag::EmojiStatus
-+		UpdateFlag::Name
-+			| UpdateFlag::Photo
-+			| UpdateFlag::EmojiStatus
-+			| UpdateFlag::VerifyInfo
+@@ -1201,6 +1201,7 @@ PeerListContent::PeerListContent(
+ 		| UpdateFlag::Photo
+ 		| UpdateFlag::EmojiStatus
+ 		| UpdateFlag::BarSettings
++		| UpdateFlag::VerifyInfo
  	) | rpl::on_next([=](const Data::PeerUpdate &update) {
  		if (update.flags & UpdateFlag::Name) {
  			handleNameChanged(update.peer);
-@@ -1209,6 +1212,8 @@ PeerListContent::PeerListContent(
+@@ -1208,6 +1209,8 @@ PeerListContent::PeerListContent(
  		if (update.flags & UpdateFlag::Photo) {
  			invalidateLoadedUserpics();
  			this->update();
 +		} else if (update.flags & UpdateFlag::VerifyInfo) {
 +			this->update();
  		}
- 	}, lifetime());
- 
+ 		if (update.flags & UpdateFlag::BarSettings) {
+ 			const auto byPeer = _rowsByPeer.find(update.peer);
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index ff05cac63e53e34b33492c07c77e8e6520e17784..d0e16887481935f716942c409d2271e48fc96b0c 100644
+index 853f06795728b657262a439f524ac77f213cd162..ced5bcd7a1a91ae958891cc6725330e44b02fbf5 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -106,6 +106,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "core/cached_webview_availability.h"
  #include "test/test_agent.h"
  #include "tele/tele_updater.h"
@@ -72,7 +68,7 @@ index ff05cac63e53e34b33492c07c77e8e6520e17784..d0e16887481935f716942c409d2271e4
  
  #include <QtCore/QStandardPaths>
  #include <QtCore/QMimeDatabase>
-@@ -357,6 +358,7 @@ void Application::run() {
+@@ -358,6 +359,7 @@ void Application::run() {
  	Storage::ClearStaleArchiveFiles();
  	Webview::ClearStaleTemporaryStorage();
  	Tele::StartUpdater();
@@ -81,18 +77,18 @@ index ff05cac63e53e34b33492c07c77e8e6520e17784..d0e16887481935f716942c409d2271e4
  	if (MediaControlsManager::Supported()) {
  		_mediaControlsManager = std::make_unique<MediaControlsManager>();
 diff --git a/Telegram/SourceFiles/data/data_channel.cpp b/Telegram/SourceFiles/data/data_channel.cpp
-index a08cf0546d91af1eaa7b8f6b65bf9c1524417fd2..5b3ffaa74cec805726488cf239d1ea4667d38828 100644
+index 6444659d325d8f583095d86f14d7e8299e2be03d..93993edf85386d156fdda704a1a30372306744d7 100644
 --- a/Telegram/SourceFiles/data/data_channel.cpp
 +++ b/Telegram/SourceFiles/data/data_channel.cpp
-@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
- #include "api/api_invite_links.h"
+@@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "storage/storage_account.h"
+ #include "tgw/tgw_storage.h"
 +#include "tele/tele_badges.h"
  #include "ui/unread_badge.h"
  #include "window/notifications_manager.h"
  
-@@ -873,6 +874,7 @@ bool ChannelData::canRestrictParticipant(
+@@ -875,6 +876,7 @@ bool ChannelData::canRestrictParticipant(
  }
  
  void ChannelData::setBotVerifyDetails(Ui::BotVerifyDetails details) {
@@ -131,10 +127,10 @@ index d43652efdee6c597ca9bb81e6df9280018ec280b..ede3e14049321fb5bd9a40342fed8b74
  }
  
 diff --git a/Telegram/SourceFiles/data/data_session.cpp b/Telegram/SourceFiles/data/data_session.cpp
-index cc392262819c86c9fb010ee6466a940ff2ea822c..d23fd09fc5981ee6a6df05479da3b7167ab46232 100644
+index e1e0971d0c857097c56c31f03c8e5a1aa3cfb013..014d0d265f213be669a3b47746e9fcf13e84378a 100644
 --- a/Telegram/SourceFiles/data/data_session.cpp
 +++ b/Telegram/SourceFiles/data/data_session.cpp
-@@ -94,6 +94,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -95,6 +95,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "base/call_delayed.h"
  #include "base/random.h"
  #include "spellcheck/spellcheck_highlight_syntax.h"
@@ -142,7 +138,7 @@ index cc392262819c86c9fb010ee6466a940ff2ea822c..d23fd09fc5981ee6a6df05479da3b716
  
  namespace Data {
  namespace {
-@@ -740,9 +741,9 @@ not_null<UserData*> Session::processUser(const MTPUser &data) {
+@@ -744,9 +745,9 @@ not_null<UserData*> Session::processUser(const MTPUser &data) {
  			? std::optional<Data::Stories::PeerSourceState>()
  			: stories().peerSourceState(result, *data.vstories_max_id());
  		const auto flagsSet = (data.is_deleted() ? Flag::Deleted : Flag())
@@ -155,7 +151,7 @@ index cc392262819c86c9fb010ee6466a940ff2ea822c..d23fd09fc5981ee6a6df05479da3b716
  			| (data.is_bot_inline_geo() ? Flag::BotInlineGeo : Flag())
  			| (data.is_bot_forum_view() ? Flag::Forum : Flag())
  			| (data.is_premium() ? Flag::Premium : Flag())
-@@ -1151,9 +1152,9 @@ not_null<PeerData*> Session::processChat(const MTPChat &data) {
+@@ -1155,9 +1156,9 @@ not_null<PeerData*> Session::processChat(const MTPChat &data) {
  			? std::optional<Data::Stories::PeerSourceState>()
  			: stories().peerSourceState(channel, *data.vstories_max_id());
  		const auto flagsSet = (data.is_broadcast() ? Flag::Broadcast : Flag())
@@ -169,7 +165,7 @@ index cc392262819c86c9fb010ee6466a940ff2ea822c..d23fd09fc5981ee6a6df05479da3b716
  			| (data.is_gigagroup() ? Flag::Gigagroup : Flag())
  			| (hasUsername ? Flag::Username : Flag())
 diff --git a/Telegram/SourceFiles/data/data_user.cpp b/Telegram/SourceFiles/data/data_user.cpp
-index 68278a261bec78301b9db38570eaf333444683a5..00f224d6e000d5a3897172bf0689e75b70920515 100644
+index a912e38becb513ae1a64ac28ef3da9f9a51c0702..ac613a80d2997190a3957ea52badc6d9c9e85cc9 100644
 --- a/Telegram/SourceFiles/data/data_user.cpp
 +++ b/Telegram/SourceFiles/data/data_user.cpp
 @@ -40,6 +40,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -180,7 +176,7 @@ index 68278a261bec78301b9db38570eaf333444683a5..00f224d6e000d5a3897172bf0689e75b
  #include "wallet/wallet_own_card.h"
  #include "wallet/wallet_session.h"
  #include "window/notifications_manager.h"
-@@ -781,6 +782,7 @@ bool UserData::isOldWalletBot() const {
+@@ -786,6 +787,7 @@ bool UserData::isOldWalletBot() const {
  }
  
  void UserData::setBotVerifyDetails(Ui::BotVerifyDetails details) {
@@ -189,7 +185,7 @@ index 68278a261bec78301b9db38570eaf333444683a5..00f224d6e000d5a3897172bf0689e75b
  		if (_botVerifyDetails) {
  			_botVerifyDetails = nullptr;
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_badge.cpp b/Telegram/SourceFiles/info/profile/info_profile_badge.cpp
-index 1b058ae69f4a956c8b6d48a10771c7fb039e4676..78acde4d2b78d1c3c331598082513585d944af96 100644
+index a7b8945cb8cf1d50821f520e65c2ebd75834158f..6bdfb5dcbcc6590c8a32b058a01d687159a4f4d4 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_badge.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_badge.cpp
 @@ -126,10 +126,8 @@ void Badge::setContent(Content content) {
@@ -1308,7 +1304,7 @@ index f26f4c43d836e20b3190a6432e52c3209a38e5a9..9fcfcd4a00d5ea22082f6e214ad8b4b6
  
  } // namespace Tele
 diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
-index 4c417cb2ebceed208d2f05ee17033566721ac9d4..37bb050311647243b88629f3b9e10ad4adf55ad8 100644
+index b5dca179cf0fbe5a66fdc9d97282227bbc8fd481..18df642360f66a7bcc50f034cf5f77f015f944e3 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.cpp
 +++ b/Telegram/SourceFiles/ui/unread_badge.cpp
 @@ -46,7 +46,6 @@ private:
@@ -1373,7 +1369,7 @@ index 4c417cb2ebceed208d2f05ee17033566721ac9d4..37bb050311647243b88629f3b9e10ad4
  }
  
  void ScaledBotVerifiedEmoji::unload() {
-@@ -482,6 +476,7 @@ int PeerBadge::drawVerified(
+@@ -483,6 +477,7 @@ int PeerBadge::drawVerified(
  			.textColor = st.color->c,
  			.now = crl::now(),
  			.position = position + st.position,

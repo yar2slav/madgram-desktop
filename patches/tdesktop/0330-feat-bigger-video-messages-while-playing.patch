@@ -1,0 +1,512 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Sun, 25 Oct 2026 03:12:32 +0300
+Subject: [PATCH] feat: bigger video messages while playing
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ .../history/view/media/history_view_gif.cpp   |  31 +-
+ .../SourceFiles/settings/settings_tele.cpp    |   6 +
+ Telegram/SourceFiles/tele/tele_options.cpp    |  20 ++
+ Telegram/SourceFiles/tele/tele_options.h      |   3 +
+ .../SourceFiles/tele/tele_round_videos.cpp    | 279 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_round_videos.h |  29 ++
+ .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
+ 8 files changed, 369 insertions(+), 2 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_round_videos.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_round_videos.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 55562f712c56daa03d9ef12264842db36cffddc0..516cdce56e8a06a2d3453029ba660b64c4e3aea4 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3088,6 +3088,8 @@ PRIVATE
+     tele/tele_rich_timestamps.h
+     tele/tele_rmb_beside_bubble.cpp
+     tele/tele_rmb_beside_bubble.h
++    tele/tele_round_videos.cpp
++    tele/tele_round_videos.h
+     tele/tele_screen_capture.cpp
+     tele/tele_screen_capture.h
+     tele/tele_scroll_layer.cpp
+diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+index 15f4814aebb1a1988cb170aeae905206756dd4d2..a1ad04a2ae70e8b878853ca93482c96ab54f9fc3 100644
+--- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
++++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_shot_sharp.h"
+ #include "tele/tele_spoilers.h"
+ #include "tele/tele_drafts.h"
++#include "tele/tele_round_videos.h"
+ #include "styles/style_chat.h"
+ #include "styles/style_chat_style.h"
+ 
+@@ -377,11 +378,18 @@ QSize Gif::countThumbSize(int &inOutWidthMax) const {
+ 		} else if (_data->isVideoFile()) {
+ 			return st::maxMediaSize;
+ 		} else if (_data->isVideoMessage()) {
+-			return st::maxVideoMessageSize;
++			return Tele::RoundVideoSize(
++				_parent,
++				this,
++				st::maxVideoMessageSize);
+ 		}
+ 		return st::maxGifSize;
+ 	}();
+-	const auto size = style::ConvertScale(videoSize());
++	const auto size = Tele::RoundVideoSource(
++		_parent,
++		this,
++		style::ConvertScale(videoSize()),
++		maxSize);
+ 	if (hostedInstantView) {
+ 		inOutWidthMax = std::max(inOutWidthMax, 1);
+ 	} else {
+@@ -455,6 +463,21 @@ QSize Gif::countCurrentSize(int newWidth) {
+ 
+ 	const auto hostedInstantView = IsHostedInstantViewMedia(_parent);
+ 	auto thumbMaxWidth = newWidth;
++	if (Tele::RoundVideoResized(_parent, this)) {
++		const auto additional = additionalWidth();
++		thumbMaxWidth = Tele::RoundVideoFit(
++			_parent,
++			this,
++			st::maxVideoMessageSize,
++			newWidth,
++			additional);
++		setOptimalSize({
++			std::max(
++				thumbMaxWidth + additional,
++				_parent->reactionsOptimalWidth()),
++			std::max(thumbMaxWidth, int(st::minPhotoSize)),
++		});
++	}
+ 	const auto scaled = countThumbSize(thumbMaxWidth);
+ 	const auto minWidthByInfo = hostedInstantView
+ 		? _parent->minWidthForMedia()
+@@ -2394,6 +2417,10 @@ bool Gif::enforceBubbleWidth() const {
+ }
+ 
+ int Gif::bubbleWidthLimit() const {
++	if (Tele::RoundVideoResized(_parent, this)) {
++		return additionalWidth()
++			+ Tele::RoundVideoSize(_parent, this, st::maxVideoMessageSize);
++	}
+ 	if (_ephemeral.text.isEmpty()
+ 		|| !_data->isVideoMessage()
+ 		|| !isUnwrapped()) {
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index c2f84991ecf957ec53c67676e2c4fe6a2b639279..ee43cbab5038744a8e2b137555d29feabdb0bd7a 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3170,6 +3170,12 @@ void FillMessages(SectionBuilder &builder) {
+ 		::Tele::kOptionNoEmojiOutline,
+ 		{ u"emoji"_q, u"stroke"_q, u"border"_q, u"white"_q });
+ 	AddGroupDivider(builder);
++	AddGroupTitle(builder, u"Video messages"_q);
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionBiggerRoundVideos,
++		{ u"round"_q, u"circle"_q, u"enlarge"_q, u"size"_q });
++	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Bookmarks"_q);
+ 	AddOptionToggle(
+ 		builder,
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index f2c5acf80b3746facf8bc840e369b0d441890d27..c1f3c7750574cdd5801da5ea4910ebbc96ff545b 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -127,6 +127,7 @@ const char kOptionCodeLineNumbers[] = "tele-code-line-numbers";
+ const char kOptionHideBubbleTails[] = "tele-hide-bubble-tails";
+ const char kOptionBubblePadding[] = "tele-bubble-padding";
+ const char kOptionNoEmojiOutline[] = "tele-no-emoji-outline";
++const char kOptionBiggerRoundVideos[] = "tele-bigger-round-videos";
+ const char kOptionCopyProtected[] = "tele-copy-protected";
+ const char kOptionRichQuote[] = "tele-rich-quote";
+ const char kOptionMultiQuote[] = "tele-multi-quote";
+@@ -1010,6 +1011,11 @@ base::options::toggle NoEmojiOutlineOption({
+ 	.name = "No outline on large emoji",
+ });
+ 
++base::options::toggle BiggerRoundVideosOption({
++	.id = kOptionBiggerRoundVideos,
++	.name = "Bigger video messages while playing",
++});
++
+ base::options::toggle CopyProtectedOption({
+ 	.id = kOptionCopyProtected,
+ 	.name = "Forward protected messages as copies",
+@@ -2880,6 +2886,20 @@ rpl::producer<> NoEmojiOutlineChanges() {
+ 	return NoEmojiOutlineOption.changes() | rpl::to_empty;
+ }
+ 
++bool BiggerRoundVideos() {
++	return BiggerRoundVideosOption.value();
++}
++
++rpl::producer<bool> BiggerRoundVideosValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		BiggerRoundVideosOption.changes()
++	) | rpl::map([] {
++		return BiggerRoundVideosOption.value();
++	});
++}
++
+ bool CopyProtected() {
+ 	return CopyProtectedOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index be2def0d53de46f6c49b7d0a10dec52de879598f..ea8414325c0b12d486e4c5c28334da5ae0ab4464 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -122,6 +122,7 @@ extern const char kOptionCodeLineNumbers[];
+ extern const char kOptionHideBubbleTails[];
+ extern const char kOptionBubblePadding[];
+ extern const char kOptionNoEmojiOutline[];
++extern const char kOptionBiggerRoundVideos[];
+ extern const char kOptionCopyProtected[];
+ extern const char kOptionRichQuote[];
+ extern const char kOptionMultiQuote[];
+@@ -450,6 +451,8 @@ void SetSavedHistoryPeriod(const QString &value);
+ [[nodiscard]] bool BubblePadding();
+ [[nodiscard]] bool NoEmojiOutline();
+ [[nodiscard]] rpl::producer<> NoEmojiOutlineChanges();
++[[nodiscard]] bool BiggerRoundVideos();
++[[nodiscard]] rpl::producer<bool> BiggerRoundVideosValue();
+ [[nodiscard]] rpl::producer<> CodeLineNumbersChanges();
+ [[nodiscard]] bool CopyProtected();
+ [[nodiscard]] bool RichQuote();
+diff --git a/Telegram/SourceFiles/tele/tele_round_videos.cpp b/Telegram/SourceFiles/tele/tele_round_videos.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a733d2e92b7197f2122d21a448138a13f600614
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_round_videos.cpp
+@@ -0,0 +1,279 @@
++#include "tele/tele_round_videos.h"
++
++#include "base/weak_ptr.h"
++#include "data/data_document.h"
++#include "data/data_media_types.h"
++#include "data/data_session.h"
++#include "history/history.h"
++#include "history/history_item.h"
++#include "history/view/history_view_element.h"
++#include "history/view/history_view_list_widget.h"
++#include "history/view/history_view_message.h"
++#include "history/view/media/history_view_media.h"
++#include "main/main_session.h"
++#include "media/audio/media_audio.h"
++#include "media/player/media_player_instance.h"
++#include "tele/tele_options.h"
++#include "tele/tele_smooth_scroll.h"
++#include "ui/effects/animations.h"
++#include "styles/style_chat.h"
++
++namespace Tele {
++namespace {
++
++using namespace HistoryView;
++
++constexpr auto kDuration = crl::time(200);
++constexpr auto kPlayingSize = 400;
++constexpr auto kMinGain = 40;
++
++struct Entry {
++	Ui::Animations::Simple animation;
++	bool shown = false;
++};
++
++class Tracker final : public base::has_weak_ptr {
++public:
++	explicit Tracker(not_null<Main::Session*> session);
++	~Tracker();
++
++	[[nodiscard]] float64 progress(FullMsgId id) const;
++
++private:
++	void apply(const ::Media::Player::TrackState &state);
++	void setCurrent(FullMsgId id);
++	void toggle(FullMsgId id, bool shown);
++	void resize(FullMsgId id);
++
++	const not_null<Main::Session*> _session;
++	FullMsgId _current;
++	base::flat_map<FullMsgId, std::unique_ptr<Entry>> _entries;
++	rpl::lifetime _lifetime;
++
++};
++
++[[nodiscard]] auto Registry()
++-> base::flat_map<not_null<Main::Session*>, Tracker*> & {
++	static auto result = base::flat_map<not_null<Main::Session*>, Tracker*>();
++	return result;
++}
++
++Tracker::Tracker(not_null<Main::Session*> session)
++: _session(session) {
++	using namespace ::Media::Player;
++	Registry().emplace(session, this);
++
++	const auto player = instance();
++	player->updatedNotifier(
++	) | rpl::on_next([=](const TrackState &state) {
++		apply(state);
++	}, _lifetime);
++
++	rpl::merge(
++		player->stops(AudioMsgId::Type::Voice),
++		player->tracksFinished(
++		) | rpl::filter([](AudioMsgId::Type type) {
++			return (type == AudioMsgId::Type::Voice);
++		}) | rpl::to_empty
++	) | rpl::on_next([=] {
++		setCurrent(FullMsgId());
++	}, _lifetime);
++
++	BiggerRoundVideosValue(
++	) | rpl::on_next([=](bool enabled) {
++		crl::on_main(this, [=] {
++			if (enabled) {
++				apply(instance()->getState(AudioMsgId::Type::Voice));
++			} else {
++				setCurrent(FullMsgId());
++			}
++		});
++	}, _lifetime);
++}
++
++Tracker::~Tracker() {
++	Registry().remove(_session);
++}
++
++float64 Tracker::progress(FullMsgId id) const {
++	const auto i = _entries.find(id);
++	return (i != end(_entries))
++		? i->second->animation.value(i->second->shown ? 1. : 0.)
++		: 0.;
++}
++
++void Tracker::apply(const ::Media::Player::TrackState &state) {
++	using namespace ::Media::Player;
++	if (state.id.type() != AudioMsgId::Type::Voice) {
++		return;
++	}
++	const auto document = state.id.audio();
++	const auto id = state.id.contextId();
++	const auto round = BiggerRoundVideos()
++		&& document
++		&& document->isVideoMessage()
++		&& (&document->session() == _session);
++	if (round && !IsStoppedOrStopping(state.state)) {
++		setCurrent(id);
++	} else if (!round || state.state != State::Stopped || id != _current) {
++		setCurrent(FullMsgId());
++	}
++}
++
++void Tracker::setCurrent(FullMsgId id) {
++	if (_current == id) {
++		return;
++	}
++	const auto was = std::exchange(_current, id);
++	if (was) {
++		toggle(was, false);
++	}
++	if (id) {
++		toggle(id, true);
++	}
++}
++
++void Tracker::toggle(FullMsgId id, bool shown) {
++	for (auto i = begin(_entries); i != end(_entries);) {
++		const auto &entry = i->second;
++		if (i->first != id
++			&& !entry->shown
++			&& !entry->animation.animating()) {
++			i = _entries.erase(i);
++		} else {
++			++i;
++		}
++	}
++	auto i = _entries.find(id);
++	if (i == end(_entries)) {
++		if (!shown) {
++			return;
++		}
++		i = _entries.emplace(id, std::make_unique<Entry>()).first;
++	}
++	const auto &entry = i->second;
++	if (entry->shown == shown) {
++		return;
++	}
++	entry->shown = shown;
++	const auto from = entry->animation.value(shown ? 0. : 1.);
++	const auto to = shown ? 1. : 0.;
++	if (anim::Disabled() || ReduceMotion() || SmoothGlideActive()) {
++		entry->animation.stop();
++		resize(id);
++	} else {
++		entry->animation.start(
++			[=] { resize(id); },
++			from,
++			to,
++			kDuration,
++			anim::easeOutCubic);
++	}
++}
++
++void Tracker::resize(FullMsgId id) {
++	if (const auto item = _session->data().message(id)) {
++		_session->data().requestItemResize(item);
++	}
++}
++
++[[nodiscard]] bool Included(
++		not_null<const Element*> view,
++		not_null<const HistoryView::Media*> media) {
++	if (view->media() != media.get()) {
++		return false;
++	}
++	const auto document = media->getDocument();
++	if (!document || !document->isVideoMessage()) {
++		return false;
++	}
++	switch (view->context()) {
++	case Context::History:
++	case Context::Replies:
++	case Context::Pinned:
++	case Context::Monoforum:
++	case Context::SavedSublist:
++	case Context::ShortcutMessages:
++	case Context::ScheduledTopic:
++		break;
++	default:
++		return false;
++	}
++	if (view->Get<InstantViewMediaRuntime>()) {
++		return false;
++	} else if (const auto data = view->data()->media()
++		; data && data->ttlSeconds()) {
++		return false;
++	}
++	return (view->data()->mainView() == view.get())
++		|| dynamic_cast<const ListWidget*>(view->delegate().get());
++}
++
++[[nodiscard]] float64 Progress(
++		not_null<const Element*> view,
++		not_null<const HistoryView::Media*> media) {
++	if (!Included(view, media)) {
++		return 0.;
++	}
++	const auto session = &view->history()->session();
++	const auto &registry = Registry();
++	const auto i = registry.find(session);
++	const auto tracker = (i != end(registry))
++		? i->second
++		: session->lifetime().make_state<Tracker>(session);
++	return tracker->progress(view->data()->fullId());
++}
++
++[[nodiscard]] int Grown(int normal, int target, float64 progress) {
++	return normal + int(base::SafeRound((target - normal) * progress));
++}
++
++} // namespace
++
++bool RoundVideoResized(
++		not_null<const Element*> view,
++		not_null<const HistoryView::Media*> media) {
++	return Progress(view, media) > 0.;
++}
++
++int RoundVideoSize(
++		not_null<const Element*> view,
++		not_null<const HistoryView::Media*> media,
++		int normal) {
++	return (Progress(view, media) > 0.)
++		? std::max(style::ConvertScale(kPlayingSize), normal)
++		: normal;
++}
++
++int RoundVideoFit(
++		not_null<const Element*> view,
++		not_null<const HistoryView::Media*> media,
++		int normal,
++		int available,
++		int additional) {
++	const auto progress = Progress(view, media);
++	const auto target = std::min(
++		style::ConvertScale(kPlayingSize),
++		available - additional);
++	const auto size = (target - normal < style::ConvertScale(kMinGain))
++		? normal
++		: Grown(normal, target, progress);
++	return std::max(std::min(size, available), 1);
++}
++
++QSize RoundVideoSource(
++		not_null<const Element*> view,
++		not_null<const HistoryView::Media*> media,
++		QSize size,
++		int maxSize) {
++	if (size.isEmpty()
++		|| maxSize <= st::maxVideoMessageSize
++		|| size.width() >= maxSize
++		|| size.height() >= maxSize
++		|| !RoundVideoResized(view, media)) {
++		return size;
++	}
++	return size.scaled(maxSize, maxSize, Qt::KeepAspectRatio);
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_round_videos.h b/Telegram/SourceFiles/tele/tele_round_videos.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..f5f698bb24a473792e98ef29c8c9709061a066ac
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_round_videos.h
+@@ -0,0 +1,29 @@
++#pragma once
++
++namespace HistoryView {
++class Element;
++class Media;
++} // namespace HistoryView
++
++namespace Tele {
++
++[[nodiscard]] bool RoundVideoResized(
++	not_null<const HistoryView::Element*> view,
++	not_null<const HistoryView::Media*> media);
++[[nodiscard]] int RoundVideoSize(
++	not_null<const HistoryView::Element*> view,
++	not_null<const HistoryView::Media*> media,
++	int normal);
++[[nodiscard]] int RoundVideoFit(
++	not_null<const HistoryView::Element*> view,
++	not_null<const HistoryView::Media*> media,
++	int normal,
++	int available,
++	int additional);
++[[nodiscard]] QSize RoundVideoSource(
++	not_null<const HistoryView::Element*> view,
++	not_null<const HistoryView::Media*> media,
++	QSize size,
++	int maxSize);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index db083aed834d7ca8ebcc5c3acfb7cf39d662bb08..00c20768b0a8bdede7096be58f501ad58801d6a2 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -211,6 +211,7 @@ struct Spec {
+ 		Toggle(kOptionHideBubbleTails),
+ 		Toggle(kOptionBubblePadding),
+ 		Toggle(kOptionNoEmojiOutline),
++		Toggle(kOptionBiggerRoundVideos),
+ 		Toggle(kOptionCopyProtected),
+ 		Toggle(kOptionRichQuote),
+ 		Toggle(kOptionMultiQuote),

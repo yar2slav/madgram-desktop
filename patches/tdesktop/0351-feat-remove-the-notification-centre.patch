@@ -1,0 +1,156 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Thu, 29 Oct 2026 04:10:47 +0200
+Subject: [PATCH] feat: remove the notification centre
+
+---
+ .../SourceFiles/settings/settings_tele.cpp    | 34 -------------------
+ .../tele/tele_gift_studio_menu.cpp            | 20 +----------
+ Telegram/SourceFiles/tele/tele_notices.cpp    |  3 --
+ .../SourceFiles/tele/tele_notices_section.cpp |  5 ++-
+ Telegram/SourceFiles/tele/tele_options.cpp    | 10 ++----
+ 5 files changed, 7 insertions(+), 65 deletions(-)
+
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index bab1689c13e0fa8c03d30d27ae596796b33e10a7..230664c21df38ceb3263a25af56d64c315ff3f86 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3337,40 +3337,6 @@ void FillSending(SectionBuilder &builder) {
+ 
+ void FillNotifications(SectionBuilder &builder) {
+ 	AddSkip(builder);
+-	AddGroupTitle(builder, u"Notification centre"_q);
+-	AddOptionToggle(
+-		builder,
+-		::Tele::kOptionNotices,
+-		{ u"notices"_q, u"history"_q, u"toasts"_q },
+-		{},
+-		[&] {
+-			AddOptionToggle(
+-				builder,
+-				::Tele::kOptionNoticesLogLimits,
+-				{ u"flood"_q, u"wait"_q, u"history"_q },
+-				::Tele::kOptionNotices);
+-			AddOptionToggle(
+-				builder,
+-				::Tele::kOptionNoticesTeleToasts,
+-				{ u"notices"_q, u"history"_q },
+-				::Tele::kOptionNotices);
+-			AddOptionToggle(
+-				builder,
+-				::Tele::kOptionNoticesCopies,
+-				{ u"copy"_q, u"clipboard"_q, u"history"_q },
+-				::Tele::kOptionNotices);
+-			AddOptionToggle(
+-				builder,
+-				::Tele::kOptionNoticesMentions,
+-				{ u"mention"_q, u"reply"_q, u"notices"_q, u"history"_q },
+-				::Tele::kOptionNotices);
+-			AddOptionToggle(
+-				builder,
+-				::Tele::kOptionNoticesScripts,
+-				{ u"scripts"_q, u"plugins"_q, u"notices"_q, u"history"_q },
+-				::Tele::kOptionNotices);
+-		});
+-	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Rate limits"_q);
+ 	AddOptionToggle(
+ 		builder,
+diff --git a/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp b/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp
+index 2ef4df5aff73981143484700738ea22a66ae88cd..5a503e853659cc62f1a7c7e4d964d75d9933711c 100644
+--- a/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp
++++ b/Telegram/SourceFiles/tele/tele_gift_studio_menu.cpp
+@@ -47,30 +47,12 @@ void AddMainMenuItems(
+ 		not_null<Window::SessionController*> controller) {
+ 	AddQuickModesMenu(menu);
+ 	const auto studio = GiftStudioMainMenu() && !OfflineForLaunch();
+-	const auto notices = NoticesCentre();
+-	if (!studio && !notices) {
++	if (!studio) {
+ 		return;
+ 	}
+ 	menu->add(
+ 		object_ptr<Ui::PlainShadow>(menu),
+ 		{ 0, st::mainMenuSkip, 0, st::mainMenuSkip });
+-	if (notices) {
+-		const auto button = Settings::AddButtonWithIcon(
+-			menu,
+-			rpl::single(Tr(u"Notifications"_q)),
+-			st::mainMenuButton,
+-			{ &st::menuIconNotifications });
+-		button->setClickedCallback([=] {
+-			ShowNotices(controller);
+-		});
+-		Settings::Badge::AddUnread(
+-			button,
+-			NoticesUnreadValue(
+-				&controller->session()
+-			) | rpl::map([](int count) {
+-				return Settings::Badge::UnreadBadge{ .count = count };
+-			}));
+-	}
+ 	if (studio) {
+ 		Settings::AddButtonWithIcon(
+ 			menu,
+diff --git a/Telegram/SourceFiles/tele/tele_notices.cpp b/Telegram/SourceFiles/tele/tele_notices.cpp
+index bdc9dc24ac37ce96d45d985ab307ec6b0bbd4faa..f41a5ae5837f2256791dfe3e82e7e1373fc789d1 100644
+--- a/Telegram/SourceFiles/tele/tele_notices.cpp
++++ b/Telegram/SourceFiles/tele/tele_notices.cpp
+@@ -706,10 +706,7 @@ void DeliverCrashes() {
+ } // namespace
+ 
+ void SetupNotices(not_null<Main::Session*> session) {
+-	session->lifetime().make_state<Store>(session);
+ 	SetupRateLimits(session);
+-	SetupServerNotices(session);
+-	SetupNoticeMentions(session);
+ }
+ 
+ void Notify(not_null<Main::Session*> session, Notice notice) {
+diff --git a/Telegram/SourceFiles/tele/tele_notices_section.cpp b/Telegram/SourceFiles/tele/tele_notices_section.cpp
+index f0d7b6ba13bba2548f30a276d00f62197b063238..5486f62af892489057161abcec814d2e0eae3826 100644
+--- a/Telegram/SourceFiles/tele/tele_notices_section.cpp
++++ b/Telegram/SourceFiles/tele/tele_notices_section.cpp
+@@ -10,6 +10,7 @@
+ #include "settings/settings_common_session.h"
+ #include "tele/tele_lowercase.h"
+ #include "tele/tele_notices.h"
++#include "tele/tele_options.h"
+ #include "tele/tele_notices_mentions.h"
+ #include "ui/boxes/confirm_box.h"
+ #include "ui/controls/sub_tabs.h"
+@@ -795,7 +796,9 @@ void NoticesSection::rebuild() {
+ } // namespace
+ 
+ void ShowNotices(not_null<Window::SessionController*> controller) {
+-	controller->showSettings(NoticesSection::Id());
++	if (NoticesCentre()) {
++		controller->showSettings(NoticesSection::Id());
++	}
+ }
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index d9ead71da69200b3a38e41d9751fd8bb48407d53..62183c4f01408238d9cfc1bdc1e06c77fe386bea 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -3301,17 +3301,11 @@ bool TypingHiddenLastSeen() {
+ }
+ 
+ bool NoticesCentre() {
+-	return NoticesOption.value();
++	return false;
+ }
+ 
+ rpl::producer<bool> NoticesCentreValue() {
+-	return rpl::single(
+-		rpl::empty
+-	) | rpl::then(
+-		NoticesOption.changes()
+-	) | rpl::map([] {
+-		return NoticesOption.value();
+-	});
++	return rpl::single(false);
+ }
+ 
+ bool NoticesLimits() {

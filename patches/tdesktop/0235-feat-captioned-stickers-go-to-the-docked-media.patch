@@ -18,7 +18,7 @@ Subject: [PATCH] feat: captioned stickers go to the docked media
  11 files changed, 480 insertions(+), 75 deletions(-)
 
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index aecec67cad869733a06dc38a8f4430bd17af8eaf..b3ee3ac2a95de064b4ecb8cf213e788c8194cd82 100644
+index e4068d3b39ed3214987d07e8f240958ca73df0d0..0b987b016cac24940ea37455bd6353fecb70be24 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -29,7 +29,7 @@ index aecec67cad869733a06dc38a8f4430bd17af8eaf..b3ee3ac2a95de064b4ecb8cf213e788c
  #include "tele/tele_gif_video.h"
  #include "tele/tele_past_limit.h"
  #include "styles/style_chat_helpers.h"
-@@ -412,6 +413,18 @@ base::unique_qptr<Ui::PopupMenu> GifsListWidget::fillContextMenu(
+@@ -420,6 +421,18 @@ base::unique_qptr<Ui::PopupMenu> GifsListWidget::fillContextMenu(
  		// inline results don't have effects
  		copyDetails.effectAllowed = false;
  	}
@@ -49,7 +49,7 @@ index aecec67cad869733a06dc38a8f4430bd17af8eaf..b3ee3ac2a95de064b4ecb8cf213e788c
  	// In case we're adding items after FillSendMenu we have
  	// to pass nullptr for showForEffect and attach selector later.
 diff --git a/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp
-index 115dba4335c0efa7c3fe8f88250b6b3afec8539e..51406c62bd443c15cb7aa8d6cfa0c87a740b7752 100644
+index 410ca0328942552f96c7b9cfe58b5ee533f14245..7f7aa6a3fadbac40b5a3dedd8d61ff92e377737c 100644
 --- a/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/stickers_list_widget.cpp
 @@ -56,6 +56,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -88,10 +88,10 @@ index 0ae16ee9a60646671c9bed2156628ab15833cd0d..ecb9228720ae64b51f860c0ff08ea780
  
  struct PhotoChosen {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index b8b927b94d98763833597dba4cf11f91c062b3a0..d8e57e637671a730fb4952dc73572cde5e55bf87 100644
+index 50c12fbf0fd3c6274b3e40068e1997510ebf7374..c3c8db09db0efd4c36d05a71696971d3044246ea 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -608,6 +608,15 @@ HistoryWidget::HistoryWidget(
+@@ -627,6 +627,15 @@ HistoryWidget::HistoryWidget(
  					Api::SendOptions options) {
  				sendingFilesConfirmed(std::move(bundle), options);
  			},
@@ -107,7 +107,7 @@ index b8b927b94d98763833597dba4cf11f91c062b3a0..d8e57e637671a730fb4952dc73572cde
  			.sendMenuDetails = [=] { return sendMenuDetails(); },
  		});
  	_teleFieldResize = std::make_unique<Tele::FieldResize>(
-@@ -2657,7 +2666,13 @@ void HistoryWidget::fileChosen(ChatHelpers::FileChosen &&data) {
+@@ -2711,7 +2720,13 @@ void HistoryWidget::fileChosen(ChatHelpers::FileChosen &&data) {
  			Data::InsertCustomEmoji(_field.data(), data.document);
  		}
  	} else if (_history) {
@@ -123,7 +123,7 @@ index b8b927b94d98763833597dba4cf11f91c062b3a0..d8e57e637671a730fb4952dc73572cde
  			const auto from = data.messageSendingFrom;
  			Ui::SendGifWithCaption(
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 76cd71e47fdf66b386550dde7c71f3ee4cc075a7..7bf4308f963a908fb4ca3073c0f03521e0a0ec88 100644
+index 715376d8c78394c8f861f0dccb6ed014c923f6c9..3d5dc4d8fd6367997786d70ce7d97cb7927811ea 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -1641,6 +1641,16 @@ void ComposeControls::setupTeleDocked() {
@@ -143,7 +143,7 @@ index 76cd71e47fdf66b386550dde7c71f3ee4cc075a7..7bf4308f963a908fb4ca3073c0f03521
  			.sendMenuDetails = [=] { return sendMenuDetails(); },
  			.scheduled = (_mode == Mode::Scheduled),
  		});
-@@ -4191,6 +4201,12 @@ void ComposeControls::initTabbedSelector() {
+@@ -4206,6 +4216,12 @@ void ComposeControls::initTabbedSelector() {
  				Data::InsertCustomEmoji(_field, data.document);
  			}
  		} else if (data.needsCaption && _history) {
@@ -157,10 +157,10 @@ index 76cd71e47fdf66b386550dde7c71f3ee4cc075a7..7bf4308f963a908fb4ca3073c0f03521
  			const auto from = data.messageSendingFrom;
  			Ui::SendGifWithCaption(
 diff --git a/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp b/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp
-index edac904aef39604ab60329bef8d02526a50f9c3e..380aad10b2805ca45d846da548bf6c13887feb5b 100644
+index e30334d66b911fe349ff47e2e11bd92571cc10a1..93b74f3046c1656781ea1d176db988adb593ca23 100644
 --- a/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_scheduled_section.cpp
-@@ -446,6 +446,10 @@ void ScheduledWidget::setupComposeControls() {
+@@ -471,6 +471,10 @@ void ScheduledWidget::setupComposeControls() {
  			messageToSend.textWithTags = data.caption;
  			sendExistingDocument(document, std::move(messageToSend));
  		});
@@ -1018,10 +1018,10 @@ index f850a547573f1ad03b8aa57e02f0c9b471592259..e752ea538d5adb6d98567075f4284555
  [[nodiscard]] bool ComposeDockedHasFiles(const ComposeDocked *docked);
  [[nodiscard]] int ComposeDockedHeight(ComposeDocked *docked);
 diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-index 8d87bdd8eaa9d94ce05cb16f4c2f88ee493a4e7b..f6352da939eed47c5b4e8669d782ee8d3c566743 100644
+index 3762709890abd8a154610e598b26179ca6119096..eef9d903fd0f7b037ee614dbc3eb2942fdfb460f 100644
 --- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
 +++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
-@@ -1299,6 +1299,9 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1297,6 +1297,9 @@ constexpr auto kFieldText = uint32(1 << 0);
  			P([](int) { return Lower(u"Send without calculating"_q); },
  				st::menuIconSend),
  		}, .contexts = kSendText, .gate = kOptionCalcmula },
@@ -1031,7 +1031,7 @@ index 8d87bdd8eaa9d94ce05cb16f4c2f88ee493a4e7b..f6352da939eed47c5b4e8669d782ee8d
  		{ .key = u"hd"_q, .phrases = {
  			Compose([](int) { return tr::lng_send_high_quality(tr::now); },
  				[](const style::ComposeIcons &i) {
-@@ -1373,7 +1376,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1371,7 +1374,7 @@ constexpr auto kFieldText = uint32(1 << 0);
  		}, .contexts = all, .gate = kOptionDraftsMenu },
  	};
  	result.defaults = u""
@@ -1040,7 +1040,7 @@ index 8d87bdd8eaa9d94ce05cb16f4c2f88ee493a4e7b..f6352da939eed47c5b4e8669d782ee8d
  		"hd,spoiler,caption,cover,clear_cover,price,|,"
  		"translate,|,"
  		"[Drafts#drafts:save_draft,saved_drafts,discarded,draft_send,"
-@@ -1382,12 +1385,12 @@ constexpr auto kFieldText = uint32(1 << 0);
+@@ -1380,12 +1383,12 @@ constexpr auto kFieldText = uint32(1 << 0);
  		"silent,schedule,when_online,|,"
  		"hd,spoiler,caption,cover,clear_cover,price,|,"
  		"draft_send,draft_silent,draft_schedule,save_draft,saved_drafts,"

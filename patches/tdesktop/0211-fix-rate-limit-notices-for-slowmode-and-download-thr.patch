@@ -14,7 +14,7 @@ Subject: [PATCH] fix: rate limit notices for slowmode and download throttling
  7 files changed, 81 insertions(+), 22 deletions(-)
 
 diff --git a/Telegram/SourceFiles/mtproto/mtp_instance.cpp b/Telegram/SourceFiles/mtproto/mtp_instance.cpp
-index 82711e8525cd2e0c1ea84abfb71fdf2639bdea56..0a60e313bbe4158fafa6c9e0b91ed3d1cf665529 100644
+index 847a0d9ed5f2098aafb9e4685d02aaac421614c4..efd8741e79467c0381834b6257ae9a763793a850 100644
 --- a/Telegram/SourceFiles/mtproto/mtp_instance.cpp
 +++ b/Telegram/SourceFiles/mtproto/mtp_instance.cpp
 @@ -196,7 +196,11 @@ private:

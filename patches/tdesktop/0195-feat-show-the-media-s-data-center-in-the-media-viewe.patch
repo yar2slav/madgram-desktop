@@ -15,10 +15,10 @@ Subject: [PATCH] feat: show the media's data center in the media viewer
  8 files changed, 41 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/media/stories/media_stories_controller.cpp b/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
-index 4454f2bcd03ea15ac4e36e088f8e92c254fe3b66..c1ba9a7a69887a2d50c2dc114160f8fa30e0bedf 100644
+index 30c99818cd6f50b349f9461963c2306917d32624..02fffe7085ed1b8b6cbc5814f1000b2c51c7cbad 100644
 --- a/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
 +++ b/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
-@@ -49,6 +49,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -50,6 +50,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "info/stories/info_stories_common.h"
  #include "payments/payments_reaction_process.h"
  #include "settings/settings_credits_graphics.h"
@@ -26,7 +26,7 @@ index 4454f2bcd03ea15ac4e36e088f8e92c254fe3b66..c1ba9a7a69887a2d50c2dc114160f8fa
  #include "ui/boxes/confirm_box.h"
  #include "ui/boxes/report_box_graphics.h"
  #include "ui/controls/send_button.h"
-@@ -926,6 +927,7 @@ void Controller::show(
+@@ -927,6 +928,7 @@ void Controller::show(
  		.video = (document != nullptr),
  		.videoStream = videoStream(),
  		.silent = (document && document->isSilentVideo()),
@@ -70,10 +70,10 @@ index b6a4bb3b948c923918face3f6a7f9b9c97329d6b..ee28bdd5e656e3c4220d288dc1c0d847
  	friend inline auto operator<=>(HeaderData, HeaderData) = default;
  	friend inline bool operator==(HeaderData, HeaderData) = default;
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 20fb9d920b31307ac6fb14eb75bcaf5c732c5497..3ba56522260e85496b7fa79dcd8a91a8a8b69304 100644
+index c8216b22f9b8c267aa0e45f242f3ba9521f735fc..965c9f802ab605cb5f1e9a086601f3c2f1eb8082 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -123,6 +123,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_download_folders.h"
  #include "tele/tele_lowercase.h"
  #include "tele/tele_options.h"
@@ -81,7 +81,7 @@ index 20fb9d920b31307ac6fb14eb75bcaf5c732c5497..3ba56522260e85496b7fa79dcd8a91a8
  #include "tele/tele_protected.h"
  #include "tele/tele_secret_media.h"
  #include "tele/tele_spoilers.h"
-@@ -1851,6 +1852,10 @@ void OverlayWidget::updateControls() {
+@@ -1870,6 +1871,10 @@ void OverlayWidget::updateControls() {
  		return dNow;
  	}();
  	_dateText = d.isValid() ? Ui::FormatDateTime(d) : QString();

@@ -16,10 +16,10 @@ Subject: [PATCH] feat: show bot button payloads in tooltips
  create mode 100644 Telegram/SourceFiles/tele/tele_button_payload.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 721c50a0aa25267cc52a8cd26b7efde7c1d344b9..1610d46ae49e71def0332a0af9a4606628c58e91 100644
+index 5065bb99bfd9e38b5ce90d293b8f03d6a13147a9..5f59e1475b55264f4a70a73b8647070d4411f18d 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2485,6 +2485,8 @@ PRIVATE
+@@ -2641,6 +2641,8 @@ PRIVATE
      settings/settings_tele.h
      tele/tele_build.cpp
      tele/tele_build.h
@@ -29,7 +29,7 @@ index 721c50a0aa25267cc52a8cd26b7efde7c1d344b9..1610d46ae49e71def0332a0af9a46066
      tele/tele_options.h
  )
 diff --git a/Telegram/SourceFiles/history/history_item_components.cpp b/Telegram/SourceFiles/history/history_item_components.cpp
-index fb76cf37b4e20a1842d5ccfc5c4edabd273d0f55..9f1b636558fe5530f7ede0291f1cb5169615044a 100644
+index 18081cb70d4e239522bc258f9c586a5b157c9ff8..22d6c9926117c9c7cb294f2472b6b6a9f529eabd 100644
 --- a/Telegram/SourceFiles/history/history_item_components.cpp
 +++ b/Telegram/SourceFiles/history/history_item_components.cpp
 @@ -6,6 +6,7 @@ For license and copyright information please follow this link:

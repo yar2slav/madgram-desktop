@@ -24,10 +24,10 @@ Subject: [PATCH] feat: reveal spoilers automatically
  create mode 100644 Telegram/SourceFiles/tele/tele_spoilers.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 674aecbc123568e6a3c631fd48e37c9e9869a8d0..0e1a72604c6900ca22d1b2fea6e7860d03a447e9 100644
+index 08df45b19adadf44e252aa7d0ea06eef776a79a1..ef4792364ae57252ebe67759b40dd5823e36a859 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2537,6 +2537,8 @@ PRIVATE
+@@ -2693,6 +2693,8 @@ PRIVATE
      tele/tele_send_order.h
      tele/tele_shortcuts.cpp
      tele/tele_shortcuts.h
@@ -37,7 +37,7 @@ index 674aecbc123568e6a3c631fd48e37c9e9869a8d0..0e1a72604c6900ca22d1b2fea6e7860d
      tele/tele_time.h
      tele/tele_title.cpp
 diff --git a/Telegram/SourceFiles/data/data_media_types.cpp b/Telegram/SourceFiles/data/data_media_types.cpp
-index eaee27a4acb55fe54e3030c9537a6f1d11b4219b..3af93aabf1f07188bfdfaf9ba5509ef594037918 100644
+index e04449e6e2c60413d3d40c5b9fb1604629c11bd1..34dc171fc4b3a02c5db60a47365bb06202fc9858 100644
 --- a/Telegram/SourceFiles/data/data_media_types.cpp
 +++ b/Telegram/SourceFiles/data/data_media_types.cpp
 @@ -83,6 +83,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -48,7 +48,7 @@ index eaee27a4acb55fe54e3030c9537a6f1d11b4219b..3af93aabf1f07188bfdfaf9ba5509ef5
  #include "styles/style_chat.h"
  #include "styles/style_dialogs.h"
  
-@@ -950,7 +951,8 @@ ItemPreview MediaPhoto::toPreview(ToPreviewOptions options) const {
+@@ -957,7 +958,8 @@ ItemPreview MediaPhoto::toPreview(ToPreviewOptions options) const {
  	const auto radius = _chat
  		? ImageRoundRadius::Ellipse
  		: ImageRoundRadius::Small;
@@ -58,7 +58,7 @@ index eaee27a4acb55fe54e3030c9537a6f1d11b4219b..3af93aabf1f07188bfdfaf9ba5509ef5
  	if (auto found = FindCachedPreview(
  			options.existing,
  			_photo,
-@@ -1213,7 +1215,8 @@ ItemPreview MediaFile::toPreview(ToPreviewOptions options) const {
+@@ -1220,7 +1222,8 @@ ItemPreview MediaFile::toPreview(ToPreviewOptions options) const {
  	auto images = std::vector<ItemPreviewImage>();
  	auto context = std::any();
  	const auto existing = options.existing;
@@ -68,7 +68,7 @@ index eaee27a4acb55fe54e3030c9537a6f1d11b4219b..3af93aabf1f07188bfdfaf9ba5509ef5
  	const auto radius = _document->isVideoMessage()
  		? ImageRoundRadius::Ellipse
  		: ImageRoundRadius::Small;
-@@ -1230,7 +1233,7 @@ ItemPreview MediaFile::toPreview(ToPreviewOptions options) const {
+@@ -1237,7 +1240,7 @@ ItemPreview MediaFile::toPreview(ToPreviewOptions options) const {
  					parent(),
  					media,
  					radius,
@@ -159,7 +159,7 @@ index 64e565d78223e580362dd33f41fe292a39065962..f63be855712f832a49c4eb32ac43f7ef
  		const auto weak = base::make_weak(view);
  		text.setBlockquoteExpandCallback([=](int quoteIndex, bool expanded) {
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index 854307f9e0f29d8ebdce71ef0654cb6c0e9cec73..d96356a860a1edb813d2f7407ddd155cd32627f4 100644
+index 9c4b0f82084b8cccfacf9eed78ba8b66873df450..4ae0d8289c309e0ec18a70babc0dd7a587273ed3 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 @@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -170,7 +170,7 @@ index 854307f9e0f29d8ebdce71ef0654cb6c0e9cec73..d96356a860a1edb813d2f7407ddd155c
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
  
-@@ -259,6 +260,7 @@ Gif::Gif(
+@@ -258,6 +259,7 @@ Gif::Gif(
  
  	if (_spoiler) {
  		createSpoilerLink(_spoiler.get());
@@ -199,7 +199,7 @@ index 2494eb2035d2b3184fe29d4398a9f2eaf30a0961..f3600aec873d6e5369b0acb1cf0f5d9e
  	_purchasedPriceTag = hasPurchasedTag() ? 1 : 0;
  }
 diff --git a/Telegram/SourceFiles/iv/markdown/iv_markdown_article_text.cpp b/Telegram/SourceFiles/iv/markdown/iv_markdown_article_text.cpp
-index 2fcab1a3e549d320ca38266373d562238c13fe29..7ab247c60ee6175abbc803142324da0cfcc3a971 100644
+index d5e8aeabe52937d980c419b27528324867ecffc4..82b75bfd529d126d39f3a7f7584a27ee0a2082bd 100644
 --- a/Telegram/SourceFiles/iv/markdown/iv_markdown_article_text.cpp
 +++ b/Telegram/SourceFiles/iv/markdown/iv_markdown_article_text.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -219,10 +219,10 @@ index 2fcab1a3e549d320ca38266373d562238c13fe29..7ab247c60ee6175abbc803142324da0c
  		leaf->setSpoilerLinkFilter([](const ClickContext &context) {
  			return context.button == Qt::LeftButton;
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 6f7a13fa4281c75480eb63fa3245e38987f8df46..93f17fc59e3801926973aed242d44c672cab12d9 100644
+index 09fd02a0b8c59c532b26b6fd76048c0745a9b072..b718d99cec7c64a31e76629d753b353564859725 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -123,6 +123,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_lowercase.h"
  #include "tele/tele_options.h"
  #include "tele/tele_secret_media.h"
@@ -230,7 +230,7 @@ index 6f7a13fa4281c75480eb63fa3245e38987f8df46..93f17fc59e3801926973aed242d44c67
  #include "tele/tele_view_tl.h"
  
  #include <QGraphicsOpacityEffect>
-@@ -4305,6 +4306,7 @@ void OverlayWidget::refreshCaption() {
+@@ -4350,6 +4351,7 @@ void OverlayWidget::refreshCaption() {
  			return (weak != nullptr);
  		});
  	}

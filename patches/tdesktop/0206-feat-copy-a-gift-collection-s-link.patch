@@ -13,10 +13,10 @@ Subject: [PATCH] feat: copy a gift collection's link
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_collection_link.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ee57908b0d545b0c7343e4347bfe24403ae28cbb..0fc1c50ab3ceefda302384c85e4e629cbc5fe9d5 100644
+index 1ebd3dd3aa0a0b1cf1575cc31947949687311015..c694c5977c6593fc6769df1f92896284f49b1341 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2586,6 +2586,8 @@ PRIVATE
+@@ -2742,6 +2742,8 @@ PRIVATE
      tele/tele_full_preview.h
      tele/tele_gif_video.cpp
      tele/tele_gif_video.h
@@ -26,7 +26,7 @@ index ee57908b0d545b0c7343e4347bfe24403ae28cbb..0fc1c50ab3ceefda302384c85e4e629c
      tele/tele_gift_fake_upgrade.h
      tele/tele_gift_grid.cpp
 diff --git a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
-index d06d96fd64de1a02fa1193d8a02099a0254d12c3..b02e8d2aaefc63022406c0b62bd5f2c8c3f7c3a5 100644
+index 25eef7e9749459b2920102933fc091943f90cd60..26099e21ad6d775f35a884895c644b06dd18523f 100644
 --- a/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 +++ b/Telegram/SourceFiles/info/peer_gifts/info_peer_gifts_widget.cpp
 @@ -24,6 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -37,7 +37,7 @@ index d06d96fd64de1a02fa1193d8a02099a0254d12c3..b02e8d2aaefc63022406c0b62bd5f2c8
  #include "tele/tele_gift_search.h"
  #include "tele/tele_list_dates.h"
  #include "ui/boxes/confirm_box.h"
-@@ -1124,6 +1125,7 @@ void InnerWidget::showMenuForCollection(int id) {
+@@ -1133,6 +1134,7 @@ void InnerWidget::showMenuForCollection(int id) {
  	addAction(tr::lng_gift_collection_add_button(tr::now), [=] {
  		editCollectionGifts(id);
  	}, &st::menuIconGiftPremium);
@@ -45,7 +45,7 @@ index d06d96fd64de1a02fa1193d8a02099a0254d12c3..b02e8d2aaefc63022406c0b62bd5f2c8
  	if (const auto username = _peer->username(); !username.isEmpty()) {
  		addAction(tr::lng_gift_collection_share(tr::now), [=] {
  			shareCollectionLink(username, id);
-@@ -1685,6 +1687,7 @@ void InnerWidget::refreshCollectionsTabs() {
+@@ -1699,6 +1701,7 @@ void InnerWidget::refreshCollectionsTabs() {
  
  		_collectionsTabs->contextMenuRequests(
  		) | rpl::on_next([=](const QString &id) {
