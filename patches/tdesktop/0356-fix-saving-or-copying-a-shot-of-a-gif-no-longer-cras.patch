@@ -1,0 +1,98 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Mon, 9 Nov 2026 00:42:23 +0300
+Subject: [PATCH] fix: saving or copying a shot of a gif no longer crashes tele
+
+---
+ .../history/view/media/history_view_gif.cpp         |  4 ++--
+ Telegram/SourceFiles/tele/tele_shot_sharp.cpp       | 13 ++++++++++++-
+ Telegram/SourceFiles/tele/tele_shot_sharp.h         |  3 +++
+ 3 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+index 3c9ead768a8287ec5deb1a34f770520bbd42d868..e90a3fc3e2c012c50fcfdefee7eca962e486d72d 100644
+--- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
++++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+@@ -790,7 +790,7 @@ void Gif::draw(Painter &p, const PaintContext &context) const {
+ 			validateRoundingMask(request.outer);
+ 			request.mask = _roundingMask;
+ 		} else {
+-			request.rounding = MediaRoundingMask(rounding);
++			request.rounding = Tele::ScreenRoundingMask(rounding);
+ 		}
+ 		if (!activeRoundPlaying && activeOwnPlaying->instance.playerLocked()) {
+ 			if (activeOwnPlaying->frozenFrame.isNull()) {
+@@ -1891,7 +1891,7 @@ void Gif::drawGrouped(
+ 		auto request = ::Media::Streaming::FrameRequest{
+ 			.resize = pixSize * ratio,
+ 			.outer = scaled * ratio,
+-			.rounding = MediaRoundingMask(rounding),
++			.rounding = Tele::ScreenRoundingMask(rounding),
+ 		};
+ 		if (activeOwnPlaying->instance.playerLocked()) {
+ 			if (activeOwnPlaying->frozenFrame.isNull()) {
+diff --git a/Telegram/SourceFiles/tele/tele_shot_sharp.cpp b/Telegram/SourceFiles/tele/tele_shot_sharp.cpp
+index 4da44fbedb6479502060c05c444b56f912b83181..fffd670449a14723c4488c1fb243cf1b2eac4a9f 100644
+--- a/Telegram/SourceFiles/tele/tele_shot_sharp.cpp
++++ b/Telegram/SourceFiles/tele/tele_shot_sharp.cpp
+@@ -5,6 +5,7 @@
+ #include "data/data_message_reactions.h"
+ #include "data/data_session.h"
+ #include "ffmpeg/ffmpeg_frame_generator.h"
++#include "history/view/media/history_view_media.h"
+ #include "lottie/lottie_common.h"
+ #include "lottie/lottie_frame_generator.h"
+ #include "ui/chat/chat_style.h"
+@@ -104,6 +105,7 @@ struct SavedIcon {
+ struct State {
+ 	int ratio = 0;
+ 	int emojiScopes = 0;
++	bool screenMasks = false;
+ 	base::flat_map<std::pair<uint64, int>, QImage> frames;
+ 	base::flat_map<std::tuple<const IconMask*, int, int>, QImage> masks;
+ 	base::flat_map<MonoIcon*, SavedIcon> swapped;
+@@ -443,6 +445,15 @@ int ShotPixelRatio() {
+ 	return std::max(Current().ratio, style::DevicePixelRatio());
+ }
+ 
++Images::CornersMaskRef ScreenRoundingMask(
++		std::optional<Ui::BubbleRounding> rounding) {
++	auto &current = Current();
++	const auto was = std::exchange(current.screenMasks, true);
++	auto result = HistoryView::MediaRoundingMask(rounding);
++	current.screenMasks = was;
++	return result;
++}
++
+ ShotSharpScope::ShotSharpScope(
+ 	int ratio,
+ 	not_null<const Ui::ChatStyle*> st)
+@@ -517,7 +528,7 @@ const std::array<QImage, 4> &ShotRadiusMask(int radius, int ratio) {
+ 
+ const std::array<QImage, 4> &ShotCachedCornersMasks(
+ 		Ui::CachedCornerRadius radius) {
+-	const auto ratio = ShotSharpRatio();
++	const auto ratio = Current().screenMasks ? 0 : ShotSharpRatio();
+ 	return ratio
+ 		? ShotRadiusMask(Ui::CachedCornerRadiusValue(radius), ratio)
+ 		: Ui::CachedCornersMasks(radius);
+diff --git a/Telegram/SourceFiles/tele/tele_shot_sharp.h b/Telegram/SourceFiles/tele/tele_shot_sharp.h
+index d6939260a45e668448ee140acf05e916cd23c4f5..883f8fd6dda87a24888bd6b77174f2637deb92f7 100644
+--- a/Telegram/SourceFiles/tele/tele_shot_sharp.h
++++ b/Telegram/SourceFiles/tele/tele_shot_sharp.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include "ui/chat/message_bubble.h"
+ #include "ui/image/image_prepare.h"
+ 
+ class DocumentData;
+@@ -40,6 +41,8 @@ private:
+ 
+ [[nodiscard]] int ShotSharpRatio();
+ [[nodiscard]] int ShotPixelRatio();
++[[nodiscard]] Images::CornersMaskRef ScreenRoundingMask(
++	std::optional<Ui::BubbleRounding> rounding);
+ 
+ class ShotEmojiScope final {
+ public:

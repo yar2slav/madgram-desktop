@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Tue, 27 Oct 2026 17:31:49 +0300
+Subject: [PATCH] fix: topic tabs no longer crash after you move them
+
+---
+ rpl/event_stream.h | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/rpl/event_stream.h b/rpl/event_stream.h
+index e65498a79b7934cc8c85e6c8a89d6abfb090617b..ccd8d72bbf5a1b540ab6c0cdf43324e79cfb5acd 100644
+--- a/rpl/event_stream.h
++++ b/rpl/event_stream.h
+@@ -126,6 +126,14 @@ inline void event_stream<Value, Error>::fire_forward(
+ 	const auto begin = base::index_based_begin(consumers);
+ 	const auto end = base::index_based_end(consumers);
+ 
++	if (copy->depth > 1) {
++		std::for_each(begin, end, [&](const auto &consumer) {
++			consumer.put_next_copy(value);
++		});
++		--copy->depth;
++		return;
++	}
++
+ 	// Copy value for every consumer except the last.
+ 	const auto prev = end - 1;
+ 	auto staleFrom = std::remove_if(begin, prev, [&](const auto &consumer) {
+@@ -152,9 +160,7 @@ inline void event_stream<Value, Error>::fire_forward(
+ 		}
+ 
+ 		// Erase stale consumers.
+-		if (copy->depth == 1) {
+-			consumers.erase(staleFrom.base(), consumers.end());
+-		}
++		consumers.erase(staleFrom.base(), consumers.end());
+ 	}
+ 	--copy->depth;
+ }

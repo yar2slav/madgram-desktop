@@ -150,7 +150,7 @@ index a5447936123e8b4dd673bcd8c904838181dc8a6a..128b636f846f6dbb5259c1ed3748c290
  	class ActiveBasicPointer {
  	public:
 diff --git a/ui/widgets/elastic_scroll.cpp b/ui/widgets/elastic_scroll.cpp
-index adb6dd9a14ff97c1efba816dd001e4803756dbd7..909345d1453282320116dddde6d86bdf821c08b4 100644
+index f0bccdde69fdac9dd2a77409ac40ea379ccaac40..0ce8ca303eb9ad88ee456a94118418d56e433754 100644
 --- a/ui/widgets/elastic_scroll.cpp
 +++ b/ui/widgets/elastic_scroll.cpp
 @@ -382,6 +382,7 @@ ElasticScroll::ElasticScroll(
@@ -162,7 +162,7 @@ index adb6dd9a14ff97c1efba816dd001e4803756dbd7..909345d1453282320116dddde6d86bdf
  	_bar->visibleFromDragged(
  	) | rpl::on_next([=](int from) {
 diff --git a/ui/widgets/scroll_area.cpp b/ui/widgets/scroll_area.cpp
-index f825c1d9579e265b2a0504f12b58e393f820f9f6..27e62fc3e6f4e1038817eadf0469ff62ea778a52 100644
+index f8b5b936d359bd00ea73201fdb34c748c2ed3fb2..48f260bc0ccb6b33fd2aebb1f1d04409cc91c0f9 100644
 --- a/ui/widgets/scroll_area.cpp
 +++ b/ui/widgets/scroll_area.cpp
 @@ -415,6 +415,7 @@ ScrollArea::ScrollArea(

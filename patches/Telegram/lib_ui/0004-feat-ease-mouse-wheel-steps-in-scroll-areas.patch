@@ -5,13 +5,13 @@ Subject: [PATCH] feat: ease mouse wheel steps in scroll areas
 
 ---
  CMakeLists.txt                |   2 +
- ui/widgets/elastic_scroll.cpp |  11 +++-
+ ui/widgets/elastic_scroll.cpp |  16 ++++-
  ui/widgets/elastic_scroll.h   |   2 +
- ui/widgets/scroll_area.cpp    |  16 +++++
+ ui/widgets/scroll_area.cpp    |  17 +++++
  ui/widgets/scroll_area.h      |   2 +
  ui/widgets/smooth_wheel.cpp   | 113 ++++++++++++++++++++++++++++++++++
  ui/widgets/smooth_wheel.h     |  46 ++++++++++++++
- 7 files changed, 191 insertions(+), 1 deletion(-)
+ 7 files changed, 197 insertions(+), 1 deletion(-)
  create mode 100644 ui/widgets/smooth_wheel.cpp
  create mode 100644 ui/widgets/smooth_wheel.h
 
@@ -29,15 +29,27 @@ index 6b81a56e9fd12e708876280027b0f0b6f283d542..1c4f5b5324fc648f03595f5856d0e073
      ui/widgets/shadow.h
      ui/widgets/time_input.cpp
 diff --git a/ui/widgets/elastic_scroll.cpp b/ui/widgets/elastic_scroll.cpp
-index f72ffc506905e9e4964bb46f68a3e6f15f0e4350..adb6dd9a14ff97c1efba816dd001e4803756dbd7 100644
+index f72ffc506905e9e4964bb46f68a3e6f15f0e4350..f0bccdde69fdac9dd2a77409ac40ea379ccaac40 100644
 --- a/ui/widgets/elastic_scroll.cpp
 +++ b/ui/widgets/elastic_scroll.cpp
-@@ -922,7 +922,16 @@ bool ElasticScroll::handleWheelEvent(
+@@ -855,6 +855,9 @@ bool ElasticScroll::handleWheelEvent(
+ 	const auto touch = (source != WheelSource::Wheel);
+ 	const auto exact = (source == WheelSource::ExactTouch);
+ 	const auto phase = e->phase();
++	if (touch || phase != Qt::NoScrollPhase) {
++		_smoothWheel.stop();
++	}
+ 	auto ownAxisLocked = false;
+ 	if (_wheelDirectionLocked || _crossAxisWheelProcess) {
+ 		const auto lockDelta = exact
+@@ -922,7 +925,18 @@ bool ElasticScroll::handleWheelEvent(
  			if (!weak) {
  				return true;
  			}
 -			tryScrollTo(_state.visibleFrom + delta);
 +			const auto smooth = _vertical
++				&& !touch
++				&& (_movement.current() != Movement::Momentum)
 +				&& _smoothWheel.handle(
 +					e,
 +					delta,
@@ -71,7 +83,7 @@ index f0ba4d9a200b6bfcbbfedcffadf04fa192d97c41..35b2c007a4447c31d45ad5c3c93de12a
  	Fn<bool(QPoint, Qt::ScrollPhase)> _crossAxisWheelProcess;
  	ScrollDirectionLock _wheelDirectionLock;
 diff --git a/ui/widgets/scroll_area.cpp b/ui/widgets/scroll_area.cpp
-index 67ff1f96c831a71864a8ebcc169d7e92930de032..f825c1d9579e265b2a0504f12b58e393f820f9f6 100644
+index 67ff1f96c831a71864a8ebcc169d7e92930de032..f8b5b936d359bd00ea73201fdb34c748c2ed3fb2 100644
 --- a/ui/widgets/scroll_area.cpp
 +++ b/ui/widgets/scroll_area.cpp
 @@ -647,6 +647,22 @@ bool ScrollArea::viewportEvent(QEvent *e) {
@@ -97,6 +109,14 @@ index 67ff1f96c831a71864a8ebcc169d7e92930de032..f825c1d9579e265b2a0504f12b58e393
  	}
  	return QScrollArea::viewportEvent(e);
  }
+@@ -680,6 +696,7 @@ void ScrollArea::touchEvent(QTouchEvent *e) {
+ 	case QEvent::TouchBegin: {
+ 		if (_touchPress || e->touchPoints().isEmpty()) return;
+ 		_touchPress = true;
++		_smoothWheel.stop();
+ 		if (_touchScrollState == TouchScrollState::Auto) {
+ 			_touchScrollState = TouchScrollState::Acceleration;
+ 			_touchWaitingAcceleration = true;
 diff --git a/ui/widgets/scroll_area.h b/ui/widgets/scroll_area.h
 index a05ab78b40b2f3af5c4d3b3ff8795cb9b01f9893..1261b8b3e922f840c055418f12791c5850c399a6 100644
 --- a/ui/widgets/scroll_area.h
