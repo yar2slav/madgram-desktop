@@ -15730,10 +15730,10 @@ index 21a39ca1859de60b30b303502bb0434e135d8db4..a9062b3cf6842c8bb6972fe29554289c
  		.icon = &st::menuIconStealth,
  		.fillSubmenu = fill,
 diff --git a/Telegram/SourceFiles/tele/tele_ghost_pending.cpp b/Telegram/SourceFiles/tele/tele_ghost_pending.cpp
-index 06642dfaadee2c9eb13c10acade322301d645b9d..710e89ff00b86bb5de8c810b2ae9d4e311c406a5 100644
+index 43f3327f73b1c7e34ada704ed96a2ac8b1bb9ae5..1461a0f4708ec281c273f5e9bb6ab2a8dd6a97f3 100644
 --- a/Telegram/SourceFiles/tele/tele_ghost_pending.cpp
 +++ b/Telegram/SourceFiles/tele/tele_ghost_pending.cpp
-@@ -610,7 +610,7 @@ void AddGhostPendingActions(
+@@ -611,7 +611,7 @@ void AddGhostPendingActions(
  			}
  		}, &st::menuIconSend);
  	}

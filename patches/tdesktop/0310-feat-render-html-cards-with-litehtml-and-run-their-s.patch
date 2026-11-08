@@ -4375,7 +4375,7 @@ index 0000000000000000000000000000000000000000..90b9b7763361c5668ba3be47a0b155df
 +} // namespace Tele::Html
 diff --git a/Telegram/SourceFiles/tele/tele_html_script.cpp b/Telegram/SourceFiles/tele/tele_html_script.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..7b3b1e93ad262ef43d0dfb72551ce1677bfaa957
+index 0000000000000000000000000000000000000000..bebe6ba7877856cabd79bdbc101975b8546d9ca9
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_html_script.cpp
 @@ -0,0 +1,698 @@
@@ -4609,7 +4609,7 @@ index 0000000000000000000000000000000000000000..7b3b1e93ad262ef43d0dfb72551ce167
 +	return ScriptOf(ctx)->native(magic, argc, argv);
 +}
 +
-+int Interrupt(JSRuntime *rt, void *opaque) {
++int Interrupt(JSContext *ctx, void *opaque) {
 +	return static_cast<Script*>(opaque)->interrupt() ? 1 : 0;
 +}
 +

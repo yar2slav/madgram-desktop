@@ -9,13 +9,13 @@ Subject: [PATCH] feat: show pending ghost-scheduled messages
  .../view/history_view_context_menu.cpp        |   2 +
  .../SourceFiles/settings/settings_tele.cpp    |   9 +-
  Telegram/SourceFiles/tele/tele_ghost.cpp      |  10 +-
- .../SourceFiles/tele/tele_ghost_pending.cpp   | 620 ++++++++++++++++++
+ .../SourceFiles/tele/tele_ghost_pending.cpp   | 621 ++++++++++++++++++
  .../SourceFiles/tele/tele_ghost_pending.h     |  17 +
  .../SourceFiles/tele/tele_menu_registry.cpp   |  14 +-
  Telegram/SourceFiles/tele/tele_options.cpp    |  18 +
  Telegram/SourceFiles/tele/tele_options.h      |   3 +
  .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
- 11 files changed, 695 insertions(+), 5 deletions(-)
+ 11 files changed, 696 insertions(+), 5 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_ghost_pending.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_ghost_pending.h
 
@@ -134,10 +134,10 @@ index 01779aefcf7b04d7c504c01f1c29b5a878125df6..d53734d05f2aab967aeca124a5df0701
  void AddMarkReadAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item) {
 diff --git a/Telegram/SourceFiles/tele/tele_ghost_pending.cpp b/Telegram/SourceFiles/tele/tele_ghost_pending.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..06642dfaadee2c9eb13c10acade322301d645b9d
+index 0000000000000000000000000000000000000000..43f3327f73b1c7e34ada704ed96a2ac8b1bb9ae5
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_ghost_pending.cpp
-@@ -0,0 +1,620 @@
+@@ -0,0 +1,621 @@
 +#include "tele/tele_ghost_pending.h"
 +
 +#include "apiwrap.h"
@@ -149,6 +149,7 @@ index 0000000000000000000000000000000000000000..06642dfaadee2c9eb13c10acade32230
 +#include "data/data_changes.h"
 +#include "data/data_histories.h"
 +#include "data/data_media_types.h"
++#include "data/data_messages.h"
 +#include "data/data_peer.h"
 +#include "data/data_session.h"
 +#include "data/data_web_page.h"
