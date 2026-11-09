@@ -1,0 +1,537 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 12:17:20 +0200
+Subject: [PATCH] feat: load what's new from mad releases
+
+---
+ Telegram/SourceFiles/tele/tele_changelog.cpp  |  10 +-
+ .../tele/tele_changelog_history.cpp           | 458 +++++++++++++++++-
+ 2 files changed, 455 insertions(+), 13 deletions(-)
+
+diff --git a/Telegram/SourceFiles/tele/tele_changelog.cpp b/Telegram/SourceFiles/tele/tele_changelog.cpp
+index 1948c6bc446455c5971fd6c048540fe6d0d3b8d9..9400f624d7539bb777761fb93d3b2d46f4ea4c8e 100644
+--- a/Telegram/SourceFiles/tele/tele_changelog.cpp
++++ b/Telegram/SourceFiles/tele/tele_changelog.cpp
+@@ -47,8 +47,8 @@ constexpr auto kMaxItemLength = 1024;
+ constexpr auto kMaxMessageLength = 4096;
+ constexpr auto kMaxSplitLength = 4000;
+ constexpr auto kTestBit = BareId(1) << 63;
+-constexpr auto kReleasesUrl = "https://github.com/nitreojs/tele/releases";
+-constexpr auto kReleasesPrefix = "https://github.com/nitreojs/tele/releases/";
++constexpr auto kReleasesUrl = "https://github.com/yar2slav/madgram-desktop/releases";
++constexpr auto kReleasesPrefix = "https://github.com/yar2slav/madgram-desktop/releases/";
+ 
+ struct Entry {
+ 	QString text;
+@@ -117,7 +117,7 @@ private:
+ QPointer<Changelog> Instance;
+ 
+ [[nodiscard]] QString Tag() {
+-	return u"v%1-tele.%2"_q.arg(
++	return u"v%1-mad.%2"_q.arg(
+ 		QString::fromLatin1(AppVersionStr),
+ 		QString::number(BuildNumber()));
+ }
+@@ -126,7 +126,7 @@ QPointer<Changelog> Instance;
+ 	return QString::fromLatin1(kReleasesPrefix)
+ 		+ u"download/"_q
+ 		+ Tag()
+-		+ u"/tele-changelog.json"_q;
++		+ u"/mad-changelog.json"_q;
+ }
+ 
+ [[nodiscard]] QString MissingText(Missing missing) {
+@@ -196,7 +196,7 @@ void ShowFallback(
+ 	auto result = Notes();
+ 	result.title = object.value(u"title"_q).toString().trimmed();
+ 	if (result.title.isEmpty() || result.title.size() > kMaxTitleLength) {
+-		result.title = u"tele %1"_q.arg(BuildNumber());
++		result.title = u"mad %1"_q.arg(BuildNumber());
+ 	}
+ 	result.url = object.value(u"url"_q).toString();
+ 	if (!result.url.startsWith(QString::fromLatin1(kReleasesPrefix))) {
+diff --git a/Telegram/SourceFiles/tele/tele_changelog_history.cpp b/Telegram/SourceFiles/tele/tele_changelog_history.cpp
+index d43c6a16420c96215c36402d8d44a5cb13130455..a5d9811754ec69e6a9c0ddfb2dd53f1e2e135757 100644
+--- a/Telegram/SourceFiles/tele/tele_changelog_history.cpp
++++ b/Telegram/SourceFiles/tele/tele_changelog_history.cpp
+@@ -1,18 +1,172 @@
+ #include "tele/tele_changelog_history.h"
+ 
++#include "settings.h"
++#include "tele/tele_launch_flags.h"
++#include "tele/tele_updater.h"
++
++#include <QtCore/QCoreApplication>
++#include <QtCore/QDir>
++#include <QtCore/QFile>
++#include <QtCore/QJsonArray>
++#include <QtCore/QJsonDocument>
++#include <QtCore/QJsonObject>
++#include <QtCore/QPointer>
++#include <QtCore/QRegularExpression>
++#include <QtCore/QSaveFile>
++#include <QtNetwork/QNetworkAccessManager>
++#include <QtNetwork/QNetworkReply>
++#include <QtNetwork/QNetworkRequest>
++
+ namespace Tele {
++namespace {
+ 
+-void StartChangelogHistory() {
++constexpr auto kTransferTimeout = 60 * 1000;
++constexpr auto kMaxListSize = qint64(4 * 1024 * 1024);
++constexpr auto kMaxChangelogSize = qint64(256 * 1024);
++constexpr auto kMaxCacheSize = qint64(4 * 1024 * 1024);
++constexpr auto kMaxItems = 256;
++constexpr auto kMaxOptions = 16;
++constexpr auto kMaxTitleLength = 64;
++constexpr auto kMaxItemLength = 1024;
++constexpr auto kListUrl = "https://api.github.com/repos/yar2slav/"
++	"madgram-desktop/releases?per_page=30";
++constexpr auto kDownloadPrefix = "https://github.com/yar2slav/"
++	"madgram-desktop/releases/download/";
++constexpr auto kReleasesPrefix = "https://github.com/yar2slav/"
++	"madgram-desktop/releases/";
++constexpr auto kRepoPrefix = "https://github.com/yar2slav/madgram-desktop/";
++constexpr auto kAssetName = "mad-changelog.json";
++
++using Item = ChangelogHistoryItem;
++using Release = ChangelogHistoryRelease;
++
++[[nodiscard]] bool NetworkOff() {
++	return UpdatesOffForLaunch() || OfflineForLaunch();
+ }
+ 
+-void RefreshChangelogHistory() {
++[[nodiscard]] QString CachePath() {
++	return cWorkingDir() + u"tdata/mad_changelogs.json"_q;
+ }
+ 
+-void RememberChangelogRelease(const QByteArray &) {
++[[nodiscard]] int VersionFromTag(const QString &tag) {
++	static const auto regex = QRegularExpression(
++		u"^v\\d+(?:\\.\\d+)*-mad\\.(\\d+)$"_q);
++	const auto match = regex.match(tag);
++	return match.hasMatch() ? match.captured(1).toInt() : 0;
+ }
+ 
+-const std::vector<ChangelogHistoryRelease> &ChangelogHistory() {
+-	static const auto releases = std::vector<ChangelogHistoryRelease>{ {
++[[nodiscard]] int NumberFromUrl(const QString &url) {
++	static const auto regex = QRegularExpression(
++		u"/(\\d+)-[^/]*\\.patch$"_q);
++	const auto match = regex.match(url);
++	return match.hasMatch() ? match.captured(1).toInt() : 0;
++}
++
++[[nodiscard]] QString Field(const QJsonObject &object, const QString &key) {
++	return object.value(key).toString().trimmed().left(kMaxItemLength);
++}
++
++[[nodiscard]] std::optional<Item> ParseItem(const QJsonObject &object) {
++	auto result = Item{
++		.number = object.value(u"number"_q).toInt(),
++		.text = Field(object, u"text"_q),
++		.where = Field(object, u"where"_q),
++		.category = Field(object, u"category"_q).left(kMaxTitleLength),
++		.url = object.value(u"url"_q).toString(),
++	};
++	if (result.text.isEmpty()) {
++		return std::nullopt;
++	} else if (!result.url.startsWith(QString::fromLatin1(kRepoPrefix))) {
++		result.url = QString();
++	}
++	if (result.number <= 0) {
++		result.number = NumberFromUrl(result.url);
++	}
++	for (const auto &value : object.value(u"options"_q).toArray()) {
++		const auto option = value.toString();
++		if (int(result.options.size()) >= kMaxOptions) {
++			break;
++		} else if (!option.isEmpty()) {
++			result.options.push_back(option);
++		}
++	}
++	return result;
++}
++
++[[nodiscard]] std::optional<Release> ParseRelease(const QJsonObject &object) {
++	auto result = Release{
++		.version = object.value(u"version"_q).toInt(),
++		.tag = object.value(u"tag"_q).toString(),
++		.title = object.value(u"title"_q).toString().trimmed(),
++		.url = object.value(u"url"_q).toString(),
++	};
++	if (result.version <= 0) {
++		result.version = VersionFromTag(result.tag);
++	}
++	if (result.version <= 0) {
++		return std::nullopt;
++	} else if (result.title.isEmpty()
++		|| result.title.size() > kMaxTitleLength) {
++		result.title = u"mad %1"_q.arg(result.version);
++	}
++	if (!result.url.startsWith(QString::fromLatin1(kReleasesPrefix))) {
++		result.url = result.tag.isEmpty()
++			? QString()
++			: (QString::fromLatin1(kReleasesPrefix)
++				+ u"tag/"_q
++				+ result.tag);
++	}
++	for (const auto &value : object.value(u"items"_q).toArray()) {
++		if (int(result.items.size()) >= kMaxItems) {
++			break;
++		} else if (auto item = ParseItem(value.toObject())) {
++			result.items.push_back(std::move(*item));
++		}
++	}
++	if (result.items.empty()) {
++		return std::nullopt;
++	}
++	return result;
++}
++
++[[nodiscard]] std::vector<Release> ParseReleases(const QByteArray &data) {
++	auto result = std::vector<Release>();
++	const auto object = QJsonDocument::fromJson(data).object();
++	for (const auto &value : object.value(u"releases"_q).toArray()) {
++		if (auto release = ParseRelease(value.toObject())) {
++			result.push_back(std::move(*release));
++		}
++	}
++	return result;
++}
++
++[[nodiscard]] QJsonObject Serialize(const Release &release) {
++	auto items = QJsonArray();
++	for (const auto &item : release.items) {
++		auto options = QJsonArray();
++		for (const auto &option : item.options) {
++			options.push_back(option);
++		}
++		items.push_back(QJsonObject{
++			{ u"number"_q, item.number },
++			{ u"text"_q, item.text },
++			{ u"where"_q, item.where },
++			{ u"category"_q, item.category },
++			{ u"options"_q, options },
++			{ u"url"_q, item.url },
++		});
++	}
++	return QJsonObject{
++		{ u"version"_q, release.version },
++		{ u"tag"_q, release.tag },
++		{ u"title"_q, release.title },
++		{ u"url"_q, release.url },
++		{ u"items"_q, items },
++	};
++}
++
++[[nodiscard]] std::vector<Release> Bundled() {
++	return { {
+ 		.version = 1,
+ 		.tag = u"mad-1"_q,
+ 		.title = u"mad 1"_q,
+@@ -23,11 +177,299 @@ const std::vector<ChangelogHistoryRelease> &ChangelogHistory() {
+ 			{ .text = u"Badge spacing and image cache improvements."_q },
+ 		},
+ 	} };
+-	return releases;
+ }
+ 
+-rpl::producer<> ChangelogHistoryChanges() {
+-	return rpl::never<>();
++class Archive final : public QObject {
++public:
++	Archive();
++
++	[[nodiscard]] const std::vector<Release> &list();
++	[[nodiscard]] rpl::producer<> changes() const;
++
++	void refresh();
++	void remember(const QByteArray &data);
++	void seen(const QString &tag);
++
++private:
++	void load();
++	void merge();
++	void writeCache() const;
++	void add(Release release);
++	void listed(const QByteArray &data);
++	void fetch(const QString &tag);
++	void get(
++		const QString &url,
++		qint64 limit,
++		Fn<void(QByteArray)> done,
++		Fn<void()> failed);
++	[[nodiscard]] bool wanted(int version) const;
++
++	QNetworkAccessManager _manager;
++	std::vector<Release> _bundled;
++	std::vector<Release> _fetched;
++	std::vector<Release> _all;
++	base::flat_set<QString> _inflight;
++	base::flat_set<QString> _failed;
++	rpl::event_stream<> _changes;
++	int _bundledMax = 0;
++	bool _loaded = false;
++	bool _listing = false;
++	bool _listed = false;
++	rpl::lifetime _lifetime;
++
++};
++
++QPointer<Archive> Instance;
++
++[[nodiscard]] not_null<Archive*> Current() {
++	if (!Instance) {
++		Instance = new Archive();
++	}
++	return Instance.data();
++}
++
++Archive::Archive()
++: QObject(QCoreApplication::instance()) {
++	UpdateStatusValue(
++	) | rpl::on_next([=](const UpdateStatus &status) {
++		if (!status.tag.isEmpty()) {
++			seen(status.tag);
++		}
++	}, _lifetime);
++}
++
++const std::vector<Release> &Archive::list() {
++	load();
++	return _all;
++}
++
++rpl::producer<> Archive::changes() const {
++	return _changes.events();
++}
++
++void Archive::load() {
++	if (_loaded) {
++		return;
++	}
++	_loaded = true;
++	_bundled = Bundled();
++	for (const auto &release : _bundled) {
++		_bundledMax = std::max(_bundledMax, release.version);
++	}
++	auto cache = QFile(CachePath());
++	if (cache.open(QIODevice::ReadOnly) && cache.size() <= kMaxCacheSize) {
++		for (auto &release : ParseReleases(cache.readAll())) {
++			const auto version = release.version;
++			if (version > _bundledMax
++				&& !ranges::contains(_fetched, version, &Release::version)) {
++				_fetched.push_back(std::move(release));
++			}
++		}
++	}
++	merge();
+ }
+ 
++void Archive::merge() {
++	_all = _bundled;
++	_all.insert(end(_all), begin(_fetched), end(_fetched));
++	ranges::sort(_all, ranges::greater(), &Release::version);
+ }
++
++void Archive::writeCache() const {
++	auto releases = QJsonArray();
++	for (const auto &release : _fetched) {
++		releases.push_back(Serialize(release));
++	}
++	QDir().mkpath(cWorkingDir() + u"tdata"_q);
++	auto file = QSaveFile(CachePath());
++	if (!file.open(QIODevice::WriteOnly)
++		|| file.write(QJsonDocument(QJsonObject{
++			{ u"releases"_q, releases },
++		}).toJson(QJsonDocument::Compact)) < 0
++		|| !file.commit()) {
++		LOG(("Tele Changelog History Error: can't write %1"
++			).arg(CachePath()));
++	}
++}
++
++bool Archive::wanted(int version) const {
++	return (version > _bundledMax)
++		&& !ranges::contains(_fetched, version, &Release::version);
++}
++
++void Archive::add(Release release) {
++	load();
++	if (release.version <= _bundledMax
++		|| ranges::contains(_fetched, release.version, &Release::version)) {
++		return;
++	}
++	for (auto &item : release.items) {
++		if (!item.options.empty() || item.number <= 0) {
++			continue;
++		}
++		for (const auto &known : _bundled) {
++			const auto i = ranges::find(
++				known.items,
++				item.number,
++				&Item::number);
++			if (i != end(known.items) && !i->options.empty()) {
++				item.options = i->options;
++				break;
++			}
++		}
++	}
++	_fetched.push_back(std::move(release));
++	merge();
++	writeCache();
++	_changes.fire({});
++}
++
++void Archive::remember(const QByteArray &data) {
++	const auto object = QJsonDocument::fromJson(data).object();
++	if (auto release = ParseRelease(object)) {
++		add(std::move(*release));
++	}
++}
++
++void Archive::refresh() {
++	load();
++	if (_listed || _listing || NetworkOff()) {
++		return;
++	}
++	_listing = true;
++	get(QString::fromLatin1(kListUrl), kMaxListSize, [=](QByteArray data) {
++		_listing = false;
++		_listed = true;
++		listed(data);
++	}, [=] {
++		_listing = false;
++	});
++}
++
++void Archive::listed(const QByteArray &data) {
++	const auto name = QString::fromLatin1(kAssetName);
++	for (const auto &value : QJsonDocument::fromJson(data).array()) {
++		const auto object = value.toObject();
++		const auto tag = object.value(u"tag_name"_q).toString();
++		const auto version = VersionFromTag(tag);
++		if (object.value(u"draft"_q).toBool()
++			|| !version
++			|| !wanted(version)) {
++			continue;
++		}
++		const auto assets = object.value(u"assets"_q).toArray();
++		const auto published = ranges::any_of(assets, [&](
++				const QJsonValue &asset) {
++			return asset.toObject().value(u"name"_q).toString() == name;
++		});
++		if (published) {
++			fetch(tag);
++		}
++	}
++}
++
++void Archive::seen(const QString &tag) {
++	load();
++	const auto version = VersionFromTag(tag);
++	if (version
++		&& wanted(version)
++		&& !_failed.contains(tag)
++		&& !NetworkOff()) {
++		fetch(tag);
++	}
++}
++
++void Archive::fetch(const QString &tag) {
++	if (!_inflight.emplace(tag).second) {
++		return;
++	}
++	const auto url = QString::fromLatin1(kDownloadPrefix)
++		+ tag
++		+ '/'
++		+ QString::fromLatin1(kAssetName);
++	get(url, kMaxChangelogSize, [=](QByteArray data) {
++		_inflight.remove(tag);
++		const auto object = QJsonDocument::fromJson(data).object();
++		auto release = ParseRelease(object);
++		if (!release || release->tag != tag) {
++			LOG(("Tele Changelog History Error: malformed %1").arg(tag));
++			_failed.emplace(tag);
++			return;
++		}
++		add(std::move(*release));
++	}, [=] {
++		_inflight.remove(tag);
++		_failed.emplace(tag);
++		_listed = false;
++	});
++}
++
++void Archive::get(
++		const QString &url,
++		qint64 limit,
++		Fn<void(QByteArray)> done,
++		Fn<void()> failed) {
++	if (NetworkOff()) {
++		failed();
++		return;
++	}
++	auto request = QNetworkRequest(QUrl(url));
++	request.setAttribute(
++		QNetworkRequest::RedirectPolicyAttribute,
++		QNetworkRequest::NoLessSafeRedirectPolicy);
++	request.setTransferTimeout(std::chrono::milliseconds(kTransferTimeout));
++	request.setHeader(QNetworkRequest::UserAgentHeader, u"mad"_q);
++	request.setRawHeader("Accept", "application/vnd.github+json");
++	const auto reply = _manager.get(request);
++	const auto tooLarge = std::make_shared<bool>(false);
++	connect(reply, &QNetworkReply::downloadProgress, this, [=](
++			qint64 ready,
++			qint64 total) {
++		if (ready > limit || total > limit) {
++			*tooLarge = true;
++			reply->abort();
++		}
++	});
++	connect(reply, &QNetworkReply::finished, this, [=] {
++		reply->deleteLater();
++		const auto code = reply->attribute(
++			QNetworkRequest::HttpStatusCodeAttribute).toInt();
++		if (*tooLarge) {
++			LOG(("Tele Changelog History Error: %1 is too large").arg(url));
++			failed();
++		} else if (reply->error() != QNetworkReply::NoError
++			|| code != 200) {
++			LOG(("Tele Changelog History Error: %1, %2, http %3"
++				).arg(url
++				).arg(reply->errorString()
++				).arg(code));
++			failed();
++		} else {
++			done(reply->readAll());
++		}
++	});
++}
++
++} // namespace
++
++void StartChangelogHistory() {
++	Current();
++}
++
++void RefreshChangelogHistory() {
++	Current()->refresh();
++}
++
++void RememberChangelogRelease(const QByteArray &data) {
++	Current()->remember(data);
++}
++
++const std::vector<ChangelogHistoryRelease> &ChangelogHistory() {
++	return Current()->list();
++}
++
++rpl::producer<> ChangelogHistoryChanges() {
++	return Current()->changes();
++}
++
++} // namespace Tele
