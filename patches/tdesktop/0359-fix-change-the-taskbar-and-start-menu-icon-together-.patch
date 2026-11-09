@@ -1,0 +1,109 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 12:14:42 +0200
+Subject: [PATCH] fix: change the taskbar and start menu icon together with the
+ app icon
+
+---
+ Telegram/SourceFiles/tele/tele_app_icons.cpp | 70 ++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/Telegram/SourceFiles/tele/tele_app_icons.cpp b/Telegram/SourceFiles/tele/tele_app_icons.cpp
+index 677949f660d4919010fe029a83ac26826613ad87..a6af57df53a3f644f675f648e2e2f3b73142e72c 100644
+--- a/Telegram/SourceFiles/tele/tele_app_icons.cpp
++++ b/Telegram/SourceFiles/tele/tele_app_icons.cpp
+@@ -13,10 +13,13 @@
+ #ifdef Q_OS_WIN
+ #include "platform/win/tray_win.h"
+ #include "platform/win/windows_app_user_model_id.h"
++#include "base/platform/win/base_windows_winrt.h"
++#include "tele/tele_start_menu.h"
+ #include <propkey.h>
+ #include <propvarutil.h>
+ #include <shobjidl.h>
+ #include <shellapi.h>
++#include <shlobj.h>
+ #include <QtCore/QBuffer>
+ #include <QtCore/QCryptographicHash>
+ #include <QtCore/QSaveFile>
+@@ -138,6 +141,72 @@ void ValidateLogoCaches(
+ }
+ 
+ #ifdef Q_OS_WIN
++namespace {
++
++[[nodiscard]] QString KnownFolder(const KNOWNFOLDERID &id) {
++	auto path = PWSTR();
++	if (FAILED(SHGetKnownFolderPath(id, 0, nullptr, &path))) {
++		return QString();
++	}
++	const auto result = QString::fromWCharArray(path);
++	CoTaskMemFree(path);
++	return result;
++}
++
++bool UpdateShortcutIcon(const QString &shortcut, const QString &icon) {
++	auto link = base::WinRT::TryCreateInstance<IShellLink>(CLSID_ShellLink);
++	const auto file = link ? link.try_as<IPersistFile>() : nullptr;
++	const auto store = link ? link.try_as<IPropertyStore>() : nullptr;
++	const auto native = QDir::toNativeSeparators(shortcut).toStdWString();
++	if (!file || !store || FAILED(file->Load(native.c_str(), STGM_READWRITE))) {
++		return false;
++	}
++	auto id = PROPVARIANT();
++	if (FAILED(store->GetValue(Platform::AppUserModelId::Key(), &id))) {
++		return false;
++	}
++	const auto ours = (id.vt == VT_LPWSTR)
++		&& id.pwszVal
++		&& (std::wstring(id.pwszVal) == Platform::AppUserModelId::Id());
++	PropVariantClear(&id);
++	if (!ours) {
++		return false;
++	}
++	const auto wanted = QDir::toNativeSeparators(icon).toStdWString();
++	WCHAR current[MAX_PATH] = { 0 };
++	auto index = 0;
++	if (SUCCEEDED(link->GetIconLocation(current, MAX_PATH, &index))
++		&& index == 0
++		&& wanted == current) {
++		return false;
++	}
++	return SUCCEEDED(link->SetIconLocation(wanted.c_str(), 0))
++		&& SUCCEEDED(file->Save(native.c_str(), TRUE));
++}
++
++void UpdateShortcutIcons(const QString &icon) {
++	auto changed = false;
++	const auto programs = KnownFolder(FOLDERID_Programs);
++	if (!programs.isEmpty()) {
++		changed |= UpdateShortcutIcon(
++			programs + '/' + StartMenuShortcutName(),
++			icon);
++	}
++	const auto roaming = KnownFolder(FOLDERID_RoamingAppData);
++	if (!roaming.isEmpty()) {
++		const auto pinned = QDir(roaming
++			+ u"/Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar"_q);
++		for (const auto &name : pinned.entryList({ u"*.lnk"_q }, QDir::Files)) {
++			changed |= UpdateShortcutIcon(pinned.filePath(name), icon);
++		}
++	}
++	if (changed) {
++		SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
++	}
++}
++
++} // namespace
++
+ void RefreshWindowsAppIcon(not_null<QWidget*> window) {
+ 	const auto logo = CustomAppLogo();
+ 	if (!logo || logo->isNull()) {
+@@ -195,6 +264,7 @@ void RefreshWindowsAppIcon(not_null<QWidget*> window) {
+ 		return;
+ 	}
+ 	store->Commit();
++	UpdateShortcutIcons(path);
+ }
+ 
+ QPixmap TrayIconWithCounter(

@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 367 patches, newest release first.
+all 368 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -31,6 +31,7 @@ all 367 patches, newest release first.
 | [356](../patches/tdesktop/0356-fix-saving-or-copying-a-shot-of-a-gif-no-longer-cras.patch) | saving or copying a shot with a playing gif or video no longer crashes mad, and its corners are rounded like in the chat instead of far more | with 104 |
 | [357](../patches/tdesktop/0357-fix-turning-off-money-hides-profile-balances.patch) | turning off money also hides wallet balances in every profile, without leaving an empty space | with 287 |
 | [358](../patches/tdesktop/0358-fix-let-telegram-keep-the-first-line-s-indent-in-cod.patch) | telegram 7.4 keeps the indent of a code block's first line by itself, so the extra character 321 put in front of it is gone and quoting code that starts with spaces works like in telegram | with 321 |
+| [359](../patches/tdesktop/0359-fix-change-the-taskbar-and-start-menu-icon-together-.patch) | changing the app icon also changes it on the taskbar and in the start menu, including pinned shortcuts | settings → mad → interface |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 
