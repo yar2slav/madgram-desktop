@@ -1,0 +1,199 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 12:15:28 +0200
+Subject: [PATCH] feat: choose the smooth typing speed
+
+---
+ Telegram/Resources/langs/mad_ru.json          |  7 +++++-
+ .../SourceFiles/settings/settings_tele.cpp    | 19 ++++++++++++++-
+ Telegram/SourceFiles/tele/tele_options.cpp    | 24 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_options.h      |  4 ++++
+ .../SourceFiles/tele/tele_settings_io.cpp     |  1 +
+ .../SourceFiles/tele/tele_smooth_typing.cpp   | 24 +++++++++++++++----
+ 6 files changed, 72 insertions(+), 7 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index da15700a026f50552cde4b0564ea7549f1f15357..3f23356473b2ad7f625b111abe41f3a237699763 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2070,5 +2070,10 @@
+   "To add another PC, open this window on it and choose the transfer file saved here.": "Чтобы добавить ещё один ПК, открой на нём это окно и выбери файл переноса, сохранённый здесь.",
+   "Open transfer file": "Открыть файл переноса",
+   "Smooth typing": "Плавный ввод",
+-  "The text cursor glides to its new place instead of jumping.": "Курсор в поле ввода плавно переезжает на новое место, а не прыгает."
++  "The text cursor glides to its new place instead of jumping.": "Курсор в поле ввода плавно переезжает на новое место, а не прыгает.",
++  "Smooth typing speed": "Скорость плавного ввода",
++  "Fast": "Быстро",
++  "Normal": "Обычно",
++  "Slow": "Медленно",
++  "Very slow": "Очень медленно"
+ }
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index c3cf0be1784d28e637f9d0060b8ef2ca293e6091..65aafff8ddf2e339efea24546b7c80cf18825b83 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -2732,7 +2732,24 @@ void FillInterface(SectionBuilder &builder) {
+ 	AddOptionToggle(
+ 		builder,
+ 		::Tele::kOptionSmoothTyping,
+-		{ u"cursor"_q, u"caret"_q, u"typing"_q, u"animation"_q });
++		{ u"cursor"_q, u"caret"_q, u"typing"_q, u"animation"_q },
++		{},
++		[&] {
++			AddButtonChoice(
++				builder,
++				::Tele::kOptionSmoothTypingSpeed,
++				::Tele::SmoothTypingSpeed,
++				::Tele::SetSmoothTypingSpeed,
++				::Tele::SmoothTypingSpeedValue,
++				{
++					{ u"fast"_q, u"Fast"_q },
++					{ QString(), u"Normal"_q },
++					{ u"slow"_q, u"Slow"_q },
++					{ u"slower"_q, u"Very slow"_q },
++				},
++				{ u"delay"_q, u"speed"_q, u"duration"_q },
++				::Tele::kOptionSmoothTyping);
++		});
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Scrolling"_q);
+ 	AddOptionToggle(
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 7cd1a1c122e3459cbec4248086ae9c75f32cae72..f89f490081a4080c43a527b6d7c99c2a8f36fd70 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -76,6 +76,7 @@ const char kOptionReduceMotionSaved[] = "tele-reduce-motion-saved";
+ const char kOptionListKeys[] = "tele-list-keys";
+ const char kOptionSmoothScroll[] = "tele-smooth-scroll";
+ const char kOptionSmoothTyping[] = "tele-smooth-typing";
++const char kOptionSmoothTypingSpeed[] = "tele-smooth-typing-speed";
+ const char kOptionScrollStats[] = "tele-scroll-stats";
+ const char kOptionScrollZoom[] = "tele-scroll-zoom";
+ const char kOptionViewerMouseBack[] = "tele-viewer-mouse-back";
+@@ -702,6 +703,11 @@ base::options::toggle SmoothTypingOption({
+ 	.description = "The text cursor glides to its new place instead of jumping.",
+ });
+ 
++base::options::option<QString> SmoothTypingSpeedOption({
++	.id = kOptionSmoothTypingSpeed,
++	.name = "Smooth typing speed",
++});
++
+ base::options::toggle ScrollStatsOption({
+ 	.id = kOptionScrollStats,
+ 	.name = "Log scroll frame rate",
+@@ -2443,6 +2449,24 @@ rpl::producer<bool> ListKeysValue() {
+ 	});
+ }
+ 
++QString SmoothTypingSpeed() {
++	return SmoothTypingSpeedOption.value();
++}
++
++void SetSmoothTypingSpeed(const QString &value) {
++	SmoothTypingSpeedOption.set(value);
++}
++
++rpl::producer<QString> SmoothTypingSpeedValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		SmoothTypingSpeedOption.changes()
++	) | rpl::map([] {
++		return SmoothTypingSpeedOption.value();
++	});
++}
++
+ rpl::producer<bool> SmoothTypingValue() {
+ 	return rpl::single(
+ 		rpl::empty
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 188a92e9b232003f321599e4b400edfb4f2cc672..46736e571ffa9a7be7dd87c54702f8ce089ca96a 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -68,6 +68,7 @@ extern const char kOptionReduceMotionSaved[];
+ extern const char kOptionListKeys[];
+ extern const char kOptionSmoothScroll[];
+ extern const char kOptionSmoothTyping[];
++extern const char kOptionSmoothTypingSpeed[];
+ extern const char kOptionScrollStats[];
+ extern const char kOptionScrollZoom[];
+ extern const char kOptionViewerMouseBack[];
+@@ -368,6 +369,9 @@ void SetReduceMotionSaved(const QString &value);
+ [[nodiscard]] rpl::producer<bool> ListKeysValue();
+ [[nodiscard]] rpl::producer<bool> SmoothScrollValue();
+ [[nodiscard]] rpl::producer<bool> SmoothTypingValue();
++[[nodiscard]] QString SmoothTypingSpeed();
++void SetSmoothTypingSpeed(const QString &value);
++[[nodiscard]] rpl::producer<QString> SmoothTypingSpeedValue();
+ [[nodiscard]] bool ScrollStats();
+ [[nodiscard]] bool ScrollZoom();
+ [[nodiscard]] bool ViewerMouseBack();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index ef0b1445e4b19fccc09e4c342468508581241daf..542cd9367fd1f80a4cb587a982fb07f40570ee1c 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -156,6 +156,7 @@ struct Spec {
+ 		Toggle(kOptionListKeys),
+ 		Toggle(kOptionSmoothScroll),
+ 		Toggle(kOptionSmoothTyping),
++		Choice(kOptionSmoothTypingSpeed, { u"fast"_q, QString(), u"slow"_q, u"slower"_q }),
+ 		Toggle(kOptionScrollStats),
+ 		Toggle(kOptionScrollZoom),
+ 		Toggle(kOptionViewerMouseBack),
+diff --git a/Telegram/SourceFiles/tele/tele_smooth_typing.cpp b/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
+index e21623249ea3e2741358bd08c75a87a60f6f29c9..33150501b7533e4e916dc65ffe6403988b3fc25b 100644
+--- a/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
++++ b/Telegram/SourceFiles/tele/tele_smooth_typing.cpp
+@@ -18,8 +18,22 @@
+ namespace Tele {
+ namespace {
+ 
+-constexpr auto kGlideDuration = crl::time(110);
+-constexpr auto kFadeDuration = crl::time(160);
++struct Durations {
++	crl::time glide = 0;
++	crl::time fade = 0;
++};
++
++[[nodiscard]] Durations CurrentDurations() {
++	const auto speed = SmoothTypingSpeed();
++	if (speed == u"fast"_q) {
++		return { .glide = 60, .fade = 100 };
++	} else if (speed == u"slow"_q) {
++		return { .glide = 180, .fade = 260 };
++	} else if (speed == u"slower"_q) {
++		return { .glide = 280, .fade = 400 };
++	}
++	return { .glide = 110, .fade = 160 };
++}
+ constexpr auto kMaxFadedCharacters = 2;
+ constexpr auto kAttachedProperty = "mad_smooth_caret";
+ 
+@@ -98,7 +112,7 @@ protected:
+ 		auto p = QPainter(this);
+ 		const auto now = crl::now();
+ 		for (const auto &fade : _fades) {
+-			const auto progress = std::clamp((now - fade.start) / float64(kFadeDuration), 0., 1.);
++			const auto progress = std::clamp((now - fade.start) / float64(CurrentDurations().fade), 0., 1.);
+ 			auto color = _background;
+ 			color.setAlphaF(1. - anim::easeOutCubic(1., progress));
+ 			p.fillRect(fade.rect, color);
+@@ -135,7 +149,7 @@ private:
+ 			_from = current();
+ 			_to = target;
+ 			_glide.stop();
+-			_glide.start([=] { update(); }, 0., 1., kGlideDuration, anim::easeOutCubic);
++			_glide.start([=] { update(); }, 0., 1., CurrentDurations().glide, anim::easeOutCubic);
+ 		} else {
+ 			_glide.stop();
+ 			_from = _to = target;
+@@ -186,7 +200,7 @@ private:
+ 	bool fadeStep(crl::time now) {
+ 		_fades.erase(
+ 			ranges::remove_if(_fades, [&](const Fade &fade) {
+-				return now - fade.start >= kFadeDuration;
++				return now - fade.start >= CurrentDurations().fade;
+ 			}),
+ 			end(_fades));
+ 		update();
