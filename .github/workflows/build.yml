@@ -44,6 +44,21 @@ jobs:
           path: mad
           persist-credentials: false
 
+      - name: check the russian release text
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $previous = gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[].tagName'
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $previous = "$previous".Trim()
+          if ($previous) {
+            git -C mad fetch --quiet --depth 1 origin "refs/tags/${previous}:refs/tags/${previous}"
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          }
+          python mad/ci/mad-changelog.py --check --previous "$previous"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
       - name: validate inputs and credentials
         env:
           TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
