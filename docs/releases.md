@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 370 patches, newest release first.
+all 371 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -34,6 +34,7 @@ all 370 patches, newest release first.
 | [359](../patches/tdesktop/0359-fix-change-the-taskbar-and-start-menu-icon-together-.patch) | changing the app icon also changes it on the taskbar and in the start menu, including pinned shortcuts | settings → mad → interface |
 | [360](../patches/tdesktop/0360-feat-choose-the-smooth-typing-speed.patch) | choose how fast smooth typing moves the cursor and fades in letters: fast, normal, slow or very slow | settings → mad → interface, with 354 |
 | [361](../patches/tdesktop/0361-feat-load-what-s-new-from-mad-releases.patch) | what's new lists every mad release with its changes, loaded from this repository's releases, and a fresh update posts its changes in the mad chat | always on |
+| [362](../patches/tdesktop/0362-feat-show-seconds-in-last-seen.patch) | a profile's last seen shows seconds, like last seen today at 22:42:13, also for the time mad noticed or peeked when last seen is hidden. the chat header keeps telegram's own last seen | settings → mad → messages → show seconds in message times, off |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 

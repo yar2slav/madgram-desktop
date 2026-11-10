@@ -1,0 +1,420 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Tue, 10 Nov 2026 22:53:24 +0300
+Subject: [PATCH] feat: show seconds in last seen
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  1 +
+ .../SourceFiles/data/data_peer_values.cpp     |  4 ++
+ .../profile/info_profile_status_label.cpp     |  3 +-
+ Telegram/SourceFiles/main/main_session.cpp    |  2 +
+ .../SourceFiles/settings/settings_tele.cpp    | 13 +++-
+ .../tele/tele_last_seen_seconds.cpp           | 70 +++++++++++++++++++
+ .../SourceFiles/tele/tele_last_seen_seconds.h | 13 ++++
+ .../tele/tele_observed_activity.cpp           | 10 +--
+ .../SourceFiles/tele/tele_observed_activity.h |  3 +-
+ Telegram/SourceFiles/tele/tele_options.cpp    | 20 ++++++
+ Telegram/SourceFiles/tele/tele_options.h      |  3 +
+ Telegram/SourceFiles/tele/tele_peek.cpp       | 17 +++--
+ .../SourceFiles/tele/tele_settings_io.cpp     |  1 +
+ 14 files changed, 150 insertions(+), 12 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_last_seen_seconds.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_last_seen_seconds.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index a6137b31befecae6f9f5a0ef6ff8e5c6c8171a04..5b6090e2c892572c420c98b682e78d14b9e490cd 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2976,6 +2976,8 @@ PRIVATE
+     tele/tele_kept_chats.h
+     tele/tele_kept_store.cpp
+     tele/tele_kept_store.h
++    tele/tele_last_seen_seconds.cpp
++    tele/tele_last_seen_seconds.h
+     tele/tele_list_keys.cpp
+     tele/tele_list_keys.h
+     tele/tele_local_drafts.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 3f23356473b2ad7f625b111abe41f3a237699763..342f3c76d6f6fd4a0d8797531a357a2b93c74b4e 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -708,6 +708,7 @@
+   "In": "Получено",
+   "In Saved Messages": "В избранном",
+   "In bot chats": "В чатах с ботами",
++  "In last seen in profiles": "Во времени посещения в профиле",
+   "In profiles": "В профилях",
+   "In the media viewer, when it differs from the message date.": "В просмотре медиа, если дата файла отличается от даты сообщения.",
+   "In your sets and the panel's search.": "В твоих наборах и в поиске панели.",
+diff --git a/Telegram/SourceFiles/data/data_peer_values.cpp b/Telegram/SourceFiles/data/data_peer_values.cpp
+index 404f1ec062a165997719e2b31f6f3174888febd4..2648556071e340de354b29ad189e172b8f26e950 100644
+--- a/Telegram/SourceFiles/data/data_peer_values.cpp
++++ b/Telegram/SourceFiles/data/data_peer_values.cpp
+@@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/secret/secret_chats.h"
+ #include "tele/tele_badges.h"
+ #include "tele/tele_changelog_chat.h"
++#include "tele/tele_last_seen_seconds.h"
+ 
+ namespace Data {
+ namespace {
+@@ -540,6 +541,9 @@ QString OnlineTextFull(not_null<UserData*> user, TimeId now) {
+ 		return *common;
+ 	}
+ 	const auto till = user->lastseen().onlineTill();
++	if (const auto exact = Tele::LastSeenExact(till, now)) {
++		return *exact;
++	}
+ 	const auto onlineFull = base::unixtime::parse(till);
+ 	const auto nowFull = base::unixtime::parse(now);
+ 	const auto locale = QLocale();
+diff --git a/Telegram/SourceFiles/info/profile/info_profile_status_label.cpp b/Telegram/SourceFiles/info/profile/info_profile_status_label.cpp
+index b39a6975f7e31c65cf43a63a6ddaa801df716a06..32f51036940a9ca82f1131c62557f03de90098e7 100644
+--- a/Telegram/SourceFiles/info/profile/info_profile_status_label.cpp
++++ b/Telegram/SourceFiles/info/profile/info_profile_status_label.cpp
+@@ -144,7 +144,8 @@ void StatusLabel::refresh() {
+ 			const auto result = Tele::WithObservedActivity(
+ 				user,
+ 				Data::OnlineTextFull(user, currentTime),
+-				currentTime);
++				currentTime,
++				true);
+ 			const auto showOnline = Data::OnlineTextActive(
+ 				user,
+ 				currentTime);
+diff --git a/Telegram/SourceFiles/main/main_session.cpp b/Telegram/SourceFiles/main/main_session.cpp
+index fcd4205f1d2ce7bb8b8a847cb9076aa909466e45..cf02ea44003d7338b1da6f9a170415f2d4bb53e5 100644
+--- a/Telegram/SourceFiles/main/main_session.cpp
++++ b/Telegram/SourceFiles/main/main_session.cpp
+@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_communities.h"
+ #include "tele/tele_kept_chats.h"
+ #include "tele/tele_kept_store.h"
++#include "tele/tele_last_seen_seconds.h"
+ #include "tele/tele_local_pins.h"
+ #include "tele/tele_mute.h"
+ #include "tele/tele_no_ai.h"
+@@ -307,6 +308,7 @@ Session::Session(
+ 	Tele::SetupOnlineNotify(this);
+ 	Tele::SetupPeekLastSeen(this);
+ 	Tele::SetupObservedActivity(this);
++	Tele::SetupLastSeenSeconds(this);
+ 	Tele::SetupNotices(this);
+ 	Tele::SetupMute(this);
+ 	Tele::SetupMediaPastLimit(this);
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 65aafff8ddf2e339efea24546b7c80cf18825b83..8c9d59b39c95afeea69b93d7838087cff293fd99 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3025,7 +3025,18 @@ void AddSavedHistory(SectionBuilder &builder) {
+ void FillMessages(SectionBuilder &builder) {
+ 	AddSkip(builder);
+ 	AddGroupTitle(builder, u"Messages"_q);
+-	AddOptionToggle(builder, ::Tele::kOptionMessageSeconds);
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionMessageSeconds,
++		{},
++		{},
++		[&] {
++			AddOptionToggle(
++				builder,
++				::Tele::kOptionLastSeenSeconds,
++				{ u"online"_q, u"status"_q, u"seconds"_q, u"profile"_q },
++				::Tele::kOptionMessageSeconds);
++		});
+ 	AddOptionToggle(builder, ::Tele::kOptionEditHistory);
+ 	AddOptionToggle(
+ 		builder,
+diff --git a/Telegram/SourceFiles/tele/tele_last_seen_seconds.cpp b/Telegram/SourceFiles/tele/tele_last_seen_seconds.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..cee9be3dd32225e17a4af961d062de947ed5b6b3
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_last_seen_seconds.cpp
+@@ -0,0 +1,70 @@
++#include "tele/tele_last_seen_seconds.h"
++
++#include "base/unixtime.h"
++#include "data/data_changes.h"
++#include "data/data_session.h"
++#include "data/data_user.h"
++#include "lang/lang_keys.h"
++#include "main/main_session.h"
++#include "tele/tele_options.h"
++#include "tele/tele_time.h"
++
++#include <QtCore/QLocale>
++
++namespace Tele {
++namespace {
++
++[[nodiscard]] bool Enabled() {
++	return MessageSeconds() && LastSeenSeconds();
++}
++
++void RefreshShown(not_null<Main::Session*> session) {
++	auto users = std::vector<not_null<UserData*>>();
++	session->data().enumerateUsers([&](not_null<UserData*> user) {
++		users.push_back(user);
++	});
++	for (const auto &user : users) {
++		session->changes().peerUpdated(
++			user,
++			Data::PeerUpdate::Flag::OnlineStatus);
++	}
++}
++
++} // namespace
++
++QString LastSeenTime(const QTime &time, bool seconds) {
++	return (seconds && Enabled())
++		? FormatMessageTime(time)
++		: QLocale().toString(time, QLocale::ShortFormat);
++}
++
++std::optional<QString> LastSeenExact(TimeId till, TimeId now) {
++	if (!Enabled() || (till <= 0)) {
++		return std::nullopt;
++	}
++	const auto online = base::unixtime::parse(till);
++	const auto today = base::unixtime::parse(now).date();
++	const auto time = FormatMessageTime(online.time());
++	if (online.date() == today) {
++		return tr::lng_status_lastseen_today(tr::now, lt_time, time);
++	} else if (online.date().addDays(1) == today) {
++		return tr::lng_status_lastseen_yesterday(tr::now, lt_time, time);
++	}
++	return tr::lng_status_lastseen_date_time(
++		tr::now,
++		lt_date,
++		QLocale().toString(online.date(), QLocale::ShortFormat),
++		lt_time,
++		time);
++}
++
++void SetupLastSeenSeconds(not_null<Main::Session*> session) {
++	rpl::merge(
++		MessageSecondsValue() | rpl::skip(1) | rpl::to_empty,
++		LastSeenSecondsValue() | rpl::skip(1) | rpl::to_empty
++	) | rpl::on_next([=] {
++		RefreshShown(session);
++	}, session->lifetime());
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_last_seen_seconds.h b/Telegram/SourceFiles/tele/tele_last_seen_seconds.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..96283f56beefa55ed1c18c24cf4d8a7c93680210
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_last_seen_seconds.h
+@@ -0,0 +1,13 @@
++#pragma once
++
++namespace Main {
++class Session;
++} // namespace Main
++
++namespace Tele {
++
++[[nodiscard]] QString LastSeenTime(const QTime &time, bool seconds);
++[[nodiscard]] std::optional<QString> LastSeenExact(TimeId till, TimeId now);
++void SetupLastSeenSeconds(not_null<Main::Session*> session);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_observed_activity.cpp b/Telegram/SourceFiles/tele/tele_observed_activity.cpp
+index f014ce54ae904fd74e200c9f36d7981cf80f4caf..b4f3a156d0151cb034b867f6df7e0efa9fd56bfe 100644
+--- a/Telegram/SourceFiles/tele/tele_observed_activity.cpp
++++ b/Telegram/SourceFiles/tele/tele_observed_activity.cpp
+@@ -12,6 +12,7 @@
+ #include "tele/secret/secret_chats.h"
+ #include "tele/tele_badges.h"
+ #include "tele/tele_changelog_chat.h"
++#include "tele/tele_last_seen_seconds.h"
+ #include "tele/tele_options.h"
+ 
+ #include <QtCore/QDir>
+@@ -77,11 +78,11 @@ private:
+ 		&& user->lastseen().isHidden();
+ }
+ 
+-[[nodiscard]] QString FormatWhen(TimeId when, TimeId now) {
++[[nodiscard]] QString FormatWhen(TimeId when, TimeId now, bool seconds) {
+ 	const auto full = base::unixtime::parse(when);
+ 	const auto today = base::unixtime::parse(now).date();
+ 	const auto locale = QLocale();
+-	const auto time = locale.toString(full.time(), QLocale::ShortFormat);
++	const auto time = LastSeenTime(full.time(), seconds);
+ 	if (full.date() == today) {
+ 		return time;
+ 	} else if (full.date().addDays(1) == today) {
+@@ -283,7 +284,8 @@ void NoteReactionActivity(
+ QString WithObservedActivity(
+ 		not_null<UserData*> user,
+ 		const QString &status,
+-		TimeId now) {
++		TimeId now,
++		bool seconds) {
+ 	if (!ObservedActivity()
+ 		|| !Tracked(user)
+ 		|| user->lastseen().isOnline(now)) {
+@@ -292,7 +294,7 @@ QString WithObservedActivity(
+ 	const auto store = Find(&user->session());
+ 	const auto when = store ? store->lookup(user) : TimeId();
+ 	return when
+-		? (status + u" ("_q + FormatWhen(when, now) + u")"_q)
++		? (status + u" ("_q + FormatWhen(when, now, seconds) + u")"_q)
+ 		: status;
+ }
+ 
+diff --git a/Telegram/SourceFiles/tele/tele_observed_activity.h b/Telegram/SourceFiles/tele/tele_observed_activity.h
+index ab40d4f71dbf49fb9d8b629d251c2b2cf261fb14..963ad7ad7a912637e9f2bd3b7e3409a22d2b15b3 100644
+--- a/Telegram/SourceFiles/tele/tele_observed_activity.h
++++ b/Telegram/SourceFiles/tele/tele_observed_activity.h
+@@ -21,6 +21,7 @@ void NoteReactionActivity(
+ [[nodiscard]] QString WithObservedActivity(
+ 	not_null<UserData*> user,
+ 	const QString &status,
+-	TimeId now);
++	TimeId now,
++	bool seconds = false);
+ 
+ } // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index f89f490081a4080c43a527b6d7c99c2a8f36fd70..32be71cacd1738bcae2d59c6f47a21cc4e4b8793 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -118,6 +118,7 @@ const char kOptionIgnoreInMenu[] = "tele-ignore-in-menu";
+ const char kOptionIgnoredUsers[] = "tele-ignored-users";
+ const char kOptionHiddenWords[] = "tele-hidden-words";
+ const char kOptionMessageSeconds[] = "tele-message-seconds";
++const char kOptionLastSeenSeconds[] = "tele-last-seen-seconds";
+ const char kOptionEditHistory[] = "tele-edit-history";
+ const char kOptionEditHistoryPersist[] = "tele-edit-history-persist";
+ const char kOptionReadLog[] = "tele-read-log";
+@@ -947,6 +948,11 @@ base::options::toggle MessageSecondsOption({
+ 	.description = "Service messages show their time too.",
+ });
+ 
++base::options::toggle LastSeenSecondsOption({
++	.id = kOptionLastSeenSeconds,
++	.name = "In last seen in profiles",
++});
++
+ base::options::toggle EditHistoryOption({
+ 	.id = kOptionEditHistory,
+ 	.name = "Keep edit history",
+@@ -2790,6 +2796,20 @@ rpl::producer<bool> MessageSecondsValue() {
+ 	});
+ }
+ 
++bool LastSeenSeconds() {
++	return LastSeenSecondsOption.value();
++}
++
++rpl::producer<bool> LastSeenSecondsValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		LastSeenSecondsOption.changes()
++	) | rpl::map([] {
++		return LastSeenSecondsOption.value();
++	});
++}
++
+ bool EditHistory() {
+ 	return EditHistoryOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 46736e571ffa9a7be7dd87c54702f8ce089ca96a..3aa350b5c92fa99661612ab2ee229fdbf05a2b9c 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -113,6 +113,7 @@ extern const char kOptionIgnoreInMenu[];
+ extern const char kOptionIgnoredUsers[];
+ extern const char kOptionHiddenWords[];
+ extern const char kOptionMessageSeconds[];
++extern const char kOptionLastSeenSeconds[];
+ extern const char kOptionEditHistory[];
+ extern const char kOptionEditHistoryPersist[];
+ extern const char kOptionReadLog[];
+@@ -434,6 +435,8 @@ void SetHiddenWords(const QString &value);
+ [[nodiscard]] rpl::producer<QString> HiddenWordsValue();
+ [[nodiscard]] bool MessageSeconds();
+ [[nodiscard]] rpl::producer<bool> MessageSecondsValue();
++[[nodiscard]] bool LastSeenSeconds();
++[[nodiscard]] rpl::producer<bool> LastSeenSecondsValue();
+ [[nodiscard]] bool EditHistory();
+ [[nodiscard]] rpl::producer<bool> EditHistoryValue();
+ [[nodiscard]] bool EditHistoryPersist();
+diff --git a/Telegram/SourceFiles/tele/tele_peek.cpp b/Telegram/SourceFiles/tele/tele_peek.cpp
+index 1b4855ff32e27087a9193e1721d928be48d26ccf..6d7b92821d2529cda3e4640ef2cd84aea89b66e8 100644
+--- a/Telegram/SourceFiles/tele/tele_peek.cpp
++++ b/Telegram/SourceFiles/tele/tele_peek.cpp
+@@ -17,6 +17,7 @@
+ #include "storage/serialize_common.h"
+ #include "storage/storage_account.h"
+ #include "tele/tele_changelog_chat.h"
++#include "tele/tele_last_seen_seconds.h"
+ #include "tele/tele_lowercase.h"
+ #include "tele/tele_notices.h"
+ #include "tele/tele_options.h"
+@@ -204,14 +205,17 @@ struct Peeked {
+ 	return result.v;
+ }
+ 
+-[[nodiscard]] QString Phrase(const Peeked &peeked, TimeId now) {
++[[nodiscard]] QString Phrase(
++		const Peeked &peeked,
++		TimeId now,
++		bool seconds = false) {
+ 	if (peeked.onlineTill > now) {
+ 		return tr::lng_status_online(tr::now);
+ 	}
+ 	const auto seen = base::unixtime::parse(peeked.seen);
+ 	const auto today = base::unixtime::parse(now);
+ 	const auto locale = QLocale();
+-	const auto time = locale.toString(seen.time(), QLocale::ShortFormat);
++	const auto time = LastSeenTime(seen.time(), seconds);
+ 	if (seen.date() == today.date()) {
+ 		return tr::lng_status_lastseen_today(tr::now, lt_time, time);
+ 	} else if (seen.date().addDays(1) == today.date()) {
+@@ -632,13 +636,16 @@ void State::opened(not_null<UserData*> user, bool profile) {
+ 
+ [[nodiscard]] std::optional<QString> PeekedText(
+ 		not_null<UserData*> user,
+-		TimeId now) {
++		TimeId now,
++		bool seconds = false) {
+ 	if (!PeekLastSeen() || !StatusHidden(user)) {
+ 		return std::nullopt;
+ 	}
+ 	const auto state = State::Find(&user->session());
+ 	const auto peeked = state ? state->lookup(user) : nullptr;
+-	return peeked ? std::make_optional(Phrase(*peeked, now)) : std::nullopt;
++	return peeked
++		? std::make_optional(Phrase(*peeked, now, seconds))
++		: std::nullopt;
+ }
+ 
+ } // namespace
+@@ -671,7 +678,7 @@ rpl::producer<TextWithEntities> PeekedStatusValue(not_null<PeerData*> peer) {
+ 		user,
+ 		Data::PeerUpdate::Flag::OnlineStatus
+ 	) | rpl::map([=] {
+-		const auto text = PeekedText(user, base::unixtime::now());
++		const auto text = PeekedText(user, base::unixtime::now(), true);
+ 		if (!text) {
+ 			return TextWithEntities();
+ 		}
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index 542cd9367fd1f80a4cb587a982fb07f40570ee1c..9ed2237fbf08df2eaf1e2ca77253ba6f0dd8bf8a 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -201,6 +201,7 @@ struct Spec {
+ 		Toggle(kOptionMuteIgnored),
+ 		Toggle(kOptionIgnoreInMenu),
+ 		Toggle(kOptionMessageSeconds),
++		Toggle(kOptionLastSeenSeconds),
+ 		Toggle(kOptionEditHistory),
+ 		Toggle(kOptionEditHistoryPersist),
+ 		Toggle(kOptionReadLog),
