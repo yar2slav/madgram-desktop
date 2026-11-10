@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Wed, 11 Nov 2026 00:04:09 +0300
+Subject: [PATCH] feat: open the owner of a sticker set from its menu
+
+---
+ Telegram/Resources/langs/mad_ru.json       | 1 +
+ Telegram/SourceFiles/tele/tele_peer_id.cpp | 9 +++++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 8f0da45956ed6fc95193611a3434a42c15069083..456f34697298fe28c6f234c3c39fcb535698ee2e 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -997,6 +997,7 @@
+   "Out": "Отправлено",
+   "Own text": "Свой текст",
+   "Owner ID copied to clipboard.": "Идентификатор владельца скопирован в буфер обмена.",
++  "Owner: %1": "Автор: %1",
+   "PNG and GIF: %1 × %2 px, MP4: %3 × %4 px.": "PNG и GIF: %1 × %2 пикселей, MP4: %3 × %4 пикселей.",
+   "Page Up, Page Down, Home and End scroll boxes and sections, and a click just outside a box doesn't close it.": "Page Up, Page Down, Home и End прокручивают окна и разделы. Клик за пределами диалога не закрывает его.",
+   "Paid media": "Платные медиа",
+diff --git a/Telegram/SourceFiles/tele/tele_peer_id.cpp b/Telegram/SourceFiles/tele/tele_peer_id.cpp
+index 69d5bb6e714fd8cbd23188e222f8d5328f73d0dd..ef77e89c1be3afe2a9be84cdcee9f0e3a270413f 100644
+--- a/Telegram/SourceFiles/tele/tele_peer_id.cpp
++++ b/Telegram/SourceFiles/tele/tele_peer_id.cpp
+@@ -11,6 +11,7 @@
+ #include "data/data_photo.h"
+ #include "data/data_session.h"
+ #include "data/data_shared_media.h"
++#include "data/data_user.h"
+ #include "history/history_item.h"
+ #include "info/profile/info_profile_actions.h"
+ #include "lang/lang_tag.h"
+@@ -439,6 +440,14 @@ void AddCopySetOwnerAction(
+ 	if (!StickerSetOwner() || !setId) {
+ 		return;
+ 	}
++	const auto ownerId = UserId(SetOwnerId(setId));
++	if (const auto owner = show->session().data().userLoaded(ownerId)) {
++		menu->addAction(Tr(u"Owner: %1"_q).arg(owner->name()), [=] {
++			if (const auto window = show->resolveWindow()) {
++				window->showPeerInfo(owner);
++			}
++		}, &st::menuIconProfile);
++	}
+ 	menu->addAction(Tr(u"Copy owner ID"_q), [=] {
+ 		const auto text = QString::number(SetOwnerId(setId));
+ 		TextUtilities::SetClipboardText({ text });
