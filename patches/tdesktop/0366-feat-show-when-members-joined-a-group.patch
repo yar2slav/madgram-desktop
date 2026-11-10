@@ -1,0 +1,284 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Wed, 11 Nov 2026 00:30:40 +0300
+Subject: [PATCH] feat: show when members joined a group
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  4 +
+ .../boxes/peers/edit_participants_box.cpp     |  7 ++
+ .../SourceFiles/settings/settings_tele.cpp    |  4 +
+ .../SourceFiles/tele/tele_member_dates.cpp    | 82 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_member_dates.h | 28 +++++++
+ Telegram/SourceFiles/tele/tele_options.cpp    | 11 +++
+ Telegram/SourceFiles/tele/tele_options.h      |  2 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |  1 +
+ 9 files changed, 141 insertions(+)
+ create mode 100644 Telegram/SourceFiles/tele/tele_member_dates.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_member_dates.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 2245def1066b6ae6d1bec26f0a0c879517d92596..d854a39017b9d6792e80d6e1bfd953d60bfe6e89 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2998,6 +2998,8 @@ PRIVATE
+     tele/tele_lowercase.h
+     tele/tele_maps.cpp
+     tele/tele_maps.h
++    tele/tele_member_dates.cpp
++    tele/tele_member_dates.h
+     tele/tele_mention_search.cpp
+     tele/tele_mention_search.h
+     tele/tele_menu_apply.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 78520093a0560ab85b361eff351fe306db5e6661..f9efdc70dbe0eb449db8b20ba043db2f597fdb9d 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -136,6 +136,10 @@
+   "Chats you're not in show when they were created.": "Для чатов, где тебя нет, показывается дата создания.",
+   "You joined": "Вы вступили",
+   "Created": "Создан",
++  "Show when members joined": "Показывать, когда вступили участники",
++  "In a member's menu in the members list. Telegram only says who invited you.": "В меню участника в списке участников. Кто пригласил, Telegram сообщает только про тебя.",
++  "Joined: %1": "Вступил(а): %1",
++  "Invited by %1": "Пригласил(а): %1",
+   "Estimated from the user ID, so it can be off by a few months.": "Оценка по ID пользователя, может ошибаться на несколько месяцев.",
+   "Accounts left out of the app's unread count.": "Непрочитанные сообщения этих аккаунтов не учитываются на значке приложения.",
+   "Accounts, sessions, drafts and cached tele server data are never exported.": "Аккаунты, сеансы, черновики и кеш данных сервера mad не экспортируются.",
+diff --git a/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp b/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp
+index b18678af70e3986fc2558b4b4fef051223d4ef7b..ac5396f005f9b3b24df5aeeb846655f99b81c0a5 100644
+--- a/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp
++++ b/Telegram/SourceFiles/boxes/peers/edit_participants_box.cpp
+@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "window/window_session_controller.h"
+ #include "history/history.h"
+ #include "history/view/history_view_message.h"
++#include "tele/tele_member_dates.h"
+ #include "tele/tele_view_tl.h"
+ #include "styles/style_chat.h"
+ #include "styles/style_menu_icons.h"
+@@ -913,6 +914,7 @@ PeerData *ParticipantsAdditionalData::applyParticipant(
+ 			_memberRanks.remove(user);
+ 		}
+ 	}
++	Tele::RememberMemberDate(_peer, data);
+ 	return result;
+ }
+ 
+@@ -2048,6 +2050,11 @@ base::unique_qptr<Ui::PopupMenu> ParticipantsBoxController::rowContextMenu(
+ 				}
+ 			}
+ 		}
++		Tele::AddMemberDateAction(
++			result.get(),
++			_peer,
++			participant,
++			_navigation);
+ 	});
+ 	if (_navigation) {
+ 		result->addAction(
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 67c4ad3f575b4f32c9bb54e9b963eece305dc009..fe765f23a85a9452380326381f3687a8c7a56c01 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3718,6 +3718,10 @@ void FillProfiles(SectionBuilder &builder) {
+ 		builder,
+ 		::Tele::kOptionChatJoinDate,
+ 		{ u"joined"_q, u"channel"_q, u"group"_q, u"date"_q });
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionMemberJoinDate,
++		{ u"joined"_q, u"member"_q, u"invited"_q, u"date"_q });
+ 	AddOptionToggle(
+ 		builder,
+ 		::Tele::kOptionMediaUploadDate,
+diff --git a/Telegram/SourceFiles/tele/tele_member_dates.cpp b/Telegram/SourceFiles/tele/tele_member_dates.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..6d741ac2cf2260642726cecda61071bbcfb9c401
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_member_dates.cpp
+@@ -0,0 +1,82 @@
++#include "tele/tele_member_dates.h"
++
++#include "api/api_chat_participants.h"
++#include "base/unixtime.h"
++#include "boxes/peers/prepare_short_info_box.h"
++#include "data/data_peer.h"
++#include "data/data_session.h"
++#include "data/data_user.h"
++#include "lang/lang_keys.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "ui/widgets/menu/menu_multiline_action.h"
++#include "ui/widgets/popup_menu.h"
++#include "window/window_session_controller.h"
++#include "styles/style_chat.h"
++
++namespace Tele {
++namespace {
++
++struct Joined {
++	TimeId date = 0;
++	UserId inviter = 0;
++};
++
++[[nodiscard]] base::flat_map<std::pair<PeerId, PeerId>, Joined> &Dates() {
++	static auto result = base::flat_map<std::pair<PeerId, PeerId>, Joined>();
++	return result;
++}
++
++} // namespace
++
++void RememberMemberDate(
++		not_null<PeerData*> chat,
++		const Api::ChatParticipant &data) {
++	const auto date = data.memberSince();
++	if (!MemberJoinDate() || (date <= 0)) {
++		return;
++	}
++	Dates()[{ chat->id, data.id() }] = Joined{
++		.date = date,
++		.inviter = data.by(),
++	};
++}
++
++void AddMemberDateAction(
++		not_null<Ui::PopupMenu*> menu,
++		not_null<PeerData*> chat,
++		not_null<PeerData*> participant,
++		Window::SessionNavigation *navigation) {
++	if (!MemberJoinDate()) {
++		return;
++	}
++	const auto i = Dates().find({ chat->id, participant->id });
++	if (i == end(Dates())) {
++		return;
++	}
++	const auto joined = i->second;
++	const auto inviter = joined.inviter
++		? chat->owner().userLoaded(joined.inviter)
++		: nullptr;
++	auto text = TextWithEntities::Simple(Tr(u"Joined: %1"_q).arg(
++		langDateTimeFull(base::unixtime::parse(joined.date))));
++	if (inviter) {
++		text.append('\n').append(Tr(u"Invited by %1"_q).arg(inviter->name()));
++	}
++	auto button = base::make_unique_q<Ui::Menu::MultilineAction>(
++		menu->menu(),
++		menu->st().menu,
++		st::historyHasCustomEmoji,
++		st::historyHasCustomEmojiPosition,
++		std::move(text));
++	if (inviter && navigation) {
++		button->setActionTriggered([=] {
++			navigation->parentController()->show(
++				PrepareShortInfoBox(inviter, navigation));
++		});
++	}
++	menu->addSeparator();
++	menu->addAction(std::move(button));
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_member_dates.h b/Telegram/SourceFiles/tele/tele_member_dates.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..4904bcaf3ca90eb65cff0f59c0a25916c0d6750b
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_member_dates.h
+@@ -0,0 +1,28 @@
++#pragma once
++
++class PeerData;
++
++namespace Api {
++class ChatParticipant;
++} // namespace Api
++
++namespace Ui {
++class PopupMenu;
++} // namespace Ui
++
++namespace Window {
++class SessionNavigation;
++} // namespace Window
++
++namespace Tele {
++
++void RememberMemberDate(
++	not_null<PeerData*> chat,
++	const Api::ChatParticipant &data);
++void AddMemberDateAction(
++	not_null<Ui::PopupMenu*> menu,
++	not_null<PeerData*> chat,
++	not_null<PeerData*> participant,
++	Window::SessionNavigation *navigation);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 3649be6ca99d491a40e58bc2f65b057f087f3cd2..19f2e22f164f68a763d02b8fd48d204ed5a0a738 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -111,6 +111,7 @@ const char kOptionStickerSetOwner[] = "tele-sticker-set-owner";
+ const char kOptionShowDc[] = "tele-show-dc";
+ const char kOptionAccountAge[] = "tele-account-age";
+ const char kOptionChatJoinDate[] = "tele-chat-join-date";
++const char kOptionMemberJoinDate[] = "tele-member-join-date";
+ const char kOptionMergeIdDc[] = "tele-merge-id-dc";
+ const char kOptionMediaUploadDate[] = "tele-media-upload-date";
+ const char kOptionMessageIdMenu[] = "tele-message-id-menu";
+@@ -911,6 +912,12 @@ base::options::toggle ChatJoinDateOption({
+ 	.description = "Chats you're not in show when they were created.",
+ });
+ 
++base::options::toggle MemberJoinDateOption({
++	.id = kOptionMemberJoinDate,
++	.name = "Show when members joined",
++	.description = "In a member's menu in the members list. Telegram only says who invited you.",
++});
++
+ base::options::toggle MergeIdDcOption({
+ 	.id = kOptionMergeIdDc,
+ 	.name = "ID and DC in one row",
+@@ -2748,6 +2755,10 @@ rpl::producer<bool> ChatJoinDateValue() {
+ 	});
+ }
+ 
++bool MemberJoinDate() {
++	return MemberJoinDateOption.value();
++}
++
+ rpl::producer<bool> MergeIdDcValue() {
+ 	return rpl::single(
+ 		rpl::empty
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index fba831a5885221927f716a1cb849f8cd9653a877..c5814b7c4bba2b56b87f8c346aa461a9eb2f6c98 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -106,6 +106,7 @@ extern const char kOptionStickerSetOwner[];
+ extern const char kOptionShowDc[];
+ extern const char kOptionAccountAge[];
+ extern const char kOptionChatJoinDate[];
++extern const char kOptionMemberJoinDate[];
+ extern const char kOptionMergeIdDc[];
+ extern const char kOptionMediaUploadDate[];
+ extern const char kOptionMessageIdMenu[];
+@@ -426,6 +427,7 @@ void SetMoneyHideBalances(bool hidden);
+ [[nodiscard]] rpl::producer<bool> ShowDcValue();
+ [[nodiscard]] rpl::producer<bool> AccountAgeValue();
+ [[nodiscard]] rpl::producer<bool> ChatJoinDateValue();
++[[nodiscard]] bool MemberJoinDate();
+ [[nodiscard]] rpl::producer<bool> MergeIdDcValue();
+ [[nodiscard]] bool MessageIdMenu();
+ [[nodiscard]] bool HideIgnored();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index e05998f90f5d81a522d506b6d8001afd89753654..0cbf75f5ef36425a30ab53f0d7db103e53553713 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -196,6 +196,7 @@ struct Spec {
+ 		Toggle(kOptionShowDc),
+ 		Toggle(kOptionAccountAge),
+ 		Toggle(kOptionChatJoinDate),
++		Toggle(kOptionMemberJoinDate),
+ 		Toggle(kOptionMergeIdDc),
+ 		Toggle(kOptionMediaUploadDate),
+ 		Toggle(kOptionMessageIdMenu),
