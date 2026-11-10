@@ -1,0 +1,259 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Wed, 11 Nov 2026 00:03:18 +0300
+Subject: [PATCH] feat: show account age in profiles
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  3 +
+ .../info/profile/info_profile_actions.cpp     |  5 ++
+ .../SourceFiles/settings/settings_tele.cpp    |  4 +
+ .../SourceFiles/tele/tele_account_age.cpp     | 79 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_account_age.h  | 10 +++
+ Telegram/SourceFiles/tele/tele_options.cpp    | 17 ++++
+ Telegram/SourceFiles/tele/tele_options.h      |  2 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |  1 +
+ 9 files changed, 123 insertions(+)
+ create mode 100644 Telegram/SourceFiles/tele/tele_account_age.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_account_age.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 5b6090e2c892572c420c98b682e78d14b9e490cd..ab7bb0425414187c3a5524f1fd80de303f8dec4e 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2759,6 +2759,8 @@ PRIVATE
+     tele/secret/secret_vault.h
+     tele/secret/secret_viewer.cpp
+     tele/secret/secret_viewer.h
++    tele/tele_account_age.cpp
++    tele/tele_account_age.h
+     tele/tele_account_badges.cpp
+     tele/tele_account_badges.h
+     tele/tele_app_icons.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 342f3c76d6f6fd4a0d8797531a357a2b93c74b4e..8f0da45956ed6fc95193611a3434a42c15069083 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -130,6 +130,9 @@
+   "Accept secret chat": "Принять секретный чат",
+   "Accept the invite in the chat menu.": "Прими приглашение в меню чата.",
+   "Account": "Аккаунт",
++  "Account created": "Аккаунт создан",
++  "Show account age": "Показывать возраст аккаунта",
++  "Estimated from the user ID, so it can be off by a few months.": "Оценка по ID пользователя, может ошибаться на несколько месяцев.",
+   "Accounts left out of the app's unread count.": "Непрочитанные сообщения этих аккаунтов не учитываются на значке приложения.",
+   "Accounts, sessions, drafts and cached tele server data are never exported.": "Аккаунты, сеансы, черновики и кеш данных сервера mad не экспортируются.",
+   "Act as you: %1.": "Действовать от твоего имени: %1.",
+diff --git a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
+index 2db4a115a752bc5d4baa1233e9f8557c1d2e53fe..07a32db29292d7698917f7b12776aa4088ab0171 100644
+--- a/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
++++ b/Telegram/SourceFiles/info/profile/info_profile_actions.cpp
+@@ -78,6 +78,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "settings/settings_common.h"
+ #include "support/support_helper.h"
+ #include "tele/scripting/tele_script_hooks.h"
++#include "tele/tele_account_age.h"
+ #include "tele/tele_birthdays.h"
+ #include "tele/tele_communities.h"
+ #include "tele/tele_local_names.h"
+@@ -1893,6 +1894,10 @@ Section DetailsFiller::makeInfo() {
+ 				QString()).text,
+ 			_peer,
+ 			controller);
++		addInfoOneLine(
++			Tele::Tr(u"Account created"_q),
++			Tele::AccountAgeTextValue(_peer),
++			QString());
+ 		Tele::Scripting::AddProfileRows(_peer, [&](
+ 				QString label,
+ 				rpl::producer<TextWithEntities> value,
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 8c9d59b39c95afeea69b93d7838087cff293fd99..307df617a6989772ed057904766c6293f26583d8 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3710,6 +3710,10 @@ void FillProfiles(SectionBuilder &builder) {
+ 		::Tele::kOptionShowDc,
+ 		::Info::Profile::kOptionShowPeerIdBelowAbout,
+ 	});
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionAccountAge,
++		{ u"registration"_q, u"created"_q, u"date"_q });
+ 	AddOptionToggle(
+ 		builder,
+ 		::Tele::kOptionMediaUploadDate,
+diff --git a/Telegram/SourceFiles/tele/tele_account_age.cpp b/Telegram/SourceFiles/tele/tele_account_age.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..cb40680c266bec40c852aa0285d237dfddeba4ab
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_account_age.cpp
+@@ -0,0 +1,79 @@
++#include "tele/tele_account_age.h"
++
++#include "data/data_user.h"
++#include "lang/lang_keys.h"
++#include "tele/tele_options.h"
++
++namespace Tele {
++namespace {
++
++struct Anchor {
++	uint64 id = 0;
++	int months = 0;
++};
++
++[[nodiscard]] constexpr int Months(int year, int month) {
++	return year * 12 + (month - 1);
++}
++
++constexpr auto kAnchors = std::array{
++	Anchor{ 0ULL, Months(2013, 8) },
++	Anchor{ 10'000'000ULL, Months(2013, 12) },
++	Anchor{ 50'000'000ULL, Months(2014, 8) },
++	Anchor{ 100'000'000ULL, Months(2015, 3) },
++	Anchor{ 150'000'000ULL, Months(2016, 1) },
++	Anchor{ 200'000'000ULL, Months(2016, 5) },
++	Anchor{ 300'000'000ULL, Months(2016, 12) },
++	Anchor{ 400'000'000ULL, Months(2017, 7) },
++	Anchor{ 600'000'000ULL, Months(2018, 6) },
++	Anchor{ 800'000'000ULL, Months(2019, 1) },
++	Anchor{ 950'000'000ULL, Months(2019, 8) },
++	Anchor{ 1'100'000'000ULL, Months(2020, 3) },
++	Anchor{ 1'400'000'000ULL, Months(2020, 10) },
++	Anchor{ 1'700'000'000ULL, Months(2021, 4) },
++	Anchor{ 2'000'000'000ULL, Months(2021, 9) },
++	Anchor{ 2'147'483'647ULL, Months(2022, 1) },
++	Anchor{ 5'000'000'000ULL, Months(2022, 2) },
++	Anchor{ 6'000'000'000ULL, Months(2023, 2) },
++	Anchor{ 7'000'000'000ULL, Months(2024, 2) },
++	Anchor{ 8'000'000'000ULL, Months(2025, 3) },
++};
++
++[[nodiscard]] int Interpolate(const Anchor &from, const Anchor &to, uint64 id) {
++	const auto progress = double(id - from.id) / double(to.id - from.id);
++	return from.months
++		+ int(std::round(progress * (to.months - from.months)));
++}
++
++[[nodiscard]] int EstimateMonths(uint64 id) {
++	for (auto i = 1; i != int(kAnchors.size()); ++i) {
++		if (id <= kAnchors[i].id) {
++			return Interpolate(kAnchors[i - 1], kAnchors[i], id);
++		}
++	}
++	const auto now = QDate::currentDate();
++	return std::min(
++		Interpolate(kAnchors[kAnchors.size() - 2], kAnchors.back(), id),
++		Months(now.year(), now.month()));
++}
++
++} // namespace
++
++rpl::producer<TextWithEntities> AccountAgeTextValue(
++		not_null<PeerData*> peer) {
++	const auto user = peer->asUser();
++	if (!user || user->isServiceUser()) {
++		return rpl::single(TextWithEntities());
++	}
++	const auto id = peerToUser(user->id).bare;
++	return AccountAgeValue() | rpl::map([=](bool shown) {
++		if (!shown) {
++			return TextWithEntities();
++		}
++		const auto months = EstimateMonths(id);
++		return TextWithEntities::Simple(u"≈ "_q
++			+ langMonthOfYearFull(months % 12 + 1, months / 12));
++	});
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_account_age.h b/Telegram/SourceFiles/tele/tele_account_age.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..722d50f1c962b9a8d2cb82790c947eb44a91f6d8
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_account_age.h
+@@ -0,0 +1,10 @@
++#pragma once
++
++class PeerData;
++
++namespace Tele {
++
++[[nodiscard]] rpl::producer<TextWithEntities> AccountAgeTextValue(
++	not_null<PeerData*> peer);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 32be71cacd1738bcae2d59c6f47a21cc4e4b8793..2c4a18def67c6eb16eda30570c2b7b439b2082e7 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -109,6 +109,7 @@ const char kOptionPeerIdsWithoutSpaces[] = "tele-peer-ids-without-spaces";
+ const char kOptionBotApiPeerIds[] = "tele-bot-api-peer-ids";
+ const char kOptionStickerSetOwner[] = "tele-sticker-set-owner";
+ const char kOptionShowDc[] = "tele-show-dc";
++const char kOptionAccountAge[] = "tele-account-age";
+ const char kOptionMergeIdDc[] = "tele-merge-id-dc";
+ const char kOptionMediaUploadDate[] = "tele-media-upload-date";
+ const char kOptionMessageIdMenu[] = "tele-message-id-menu";
+@@ -897,6 +898,12 @@ base::options::toggle ShowDcOption({
+ 	.description = "From the profile photo in profiles, from the file in the media viewer.",
+ });
+ 
++base::options::toggle AccountAgeOption({
++	.id = kOptionAccountAge,
++	.name = "Show account age",
++	.description = "Estimated from the user ID, so it can be off by a few months.",
++});
++
+ base::options::toggle MergeIdDcOption({
+ 	.id = kOptionMergeIdDc,
+ 	.name = "ID and DC in one row",
+@@ -2714,6 +2721,16 @@ rpl::producer<bool> ShowDcValue() {
+ 	});
+ }
+ 
++rpl::producer<bool> AccountAgeValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		AccountAgeOption.changes()
++	) | rpl::map([] {
++		return AccountAgeOption.value();
++	});
++}
++
+ rpl::producer<bool> MergeIdDcValue() {
+ 	return rpl::single(
+ 		rpl::empty
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 3aa350b5c92fa99661612ab2ee229fdbf05a2b9c..ba3257f302bf77c448d509d1d4d093633d3c98e4 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -104,6 +104,7 @@ extern const char kOptionPeerIdsWithoutSpaces[];
+ extern const char kOptionBotApiPeerIds[];
+ extern const char kOptionStickerSetOwner[];
+ extern const char kOptionShowDc[];
++extern const char kOptionAccountAge[];
+ extern const char kOptionMergeIdDc[];
+ extern const char kOptionMediaUploadDate[];
+ extern const char kOptionMessageIdMenu[];
+@@ -422,6 +423,7 @@ void SetMoneyHideBalances(bool hidden);
+ [[nodiscard]] bool ShowDc();
+ [[nodiscard]] bool MediaUploadDate();
+ [[nodiscard]] rpl::producer<bool> ShowDcValue();
++[[nodiscard]] rpl::producer<bool> AccountAgeValue();
+ [[nodiscard]] rpl::producer<bool> MergeIdDcValue();
+ [[nodiscard]] bool MessageIdMenu();
+ [[nodiscard]] bool HideIgnored();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index 9ed2237fbf08df2eaf1e2ca77253ba6f0dd8bf8a..b5d0b9c93ecb1a5d1239ad803e834aef3d2ac0fd 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -194,6 +194,7 @@ struct Spec {
+ 		Toggle(kOptionBotApiPeerIds),
+ 		Toggle(kOptionStickerSetOwner),
+ 		Toggle(kOptionShowDc),
++		Toggle(kOptionAccountAge),
+ 		Toggle(kOptionMergeIdDc),
+ 		Toggle(kOptionMediaUploadDate),
+ 		Toggle(kOptionMessageIdMenu),
