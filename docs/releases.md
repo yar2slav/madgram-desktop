@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 386 patches, newest release first.
+all 387 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -50,6 +50,7 @@ all 386 patches, newest release first.
 | [375](../patches/tdesktop/0375-feat-separate-music-video-voice-and-round-video-volu.patch) | music, videos, voice messages and round videos have separate saved volumes and mute levels. interface → playback → volumes has four sliders; the player, viewer, picture-in-picture and system controls change only their current media's volume | tele → interface |
 | [376](../patches/tdesktop/0376-fix-put-off-first-in-the-auto-delete-picker.patch) | the per-chat auto-delete picker starts with off, selected when auto-delete is disabled, instead of a separate disable button | always on |
 | [377](../patches/tdesktop/0377-feat-stop-selected-bots-without-deleting-their-chats.patch) | stop selected bots without deleting their chats, with a confirmation showing how many. people, groups and already stopped bots are skipped; narrow chat columns keep the action in an overflow menu | with 164 |
+| [378](../patches/tdesktop/0378-fix-keep-pending-sends-stable-on-confirmation.patch) | pending messages keep their place as more messages are sent and confirmed, including in topics, replies, Saved Messages and channel DMs. genuinely late sends still follow Telegram's server order, with text sending animations on or off | always on |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 

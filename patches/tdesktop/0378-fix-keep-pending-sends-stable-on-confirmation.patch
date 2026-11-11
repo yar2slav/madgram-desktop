@@ -1,0 +1,669 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:12:16 +0300
+Subject: [PATCH] fix: keep pending sends stable on confirmation
+
+---
+ .../data/data_history_messages.cpp            |  58 +++--
+ .../SourceFiles/data/data_replies_list.cpp    |  14 ++
+ .../SourceFiles/data/data_saved_sublist.cpp   |  16 +-
+ .../history/view/history_view_list_widget.cpp |  27 +++
+ .../history/view/history_view_list_widget.h   |   7 +
+ Telegram/SourceFiles/tele/tele_send_order.cpp | 222 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_send_order.h   |  35 +++
+ 7 files changed, 347 insertions(+), 32 deletions(-)
+
+diff --git a/Telegram/SourceFiles/data/data_history_messages.cpp b/Telegram/SourceFiles/data/data_history_messages.cpp
+index ebfe069e3de7128b3086285773abca1f401b9eef..626360f91bc58731c712c69b68c4040fcd14195f 100644
+--- a/Telegram/SourceFiles/data/data_history_messages.cpp
++++ b/Telegram/SourceFiles/data/data_history_messages.cpp
+@@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "history/history.h"
+ #include "history/history_item.h"
+ #include "main/main_session.h"
++#include "tele/tele_send_order.h"
+ 
+ namespace Data {
+ namespace {
+@@ -26,7 +27,6 @@ struct HistoryMessagesViewerState {
+ 	MessagesSlice slice;
+ 	MessagePosition around;
+ 	MsgId queryAroundId = 0;
+-	base::flat_set<FullMsgId> confirmed;
+ 	base::has_weak_ptr guard;
+ 	bool scheduled = false;
+ };
+@@ -145,20 +145,6 @@ void RecomputeHistoryNearestToAround(
+ 	slice->nearestToAround = nearest.value_or(last);
+ }
+ 
+-void RewriteHistorySliceIds(
+-		not_null<MessagesSlice*> slice,
+-		FullMsgId oldId,
+-		FullMsgId newId) {
+-	if (slice->nearestToAround == oldId) {
+-		slice->nearestToAround = newId;
+-	}
+-	for (auto &fullId : slice->ids) {
+-		if (fullId == oldId) {
+-			fullId = newId;
+-		}
+-	}
+-}
+-
+ // A sent message gets its server id before the update with the message
+ // puts it to the index (it may wait for a pts gap), keep it till then.
+ [[nodiscard]] std::vector<not_null<HistoryItem*>> ConfirmedHistoryMessages(
+@@ -168,12 +154,12 @@ void RewriteHistorySliceIds(
+ 	auto result = std::vector<not_null<HistoryItem*>>();
+ 	for (auto i = begin(*confirmed); i != end(*confirmed);) {
+ 		const auto item = history->owner().message(*i);
+-		if (!item
+-			|| (slice.skippedAfter != 0)
+-			|| ranges::contains(slice.ids, *i)) {
++		if (!item || item->isScheduled() || ranges::contains(slice.ids, *i)) {
+ 			i = confirmed->erase(i);
+ 		} else {
+-			result.push_back(item);
++			if (slice.skippedAfter == 0) {
++				result.push_back(item);
++			}
+ 			++i;
+ 		}
+ 	}
+@@ -182,19 +168,20 @@ void RewriteHistorySliceIds(
+ 
+ void AppendHistoryClientSideMessages(
+ 		not_null<History*> history,
+-		MessagePosition around,
+ 		not_null<MessagesSlice*> slice,
+ 		const std::vector<not_null<HistoryItem*>> &confirmed) {
+ 	auto messages = HistoryClientSideMessages(history);
+ 	messages.insert(end(messages), begin(confirmed), end(confirmed));
+ 	if (messages.empty()) {
+-		RecomputeHistoryNearestToAround(history, slice, around);
+ 		return;
+ 	} else if (slice->ids.empty()) {
+ 		if (slice->skippedBefore != 0 || slice->skippedAfter != 0) {
+ 			return;
+ 		}
+ 	}
++	const auto firstServer = slice->ids.empty()
++		? FullMsgId()
++		: slice->ids.front();
+ 	const auto &owner = history->owner();
+ 	auto dates = std::vector<TimeId>();
+ 	dates.reserve(slice->ids.size());
+@@ -212,10 +199,17 @@ void AppendHistoryClientSideMessages(
+ 			continue;
+ 		}
+ 		const auto date = item->date();
++		const auto server = IsServerMsgId(item->id);
++		if (server
++			&& slice->skippedBefore != 0
++			&& firstServer.peer == item->history()->peer->id
++			&& item->id < firstServer.msg) {
++			continue;
++		}
+ 		if (dates.empty()) {
+ 			dates.push_back(date);
+ 			slice->ids.push_back(item->fullId());
+-		} else if (date < dates.front()) {
++		} else if (!server && date < dates.front()) {
+ 			if (slice->skippedBefore != 0) {
+ 				if (slice->skippedBefore) {
+ 					++*slice->skippedBefore;
+@@ -228,7 +222,13 @@ void AppendHistoryClientSideMessages(
+ 			auto to = dates.size();
+ 			for (; to != 0; --to) {
+ 				const auto checkId = slice->ids[to - 1].msg;
+-				if (dates[to - 1] > date) {
++				if (server) {
++					if (IsServerMsgId(checkId)
++						&& (slice->ids[to - 1].peer != item->history()->peer->id
++							|| checkId < item->id)) {
++						break;
++					}
++				} else if (dates[to - 1] > date) {
+ 					continue;
+ 				} else if (dates[to - 1] < date
+ 					|| IsServerMsgId(checkId)
+@@ -245,7 +245,6 @@ void AppendHistoryClientSideMessages(
+ 			slice->ids.insert(slice->ids.begin() + to, item->fullId());
+ 		}
+ 	}
+-	RecomputeHistoryNearestToAround(history, slice, around);
+ }
+ 
+ [[nodiscard]] HistoryMessagesAround NormalizeHistoryMessagesAround(
+@@ -472,10 +471,10 @@ rpl::producer<MessagesSlice> HistoryMessagesViewer(
+ 	const auto around = NormalizeHistoryMessagesAround(history, aroundId);
+ 	return [=](auto consumer) {
+ 		auto lifetime = rpl::lifetime();
++		const auto confirmations = Tele::UnindexedSentMessageIds(history);
+ 		const auto viewer = lifetime.make_state<HistoryMessagesViewerState>();
+ 		const auto push = [=] {
+ 			if (!viewer->scheduled || !viewer->sparse) {
+-				viewer->scheduled = false;
+ 				return;
+ 			}
+ 			viewer->scheduled = false;
+@@ -484,13 +483,13 @@ rpl::producer<MessagesSlice> HistoryMessagesViewer(
+ 				viewer->queryAroundId);
+ 			const auto confirmed = ConfirmedHistoryMessages(
+ 				history,
+-				&viewer->confirmed,
++				confirmations.get(),
+ 				viewer->slice);
+ 			AppendHistoryClientSideMessages(
+ 				history,
+-				viewer->around,
+ 				&viewer->slice,
+ 				confirmed);
++			RecomputeHistoryNearestToAround(history, &viewer->slice, viewer->around);
+ 			const auto unresolvedCountOnly = viewer->slice.ids.empty()
+ 				&& !viewer->slice.skippedBefore
+ 				&& !viewer->slice.skippedAfter
+@@ -533,13 +532,10 @@ rpl::producer<MessagesSlice> HistoryMessagesViewer(
+ 			return (event.newId.peer == history->peer->id);
+ 		}) | rpl::on_next([=](const Session::IdChange &event) {
+ 			const auto oldId = FullMsgId(event.newId.peer, event.oldId);
+-			if (IsClientMsgId(event.oldId) && IsServerMsgId(event.newId.msg)) {
+-				viewer->confirmed.emplace(event.newId);
+-			}
+ 			if (viewer->around.fullId == oldId) {
+ 				viewer->around.fullId = event.newId;
+ 			}
+-			RewriteHistorySliceIds(&viewer->slice, oldId, event.newId);
++			Tele::RewriteMessageIds(&viewer->slice, oldId, event.newId);
+ 		}, lifetime);
+ 
+ 		return lifetime;
+diff --git a/Telegram/SourceFiles/data/data_replies_list.cpp b/Telegram/SourceFiles/data/data_replies_list.cpp
+index fd01b2a23767d3834065c0523df44366a992fe0b..06ae01e66acf0a3fd32f795d52e1f4a6d76490b3 100644
+--- a/Telegram/SourceFiles/data/data_replies_list.cpp
++++ b/Telegram/SourceFiles/data/data_replies_list.cpp
+@@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "apiwrap.h"
+ #include "tele/tele_ghost.h"
+ #include "tele/tele_kept_chats.h"
++#include "tele/tele_send_order.h"
+ 
+ namespace Data {
+ namespace {
+@@ -225,6 +226,19 @@ rpl::producer<MessagesSlice> RepliesList::source(
+ 		_instantChanges.events(
+ 		) | rpl::on_next(pushInstant, lifetime);
+ 
++		_history->owner().itemIdChanged(
++		) | rpl::filter([=](const Session::IdChange &event) {
++			return event.newId.peer == _history->peer->id;
++		}) | rpl::on_next([=](const Session::IdChange &event) {
++			Tele::RewriteMessageIds(
++				&viewer->slice,
++				FullMsgId(event.newId.peer, event.oldId),
++				event.newId);
++			if (viewer->around == event.oldId) {
++				viewer->around = event.newId.msg;
++			}
++		}, lifetime);
++
+ 		pushInstant();
+ 		return lifetime;
+ 	};
+diff --git a/Telegram/SourceFiles/data/data_saved_sublist.cpp b/Telegram/SourceFiles/data/data_saved_sublist.cpp
+index 37e534df12a57865b42d45e19c58a3c42b1aeec8..050b7522fff4a2708767f855f0f69bfe4ad3f376 100644
+--- a/Telegram/SourceFiles/data/data_saved_sublist.cpp
++++ b/Telegram/SourceFiles/data/data_saved_sublist.cpp
+@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "history/history_unread_things.h"
+ #include "main/main_session.h"
+ #include "tele/tele_ghost.h"
++#include "tele/tele_send_order.h"
+ #include "window/notifications_manager.h"
+ 
+ namespace Data {
+@@ -136,6 +137,7 @@ rpl::producer<MessagesSlice> SavedSublist::source(
+ 		int limitAfter) {
+ 	const auto around = aroundId.fullId.msg;
+ 	return [=](auto consumer) {
++		const auto history = owningHistory();
+ 		auto lifetime = rpl::lifetime();
+ 		const auto viewer = lifetime.make_state<Viewer>();
+ 		const auto push = [=] {
+@@ -161,7 +163,6 @@ rpl::producer<MessagesSlice> SavedSublist::source(
+ 		viewer->limitBefore = limitBefore;
+ 		viewer->limitAfter = limitAfter;
+ 
+-		const auto history = owningHistory();
+ 		history->session().changes().historyUpdates(
+ 			history,
+ 			HistoryUpdate::Flag::ClientSideMessages
+@@ -173,6 +174,19 @@ rpl::producer<MessagesSlice> SavedSublist::source(
+ 		_instantChanges.events(
+ 		) | rpl::on_next(pushInstant, lifetime);
+ 
++		history->owner().itemIdChanged(
++		) | rpl::filter([=](const Session::IdChange &event) {
++			return event.newId.peer == history->peer->id;
++		}) | rpl::on_next([=](const Session::IdChange &event) {
++			Tele::RewriteMessageIds(
++				&viewer->slice,
++				FullMsgId(event.newId.peer, event.oldId),
++				event.newId);
++			if (viewer->around == event.oldId) {
++				viewer->around = event.newId.msg;
++			}
++		}, lifetime);
++
+ 		pushInstant();
+ 		return lifetime;
+ 	};
+diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
+index 53327a29ea62889140bd6ac5c41c0c61a0ccd857..1e9a7880e051ac6d9af4ea003ec474c8a2bc2233 100644
+--- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
+@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_rmb_beside_bubble.h"
+ #include "tele/tele_select_many.h"
+ #include "tele/tele_select_service.h"
++#include "tele/tele_send_order.h"
+ #include "styles/style_chat.h"
+ #include "styles/style_window.h" // columnMaximalWidthLeft
+ 
+@@ -619,6 +620,7 @@ ListWidget::ListWidget(
+ 		[=](const QCursor &cursor) { setCursor(cursor); },
+ 		[=] { mouseActionUpdate(QCursor::pos()); setCursor(_cursor); },
+ 		[=] { return window()->isActiveWindow(); }) {
++	refreshPendingOrder();
+ 	setAttribute(Qt::WA_AcceptTouchEvents);
+ 	setMouseTracking(true);
+ 	setAccessibleName(tr::lng_sr_message_list(tr::now));
+@@ -828,8 +830,25 @@ not_null<ListDelegate*> ListWidget::delegate() const {
+ 	return _delegate;
+ }
+ 
++void ListWidget::refreshPendingOrder() {
++	const auto editable = (_context == Context::History)
++		|| (_context == Context::Replies)
++		|| (_context == Context::SavedSublist)
++		|| (_context == Context::Monoforum);
++	const auto history = editable ? _delegate->listTranslateHistory() : nullptr;
++	if (!history) {
++		_pendingOrder = nullptr;
++	} else if (!_pendingOrder || _pendingOrder->history() != history) {
++		_pendingOrder = std::make_unique<Tele::PendingMessageOrder>(
++			history,
++			&_slice,
++			_context == Context::History);
++	}
++}
++
+ void ListWidget::refreshViewer() {
+ 	_viewerLifetime.destroy();
++	refreshPendingOrder();
+ 	_refreshingViewer = true;
+ 	const auto hold = _firstContentShown
+ 		? nullptr
+@@ -855,6 +874,14 @@ void ListWidget::refreshViewer() {
+ 
+ void ListWidget::applyViewerSlice(Data::MessagesSlice &&slice) {
+ 	_refreshingViewer = false;
++	if (_pendingOrder) {
++		_pendingOrder->apply(&slice);
++		if (!slice.ids.empty()
++			&& ((_aroundPosition == Data::MaxMessagePosition)
++				|| (_aroundPosition.fullId.msg == ShowAtTheEndMsgId))) {
++			slice.nearestToAround = slice.ids.back();
++		}
++	}
+ 	std::swap(_slice, slice);
+ 	refreshRows(slice);
+ }
+diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.h b/Telegram/SourceFiles/history/view/history_view_list_widget.h
+index 0c627e3a5e547f17e9697001e99e026cd09dc2d5..d5bb023f59f8fcc71c4861bd10317c71f5d163ea 100644
+--- a/Telegram/SourceFiles/history/view/history_view_list_widget.h
++++ b/Telegram/SourceFiles/history/view/history_view_list_widget.h
+@@ -75,6 +75,10 @@ class Manager;
+ struct ButtonParameters;
+ } // namespace HistoryView::ReplyButton
+ 
++namespace Tele {
++class PendingMessageOrder;
++} // namespace Tele
++
+ namespace Tgw {
+ class ListSelection;
+ class ListTouch;
+@@ -635,6 +639,8 @@ protected:
+ 	int resizeGetHeight(int newWidth) override;
+ 
+ private:
++	void refreshPendingOrder();
++
+ 	friend class Tgw::ListScroll;
+ 	friend class Tgw::ListSelection;
+ 	friend class Tgw::ListTouch;
+@@ -992,6 +998,7 @@ private:
+ 	int _aroundIndex = -1;
+ 	int _idsLimit = kMinimalIdsLimit;
+ 	Data::MessagesSlice _slice;
++	std::unique_ptr<Tele::PendingMessageOrder> _pendingOrder;
+ 	bool _itemsKnownTillEnd = false;
+ 
+ 	std::vector<not_null<Element*>> _items;
+diff --git a/Telegram/SourceFiles/tele/tele_send_order.cpp b/Telegram/SourceFiles/tele/tele_send_order.cpp
+index 682079a2a6267e54894ca656829dd907f299b53d..0c87f4491afdd9bb9b308ae11150f8d60b058224 100644
+--- a/Telegram/SourceFiles/tele/tele_send_order.cpp
++++ b/Telegram/SourceFiles/tele/tele_send_order.cpp
+@@ -1,10 +1,12 @@
+ #include "tele/tele_send_order.h"
+ 
++#include "base/flat_map.h"
+ #include "data/data_changes.h"
+ #include "data/data_document.h"
+ #include "data/data_forum_topic.h"
+ #include "data/data_groups.h"
+ #include "data/data_media_types.h"
++#include "data/data_messages.h"
+ #include "data/data_peer.h"
+ #include "data/data_saved_sublist.h"
+ #include "data/data_session.h"
+@@ -20,13 +22,41 @@
+ #include "ui/widgets/popup_menu.h"
+ #include "styles/style_menu_icons.h"
+ 
++#include <QtCore/QVarLengthArray>
+ #include <QtWidgets/QApplication>
++#include <algorithm>
++#include <array>
++#include <span>
+ 
+ namespace Tele {
+ namespace {
+ 
+ using Element = HistoryView::Element;
+ 
++auto &ConfirmationRegistry() {
++	static auto result = base::flat_map<
++		History*,
++		std::weak_ptr<base::flat_set<FullMsgId>>>();
++	return result;
++}
++
++struct HistoryConfirmations {
++	explicit HistoryConfirmations(not_null<History*> history) : history(history) {
++	}
++
++	~HistoryConfirmations() {
++		auto &registry = ConfirmationRegistry();
++		const auto i = registry.find(history.get());
++		if (i != registry.end() && i->second.expired()) {
++			registry.erase(i);
++		}
++	}
++
++	const not_null<History*> history;
++	base::flat_set<FullMsgId> ids;
++	rpl::lifetime lifetime;
++};
++
+ [[nodiscard]] std::vector<not_null<HistoryItem*>> CollectMoving(
+ 		not_null<HistoryItem*> item) {
+ 	const auto group = item->history()->owner().groups().find(item);
+@@ -441,6 +471,198 @@ void SendHeldNow(not_null<Main::Session*> session, FullMsgId id) {
+ 
+ } // namespace
+ 
++std::shared_ptr<base::flat_set<FullMsgId>> UnindexedSentMessageIds(
++		not_null<History*> history) {
++	auto &weak = ConfirmationRegistry()[history.get()];
++	if (auto existing = weak.lock()) {
++		return existing;
++	}
++	const auto state = std::make_shared<HistoryConfirmations>(history);
++	auto result = std::shared_ptr<base::flat_set<FullMsgId>>(state, &state->ids);
++	weak = result;
++	const auto raw = state.get();
++	history->owner().itemIdChanged(
++	) | rpl::on_next([history, raw](const Data::Session::IdChange &event) {
++		if (event.newId.peer == history->peer->id
++			&& IsClientMsgId(event.oldId)
++			&& IsServerMsgId(event.newId.msg)) {
++			raw->ids.emplace(event.newId);
++		}
++	}, state->lifetime);
++	history->owner().itemRemoved(
++	) | rpl::on_next([raw](not_null<const HistoryItem*> item) {
++		const auto i = raw->ids.find(item->fullId());
++		if (i != raw->ids.end()) {
++			raw->ids.erase(i);
++		}
++	}, state->lifetime);
++	return result;
++}
++
++void RewriteMessageIds(
++		not_null<Data::MessagesSlice*> slice,
++		FullMsgId oldId,
++		FullMsgId newId) {
++	if (slice->nearestToAround == oldId) {
++		slice->nearestToAround = newId;
++	}
++	for (auto &fullId : slice->ids) {
++		if (fullId == oldId) {
++			fullId = newId;
++		}
++	}
++}
++
++PendingMessageOrder::PendingMessageOrder(
++	not_null<History*> history,
++	not_null<Data::MessagesSlice*> previous,
++	bool mainHistory)
++: _history(history)
++, _previous(previous)
++, _knownLocalId(MsgId(StartClientMsgId.bare - 1))
++, _confirmations(mainHistory ? UnindexedSentMessageIds(history) : nullptr) {
++	observeLocalIds(false);
++	_history->session().data().itemIdChanged(
++	) | rpl::on_next([=](const Data::Session::IdChange &change) {
++		if (change.newId.peer == _history->peer->id) {
++			const auto unseen = _unseenLocalIds.find(change.oldId);
++			if (unseen != _unseenLocalIds.end()) {
++				_unseenLocalIds.erase(unseen);
++			}
++			RewriteMessageIds(
++				_previous,
++				FullMsgId(change.newId.peer, change.oldId),
++				change.newId);
++		}
++	}, _lifetime);
++	_history->owner().itemRemoved(
++	) | rpl::on_next([=](not_null<const HistoryItem*> item) {
++		if (item->history() == _history) {
++			const auto unseen = _unseenLocalIds.find(item->id);
++			if (unseen != _unseenLocalIds.end()) {
++				_unseenLocalIds.erase(unseen);
++			}
++		}
++	}, _lifetime);
++}
++
++void PendingMessageOrder::observeLocalIds(bool rememberNew) {
++	const auto known = _knownLocalId;
++	for (const auto item : _history->clientSideMessages()) {
++		if (IsClientMsgId(item->id)) {
++			if (rememberNew && item->id > known) {
++				_unseenLocalIds.emplace(item->id);
++			}
++			accumulate_max(_knownLocalId, item->id);
++		}
++	}
++}
++
++// Keep local messages between old neighbours where confirmed order permits it.
++// A genuinely late send can reverse those neighbours; predecessors win then.
++void PendingMessageOrder::apply(not_null<Data::MessagesSlice*> slice) {
++	const auto &previous = _previous->ids;
++	observeLocalIds(true);
++	if (&previous == &slice->ids || previous == slice->ids) {
++		return;
++	}
++	auto fresh = QVarLengthArray<FullMsgId, 16>();
++	for (const auto id : slice->ids) {
++		const auto unseen = _unseenLocalIds.find(id.msg);
++		if (unseen == _unseenLocalIds.end()) {
++			continue;
++		}
++		_unseenLocalIds.erase(unseen);
++		const auto item = _history->owner().message(id);
++		if (item && item->isSending()) {
++			fresh.push_back(id);
++		}
++	}
++	std::sort(fresh.begin(), fresh.end());
++	const auto parts = std::array{
++		std::span<const FullMsgId>(previous.data(), previous.size()),
++		std::span<const FullMsgId>(fresh.data(), fresh.size()),
++	};
++	const auto pending = ranges::count_if(previous, [](FullMsgId id) {
++		return IsClientMsgId(id.msg);
++	}) + fresh.size();
++	if (!pending) {
++		return;
++	}
++	auto &ids = slice->ids;
++	auto positions = base::flat_map<FullMsgId, int>();
++	positions.reserve(ids.size());
++	for (auto i = 0; i != ids.size(); ++i) {
++		positions.emplace(ids[i], i);
++	}
++	auto following = positions.end();
++	auto bounds = QVarLengthArray<FullMsgId, 16>();
++	bounds.reserve(pending);
++	for (const auto part : parts | ranges::views::reverse) {
++		for (const auto &id : part | ranges::views::reverse) {
++			const auto i = positions.find(id);
++			if (i == positions.end()) {
++				continue;
++			}
++			if (IsClientMsgId(id.msg)) {
++				bounds.push_back((following == positions.end())
++					? FullMsgId()
++					: following->first);
++			}
++			if (following == positions.end() || i->second < following->second) {
++				following = i;
++			}
++		}
++	}
++	auto preceding = positions.end();
++	if (!fresh.empty() && ranges::none_of(previous, [&](FullMsgId id) {
++			return positions.find(id) != positions.end();
++		})) {
++		// The first loaded slice, or a disjoint window, has no old anchors.
++		for (auto i = ids.rbegin(); i != ids.rend(); ++i) {
++			if (!std::binary_search(fresh.begin(), fresh.end(), *i)) {
++				preceding = positions.find(*i);
++				break;
++			}
++		}
++	}
++	for (const auto part : parts) {
++		for (const auto &id : part) {
++			const auto i = positions.find(id);
++			if (i == positions.end()) {
++				continue;
++			}
++			if (IsClientMsgId(id.msg)) {
++				const auto next = positions.find(bounds.back());
++				bounds.pop_back();
++				const auto from = i->second;
++				const auto lower = (preceding == positions.end())
++					? -1
++					: preceding->second;
++				const auto upper = (next == positions.end())
++					? int(ids.size())
++					: next->second;
++				const auto to = (from < lower)
++					? lower
++					: (from > upper && lower < upper)
++					? upper
++					: from;
++				if (from < to) {
++					std::rotate(begin(ids) + from, begin(ids) + from + 1, begin(ids) + to + 1);
++				} else if (from > to) {
++					std::rotate(begin(ids) + to, begin(ids) + from, begin(ids) + from + 1);
++				}
++				for (auto j = std::min(from, to); j <= std::max(from, to); ++j) {
++					positions.find(ids[j])->second = j;
++				}
++			}
++			if (preceding == positions.end() || i->second > preceding->second) {
++				preceding = i;
++			}
++		}
++	}
++}
++
+ void MoveSentToBottom(not_null<HistoryItem*> item) {
+ 	if (!SentToBottom() || !item->mainView()) {
+ 		return;
+diff --git a/Telegram/SourceFiles/tele/tele_send_order.h b/Telegram/SourceFiles/tele/tele_send_order.h
+index 1cbb4fdf5b367776d4c5d1cd37fd61762e5374ce..46699b940596fe27facdcd51774fa1ba2fcef06b 100644
+--- a/Telegram/SourceFiles/tele/tele_send_order.h
++++ b/Telegram/SourceFiles/tele/tele_send_order.h
+@@ -1,10 +1,16 @@
+ #pragma once
+ 
+ #include "data/data_histories.h"
++#include "base/flat_set.h"
++#include <memory>
+ 
+ class History;
+ class HistoryItem;
+ 
++namespace Data {
++struct MessagesSlice;
++} // namespace Data
++
+ namespace Main {
+ class Session;
+ } // namespace Main
+@@ -15,6 +21,35 @@ class PopupMenu;
+ 
+ namespace Tele {
+ 
++void RewriteMessageIds(
++	not_null<Data::MessagesSlice*> slice,
++	FullMsgId oldId,
++	FullMsgId newId);
++
++[[nodiscard]] std::shared_ptr<base::flat_set<FullMsgId>> UnindexedSentMessageIds(
++	not_null<History*> history);
++
++class PendingMessageOrder final {
++public:
++	PendingMessageOrder(
++		not_null<History*> history,
++		not_null<Data::MessagesSlice*> previous,
++		bool mainHistory);
++
++	[[nodiscard]] History *history() const { return _history; }
++	void apply(not_null<Data::MessagesSlice*> slice);
++
++private:
++	void observeLocalIds(bool rememberNew);
++
++	const not_null<History*> _history;
++	const not_null<Data::MessagesSlice*> _previous;
++	MsgId _knownLocalId;
++	base::flat_set<MsgId> _unseenLocalIds;
++	std::shared_ptr<base::flat_set<FullMsgId>> _confirmations;
++	rpl::lifetime _lifetime;
++};
++
+ void MoveSentToBottom(not_null<HistoryItem*> item);
+ void ApplySentDate(
+ 	not_null<HistoryItem*> item,
