@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Wed, 11 Nov 2026 20:36:48 +0300
+Subject: [PATCH] fix: go offline right after marking messages as read in ghost
+ mode
+
+---
+ Telegram/SourceFiles/tele/tele_ghost.cpp | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/Telegram/SourceFiles/tele/tele_ghost.cpp b/Telegram/SourceFiles/tele/tele_ghost.cpp
+index 77bd2b0e125d9527a1f42755efc8b9a1a2b680ad..57fe4f73a46a93c7161a578b808e42ee1333c26a 100644
+--- a/Telegram/SourceFiles/tele/tele_ghost.cpp
++++ b/Telegram/SourceFiles/tele/tele_ghost.cpp
+@@ -184,30 +184,38 @@ void SendRead(
+ 		return;
+ 	}
+ 	const auto peer = history->peer;
+-	auto &api = peer->session().api();
++	const auto session = &peer->session();
++	auto &api = session->api();
+ 	if (rootId) {
+ 		api.request(MTPmessages_ReadDiscussion(
+ 			peer->input(),
+ 			MTP_int(rootId),
+ 			MTP_int(tillId)
+-		)).send();
++		)).done([=] {
++			OfflineAfterSend(session);
++		}).send();
+ 	} else if (sublistPeer) {
+ 		api.request(MTPmessages_ReadSavedHistory(
+ 			peer->input(),
+ 			sublistPeer->input(),
+ 			MTP_int(tillId)
+-		)).send();
++		)).done([=] {
++			OfflineAfterSend(session);
++		}).send();
+ 	} else if (const auto channel = peer->asChannel()) {
+ 		api.request(MTPchannels_ReadHistory(
+ 			channel->inputChannel(),
+ 			MTP_int(tillId)
+-		)).send();
++		)).done([=] {
++			OfflineAfterSend(session);
++		}).send();
+ 	} else {
+ 		api.request(MTPmessages_ReadHistory(
+ 			peer->input(),
+ 			MTP_int(tillId)
+ 		)).done([=](const MTPmessages_AffectedMessages &result) {
+-			peer->session().api().applyAffectedMessages(peer, result);
++			session->api().applyAffectedMessages(peer, result);
++			OfflineAfterSend(session);
+ 		}).send();
+ 	}
+ }
