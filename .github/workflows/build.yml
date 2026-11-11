@@ -537,7 +537,7 @@ jobs:
 
   publish:
     needs: [windows, macos]
-    if: ${{ !cancelled() && inputs.publish && needs.windows.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped') }}
+    if: ${{ always() && inputs.publish && needs.windows.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
