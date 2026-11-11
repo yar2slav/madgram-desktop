@@ -1,0 +1,422 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:03:41 +0300
+Subject: [PATCH] feat: pad extreme image shapes for photo sending
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  2 +
+ .../SourceFiles/settings/settings_tele.cpp    |  4 +
+ .../SourceFiles/storage/localimageloader.cpp  | 14 ++-
+ .../storage/storage_media_prepare.cpp         |  9 +-
+ Telegram/SourceFiles/tele/tele_options.cpp    | 11 +++
+ Telegram/SourceFiles/tele/tele_options.h      |  2 +
+ .../SourceFiles/tele/tele_photo_padding.cpp   | 96 +++++++++++++++++++
+ .../SourceFiles/tele/tele_photo_padding.h     | 19 ++++
+ .../SourceFiles/tele/tele_settings_io.cpp     |  1 +
+ .../ui/chat/attach/attach_album_thumbnail.cpp | 12 ++-
+ .../attach/attach_single_file_preview.cpp     |  3 +-
+ .../attach/attach_single_media_preview.cpp    |  8 ++
+ 13 files changed, 174 insertions(+), 9 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_photo_padding.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_photo_padding.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 04fc4a530ad09a8e83321cb570f2c00f5802066b..07e8f392abb650a52a05b2b3f4646c6061921001 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3070,6 +3070,8 @@ PRIVATE
+     tele/tele_name_badges.h
+     tele/tele_options.cpp
+     tele/tele_options.h
++    tele/tele_photo_padding.cpp
++    tele/tele_photo_padding.h
+     tele/tele_past_limit.cpp
+     tele/tele_past_limit.h
+     tele/tele_peek.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 6d14461ab79f02d55837efb02887a842691bc969..fadaa3430e7faad49a683e4755079f295ab3058c 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -361,6 +361,8 @@
+   "Command": "Команда",
+   "Compact icon folders": "Компактные значки папок",
+   "Compress photos less": "Меньше сжимать фотографии",
++  "Pad images to send as photos": "Добавлять поля к картинкам, чтобы отправлять их фото",
++  "Adds black margins without stretching or cropping.": "Добавляет чёрные поля без растягивания и обрезки.",
+   "Confirm before sending": "Подтверждать перед отправкой",
+   "Confirmations": "Подтверждения",
+   "Connect to any server on the internet.": "Подключаться к любым серверам в интернете.",
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 62ff994aae7ef026286338dfac4171284faac09e..58db909687c519984f33a7b3e6878383f3554291 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3235,6 +3235,10 @@ void FillSending(SectionBuilder &builder) {
+ 	AddGroupTitle(builder, u"Uploads"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionParallelUploads);
+ 	AddOptionToggle(builder, ::Tele::kOptionHdPhotos);
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionPadPhotos,
++		{ u"narrow"_q, u"wide"_q, u"aspect"_q, u"padding"_q });
+ 	AddOptionToggle(
+ 		builder,
+ 		::Tele::kOptionPhotoQuality,
+diff --git a/Telegram/SourceFiles/storage/localimageloader.cpp b/Telegram/SourceFiles/storage/localimageloader.cpp
+index 64ee199a6d82322bfa5f61ae39b6b2ca5ee57c9e..432ae8d582f0fec9a69706e91f55abd7350a892c 100644
+--- a/Telegram/SourceFiles/storage/localimageloader.cpp
++++ b/Telegram/SourceFiles/storage/localimageloader.cpp
+@@ -45,6 +45,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_gif_video.h"
+ #include "tele/tele_send_files.h"
+ #include "tele/tele_sticker_truth.h"
++#include "tele/tele_photo_padding.h"
+ 
+ #include <QtCore/QBuffer>
+ #include <QtGui/QImageWriter>
+@@ -871,6 +872,7 @@ void FileLoadTask::process(ProcessArgs &&args) {
+ 					fullimage = base::take(image->data);
+ 					fullimagebytes = base::take(image->bytes);
+ 					fullimageformat = base::take(image->format);
++					isAnimation = image->animated;
+ 				}
+ 			}
+ 			const auto mimeType = Core::MimeTypeForData(_content);
+@@ -900,11 +902,15 @@ void FileLoadTask::process(ProcessArgs &&args) {
+ 				fullimage = base::take(image->data);
+ 				fullimagebytes = base::take(image->bytes);
+ 				fullimageformat = base::take(image->format);
++				isAnimation = image->animated;
+ 			}
+ 		}
+ 		if (!fullimage.isNull() && fullimage.width() > 0) {
+ 			if (_type == SendMediaType::Photo) {
+-				if (ValidateThumbDimensions(fullimage.width(), fullimage.height())) {
++				const auto size = isAnimation
++					? fullimage.size()
++					: Tele::PhotoPaddingSize(fullimage.size());
++				if (ValidateThumbDimensions(size.width(), size.height())) {
+ 					filesize = -1; // Fill later.
+ 					filemime = Core::MimeTypeForName("image/jpeg").name();
+ 					filename = filedialogDefaultName(u"image"_q, u".jpg"_q, QString(), true);
+@@ -925,6 +931,12 @@ void FileLoadTask::process(ProcessArgs &&args) {
+ 			fullimagebytes = fullimageformat = QByteArray();
+ 		}
+ 	}
++	if (_type == SendMediaType::Photo
++		&& !_forceFile
++		&& !isAnimation
++		&& Tele::PadPhoto(fullimage, PhotoSideLimit(_sendLargePhotos))) {
++		fullimagebytes = fullimageformat = QByteArray();
++	}
+ 	_result->filesize = std::min(filesize, qint64(UINT_MAX));
+ 
+ 	if (!filesize || filesize > kFileSizePremiumLimit) {
+diff --git a/Telegram/SourceFiles/storage/storage_media_prepare.cpp b/Telegram/SourceFiles/storage/storage_media_prepare.cpp
+index 04d48ae9d8dbf61fc54cd39d62a46f72412f2eef..73a9273c436f1948033f0815509a7382e229f29f 100644
+--- a/Telegram/SourceFiles/storage/storage_media_prepare.cpp
++++ b/Telegram/SourceFiles/storage/storage_media_prepare.cpp
+@@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "ui/chat/attach/attach_prepare.h"
+ #include "core/crash_reports.h"
+ #include "tele/tele_gif_video.h"
++#include "tele/tele_photo_padding.h"
+ 
+ #include <QtCore/QSemaphore>
+ #include <QtCore/QMimeData>
+@@ -44,9 +45,8 @@ bool ValidPhotoForAlbum(
+ 		|| (!mime.isEmpty() && !mime.startsWith(u"image/"))) {
+ 		return false;
+ 	}
+-	const auto width = image.data.width();
+-	const auto height = image.data.height();
+-	return Ui::ValidateThumbDimensions(width, height);
++	const auto size = Tele::PhotoPaddingSize(image.data.size());
++	return Ui::ValidateThumbDimensions(size.width(), size.height());
+ }
+ 
+ bool ValidVideoForAlbum(const PreparedFileInformation::Video &video) {
+@@ -578,6 +578,9 @@ void UpdateImageDetails(
+ 		: image->data;
+ 	Assert(!preview.isNull());
+ 	file.originalDimensions = preview.size();
++	if (!image->animated) {
++		(void)Tele::PadPhoto(preview, sideLimit);
++	}
+ 	file.shownDimensions = PrepareShownDimensions(preview, sideLimit);
+ 	const auto toWidth = std::min(
+ 		previewWidth,
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 895faa50e194645ffcb91a0aebc1d12b15fb0295..368460df234a3f59ad1b8d1b8af2bf0e7a24ea7f 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -214,6 +214,7 @@ const char kOptionConfirmGifs[] = "tele-confirm-gifs";
+ const char kOptionConfirmVoice[] = "tele-confirm-voice";
+ const char kOptionPunctualScheduled[] = "tele-punctual-scheduled";
+ const char kOptionHdPhotos[] = "tele-hd-photos";
++const char kOptionPadPhotos[] = "tele-pad-photos";
+ const char kOptionPhotoQuality[] = "tele-photo-quality";
+ const char kOptionThinBrush[] = "tele-thin-brush";
+ const char kOptionGifVideo[] = "tele-gif-video";
+@@ -1548,6 +1549,12 @@ base::options::toggle HdPhotosOption({
+ 	.defaultValue = true,
+ });
+ 
++base::options::toggle PadPhotosOption({
++	.id = kOptionPadPhotos,
++	.name = "Pad images to send as photos",
++	.description = "Adds black margins without stretching or cropping.",
++});
++
+ base::options::toggle PhotoQualityOption({
+ 	.id = kOptionPhotoQuality,
+ 	.name = "Compress photos less",
+@@ -3525,6 +3532,10 @@ bool HdPhotos() {
+ 	return HdPhotosOption.value();
+ }
+ 
++bool PadPhotos() {
++	return PadPhotosOption.value();
++}
++
+ bool PhotoQuality() {
+ 	return PhotoQualityOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 69c70d57da7977422cf35253cdd3a9d217033d0a..2b12a6f1556528834f1d58fa382ef3d12bf3e4af 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -209,6 +209,7 @@ extern const char kOptionConfirmGifs[];
+ extern const char kOptionConfirmVoice[];
+ extern const char kOptionPunctualScheduled[];
+ extern const char kOptionHdPhotos[];
++extern const char kOptionPadPhotos[];
+ extern const char kOptionPhotoQuality[];
+ extern const char kOptionThinBrush[];
+ extern const char kOptionGifVideo[];
+@@ -580,6 +581,7 @@ void ClearMessageMenuLegacy();
+ [[nodiscard]] bool ConfirmVoice();
+ [[nodiscard]] bool PunctualScheduled();
+ [[nodiscard]] bool HdPhotos();
++[[nodiscard]] bool PadPhotos();
+ [[nodiscard]] bool PhotoQuality();
+ [[nodiscard]] bool ThinBrush();
+ [[nodiscard]] bool GifVideo();
+diff --git a/Telegram/SourceFiles/tele/tele_photo_padding.cpp b/Telegram/SourceFiles/tele/tele_photo_padding.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..f75653a803b16691235125aefc88162d5b016d9e
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_photo_padding.cpp
+@@ -0,0 +1,96 @@
++#include "tele/tele_photo_padding.h"
++
++#include "tele/tele_options.h"
++#include "editor/photo_editor_common.h"
++#include "ui/chat/attach/attach_prepare.h"
++
++#include <QtGui/QImage>
++#include <QtGui/QPainter>
++
++#include <algorithm>
++
++namespace Tele {
++
++QSize PhotoPaddingSize(QSize size) {
++	if (!PadPhotos() || size.isEmpty()) {
++		return size;
++	}
++	const auto longer = std::max(size.width(), size.height());
++	const auto minimum = longer / 20 + (longer % 20 != 0);
++	return QSize(
++		std::max(size.width(), minimum),
++		std::max(size.height(), minimum));
++}
++
++bool PadPhoto(QImage &image, int sideLimit) {
++	const auto size = PhotoPaddingSize(image.size());
++	if (image.isNull() || size == image.size()) {
++		return false;
++	}
++	Expects(sideLimit > 0);
++
++	// A decoded panorama can be huge despite containing very few pixels.
++	// Scale its content first, never allocate its full padded canvas.
++	const auto scaledSize = (image.width() > sideLimit
++		|| image.height() > sideLimit)
++		? image.size().scaled(sideLimit, sideLimit, Qt::KeepAspectRatio)
++		: image.size();
++	// QSize::scaled can round the short edge to zero for very thin images.
++	const auto contentSize = QSize(
++		std::max(scaledSize.width(), 1),
++		std::max(scaledSize.height(), 1));
++	const auto content = (contentSize == image.size())
++		? image
++		: image.scaled(
++			contentSize,
++			Qt::IgnoreAspectRatio,
++			Qt::SmoothTransformation);
++	if (content.isNull()) {
++		return false;
++	}
++	const auto paddedSize = PhotoPaddingSize(content.size());
++	if (paddedSize == content.size()) {
++		image = content;
++		return true;
++	}
++	auto padded = QImage(paddedSize, QImage::Format_ARGB32_Premultiplied);
++	if (padded.isNull()) {
++		return false;
++	}
++	padded.fill(Qt::black);
++	{
++		auto painter = QPainter(&padded);
++		painter.drawImage(
++			QRect(
++				QPoint(
++					(padded.width() - content.width()) / 2,
++					(padded.height() - content.height()) / 2),
++				content.size()),
++			content);
++	}
++	image = std::move(padded);
++	return true;
++}
++
++QImage PhotoFilePreview(const Ui::PreparedFile &file) {
++	const auto image = std::get_if<Ui::PreparedFileInformation::Image>(
++		&file.information->media);
++	if (image && !image->animated
++		&& !Ui::ValidateThumbDimensions(
++			file.originalDimensions.width(), file.originalDimensions.height())) {
++		auto raw = Editor::ImageModified(image->data, image->modifications);
++		const auto limit = std::max(file.preview.width(), file.preview.height());
++		if (limit > 0 && (raw.width() > limit || raw.height() > limit)) {
++			const auto size = raw.size().scaled(limit, limit, Qt::KeepAspectRatio);
++			raw = raw.scaled(
++				QSize(std::max(size.width(), 1), std::max(size.height(), 1)),
++				Qt::IgnoreAspectRatio,
++				Qt::SmoothTransformation);
++		}
++		return raw;
++	}
++	return file.videoCover ? file.videoCover->preview
++		: file.preview.isNull() && image ? image->data : file.preview;
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_photo_padding.h b/Telegram/SourceFiles/tele/tele_photo_padding.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..bae89eebfbdae1c9055b73f716b5ec699f2af36a
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_photo_padding.h
+@@ -0,0 +1,19 @@
++#pragma once
++
++#include <QtCore/QSize>
++
++class QImage;
++
++namespace Ui {
++struct PreparedFile;
++} // namespace Ui
++
++namespace Tele {
++
++[[nodiscard]] QSize PhotoPaddingSize(QSize size);
++// Only for static images sent as photos, after applying editor modifications.
++// Bounds the allocation by the normal photo side limit before adding padding.
++[[nodiscard]] bool PadPhoto(QImage &image, int sideLimit);
++[[nodiscard]] QImage PhotoFilePreview(const Ui::PreparedFile &file);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index cc2c551d2631d4e4b16e2b635c44c7ab15603296..efc816e6b6693d8314d47cba5ea17e8d649ee81d 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -288,6 +288,7 @@ struct Spec {
+ 		Toggle(kOptionConfirmVoice),
+ 		Toggle(kOptionPunctualScheduled),
+ 		Toggle(kOptionHdPhotos),
++		Toggle(kOptionPadPhotos),
+ 		Toggle(kOptionPhotoQuality),
+ 		Toggle(kOptionThinBrush),
+ 		Toggle(kOptionGifVideo),
+diff --git a/Telegram/SourceFiles/ui/chat/attach/attach_album_thumbnail.cpp b/Telegram/SourceFiles/ui/chat/attach/attach_album_thumbnail.cpp
+index 07ad47201243cf57af7aa15f27e147051dbb864e..d043aefb37bda04b4b0faf6c39b4fb13e45b580d 100644
+--- a/Telegram/SourceFiles/ui/chat/attach/attach_album_thumbnail.cpp
++++ b/Telegram/SourceFiles/ui/chat/attach/attach_album_thumbnail.cpp
+@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "core/mime_type.h" // Core::IsMimeSticker.
+ #include "lang/lang_keys.h"
+ #include "tele/tele_gif_video.h"
++#include "tele/tele_photo_padding.h"
+ #include "ui/chat/attach/attach_prepare.h"
+ #include "ui/image/image_prepare.h"
+ #include "ui/text/format_values.h"
+@@ -82,12 +83,15 @@ AlbumThumbnail::AlbumThumbnail(
+ 		}));
+ 
+ 	const auto &layoutSt = st::attachPreviewThumbLayout;
++	const auto filePreview = Tele::PhotoFilePreview(file);
++	const auto fileWidth = filePreview.width();
++	const auto fileHeight = filePreview.height();
+ 	const auto idealSize = layoutSt.thumbSize * style::DevicePixelRatio();
+-	const auto fileThumbSize = (previewWidth > previewHeight)
+-		? QSize(previewWidth * idealSize / previewHeight, idealSize)
+-		: QSize(idealSize, previewHeight * idealSize / previewWidth);
++	const auto fileThumbSize = (fileWidth > fileHeight)
++		? QSize(fileWidth * idealSize / fileHeight, idealSize)
++		: QSize(idealSize, fileHeight * idealSize / fileWidth);
+ 	_fileThumb = PixmapFromImage(Images::Prepare(
+-		_fullPreview,
++		filePreview,
+ 		fileThumbSize,
+ 		{
+ 			.options = Option::RoundSmall,
+diff --git a/Telegram/SourceFiles/ui/chat/attach/attach_single_file_preview.cpp b/Telegram/SourceFiles/ui/chat/attach/attach_single_file_preview.cpp
+index aa496ecbda6ec2733c49e175bbe717af9a300dc8..b88e197d877358849b16a0a6e8a1dd0e3aaf52e9 100644
+--- a/Telegram/SourceFiles/ui/chat/attach/attach_single_file_preview.cpp
++++ b/Telegram/SourceFiles/ui/chat/attach/attach_single_file_preview.cpp
+@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "ui/chat/attach/attach_single_file_preview.h"
+ 
+ #include "lang/lang_keys.h"
++#include "tele/tele_photo_padding.h"
+ #include "ui/chat/attach/attach_prepare.h"
+ #include "ui/text/format_song_name.h"
+ #include "ui/text/format_values.h"
+@@ -52,7 +53,7 @@ void SingleFilePreview::preparePreview(const PreparedFile &file) {
+ 	auto preview = QImage();
+ 	if (const auto image = std::get_if<PreparedFileInformation::Image>(
+ 		&file.information->media)) {
+-		preview = file.preview.isNull() ? image->data : file.preview;
++		preview = Tele::PhotoFilePreview(file);
+ 	} else if (const auto video = std::get_if<PreparedFileInformation::Video>(
+ 		&file.information->media)) {
+ 		preview = video->thumbnail;
+diff --git a/Telegram/SourceFiles/ui/chat/attach/attach_single_media_preview.cpp b/Telegram/SourceFiles/ui/chat/attach/attach_single_media_preview.cpp
+index 617ee7343b63caf1eb205ea2b2d5791a541d1703..7438369e85dcd31e7b46cef803561b8821d0d2a3 100644
+--- a/Telegram/SourceFiles/ui/chat/attach/attach_single_media_preview.cpp
++++ b/Telegram/SourceFiles/ui/chat/attach/attach_single_media_preview.cpp
+@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ 
+ #include "editor/photo_editor_common.h"
+ #include "tele/tele_gif_video.h"
++#include "tele/tele_photo_padding.h"
+ #include "ui/chat/attach/attach_prepare.h"
+ #include "core/mime_type.h"
+ #include "lottie/lottie_single_player.h"
+@@ -46,6 +47,13 @@ SingleMediaPreview *SingleMediaPreview::Create(
+ 		// about the crop or the rotation, so show the edited frame instead.
+ 		animationPreview = video->isGifv && !video->modifications.geometry;
+ 	}
++	if (!animated && file.type == PreparedFile::Type::Photo) {
++		(void)Tele::PadPhoto(
++			preview,
++			std::max(
++				file.shownDimensions.width(),
++				file.shownDimensions.height()));
++	}
+ 	if (preview.isNull()) {
+ 		return nullptr;
+ 	} else if (!animated
