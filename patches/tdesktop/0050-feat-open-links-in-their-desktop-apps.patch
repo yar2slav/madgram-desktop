@@ -16,10 +16,10 @@ Subject: [PATCH] feat: open links in their desktop apps
  create mode 100644 Telegram/SourceFiles/tele/tele_app_links.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 3fc55156489efd1af4d049aad6ed973bb35151c9..aafe46490419139ccbd1ece4f195c115955e7e9a 100644
+index e8965db0b4acf348ef47aac3e63e4308a716681a..d52afaa38b3493fb7bfb764aaeee4e683eaa241f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2641,6 +2641,8 @@ PRIVATE
+@@ -2644,6 +2644,8 @@ PRIVATE
      settings/settings_tele.h
      tele/tele_account_badges.cpp
      tele/tele_account_badges.h

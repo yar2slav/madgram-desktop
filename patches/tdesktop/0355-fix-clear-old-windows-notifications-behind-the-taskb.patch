@@ -13,10 +13,10 @@ Subject: [PATCH] fix: clear old windows notifications behind the taskbar badge
  create mode 100644 Telegram/SourceFiles/tele/tele_toast_history.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 223b387811ab15870ad4976026d3be6f62192c50..a6137b31befecae6f9f5a0ef6ff8e5c6c8171a04 100644
+index 8085a811a4e7797b6352c607a2b54e4eb72bc28a..f1c5b33c5b1a97ce1f0fe541a7f1e665936ef1b0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3150,6 +3150,8 @@ PRIVATE
+@@ -3153,6 +3153,8 @@ PRIVATE
      tele/tele_smooth_scroll.h
      tele/tele_smooth_typing.cpp
      tele/tele_smooth_typing.h
@@ -26,10 +26,10 @@ index 223b387811ab15870ad4976026d3be6f62192c50..a6137b31befecae6f9f5a0ef6ff8e5c6
      tele/tele_spoilers.h
      tele/tele_stars_tools.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 1bdb16d1f04d115e623eafbb9603909f089fbcd0..435f90ba7ae5a51e73d932fc50a89e709b123932 100644
+index 4bd732f1142230dd29de35444df40f515c693831..c48747ce834ea22c608e6361c58fd493c35d2d75 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_options.h"
  #include "tele/tele_smooth_scroll.h"
  #include "tele/tele_smooth_typing.h"
@@ -37,7 +37,7 @@ index 1bdb16d1f04d115e623eafbb9603909f089fbcd0..435f90ba7ae5a51e73d932fc50a89e70
  #include "tele/tele_start_menu.h"
  
  #include <QtCore/QStandardPaths>
-@@ -384,6 +385,7 @@ void Application::run() {
+@@ -385,6 +386,7 @@ void Application::run() {
  	Tele::StartReduceMotion();
  	Tele::StartSmoothScroll();
  	Tele::StartSmoothTyping();

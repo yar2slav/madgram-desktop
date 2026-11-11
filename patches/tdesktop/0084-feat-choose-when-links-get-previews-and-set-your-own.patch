@@ -20,10 +20,10 @@ Subject: [PATCH] feat: choose when links get previews and set your own
  create mode 100644 Telegram/SourceFiles/tele/tele_link_previews.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 59dcaf29835bbc88bd659e2d515e13eefaa174d3..ea0871d302a8858ba01545a58c9a3328555c9769 100644
+index bb478ad25a5d1709b3ca1a044300a429cd58e123..bb94c2bbffdf6c3b8fa00a57df83d6bd69234e67 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2709,6 +2709,8 @@ PRIVATE
+@@ -2712,6 +2712,8 @@ PRIVATE
      tele/tele_message_menu.h
      tele/tele_jump_to_first.cpp
      tele/tele_jump_to_first.h
@@ -33,7 +33,7 @@ index 59dcaf29835bbc88bd659e2d515e13eefaa174d3..ea0871d302a8858ba01545a58c9a3328
      tele/tele_link_rewrites.h
      tele/tele_link_rewrites_box.cpp
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 5b4946c59d556c348af10ea59bb5b164f13cc869..b8418f8d28528e08d46eb619f3373770a31e5c22 100644
+index daba237239662c960fa8280daada4a60e51db7cb..13708b9f7692ca75370e14cf19d011225af0ebf1 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -175,6 +175,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -44,7 +44,7 @@ index 5b4946c59d556c348af10ea59bb5b164f13cc869..b8418f8d28528e08d46eb619f3373770
  #include "tele/tele_calls.h"
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
-@@ -539,6 +540,16 @@ HistoryWidget::HistoryWidget(
+@@ -540,6 +541,16 @@ HistoryWidget::HistoryWidget(
  		},
  		.send = [=] { sendWithModifiers(Qt::KeyboardModifiers()); },
  	});
@@ -62,7 +62,7 @@ index 5b4946c59d556c348af10ea59bb5b164f13cc869..b8418f8d28528e08d46eb619f3373770
  		checkCharsLimitation();
  		updateAiButtonVisibility();
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 14e15b1dbeb72f1b23d812587f2fd85266a1da48..8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea 100644
+index 2905cd32ad704a10f7bc0ce8ad7062d747f716a6..4065c686cacf2950decfe7d553710002085c2b4e 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -114,6 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -73,7 +73,7 @@ index 14e15b1dbeb72f1b23d812587f2fd85266a1da48..8b8e8f46eb91bf6cdaaa16aac5e52382
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_emoji_panel.h"
  #include "support/support_helper.h"
-@@ -3279,6 +3280,12 @@ void ComposeControls::initField() {
+@@ -3280,6 +3281,12 @@ void ComposeControls::initField() {
  		},
  		.send = [=] { _fieldSubmits.fire({}); },
  	});

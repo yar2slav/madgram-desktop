@@ -18,10 +18,10 @@ Subject: [PATCH] feat: report freezes
  create mode 100644 Telegram/SourceFiles/tele/tele_freeze_watchdog.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index c7d7ae5f10935f7f3ef5761eb21416cd64ee1787..07931dbf479d835eef6fe137cfa34ea32ddedc7e 100644
+index dffe8c57140b505939006237b84725b031709abe..2af75ec18af0527fa1dd8d28ff9e57a8198f52eb 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2735,6 +2735,8 @@ PRIVATE
+@@ -2738,6 +2738,8 @@ PRIVATE
      tele/tele_field_resize.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -31,10 +31,10 @@ index c7d7ae5f10935f7f3ef5761eb21416cd64ee1787..07931dbf479d835eef6fe137cfa34ea3
      tele/tele_full_preview.h
      tele/tele_gif_video.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 2acdcd6f5a5d8bb1822f15a2f1e4f2c343f606e6..d1cb4151d8b89a6903d52fccccccfa02ad22ecf8 100644
+index 771a2280ccdec1025ec4a5faa2633d5cd0cbd9fb..6c478e4e792d7d4f82e43f0b840b448124d7f86f 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -112,6 +112,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -113,6 +113,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_list_keys.h"
  #include "tele/tele_mtp_console.h"
  #include "tele/tele_counters.h"
@@ -42,7 +42,7 @@ index 2acdcd6f5a5d8bb1822f15a2f1e4f2c343f606e6..d1cb4151d8b89a6903d52fccccccfa02
  
  #include <QtCore/QStandardPaths>
  #include <QtCore/QMimeDatabase>
-@@ -369,6 +370,7 @@ void Application::run() {
+@@ -370,6 +371,7 @@ void Application::run() {
  	Tele::StartReduceMotion();
  	Tele::StartListKeys();
  	Tele::StartMtpConsole();
@@ -51,7 +51,7 @@ index 2acdcd6f5a5d8bb1822f15a2f1e4f2c343f606e6..d1cb4151d8b89a6903d52fccccccfa02
  	if (MediaControlsManager::Supported()) {
  		_mediaControlsManager = std::make_unique<MediaControlsManager>();
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 5a2a33c6969a0deb37928d091303a9fa0af5314c..413ebcaf95ff90dd347ea8da2f42e37cb7ad8478 100644
+index ebe2d97e66b4b5af88833f52281d3dc330a4e098..af2a0a654a9d80c5931e91b18e18e8b4122f6f9d 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

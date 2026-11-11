@@ -38,10 +38,10 @@ Subject: [PATCH] feat: sync encrypted message history across devices
  create mode 100644 Telegram/SourceFiles/tele/tests/history_crypto_tests.cpp
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a63113004ab45660921cde801e7af191510ae726..37f1a8da97f425624401e63b862b5eb70c33e090 100644
+index 4ff993f9220fb24976778e16db17a3af9a548c18..1e56a7a22e8ba70740c3f65721eae6a5646a1c6a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2642,6 +2642,12 @@ endif()
+@@ -2645,6 +2645,12 @@ endif()
  set(TELE_BUILD 0 CACHE STRING "mad release number, 0 for local builds")
  nice_target_sources(Telegram ${src_loc}
  PRIVATE

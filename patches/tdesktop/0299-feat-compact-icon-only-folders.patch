@@ -21,10 +21,10 @@ Subject: [PATCH] feat: compact icon-only folders
  create mode 100644 Telegram/SourceFiles/tele/tele_compact_folders.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index dcc6ff9e8cf6b3c922d8cbdc5bd6b3519fa1661a..b7a86baff8d50d66f917577d17a0396661b462a8 100644
+index 636d7fb10793246c288af29a851098dc1fde8608..59c68fa043bd4d79398454fbcf7605a42f8f916f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2714,6 +2714,8 @@ PRIVATE
+@@ -2717,6 +2717,8 @@ PRIVATE
      tele/tele_confirm_send.h
      tele/tele_communities.cpp
      tele/tele_communities.h
@@ -883,10 +883,10 @@ index eb270030937f3dba048693ee580d5b9d2617021f..fc0a18ba4fd38726fcb3ed6fc7b05deb
  				raw->setAccessibleName(count
  					? tr::lng_filter_unread_chats(
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 0468ab32395fa7f5f2a4280469750bf01d5004f2..ae849214dacd2e9bc2426dac2f8c4c65e79ee20e 100644
+index d1ecd5befec8ecd8422153b3150027a2b8a754d5..379ae628786b80bbbabb026094b1e3901dd235d6 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -132,6 +132,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/secret/secret_chats.h"
  #include "tele/tele_changelog_chat.h"
  #include "tele/tele_communities.h"
@@ -894,7 +894,7 @@ index 0468ab32395fa7f5f2a4280469750bf01d5004f2..ae849214dacd2e9bc2426dac2f8c4c65
  #include "tele/tele_folders.h"
  #include "tele/tele_local_folders.h"
  #include "tele/tele_options.h"
-@@ -1866,6 +1867,11 @@ SessionController::SessionController(
+@@ -1868,6 +1869,11 @@ SessionController::SessionController(
  		checkOpenedFilter();
  		crl::on_main(this, processFiltersMenu);
  	}, lifetime());
@@ -906,7 +906,7 @@ index 0468ab32395fa7f5f2a4280469750bf01d5004f2..ae849214dacd2e9bc2426dac2f8c4c65
  	Tele::SetupFolderTabs(this);
  
  	session->data().itemIdChanged(
-@@ -3504,11 +3510,11 @@ not_null<MainWidget*> SessionController::content() const {
+@@ -3497,11 +3503,11 @@ not_null<MainWidget*> SessionController::content() const {
  }
  
  int SessionController::filtersWidth() const {

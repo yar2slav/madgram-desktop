@@ -21,10 +21,10 @@ Subject: [PATCH] feat: restrict members from message menus and find them by id
  create mode 100644 Telegram/SourceFiles/tele/tele_restrict.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5b2176cfb17488a60054a41b2b8e0f7f91c22ea2..bcf79db1364398c4b1595a8832cf26d09f368e71 100644
+index 217f5a80899ee9f4aabd7f0cc5dcd6a4fbc44164..c531a950d8e90d9f92cd5c8067fc5d2f39bac251 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3072,6 +3072,8 @@ PRIVATE
+@@ -3075,6 +3075,8 @@ PRIVATE
      tele/tele_regex_search.h
      tele/tele_remove_mine.cpp
      tele/tele_remove_mine.h
@@ -60,7 +60,7 @@ index 7ab48a7fc7a42faaff200d7049045e9734954b8d..0c1e7d082523055eac085b94514ec8c9
  			_timer.callOnce(AutoSearchTimeout);
  		} else {
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 50d9276359c3972717e91d34fb2068aa4581aebb..8412101b3b95da2d572e59af59468ae3dc590db5 100644
+index 0af85df28fc05c451cedb0fa29cdad31bcf0568a..6869875ca5b11d594b088cb7703885fd281600d6 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -136,6 +136,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -452,10 +452,10 @@ index cbac5896798ea967f2d12784c427c4e21618a4d6..e35dbceb0403a9a1875c5ef8eae87595
  		Toggle(kOptionRmbBesideBubble),
  		Toggle(kOptionShot),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 2419868fda07e71022976d7465c58dab411dfcf0..5228b6ce4864ed8774577b470ed5a1b7f25704b9 100644
+index 01b92671f1ef6895015493e563e3fe68d090a620..8bb1e1e385a377dd7989062c0ab441e419030392 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peers/manage_community_box.h"
  #include "boxes/premium_preview_box.h"
  #include "tele/secret/secret_chats.h"
@@ -463,7 +463,7 @@ index 2419868fda07e71022976d7465c58dab411dfcf0..5228b6ce4864ed8774577b470ed5a1b7
  #include "tele/tele_bookmarks.h"
  #include "tele/tele_changelog_chat.h"
  #include "tele/tele_chat_backgrounds.h"
-@@ -4610,6 +4611,7 @@ void FillSenderUserpicMenu(
+@@ -4611,6 +4612,7 @@ void FillSenderUserpicMenu(
  		}
  	}
  	Tele::AddIgnoreAction(peer, addAction);

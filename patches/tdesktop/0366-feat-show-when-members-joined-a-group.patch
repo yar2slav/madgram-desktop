@@ -18,10 +18,10 @@ Subject: [PATCH] feat: show when members joined a group
  create mode 100644 Telegram/SourceFiles/tele/tele_member_dates.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 2245def1066b6ae6d1bec26f0a0c879517d92596..d854a39017b9d6792e80d6e1bfd953d60bfe6e89 100644
+index ce2986fafb951eb7c9feb5465227372038bcc916..1be11bffd54990023e1352e1e257f8f009d1faaf 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2998,6 +2998,8 @@ PRIVATE
+@@ -3001,6 +3001,8 @@ PRIVATE
      tele/tele_lowercase.h
      tele/tele_maps.cpp
      tele/tele_maps.h

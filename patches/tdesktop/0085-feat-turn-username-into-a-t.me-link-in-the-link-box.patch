@@ -24,7 +24,7 @@ index cb2161a89133adf2f2e562a3aaaed2af154dcf8f..3126e47cc4ebf9fa10f7c76faefe87f4
  			text->showError();
  			return;
 diff --git a/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp b/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp
-index d927399ab71fa8a09092a5cea98e0c4b88954466..5936996ff909805f2073a80c64a0e392b7f814f3 100644
+index 307eac58d1f1afc380bc68ca393ffa2d211cf773..63db16c06cf01f311905587c5b04a961371385bb 100644
 --- a/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp
 +++ b/Telegram/SourceFiles/iv/editor/iv_editor_widget.cpp
 @@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

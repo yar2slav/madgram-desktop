@@ -26,10 +26,10 @@ Subject: [PATCH] feat: sticker captions
  create mode 100644 Telegram/SourceFiles/tele/tele_sticker_captions.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index cb5fb8ac86ded6566705a81253dc0ec85f22178a..7cc8cb38a9d3ca665e8801e8d5d8bf468d685707 100644
+index dda76008ca626cbcfe8c73d374162ecbad2665f8..3fda45bb94746b5965850aff643511dd11158326 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2849,6 +2849,8 @@ PRIVATE
+@@ -2852,6 +2852,8 @@ PRIVATE
      tele/tele_silent.h
      tele/tele_spoilers.cpp
      tele/tele_spoilers.h
@@ -130,7 +130,7 @@ index 34dc171fc4b3a02c5db60a47365bb06202fc9858..5d842570eee83afacb2d4ffa70668db1
  
  bool MediaFile::allowsEditMedia() const {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index d400d48e6850a96a6483833a5f71094900d05bca..61d2a320852f895ef51eb244e9fb625dade16cbb 100644
+index 1e1cc9ed7caa2d8f6a8b670361fd2f0d8155b0ad..1393c3d341ba58e62c3fdb4eb3ff752fae3b72d5 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -190,6 +190,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -141,7 +141,7 @@ index d400d48e6850a96a6483833a5f71094900d05bca..61d2a320852f895ef51eb244e9fb625d
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_options.h"
  #include "media/audio/media_audio.h"
-@@ -10587,12 +10588,22 @@ bool HistoryWidget::sendExistingDocument(
+@@ -10588,12 +10589,22 @@ bool HistoryWidget::sendExistingDocument(
  		}
  	}
  
@@ -203,10 +203,10 @@ index 1d0a57bc53e7afd25ae26074d1fbfb52bad25625..27ab906b5ea034bde4ed8e3c39a76412
  	_composeControls->cancelReplyMessage();
  	finishSending(options);
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index a37786cc97a5022dbc24957bce238f33d61ef3dc..a2fbc5efbea86d18f73d187e4836db4a6d2f1add 100644
+index c5d4a6d18760afbbca0d5cea322863d29152af06..3365dca3b8614a2f0f7a090c72bd9597f5b17898 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -2278,10 +2278,16 @@ void Message::draw(Painter &p, const PaintContext &context) const {
+@@ -2295,10 +2295,16 @@ void Message::draw(Painter &p, const PaintContext &context) const {
  		}
  	} else if (media && media->isDisplayed()) {
  		_lastMediaPosition = g.topLeft();

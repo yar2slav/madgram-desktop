@@ -9,7 +9,7 @@ Subject: [PATCH] fix: clicking another collage item switches the open media
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 1a112fd42cc960d2c178eafaf2aa206e1fefa9a3..e466cc0700fc0659e4f0f348bd75e334697b3464 100644
+index 465261f84622df187c62e9b8b88aabfb10d6f2bc..97fbd05e300360260264eab62f29cc4e05256c74 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -4626,7 +4626,10 @@ void OverlayWidget::show(OpenRequest request) {

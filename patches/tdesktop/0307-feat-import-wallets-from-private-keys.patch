@@ -21,10 +21,10 @@ Subject: [PATCH] feat: import wallets from private keys
  create mode 100644 Telegram/SourceFiles/tele/tele_wallet_keys.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 503f6ef5d3124d2f3618f04c10d6299689fcef3c..14ea8a45307386ca683552c81e8337b99ce9332f 100644
+index 9bb8fa676792b7734156e29a398b353c51936239..01c8cb7caad6b8f1f861a76eacc3a9360730a402 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3153,6 +3153,8 @@ PRIVATE
+@@ -3156,6 +3156,8 @@ PRIVATE
      tele/tele_voice_quality.h
      tele/tele_wallet_address.cpp
      tele/tele_wallet_address.h
@@ -1532,7 +1532,7 @@ index 3fff0a1e7e5d63f2271725765e119c554570db73..50a7c615190050ff4be91f3845a71834
  	phrase->toggleOn(rpl::combine(
  		wallet.capabilitiesValue(),
 diff --git a/Telegram/SourceFiles/wallet/wallet_engine.cpp b/Telegram/SourceFiles/wallet/wallet_engine.cpp
-index 463c8e03580285041bc3f5f64349b0ad1555ec3b..a06fad4cfab9935feed5b091c587a938f0a70b3f 100644
+index 530e1c8a8347b4f2752ed8f2ccb44f996b65955a..284803a32d71156f12f83a11876a181aed153f27 100644
 --- a/Telegram/SourceFiles/wallet/wallet_engine.cpp
 +++ b/Telegram/SourceFiles/wallet/wallet_engine.cpp
 @@ -614,7 +614,7 @@ public:

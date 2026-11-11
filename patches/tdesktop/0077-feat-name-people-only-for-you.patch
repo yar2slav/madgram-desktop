@@ -36,10 +36,10 @@ Subject: [PATCH] feat: name people only for you
  create mode 100644 Telegram/SourceFiles/tele/tele_local_names.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4a6cb1973b07139ee67d36e5c8dc2fcdfb650ec4..0e0cc46a68eb357fdecf9bcf07a12ee43c4df75c 100644
+index 166074d00d01e56b72f3cfed0418e628865922f7..4217ba3fdac37ce1efe63e5a7378c308484e82be 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2693,6 +2693,8 @@ PRIVATE
+@@ -2696,6 +2696,8 @@ PRIVATE
      tele/tele_ignored.h
      tele/tele_inline_via.cpp
      tele/tele_inline_via.h
@@ -87,10 +87,10 @@ index ea7b142c02495b80b649630d4fba9d9a01f69b33..5450e2adb1a4e0234e40c1a7feaa3db5
  		} else {
  			result.checkbox.text = tr::lng_delete_for_everyone_check(tr::now);
 diff --git a/Telegram/SourceFiles/boxes/moderate_messages_box.cpp b/Telegram/SourceFiles/boxes/moderate_messages_box.cpp
-index a0ca8086118d6cfc500633cb539228977796253f..a8914726825181554e0759974cc5069d093f99df 100644
+index ddd4401536818c0e037752f7134b6c74f8e58017..6d907038d7b8726fdad838507803933307eafa84 100644
 --- a/Telegram/SourceFiles/boxes/moderate_messages_box.cpp
 +++ b/Telegram/SourceFiles/boxes/moderate_messages_box.cpp
-@@ -1677,7 +1677,7 @@ void DeleteChatBox(
+@@ -1678,7 +1678,7 @@ void DeleteChatBox(
  					? tr::lng_delete_for_other_check(
  						tr::now,
  						lt_user,
@@ -1086,10 +1086,10 @@ index 18c8b39bda1f25713ad255bd6145d57014901fae..838b13f12e8c3e2453bf6dd46f8dbd3f
  			? _peer->name()
  			: QString();
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 2ce1cae8f9129a0426ce03a9167b0defd66a35c6..9b5e53d8a46f3b92dac919eebec75868b2829b50 100644
+index 6111c635fe7661d45a0919f8cce59a12ed82eb44..b0c5fe3b64ed065db5f12443d9a56c1cfea7211f 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -133,6 +133,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_jump_to_first.h"
@@ -1097,7 +1097,7 @@ index 2ce1cae8f9129a0426ce03a9167b0defd66a35c6..9b5e53d8a46f3b92dac919eebec75868
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_view_tl.h"
  #include "styles/style_chat.h"
-@@ -1949,6 +1950,7 @@ void Filler::fillHistoryActions() {
+@@ -1950,6 +1951,7 @@ void Filler::fillHistoryActions() {
  	addInfo();
  	Tele::AddJumpToFirstAction(_controller, _thread, _addAction);
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
@@ -1105,7 +1105,7 @@ index 2ce1cae8f9129a0426ce03a9167b0defd66a35c6..9b5e53d8a46f3b92dac919eebec75868
  	addViewAsTopics();
  	addManageChat();
  	addStoryArchive();
-@@ -1977,6 +1979,7 @@ void Filler::fillProfileActions() {
+@@ -1978,6 +1980,7 @@ void Filler::fillProfileActions() {
  	addShareContact();
  	addEditContact();
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
@@ -1113,7 +1113,7 @@ index 2ce1cae8f9129a0426ce03a9167b0defd66a35c6..9b5e53d8a46f3b92dac919eebec75868
  	addBotToGroup();
  	addNewMembers();
  	addSendGift();
-@@ -4489,7 +4492,7 @@ void FillSenderUserpicMenu(
+@@ -4490,7 +4493,7 @@ void FillSenderUserpicMenu(
  				fieldForMention->insertTag('@' + username);
  			} else {
  				fieldForMention->insertTag(

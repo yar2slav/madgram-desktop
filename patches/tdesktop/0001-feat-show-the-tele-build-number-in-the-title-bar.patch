@@ -13,10 +13,10 @@ Subject: [PATCH] feat: show the tele build number in the title bar
  create mode 100644 Telegram/SourceFiles/tele/tele_build.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e13027ff1bbabaf7548cfc5de1483dcfe53d04be..df13c86e151c5a2a231ee43fa2afcaf1be9f9780 100644
+index 1ef95284113ee3dd1be5eb4546894c8a6368ecfd..15a8f3c755fc154a51a687bd3ec67c70acabc53f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2634,6 +2634,17 @@ if (TDESKTOP_L10N_CAPTURE)
+@@ -2637,6 +2637,17 @@ if (TDESKTOP_L10N_CAPTURE)
      include(${TDESKTOP_L10N_CAPTURE}/capture.cmake)
  endif()
  
@@ -70,7 +70,7 @@ index 0000000000000000000000000000000000000000..2e2bceb142dfe499e63f170dc41128d2
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 5af2ccfaf0de93d472bb9e7c933a61a52546ce01..3f153a2004cda2188af3b93c9c4120adcba4d1db 100644
+index 791e23bbb6bdbc92103a2f975570ab3dfc4d0f15..ef8e61640b1ffb7cdbc5410e061c854caca4f61b 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
 @@ -48,6 +48,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -92,7 +92,7 @@ index 5af2ccfaf0de93d472bb9e7c933a61a52546ce01..3f153a2004cda2188af3b93c9c4120ad
  
  	updateTitle();
  	updateWindowIcon();
-@@ -711,7 +710,7 @@ void MainWindow::setupCanaryTitleLabel() {
+@@ -720,7 +719,7 @@ void MainWindow::setupCanaryTitleLabel() {
  	const auto label = Ui::CreateTitleSubWidget(
  		title,
  		st::titleSubWidgetStyle,
@@ -101,7 +101,7 @@ index 5af2ccfaf0de93d472bb9e7c933a61a52546ce01..3f153a2004cda2188af3b93c9c4120ad
  		layout->value(
  		) | rpl::map([](const Ui::Platform::TitleLayout &layout) {
  			return layout.onLeft() ? style::al_right : style::al_left;
-@@ -726,11 +725,9 @@ void MainWindow::setupCanaryTitleLabel() {
+@@ -735,11 +734,9 @@ void MainWindow::setupCanaryTitleLabel() {
  }
  
  QString MainWindow::nativeTitleSuffix() const {

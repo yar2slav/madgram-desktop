@@ -13,10 +13,10 @@ Subject: [PATCH] feat: hide and show the pinned bar from the chat menu
  create mode 100644 Telegram/SourceFiles/tele/tele_show_pinned.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9f4f3694d174806971238983c9301fc96bce31ad..e99cc3453af142a3e393ddf4e71ec7b18ce80d40 100644
+index 3ae551d23c10d0294c3ef5c354c9e0cd332ba3bf..6ffd62bf9d9f8eebfbda95d75c1fe49d371a09c6 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2801,6 +2801,8 @@ PRIVATE
+@@ -2804,6 +2804,8 @@ PRIVATE
      tele/tele_shot.h
      tele/tele_shot_sharp.cpp
      tele/tele_shot_sharp.h
@@ -175,10 +175,10 @@ index 0000000000000000000000000000000000000000..4e881c0427444de945b23f732eea8a48
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 4a3395a1de6524784c01aa2055d392895756d862..a4864e3576228e8561d0fe328ddcf9f7386cc634 100644
+index 017cb985bc21a67b544519749d45127063712936..2a0b1922edf65ec9d4e38589f14ad87a272e22b3 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -137,6 +137,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -138,6 +138,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_local_names.h"
  #include "tele/tele_local_pins.h"
  #include "tele/tele_mtp_inspector.h"
@@ -186,7 +186,7 @@ index 4a3395a1de6524784c01aa2055d392895756d862..a4864e3576228e8561d0fe328ddcf9f7
  #include "tele/tele_silent.h"
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_view_tl.h"
-@@ -1958,6 +1959,7 @@ void Filler::fillHistoryActions() {
+@@ -1959,6 +1960,7 @@ void Filler::fillHistoryActions() {
  	addInfo();
  	Tele::AddJumpToFirstAction(_controller, _thread, _addAction);
  	Tele::AddBookmarksAction(_controller, _thread, _addAction);
@@ -194,7 +194,7 @@ index 4a3395a1de6524784c01aa2055d392895756d862..a4864e3576228e8561d0fe328ddcf9f7
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
  	Tele::AddLocalNameAction(_controller, _peer, _addAction);
  	addViewAsTopics();
-@@ -2018,6 +2020,7 @@ void Filler::fillRepliesActions() {
+@@ -2019,6 +2021,7 @@ void Filler::fillRepliesActions() {
  		addInfo();
  		Tele::AddJumpToFirstAction(_controller, _topic, _addAction);
  		Tele::AddBookmarksAction(_controller, _topic, _addAction);

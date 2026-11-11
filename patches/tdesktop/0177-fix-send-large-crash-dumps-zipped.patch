@@ -10,7 +10,7 @@ Subject: [PATCH] fix: send large crash dumps zipped
  3 files changed, 122 insertions(+), 29 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 2c8f97b42226866491a654ee60538a3116248e6b..7c8bc677ab3d2ab3299e2ae6d00c03387717d4c7 100644
+index 5da92c208378927dae5b1878d8c7b5ae92c27ad5..0f9653630531c14d352487058bc067d1a08284d6 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -613,7 +613,7 @@ void LastCrashedWindow::sendReport() {

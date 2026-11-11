@@ -14,10 +14,10 @@ Subject: [PATCH] feat: upload media in several chats at once
  create mode 100644 Telegram/SourceFiles/tele/tele_uploads.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e693673d9196addfc281f458a73cd425a0f7686a..6a8d3b0bc46a6ce0639e616d6b8332c94924d9a7 100644
+index de1ac6dd91300a29c8df6d94aa191bfa5d457017..3b61534e1e9edd5da101e711824d73ce49b5aca6 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2691,6 +2691,7 @@ PRIVATE
+@@ -2694,6 +2694,7 @@ PRIVATE
      tele/tele_title_template.h
      tele/tele_updater.cpp
      tele/tele_updater.h

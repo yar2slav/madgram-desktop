@@ -13,10 +13,10 @@ Subject: [PATCH] feat: reply timestamps for media in rich messages
  create mode 100644 Telegram/SourceFiles/tele/tele_rich_timestamps.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 6a8d3b0bc46a6ce0639e616d6b8332c94924d9a7..2f9376076c6a8aa134fc6c2f610e07c89006adae 100644
+index 3b61534e1e9edd5da101e711824d73ce49b5aca6..c9aee13dfdbcecffde75734c977729469c3cd7be 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2679,6 +2679,8 @@ PRIVATE
+@@ -2682,6 +2682,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_peer_id.cpp
      tele/tele_peer_id.h

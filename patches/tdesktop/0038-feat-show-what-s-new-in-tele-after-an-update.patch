@@ -16,10 +16,10 @@ Subject: [PATCH] feat: show what's new in tele after an update
  create mode 100644 Telegram/SourceFiles/tele/tele_changelog.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a0988b516333a0f3b5f90cc19c9d6dffd257343b..7657dfa3a87380d5516b5f49ee724bc837e59f8d 100644
+index 4fb02b6d25b6d5628d32d96a78afabf623520b83..be068ed0d075c1cd19224b552908aebe05fc2de8 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2649,6 +2649,8 @@ PRIVATE
+@@ -2652,6 +2652,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -29,10 +29,10 @@ index a0988b516333a0f3b5f90cc19c9d6dffd257343b..7657dfa3a87380d5516b5f49ee724bc8
      tele/tele_crash.h
      tele/tele_deleted.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index ced5bcd7a1a91ae958891cc6725330e44b02fbf5..631fbb64e040127bac9ed68bb4135f5f0e9d8c44 100644
+index 45ada6f36cf90e3224b8f2d13b33aacbff1db43b..fe98973e113a94f0b10caf6bef817f417992fc82 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -106,6 +106,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -107,6 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "core/cached_webview_availability.h"
  #include "test/test_agent.h"
  #include "tele/tele_updater.h"
@@ -40,7 +40,7 @@ index ced5bcd7a1a91ae958891cc6725330e44b02fbf5..631fbb64e040127bac9ed68bb4135f5f
  #include "tele/tele_badges.h"
  
  #include <QtCore/QStandardPaths>
-@@ -359,6 +360,7 @@ void Application::run() {
+@@ -360,6 +361,7 @@ void Application::run() {
  	Storage::ClearStaleArchiveFiles();
  	Webview::ClearStaleTemporaryStorage();
  	Tele::StartUpdater();

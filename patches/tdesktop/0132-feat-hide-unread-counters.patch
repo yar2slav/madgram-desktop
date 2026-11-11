@@ -21,10 +21,10 @@ Subject: [PATCH] feat: hide unread counters
  create mode 100644 Telegram/SourceFiles/tele/tele_counters.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 00a7b56c0e69f427d41394656c35b0ed9b3ec464..9f4f3694d174806971238983c9301fc96bce31ad 100644
+index 559cd4c543ed7571c1a2544290808aa43ca44a8c..3ae551d23c10d0294c3ef5c354c9e0cd332ba3bf 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2683,6 +2683,8 @@ PRIVATE
+@@ -2686,6 +2686,8 @@ PRIVATE
      tele/tele_communities.h
      tele/tele_corner_buttons.cpp
      tele/tele_corner_buttons.h
@@ -34,10 +34,10 @@ index 00a7b56c0e69f427d41394656c35b0ed9b3ec464..9f4f3694d174806971238983c9301fc9
      tele/tele_crash.h
      tele/tele_custom_emoji.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 631fbb64e040127bac9ed68bb4135f5f0e9d8c44..927d08f3c033e041f7570ed7273a481b176ce378 100644
+index fe98973e113a94f0b10caf6bef817f417992fc82..5a5be96de0c527cd70911ef04447b867197f3986 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -108,6 +108,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -109,6 +109,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_updater.h"
  #include "tele/tele_changelog.h"
  #include "tele/tele_badges.h"
@@ -45,7 +45,7 @@ index 631fbb64e040127bac9ed68bb4135f5f0e9d8c44..927d08f3c033e041f7570ed7273a481b
  
  #include <QtCore/QStandardPaths>
  #include <QtCore/QMimeDatabase>
-@@ -1229,7 +1230,7 @@ bool Application::preventsQuit(QuitReason reason) {
+@@ -1230,7 +1231,7 @@ bool Application::preventsQuit(QuitReason reason) {
  }
  
  int Application::unreadBadge() const {

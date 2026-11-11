@@ -16,10 +16,10 @@ Subject: [PATCH] fix: deletions that fail on the server come back
  create mode 100644 Telegram/SourceFiles/tele/tele_delete_fail.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ed7f01d4b5bd1f24d752a142c3e6efbfdb7348cc..3522aa72186a82ce5e6347f35dc521a9c8518066 100644
+index 09d87c626bcade96d69bcbed5a65df9498952fb0..393a0cb14acf03a72a3aa6f1347eb366c6f0c8b2 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2717,6 +2717,8 @@ PRIVATE
+@@ -2720,6 +2720,8 @@ PRIVATE
      tele/tele_drafts_rich.h
      tele/tele_drafts_section.cpp
      tele/tele_drafts_section.h

@@ -20,10 +20,10 @@ Subject: [PATCH] feat: save messages as a picture
  create mode 100644 Telegram/SourceFiles/tele/tele_shot.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ea0871d302a8858ba01545a58c9a3328555c9769..f46cb7cf87effa5e4868869e6892170ee3eb8316 100644
+index bb94c2bbffdf6c3b8fa00a57df83d6bd69234e67..8ecb99c27e7ad1f113cee6ada16a7e0776a629a7 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2733,6 +2733,8 @@ PRIVATE
+@@ -2736,6 +2736,8 @@ PRIVATE
      tele/tele_send_order.h
      tele/tele_shortcuts.cpp
      tele/tele_shortcuts.h
@@ -33,7 +33,7 @@ index ea0871d302a8858ba01545a58c9a3328555c9769..f46cb7cf87effa5e4868869e6892170e
      tele/tele_spoilers.h
      tele/tele_time.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 6b2725232057931f216c0c4db15ac9a1bdb39f61..955fd3be8d07cdc2e77d3c8c81b1f9d97c9c666f 100644
+index d2a6bc2c2c0aa5dc3e355d321116c72e7dd98f35..5b16359564bad67695c3142ffb960187304fd907 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -140,6 +140,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

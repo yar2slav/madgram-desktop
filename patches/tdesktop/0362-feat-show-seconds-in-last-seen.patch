@@ -23,10 +23,10 @@ Subject: [PATCH] feat: show seconds in last seen
  create mode 100644 Telegram/SourceFiles/tele/tele_last_seen_seconds.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a6137b31befecae6f9f5a0ef6ff8e5c6c8171a04..5b6090e2c892572c420c98b682e78d14b9e490cd 100644
+index f1c5b33c5b1a97ce1f0fe541a7f1e665936ef1b0..d22f75fd1e0f8ebcf30203d20b21cadbdcd71495 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2976,6 +2976,8 @@ PRIVATE
+@@ -2979,6 +2979,8 @@ PRIVATE
      tele/tele_kept_chats.h
      tele/tele_kept_store.cpp
      tele/tele_kept_store.h

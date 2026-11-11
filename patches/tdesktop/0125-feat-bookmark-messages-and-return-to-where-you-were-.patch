@@ -30,10 +30,10 @@ Subject: [PATCH] feat: bookmark messages and return to where you were reading
  create mode 100644 Telegram/SourceFiles/tele/tele_bookmarks_box.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 25fa92abd3129904aacd35783aea515cd02b5ccd..115f5426db74b20dcce23a1aa6d9b9a3a4a3abc0 100644
+index 7494168cd903642ba1b28e54b427628124f4e998..901738a3f00dee980b3ea0fe1db67d824f014aff 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2651,6 +2651,10 @@ PRIVATE
+@@ -2654,6 +2654,10 @@ PRIVATE
      tele/tele_app_name.h
      tele/tele_badges.cpp
      tele/tele_badges.h
@@ -45,7 +45,7 @@ index 25fa92abd3129904aacd35783aea515cd02b5ccd..115f5426db74b20dcce23a1aa6d9b9a3
      tele/tele_build.h
      tele/tele_bubble_badges.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 8288c7d1cf932d9ad01c31c9fdc13941c4033063..898be571b03e90cdf14910495adb86d09c9c5a2d 100644
+index 93d1851989fe08d0060d806efd59df59adb203c3..10314df12bb9217615b5a7676984c6420934243e 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -119,6 +119,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -65,7 +65,7 @@ index 8288c7d1cf932d9ad01c31c9fdc13941c4033063..898be571b03e90cdf14910495adb86d0
  		&& !action.options.shortcutId
  		&& !action.replaceMediaOf) {
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 0e4a029f7da45d950d2a466c2f910a28379de8e7..3d80ed0b44199961cfae0b03403f36c10ab96b32 100644
+index 48a1ba0e641b2d02c7b577e5267915f47108058c..1e4093a9ece225b4d803323d90fda1b890ce0969 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -1843,10 +1843,10 @@ index 776d5b6b40034f79f05cb14d3c225197cba22612..aa4469beb7d8a5af437d98b3f9cb7496
  		Toggle(kOptionScreenshotSecretMedia),
  		Toggle(kOptionAllowScreenCapture),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 3208cdcf53125f0145a9c1665ea246680fd00132..911b5dfa864978724c5ee50ff3790322c2e7cdfc 100644
+index 2e52c309499c1dac729677e4beb23e1c0fe4209f..2abbe07f44c1c4bca9f1311fb4bf5b85d4e434b0 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peers/edit_peer_info_box.h"
  #include "boxes/peers/manage_community_box.h"
  #include "boxes/premium_preview_box.h"
@@ -1854,7 +1854,7 @@ index 3208cdcf53125f0145a9c1665ea246680fd00132..911b5dfa864978724c5ee50ff3790322
  #include "tele/tele_changelog_chat.h"
  #include "tele/tele_chat_backgrounds.h"
  #include "tele/tele_deleted_section.h"
-@@ -1954,6 +1955,7 @@ void Filler::fillHistoryActions() {
+@@ -1955,6 +1956,7 @@ void Filler::fillHistoryActions() {
  	addCreateTopic();
  	addInfo();
  	Tele::AddJumpToFirstAction(_controller, _thread, _addAction);
@@ -1862,7 +1862,7 @@ index 3208cdcf53125f0145a9c1665ea246680fd00132..911b5dfa864978724c5ee50ff3790322
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
  	Tele::AddLocalNameAction(_controller, _peer, _addAction);
  	addViewAsTopics();
-@@ -2013,6 +2015,7 @@ void Filler::fillRepliesActions() {
+@@ -2014,6 +2016,7 @@ void Filler::fillRepliesActions() {
  	if (_topic) {
  		addInfo();
  		Tele::AddJumpToFirstAction(_controller, _topic, _addAction);

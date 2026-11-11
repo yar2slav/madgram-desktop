@@ -21,10 +21,10 @@ Subject: [PATCH] feat: remove all your messages from a chat
  create mode 100644 Telegram/SourceFiles/tele/tele_remove_mine.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b7a86baff8d50d66f917577d17a0396661b462a8..a52dd6602466e8af25510b6abf4b9a751b004de1 100644
+index 59c68fa043bd4d79398454fbcf7605a42f8f916f..6284bfde4c41598905990deb0ae4656decef300b 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2967,6 +2967,8 @@ PRIVATE
+@@ -2970,6 +2970,8 @@ PRIVATE
      tele/tele_reduce_motion.h
      tele/tele_regex_search.cpp
      tele/tele_regex_search.h
@@ -916,10 +916,10 @@ index 421e7f8e6d237549c23e6ccd2a470b50a95f3aa0..fc019b841c05e26547b7c0d3192c0c02
  		Toggle(kOptionStickerCaptionsSend),
  		Toggle(kOptionChainMentions),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index f22e9be83f42d05e60f1126041b254c054dc4a49..2419868fda07e71022976d7465c58dab411dfcf0 100644
+index 94442e7ab3b07e21931939802bea17670679f941..01b92671f1ef6895015493e563e3fe68d090a620 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -144,6 +144,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -145,6 +145,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_mtp_inspector.h"
  #include "tele/tele_online_notify.h"
  #include "tele/tele_peek.h"
@@ -927,7 +927,7 @@ index f22e9be83f42d05e60f1126041b254c054dc4a49..2419868fda07e71022976d7465c58dab
  #include "tele/tele_show_pinned.h"
  #include "tele/tele_silent.h"
  #include "tele/tele_unsorted_folder.h"
-@@ -1955,6 +1956,7 @@ void Filler::fillContextMenuActions() {
+@@ -1956,6 +1957,7 @@ void Filler::fillContextMenuActions() {
  		}
  	}
  	addBanFromChannel();
@@ -935,7 +935,7 @@ index f22e9be83f42d05e60f1126041b254c054dc4a49..2419868fda07e71022976d7465c58dab
  	addClearHistory();
  	addDeleteChat();
  	addLeaveChat();
-@@ -1994,6 +1996,7 @@ void Filler::fillHistoryActions() {
+@@ -1995,6 +1997,7 @@ void Filler::fillHistoryActions() {
  	Tele::AddDeletedActions(_controller, _thread, _addAction);
  	addTranslate();
  	addReport();
@@ -943,7 +943,7 @@ index f22e9be83f42d05e60f1126041b254c054dc4a49..2419868fda07e71022976d7465c58dab
  	addClearHistory();
  	addDeleteChat();
  	addLeaveChat();
-@@ -2051,6 +2054,9 @@ void Filler::fillRepliesActions() {
+@@ -2052,6 +2055,9 @@ void Filler::fillRepliesActions() {
  	addBoostChat();
  	addCreatePoll();
  	addCreateTodoList();

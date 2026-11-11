@@ -3375,10 +3375,10 @@ index a6f653ddd96800d44c16829b86862929d67b874a..7cef89823060c7fe2415c92747ce61de
  		}
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index a7bb20ea7d8bdfa182f62b151ae9eeb2a570c33b..8eae6e95edc19cdf6b4ef2e5758fd875ca943a78 100644
+index f47927993f5d2b05a17075633036d5ab0cb99a65..350170c8f9f81188faf7ed8051a11ec2b6ee79e3 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -3144,9 +3144,14 @@ void Message::paintText(
+@@ -3210,9 +3210,14 @@ void Message::paintText(
  	}
  
  	auto highlightRequest = context.computeHighlightCache();
@@ -3394,7 +3394,7 @@ index a7bb20ea7d8bdfa182f62b151ae9eeb2a570c33b..8eae6e95edc19cdf6b4ef2e5758fd875
  		.palette = &stm->textPalette,
  		.pre = stm->preCache.get(),
  		.blockquote = context.quoteCache(
-@@ -3164,6 +3169,7 @@ void Message::paintText(
+@@ -3230,6 +3235,7 @@ void Message::paintText(
  		.useFullWidth = true,
  		.linePostprocess = linePostprocess ? &*linePostprocess : nullptr,
  	});

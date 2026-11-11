@@ -12,7 +12,7 @@ Subject: [PATCH] feat: scroll to zoom in the media viewer
  5 files changed, 22 insertions(+), 2 deletions(-)
 
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 7106d64fae4ccb5d2570b034419b0490f514e938..a4789941f02fdda72e5ea152d41e20fbe6b8c803 100644
+index 9f159d307805a4cd7e9657f07722361ab1f46cc8..21fc8746ccbaa4810784d338ec4ba9f661fce97a 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -7652,18 +7652,20 @@ void OverlayWidget::handleWheelEvent(not_null<QWheelEvent*> e) {

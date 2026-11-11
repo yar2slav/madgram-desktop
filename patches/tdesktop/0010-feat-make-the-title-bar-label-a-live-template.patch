@@ -17,10 +17,10 @@ Subject: [PATCH] feat: make the title bar label a live template
  create mode 100644 Telegram/SourceFiles/tele/tele_title.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 43c6684f7e86a437a686cb88ff383c95db214fbe..27f5a046e84bc69b1aa8c6a2e05d570099e2bb63 100644
+index 239c4c559526ff30bf7aa6b7df2a6fc4783a8ac1..f816ec236a592a4c20296eec0e768a80bb4b3ba0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2649,6 +2649,8 @@ PRIVATE
+@@ -2652,6 +2652,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_shortcuts.cpp
      tele/tele_shortcuts.h
@@ -587,7 +587,7 @@ index f469c8cda38471623fb6b02ef4e65976373424f0..c5365571e3ab23a66bbfb46a09d5a52f
  
  	rpl::merge(
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index f8260bb5d80265a8c1f225a1478ac9455a7c9660..0aef2a3b150101a937faf07e2bc293ace61ddcad 100644
+index 9f45372d7db30e20ee31ccbbd945c7ac40da88cf..1f0aac165bedd12664f121add8e4018bebc8d3bc 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
 @@ -48,7 +48,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -599,7 +599,7 @@ index f8260bb5d80265a8c1f225a1478ac9455a7c9660..0aef2a3b150101a937faf07e2bc293ac
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h" // ChildSkip().x() for new child windows.
  
-@@ -710,7 +710,13 @@ void MainWindow::setupCanaryTitleLabel() {
+@@ -719,7 +719,13 @@ void MainWindow::setupCanaryTitleLabel() {
  	const auto label = Ui::CreateTitleSubWidget(
  		title,
  		st::titleSubWidgetStyle,
@@ -614,7 +614,7 @@ index f8260bb5d80265a8c1f225a1478ac9455a7c9660..0aef2a3b150101a937faf07e2bc293ac
  		layout->value(
  		) | rpl::map([](const Ui::Platform::TitleLayout &layout) {
  			return layout.onLeft() ? style::al_right : style::al_left;
-@@ -726,8 +732,9 @@ void MainWindow::setupCanaryTitleLabel() {
+@@ -735,8 +741,9 @@ void MainWindow::setupCanaryTitleLabel() {
  
  QString MainWindow::nativeTitleSuffix() const {
  	const auto title = titleWidget();

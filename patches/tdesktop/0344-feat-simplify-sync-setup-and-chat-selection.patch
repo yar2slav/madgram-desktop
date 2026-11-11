@@ -78,10 +78,10 @@ index 1df69bfa1c02df0aa201f2b09e47833a6523844d..867f6edff4af375b58900be41531462c
  			_controller,
  			Dialogs::EntryState{
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 60ffe5b71ed92a6256fdab246b136b15817c4826..463dae3eb4162e33333b5d2bc65469b207b31ba4 100644
+index 97ac5c075540b4ffd2b2440fad47e00d292b278b..480ef92540957239d8ef31332a1ee9ae608afebc 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -1572,6 +1572,7 @@ void TopBarWidget::showSelected(SelectedState state) {
+@@ -1573,6 +1573,7 @@ void TopBarWidget::showSelected(SelectedState state) {
  	_canSendNow = canSendNow;
  	const auto nowSelectedState = showSelectedState();
  	if (nowSelectedState) {

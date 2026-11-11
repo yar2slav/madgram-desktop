@@ -21,10 +21,10 @@ Subject: [PATCH] fix: invisible stories follow ghost settings and survive a
  create mode 100644 Telegram/SourceFiles/tele/tele_invisible_stories.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 327111684a01eb7da545b387b13ad0fa6c02d650..9cbe669c290584b5297c30c66f20c5ed853a0a98 100644
+index 3e164970d6fe0512a37727fa54bdb2a0545f8e27..07819e26dc243a012153c5b09f9289af26bc464e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2808,6 +2808,8 @@ PRIVATE
+@@ -2811,6 +2811,8 @@ PRIVATE
      tele/tele_inline_via.h
      tele/tele_invisible.cpp
      tele/tele_invisible.h
@@ -155,7 +155,7 @@ index f78ac5280d7a380aab11691a938090a0bef497c3..a154a66abbb5e50adbf1b9eeceecbd16
  	const auto st2 = st1.shareBox.get();
  	const auto st3 = st2 ? st2->scheduleBox.get() : nullptr;
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 965c9f802ab605cb5f1e9a086601f3c2f1eb8082..e4b124689eca282682979091ad40e9c5d6894c46 100644
+index e337de8ad56d89a1114d2406627a35a55d60b909..97a0a4928b8b2ea100c9f2473c3f9bc22097e76b 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

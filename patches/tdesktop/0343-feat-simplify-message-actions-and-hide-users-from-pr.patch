@@ -24,10 +24,10 @@ Subject: [PATCH] feat: simplify message actions and hide users from profiles
  create mode 100644 Telegram/SourceFiles/tele/tele_selection_shot.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 10138fcda74ca31701d648254c7122ee4a89292b..317f58251f664a477e4e0943da2e3514f8dee24c 100644
+index e5831a205785c92cf7218079ebdf9784ebcf68d4..33d0a81f88e2ce4c05285ee6b79e224d9353bcde 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3137,6 +3137,8 @@ PRIVATE
+@@ -3140,6 +3140,8 @@ PRIVATE
      tele/tele_shortcuts.cpp
      tele/tele_shortcuts.h
      tele/tele_shot.cpp
@@ -53,7 +53,7 @@ index 71f44ea6b1f5376a5bfee1927ea94a820673ae43..eca464f7e3fe2287a1f3541aedf01d32
    "Shot in the message menu": "Снимок в меню сообщения",
    "Shot view": "Вид снимка",
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 3c3ed46c2764a296443d2bbd4690252d42f23a3f..89d1ee4d79777cf0b8dcfc94a9fa53648a7fb376 100644
+index 0aab760c1621bd15cdc71199581e52a352778d55..723abef74ed4a816c296bed38d5b266d4244009b 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
@@ -65,7 +65,7 @@ index 3c3ed46c2764a296443d2bbd4690252d42f23a3f..89d1ee4d79777cf0b8dcfc94a9fa5364
  #include "history/history_widget.h"
  
  #include "api/api_compose_with_ai.h"
-@@ -1345,6 +1347,12 @@ HistoryWidget::HistoryWidget(
+@@ -1346,6 +1348,12 @@ HistoryWidget::HistoryWidget(
  	) | rpl::on_next([=](bool active) {
  		setMembersShowAreaActive(active);
  	}, _topBar->lifetime());
@@ -129,7 +129,7 @@ index 2fcd030b5e78143f1d45d41affc389a820bf292f..6ab86839356bf8885a085ccf1a0d1dea
  	) | rpl::on_next([=] {
  		confirmForwardSelected();
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index a3b2d3c399cd1f365e6c205b3908d4a1cf263518..60ffe5b71ed92a6256fdab246b136b15817c4826 100644
+index d9a39ce0de126f148769a76f4c74f4707113b1b6..97ac5c075540b4ffd2b2440fad47e00d292b278b 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 @@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
@@ -140,7 +140,7 @@ index a3b2d3c399cd1f365e6c205b3908d4a1cf263518..60ffe5b71ed92a6256fdab246b136b15
  #include "history/view/history_view_top_bar_widget.h"
  
  #include "history/history.h"
-@@ -1195,7 +1196,10 @@ void TopBarWidget::updateControlsGeometry() {
+@@ -1196,7 +1197,10 @@ void TopBarWidget::updateControlsGeometry() {
  	const auto backButtonTop = selectedButtonsTop + st::topBarHeight;
  	auto buttonsLeft = st::topBarActionSkip
  		+ (_controller->adaptive().isOneColumn() ? 0 : st::lineWidth);
@@ -152,7 +152,7 @@ index a3b2d3c399cd1f365e6c205b3908d4a1cf263518..60ffe5b71ed92a6256fdab246b136b15
  		+ (_sendNow->isHidden() ? 0 : _sendNow->contentWidth())
  		+ (_delete->isHidden() ? 0 : _delete->contentWidth())
  		+ _clear->width();
-@@ -1216,6 +1220,7 @@ void TopBarWidget::updateControlsGeometry() {
+@@ -1217,6 +1221,7 @@ void TopBarWidget::updateControlsGeometry() {
  		buttonsLeft += _forward->width() + st::topBarActionSkip;
  	}
  
@@ -628,10 +628,10 @@ index 2b698124b0556167188e1dea854d298f58575186..3ec473542ad1222e46f6c32855307d0b
  
  } // namespace Tele
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 5228b6ce4864ed8774577b470ed5a1b7f25704b9..e1e350c4a42e39a386bf99f1dcf78c6509a3186d 100644
+index 8bb1e1e385a377dd7989062c0ab441e419030392..d334864669414d3d1dab019495c92ac45e3b3950 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -2005,6 +2005,7 @@ void Filler::fillHistoryActions() {
+@@ -2006,6 +2006,7 @@ void Filler::fillHistoryActions() {
  }
  
  void Filler::fillProfileActions() {

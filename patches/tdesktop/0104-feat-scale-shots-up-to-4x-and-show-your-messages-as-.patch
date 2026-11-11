@@ -47,10 +47,10 @@ Subject: [PATCH] feat: scale shots up to 4x and show your messages as incoming
  create mode 100644 Telegram/SourceFiles/tele/tele_shot_sharp.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 85b4bb4f5a0000677b25b1a25384430dfbeb5df1..72e5a023758bd9111cc81bab94140c64dcb53ecb 100644
+index e49d691172159a276b94ca31ce7a0888cf077b43..82e5c0856c83d630daf8e07c993871a61ff19210 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2767,6 +2767,8 @@ PRIVATE
+@@ -2770,6 +2770,8 @@ PRIVATE
      tele/tele_shortcuts.h
      tele/tele_shot.cpp
      tele/tele_shot.h
@@ -112,7 +112,7 @@ index deaf6870917288bf22cbafec01f484bea4f49da7..9e9d9c15ce2f97e2ebc35034fb42a115
  
  Ui::Text::CustomEmojiFactory CustomEmojiManager::factory(
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index afc461182023c6d1cf452a9281dcd7a3e02a693f..3c2e7426fa7842348434e39d1a0a30dd6a6d9160 100644
+index 0fb91e313d29340fdab658dd9813b25780353970..f3367d13c4e7d01ee9fa8a1e9b8795bb6e6c0853 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -3945,7 +3945,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
@@ -199,10 +199,10 @@ index a09fb575e84a44cb0b83965f85d4ae721c689bd2..ddfd358ccde6ea0ba92832da3cf2b58c
  	}
  	for (auto &entry : list) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index d0c910359b6eb7a32fe727287e6c33a801caabea..8c0a9e0342906038582aff7fbfffe823e4e58f76 100644
+index 7d0942a429cb59bb69da7c94c513d84c489aa718..9818a7f9a09f94b95ef3a5d99bee2e5906746a2b 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -69,6 +69,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -70,6 +70,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_deleted.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_ignored.h"
@@ -211,7 +211,7 @@ index d0c910359b6eb7a32fe727287e6c33a801caabea..8c0a9e0342906038582aff7fbfffe823
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_chat_style.h"
-@@ -2442,7 +2444,9 @@ void Message::paintCommentsButton(
+@@ -2459,7 +2461,9 @@ void Message::paintCommentsButton(
  		const auto single = st::historyCommentsUserpics.size;
  		const auto shift = st::historyCommentsUserpics.shift;
  		const auto regenerate = [&] {
@@ -222,7 +222,7 @@ index d0c910359b6eb7a32fe727287e6c33a801caabea..8c0a9e0342906038582aff7fbfffe823
  				return true;
  			}
  			for (auto i = 0; i != count; ++i) {
-@@ -3924,7 +3928,8 @@ bool Message::hasFromPhoto() const {
+@@ -3992,7 +3996,8 @@ bool Message::hasFromPhoto() const {
  		if (item->isGuestChatBotMessage()) {
  			return true;
  		}
@@ -232,7 +232,7 @@ index d0c910359b6eb7a32fe727287e6c33a801caabea..8c0a9e0342906038582aff7fbfffe823
  	} break;
  	case Context::ContactPreview:
  	case Context::ShortcutMessages:
-@@ -5840,7 +5845,8 @@ bool Message::displayForwardedFrom() const {
+@@ -5913,7 +5918,8 @@ bool Message::displayForwardedFrom() const {
  }
  
  bool Message::hasOutLayout() const {
@@ -453,7 +453,7 @@ index 4fe8d2b4789363ddf6f40694a4aad89bfe03334a..61e8c7926d5de72d89480318b005eba0
  
  	if (_ripple) {
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index 4ae0d8289c309e0ec18a70babc0dd7a587273ed3..6110b0a1bf2a08cbd7064f9eda0da5114999a076 100644
+index c67b0b384b1a5faf33ed0cd4705b2798bec999fe..e7f5c93ed8567df86697031b3cc158c2009ebd92 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 @@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -464,7 +464,7 @@ index 4ae0d8289c309e0ec18a70babc0dd7a587273ed3..6110b0a1bf2a08cbd7064f9eda0da511
  #include "tele/tele_spoilers.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
-@@ -1253,7 +1254,7 @@ void Gif::validateThumbCache(
+@@ -1246,7 +1247,7 @@ void Gif::validateThumbCache(
  			&& (normal->width() < kUseNonBlurredThreshold)
  			&& (normal->height() < kUseNonBlurredThreshold))
  		: !videothumb;
@@ -473,7 +473,7 @@ index 4ae0d8289c309e0ec18a70babc0dd7a587273ed3..6110b0a1bf2a08cbd7064f9eda0da511
  	const auto scaled = ScaledInstantViewMediaSize(
  		outer,
  		HostedInstantViewMediaPixelScale(_parent));
-@@ -1316,7 +1317,7 @@ void Gif::validateSpoilerImageCache(
+@@ -1309,7 +1310,7 @@ void Gif::validateSpoilerImageCache(
  		std::optional<Ui::BubbleRounding> rounding) const {
  	Expects(_spoiler != nullptr);
  
@@ -482,7 +482,7 @@ index 4ae0d8289c309e0ec18a70babc0dd7a587273ed3..6110b0a1bf2a08cbd7064f9eda0da511
  	const auto scaled = ScaledInstantViewMediaSize(
  		outer,
  		HostedInstantViewMediaPixelScale(_parent));
-@@ -2257,7 +2258,8 @@ void Gif::validateGroupedCache(
+@@ -2250,7 +2251,8 @@ void Gif::validateGroupedCache(
  		| (uint64(height) << 32)
  		| (uint64(options) << 16)
  		| (uint64(rounding.key()) << 8)
@@ -492,7 +492,7 @@ index 4ae0d8289c309e0ec18a70babc0dd7a587273ed3..6110b0a1bf2a08cbd7064f9eda0da511
  	if (*cacheKey == key) {
  		return;
  	}
-@@ -2268,10 +2270,10 @@ void Gif::validateGroupedCache(
+@@ -2261,10 +2263,10 @@ void Gif::validateGroupedCache(
  	const auto pixSize = Ui::GetImageScaleSizeForGeometry(
  		{ originalWidth, originalHeight },
  		{ width, height });
@@ -897,7 +897,7 @@ index 80b48df691621e272cc429aa94cf1347fb9b3203..2330789e1f864875971fa6e9b4b1fa62
  		(Images::Option::RoundLarge
  			| Images::Option::RoundSkipTopRight
 diff --git a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
-index e89de87be5eedecc5b5606d5aae30d6de115ac2c..d069c07a763c41a53e9bf928e2a5fbe3187c66e3 100644
+index 6ca8513da7348890a8920847e146b2737ee53694..8d3e7e88c42de7a8a6613c7057e1b8d478c4de97 100644
 --- a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 +++ b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 @@ -5,6 +5,8 @@

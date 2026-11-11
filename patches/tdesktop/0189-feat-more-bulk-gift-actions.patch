@@ -14,10 +14,10 @@ Subject: [PATCH] feat: more bulk gift actions
  7 files changed, 965 insertions(+), 193 deletions(-)
 
 diff --git a/Telegram/SourceFiles/boxes/star_gift_box.cpp b/Telegram/SourceFiles/boxes/star_gift_box.cpp
-index ab59f3d1f9e963d729c83ae0acccf1cda359a484..4888cfd6c82619e7e59c8390afed3a226fb52e50 100644
+index 6ce176ee62045843a8ac3a73db14292cd1ac6e46..e4f706063d3921bc302886a3536bd16a21c3df68 100644
 --- a/Telegram/SourceFiles/boxes/star_gift_box.cpp
 +++ b/Telegram/SourceFiles/boxes/star_gift_box.cpp
-@@ -3056,12 +3056,14 @@ void UpdateGiftSellPrice(
+@@ -3045,12 +3045,14 @@ void UpdateGiftSellPrice(
  		std::shared_ptr<ChatHelpers::Show> show,
  		std::shared_ptr<Data::UniqueGift> unique,
  		Data::SavedStarGiftId savedId,
@@ -34,7 +34,7 @@ index ab59f3d1f9e963d729c83ae0acccf1cda359a484..4888cfd6c82619e7e59c8390afed3a22
  		return;
  	}
  	const auto wasOnResale = (unique->starsForResale > 0);
-@@ -3073,14 +3075,16 @@ void UpdateGiftSellPrice(
+@@ -3062,14 +3064,16 @@ void UpdateGiftSellPrice(
  			: MTP_starsAmount(MTP_long(0), MTP_int(0)))
  	)).done([=](const MTPUpdates &result) {
  		session->api().applyUpdates(result);
@@ -59,7 +59,7 @@ index ab59f3d1f9e963d729c83ae0acccf1cda359a484..4888cfd6c82619e7e59c8390afed3a22
  		const auto setStars = [&](CreditsAmount amount) {
  			unique->starsForResale = amount.whole();
  		};
-@@ -3106,7 +3110,13 @@ void UpdateGiftSellPrice(
+@@ -3095,7 +3099,13 @@ void UpdateGiftSellPrice(
  			.slug = unique->slug,
  			.action = Data::GiftUpdate::Action::ResaleChange,
  		});

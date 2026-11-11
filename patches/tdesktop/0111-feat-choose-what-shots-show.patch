@@ -73,10 +73,10 @@ index 42e4eb24dfae6a15302227284e6d1b5fd48f5e99..2805e52912789fc4d04e5cf7b14422ce
  		return;
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 8c0a9e0342906038582aff7fbfffe823e4e58f76..16783ab495ba9851e9c86d0a87e91608b01d4935 100644
+index 9818a7f9a09f94b95ef3a5d99bee2e5906746a2b..3d05f85aa1fccb2f44eaae5f9731acee5d5688fc 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -3877,7 +3877,7 @@ void Message::unloadHeavyPart() {
+@@ -3945,7 +3945,7 @@ void Message::unloadHeavyPart() {
  }
  
  bool Message::hasFromPhoto() const {
@@ -85,7 +85,7 @@ index 8c0a9e0342906038582aff7fbfffe823e4e58f76..16783ab495ba9851e9c86d0a87e91608
  		return false;
  	}
  	switch (context()) {
-@@ -5834,13 +5834,19 @@ bool Message::hasFromName() const {
+@@ -5907,13 +5907,19 @@ bool Message::hasFromName() const {
  }
  
  bool Message::displayFromName() const {

@@ -21,10 +21,10 @@ Subject: [PATCH] feat: open disappearing media without burning it
  create mode 100644 Telegram/SourceFiles/tele/tele_secret_media.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a5f02c19df82c3144f3171b9d63661cb0ffcf1c3..31891320a920c6b0d8cd43df6c9456be569c1351 100644
+index 2ffc9acc7422902ac94ef7d0d5825763b249fb6b..dbad9423c653aa221d99be0fba5d6aff548a1238 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2665,6 +2665,8 @@ PRIVATE
+@@ -2668,6 +2668,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_peer_id.cpp
      tele/tele_peer_id.h
@@ -34,7 +34,7 @@ index a5f02c19df82c3144f3171b9d63661cb0ffcf1c3..31891320a920c6b0d8cd43df6c9456be
      tele/tele_shortcuts.h
      tele/tele_time.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 47a9222b05f6cef9fe5e317dd865054f21d76b74..26135865a47875ea782b19cd76f60e462de57743 100644
+index e459de4f9f665048aa3984979a0df7a4f65e6903..7df95c44598c48fda63232f62bdb141c7aca79e0 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -108,6 +108,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -68,7 +68,7 @@ index 47a9222b05f6cef9fe5e317dd865054f21d76b74..26135865a47875ea782b19cd76f60e46
  	}
  	const auto ids = MTP_vector<MTPint>(1, MTP_int(item->id));
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index d1b78eb338c1c04c75ecc93db081d4cf77b782a6..ca2cfaf74a61cc61c25762f535b0d387f301a986 100644
+index ab0b361b99430baa8cd1a36d928dc541891341bd..e93e3f70f9e52e820b193f1124fd2c4760e020f5 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -137,6 +137,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -130,7 +130,7 @@ index 1a7c8940f36d4adaa9698def1cca3bf75b5f3bc4..3d92a8ed90c6bc98fc81492d4d2eb77d
  
  				auto lifetime = std::make_shared<rpl::lifetime>();
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index 53d555f5c987f3faaf48d8b3b30265f8356b846e..9c4b0f82084b8cccfacf9eed78ba8b66873df450 100644
+index b5ea5f06b835d741ac4b84ec15ad31bfce1f722c..6b2a3591267c97f618c312833a36b7b184a4c501 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 @@ -63,6 +63,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -141,7 +141,7 @@ index 53d555f5c987f3faaf48d8b3b30265f8356b846e..9c4b0f82084b8cccfacf9eed78ba8b66
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
  
-@@ -213,6 +214,9 @@ Gif::Gif(
+@@ -212,6 +213,9 @@ Gif::Gif(
  		const auto &data = &_parent->data()->history()->owner();
  		const auto isOut = _parent->data()->out();
  		setDocumentLinks(_data, realParent, [=] {
@@ -152,7 +152,7 @@ index 53d555f5c987f3faaf48d8b3b30265f8356b846e..9c4b0f82084b8cccfacf9eed78ba8b66
  			TTLVoiceStops(fullId) | rpl::on_next([=]() mutable {
  				if (lifetime) {
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 4c3d7850a4335fb3acc0eb7a99091153d9e98be7..d7a60f03ac4a90e269530b54d9933c1b49bf3819 100644
+index 21c7d842242d1365f82f0d2787228c80faa7316f..bf3ea61b2a4d008759b33382b3d89e8192ce297f 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

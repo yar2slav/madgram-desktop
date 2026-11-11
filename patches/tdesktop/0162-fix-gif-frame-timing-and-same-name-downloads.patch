@@ -16,10 +16,10 @@ Subject: [PATCH] fix: gif frame timing and same-name downloads
  create mode 100644 Telegram/SourceFiles/tele/tele_download_paths.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 81e81edd73394c3086dfa1c0292af6b95449407a..f7c100387b466f745206ba0dcc872e6d0a4600b5 100644
+index 877b9539ae7d695ce85d6d4df8786cfba586b940..45fee9c531e0bc6272b1dc7b4601b3292a93dbb7 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2701,6 +2701,8 @@ PRIVATE
+@@ -2704,6 +2704,8 @@ PRIVATE
      tele/tele_docked_media.h
      tele/tele_download_folders.cpp
      tele/tele_download_folders.h

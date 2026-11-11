@@ -19,10 +19,10 @@ Subject: [PATCH] fix: open custom emoji in rich and emoji-only messages
  create mode 100644 Telegram/SourceFiles/tele/tele_custom_emoji.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 039f76764fc565baa70ad421f6a3747402a50776..5db1a8e57c11e5dd6359fcaace3de5fa5631a233 100644
+index d07c36d2695a448c976e1bf82a3afa2480689b01..099e12cc5105e4e75fbfbceda5a34666c0ada6b1 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2675,6 +2675,8 @@ PRIVATE
+@@ -2678,6 +2678,8 @@ PRIVATE
      tele/tele_corner_buttons.h
      tele/tele_crash.cpp
      tele/tele_crash.h

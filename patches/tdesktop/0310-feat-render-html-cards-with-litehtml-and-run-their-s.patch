@@ -42,10 +42,10 @@ Subject: [PATCH] feat: render html cards with litehtml and run their scripts
  create mode 100644 Telegram/SourceFiles/tele/tele_html_script.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 14ea8a45307386ca683552c81e8337b99ce9332f..a93e5ee18098a5bda3b20fee331748bb1d9d553e 100644
+index 01c8cb7caad6b8f1f861a76eacc3a9360730a402..1b4d32fbefd8e12c065bbc808de5f5929aac7fd7 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2926,6 +2926,18 @@ PRIVATE
+@@ -2929,6 +2929,18 @@ PRIVATE
      tele/tele_ghost_pending.h
      tele/tele_hidden_words.cpp
      tele/tele_hidden_words.h

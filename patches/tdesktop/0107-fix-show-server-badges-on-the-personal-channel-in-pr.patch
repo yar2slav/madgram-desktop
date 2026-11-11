@@ -13,10 +13,10 @@ Subject: [PATCH] fix: show server badges on the personal channel in profiles
  create mode 100644 Telegram/SourceFiles/tele/tele_name_badges.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 39ea6e029524eff12648e0215a0647e9a6dee117..de76e1267021a19100b0e09462d73d99cdaf29b4 100644
+index a6a9c4c7784e85d010553c179e347a1c05a8eafc..150c60b1dbfd5e8972ad8d2ffd78d4268318bf48 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2749,6 +2749,8 @@ PRIVATE
+@@ -2752,6 +2752,8 @@ PRIVATE
      tele/tele_launch_flags.h
      tele/tele_links.cpp
      tele/tele_links.h

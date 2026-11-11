@@ -18,7 +18,7 @@ Subject: [PATCH] feat: captioned stickers go to the docked media
  11 files changed, 480 insertions(+), 75 deletions(-)
 
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index e4068d3b39ed3214987d07e8f240958ca73df0d0..0b987b016cac24940ea37455bd6353fecb70be24 100644
+index 1e39b5fb43379893794806b30d568ff90acb64a1..4ea20fed04ba9e3c2b501f3557d8d20767975d7a 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -88,10 +88,10 @@ index 0ae16ee9a60646671c9bed2156628ab15833cd0d..ecb9228720ae64b51f860c0ff08ea780
  
  struct PhotoChosen {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 50c12fbf0fd3c6274b3e40068e1997510ebf7374..c3c8db09db0efd4c36d05a71696971d3044246ea 100644
+index dcb42212469c470461e9df95f7d77d5bfa4a7424..283b6de811cd6b271bdf57a95d3892d445033734 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -627,6 +627,15 @@ HistoryWidget::HistoryWidget(
+@@ -628,6 +628,15 @@ HistoryWidget::HistoryWidget(
  					Api::SendOptions options) {
  				sendingFilesConfirmed(std::move(bundle), options);
  			},
@@ -107,7 +107,7 @@ index 50c12fbf0fd3c6274b3e40068e1997510ebf7374..c3c8db09db0efd4c36d05a71696971d3
  			.sendMenuDetails = [=] { return sendMenuDetails(); },
  		});
  	_teleFieldResize = std::make_unique<Tele::FieldResize>(
-@@ -2711,7 +2720,13 @@ void HistoryWidget::fileChosen(ChatHelpers::FileChosen &&data) {
+@@ -2712,7 +2721,13 @@ void HistoryWidget::fileChosen(ChatHelpers::FileChosen &&data) {
  			Data::InsertCustomEmoji(_field.data(), data.document);
  		}
  	} else if (_history) {
@@ -123,10 +123,10 @@ index 50c12fbf0fd3c6274b3e40068e1997510ebf7374..c3c8db09db0efd4c36d05a71696971d3
  			const auto from = data.messageSendingFrom;
  			Ui::SendGifWithCaption(
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 715376d8c78394c8f861f0dccb6ed014c923f6c9..3d5dc4d8fd6367997786d70ce7d97cb7927811ea 100644
+index a3ddcee584a19e6656a0d1365889af86dd7a6d0e..bd0f0f2a7a9f31e94ecd608703e9cc0c5979b43f 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-@@ -1641,6 +1641,16 @@ void ComposeControls::setupTeleDocked() {
+@@ -1642,6 +1642,16 @@ void ComposeControls::setupTeleDocked() {
  					_sendAsFileConfirmed(std::move(bundle), options);
  				}
  			},
@@ -143,7 +143,7 @@ index 715376d8c78394c8f861f0dccb6ed014c923f6c9..3d5dc4d8fd6367997786d70ce7d97cb7
  			.sendMenuDetails = [=] { return sendMenuDetails(); },
  			.scheduled = (_mode == Mode::Scheduled),
  		});
-@@ -4206,6 +4216,12 @@ void ComposeControls::initTabbedSelector() {
+@@ -4207,6 +4217,12 @@ void ComposeControls::initTabbedSelector() {
  				Data::InsertCustomEmoji(_field, data.document);
  			}
  		} else if (data.needsCaption && _history) {

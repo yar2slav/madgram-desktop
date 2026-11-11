@@ -19,10 +19,10 @@ Subject: [PATCH] feat: show message details in the message menu
  create mode 100644 Telegram/SourceFiles/tele/tele_message_details.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 24bf79cc3d872d959e6824cae15aed01d3307bd8..04fc4a530ad09a8e83321cb570f2c00f5802066b 100644
+index 4967d04fa51eac872711cd74f567b46389a72b3f..9db8264bbd709c5be5f64f798e148d8239141ba8 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3012,6 +3012,8 @@ PRIVATE
+@@ -3015,6 +3015,8 @@ PRIVATE
      tele/tele_menu_layout.h
      tele/tele_menu_registry.cpp
      tele/tele_menu_registry.h

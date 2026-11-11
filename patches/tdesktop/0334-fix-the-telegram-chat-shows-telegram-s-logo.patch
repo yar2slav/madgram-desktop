@@ -417,7 +417,7 @@ literal 0
 HcmV?d00001
 
 diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
-index 72355671bad7ae8c31f32e4e27b47d14c06da4c3..3a6a3f0043c66dfd107fc78e810edc53d5e6cad5 100644
+index e04e8c56d9c50608fdd63c4fe5a934a58f6946e4..0726f0c8692385daab76b006181e8cb56f61980c 100644
 --- a/Telegram/Resources/qrc/telegram/telegram.qrc
 +++ b/Telegram/Resources/qrc/telegram/telegram.qrc
 @@ -10,6 +10,7 @@

@@ -35,10 +35,10 @@ Subject: [PATCH] feat: let scripts give their menu items icons
  create mode 100644 Telegram/SourceFiles/tele/tele_menu_icon.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index bcf79db1364398c4b1595a8832cf26d09f368e71..b39acebcdc234ecd64c18b8ff9a3c17b134d309a 100644
+index c531a950d8e90d9f92cd5c8067fc5d2f39bac251..fec78ad0c66e7b8e7eb2c173448da5b8f83f08e9 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2698,6 +2698,8 @@ PRIVATE
+@@ -2701,6 +2701,8 @@ PRIVATE
      tele/scripting/tele_script_fs.h
      tele/scripting/tele_script_data.cpp
      tele/scripting/tele_script_data.h
@@ -47,7 +47,7 @@ index bcf79db1364398c4b1595a8832cf26d09f368e71..b39acebcdc234ecd64c18b8ff9a3c17b
      tele/scripting/tele_script_sound.cpp
      tele/scripting/tele_script_sound.h
      tele/scripting/tele_script_miniapps.cpp
-@@ -2976,6 +2978,8 @@ PRIVATE
+@@ -2979,6 +2981,8 @@ PRIVATE
      tele/tele_menu_apply.h
      tele/tele_menu_editor.cpp
      tele/tele_menu_editor.h

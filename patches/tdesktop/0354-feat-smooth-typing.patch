@@ -18,10 +18,10 @@ Subject: [PATCH] feat: smooth typing
  create mode 100644 Telegram/SourceFiles/tele/tele_smooth_typing.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index c7e56c42629fa1ceddc0e69b92a4195481ad7fa9..223b387811ab15870ad4976026d3be6f62192c50 100644
+index 0e4d32a7654805c42b89ebf1f5ac348143526c09..8085a811a4e7797b6352c607a2b54e4eb72bc28a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3148,6 +3148,8 @@ PRIVATE
+@@ -3151,6 +3151,8 @@ PRIVATE
      tele/tele_silent.h
      tele/tele_smooth_scroll.cpp
      tele/tele_smooth_scroll.h
@@ -44,10 +44,10 @@ index 43c615408275b639064fa85b6fb54fc3ffbc9016..da15700a026f50552cde4b0564ea7549
 +  "The text cursor glides to its new place instead of jumping.": "Курсор в поле ввода плавно переезжает на новое место, а не прыгает."
  }
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index f38a017c92ce97c0358ffc3f1aefcd39d5f345c5..1bdb16d1f04d115e623eafbb9603909f089fbcd0 100644
+index e0d182575d03b62a34e95d66c31a26399b0667e2..4bd732f1142230dd29de35444df40f515c693831 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -121,6 +121,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_freeze_watchdog.h"
  #include "tele/tele_options.h"
  #include "tele/tele_smooth_scroll.h"
@@ -55,7 +55,7 @@ index f38a017c92ce97c0358ffc3f1aefcd39d5f345c5..1bdb16d1f04d115e623eafbb9603909f
  #include "tele/tele_start_menu.h"
  
  #include <QtCore/QStandardPaths>
-@@ -382,6 +383,7 @@ void Application::run() {
+@@ -383,6 +384,7 @@ void Application::run() {
  	Tele::StartMadBadges();
  	Tele::StartReduceMotion();
  	Tele::StartSmoothScroll();

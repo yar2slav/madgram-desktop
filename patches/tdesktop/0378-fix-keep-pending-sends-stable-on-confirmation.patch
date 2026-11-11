@@ -180,7 +180,7 @@ index ebfe069e3de7128b3086285773abca1f401b9eef..626360f91bc58731c712c69b68c4040f
  
  		return lifetime;
 diff --git a/Telegram/SourceFiles/data/data_replies_list.cpp b/Telegram/SourceFiles/data/data_replies_list.cpp
-index fd01b2a23767d3834065c0523df44366a992fe0b..06ae01e66acf0a3fd32f795d52e1f4a6d76490b3 100644
+index 4b17c67aa68b40a4058eef29b147eed7795be29f..8e43f704d7a1c2da5bbf1abed4fc201a16b305e1 100644
 --- a/Telegram/SourceFiles/data/data_replies_list.cpp
 +++ b/Telegram/SourceFiles/data/data_replies_list.cpp
 @@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -260,7 +260,7 @@ index 37e534df12a57865b42d45e19c58a3c42b1aeec8..050b7522fff4a2708767f855f0f69bfe
  		return lifetime;
  	};
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 53327a29ea62889140bd6ac5c41c0c61a0ccd857..1e9a7880e051ac6d9af4ea003ec474c8a2bc2233 100644
+index f5cac095ae23b78422c5ccc1094fb2730c8605bf..993df7d07432b27d0a158c58479422776b424e44 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 @@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

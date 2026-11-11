@@ -22,10 +22,10 @@ Subject: [PATCH] feat: add optional composer editing helpers
  create mode 100644 Telegram/SourceFiles/tele/tele_composer_editing.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 07e8f392abb650a52a05b2b3f4646c6061921001..28fae0435e9b0737f1202f87f286ff7a99bc1734 100644
+index 32addffcf91c54aad1c48e4ed9bf7b664abd6ba8..db7a1e94caf72f529877a3ff29c4883a7fe14f28 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3070,6 +3070,8 @@ PRIVATE
+@@ -3073,6 +3073,8 @@ PRIVATE
      tele/tele_name_badges.h
      tele/tele_options.cpp
      tele/tele_options.h

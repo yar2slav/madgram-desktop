@@ -22,10 +22,10 @@ Subject: [PATCH] feat: link usernames to profiles locally
  create mode 100644 Telegram/SourceFiles/tele/tele_username_aliases.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4c4d65236a650f3afc96ae3b8171a0097c0b83ff..5237c80420f50065ac6d16eb613948a043d6c655 100644
+index 9908f4d40af0f2d5dc951cef55a9309a317525b3..7a04817403c943507e835d23ff005d64acb178cc 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2718,6 +2718,8 @@ PRIVATE
+@@ -2721,6 +2721,8 @@ PRIVATE
      tele/tele_updater.cpp
      tele/tele_updater.h
      tele/tele_uploads.h
@@ -71,7 +71,7 @@ index 160e47f37f6330a7c152a6f221008e2baa8e0f93..af9da8a6edc0b54762662806d5619cde
  	const auto flags = PrepareConfirmedFileFlags(
  		session,
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 5f9b910681c45ce41820105bd09faf5e8e1a3eb9..d4246f488ea821ac8788735dda9b3c880c798e44 100644
+index 859fe7fd14236d6524524821a7a8bcfeb4480911..5d8e2bd32f54957cf80beb35cd4b5dcb6d17a572 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -114,6 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -88,7 +88,7 @@ index 5f9b910681c45ce41820105bd09faf5e8e1a3eb9..d4246f488ea821ac8788735dda9b3c88
  	Tele::PrepareSentLinks(left);
 +	Tele::ReplaceUsernameAliases(history, left);
  
- 	HistoryItem *lastMessage = nullptr;
+ 	auto lastMessage = (HistoryItem*)nullptr;
  
 diff --git a/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp b/Telegram/SourceFiles/chat_helpers/field_autocomplete.cpp
 index 22e0145a7dee370c476896aeec93925c1c341d78..efec13a9371cedd785815cdd31d22deb26c94984 100644
@@ -1171,10 +1171,10 @@ index 0000000000000000000000000000000000000000..664a9918929ddd4b6b26414cdc111de4
 +
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 295d4105fea26f8729bd8185940e7b65e3c86836..74a2f1212f47bccd1e5bd36bb1a867d01e93610c 100644
+index bea7c866d4b2d8945c127ab0c9ed8a22f66e9747..3b36508e42a71097b09ddb8ec8c715a41a17b62f 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -132,6 +132,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -133,6 +133,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_jump_to_first.h"
@@ -1182,7 +1182,7 @@ index 295d4105fea26f8729bd8185940e7b65e3c86836..74a2f1212f47bccd1e5bd36bb1a867d0
  #include "tele/tele_view_tl.h"
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
-@@ -1946,6 +1947,7 @@ void Filler::fillHistoryActions() {
+@@ -1947,6 +1948,7 @@ void Filler::fillHistoryActions() {
  	addCreateTopic();
  	addInfo();
  	Tele::AddJumpToFirstAction(_controller, _thread, _addAction);
@@ -1190,7 +1190,7 @@ index 295d4105fea26f8729bd8185940e7b65e3c86836..74a2f1212f47bccd1e5bd36bb1a867d0
  	addViewAsTopics();
  	addManageChat();
  	addStoryArchive();
-@@ -1973,6 +1975,7 @@ void Filler::fillProfileActions() {
+@@ -1974,6 +1976,7 @@ void Filler::fillProfileActions() {
  	addNewContact();
  	addShareContact();
  	addEditContact();
@@ -1199,10 +1199,10 @@ index 295d4105fea26f8729bd8185940e7b65e3c86836..74a2f1212f47bccd1e5bd36bb1a867d0
  	addNewMembers();
  	addSendGift();
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 5c5fa7002867090a035fb1993d91a5e95c620b9b..4811a82c2182f6c4b1572c02d4adfa59332f6db6 100644
+index d98f06534ef98520d6afe2150778688a18d6e9ce..7848dfb7b5d6c42fd77a670d8877a8fcc7489708 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -130,6 +130,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "settings/sections/settings_premium.h"
  #include "settings/sections/settings_privacy_security.h"
  #include "tele/tele_folders.h"
@@ -1210,7 +1210,7 @@ index 5c5fa7002867090a035fb1993d91a5e95c620b9b..4811a82c2182f6c4b1572c02d4adfa59
  #include "styles/style_chat_helpers.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -573,6 +574,9 @@ void SessionNavigation::resolveUsername(
+@@ -574,6 +575,9 @@ void SessionNavigation::resolveUsername(
  		const QString &username,
  		Fn<void(not_null<PeerData*>)> done,
  		const QString &referral) {

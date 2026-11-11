@@ -13,10 +13,10 @@ Subject: [PATCH] feat: redesign the title template editor
  create mode 100644 Telegram/SourceFiles/tele/tele_title_box.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5e2c550736bd42c2466feecbefaa981f36aedac2..ccf549d7035623f6f29e765a34bae33a8412a83d 100644
+index 29353ed2e214a8fb7b7c84bbbde46728b9c32bc6..4586884cdc3768da99bdd607dd9c39aa5ee77572 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2759,6 +2759,8 @@ PRIVATE
+@@ -2762,6 +2762,8 @@ PRIVATE
      tele/tele_time.h
      tele/tele_title.cpp
      tele/tele_title.h

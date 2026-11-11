@@ -11,7 +11,7 @@ Subject: [PATCH] fix: closing the rich editor keeps drafts on this device
  4 files changed, 19 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 428a1f458918989925e2934dfc8ad9ad454df44b..50a5ca490ccf6032543f64c911199a9f96e5cabb 100644
+index c9c67f6f555a536cf6200bb4f8c859a0014799ae..26b3c399e8166e06ae3d24fc9947cb5871541743 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

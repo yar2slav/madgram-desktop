@@ -20,10 +20,10 @@ Subject: [PATCH] feat: hide messages by keyword or regex
  create mode 100644 Telegram/SourceFiles/tele/tele_hidden_words.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9cd17b373274e0f33434e77ea929b3cf5dc3e36d..1bc2bc1dc21eaa6d140a7a73f5ea5a4f3d9b2dc6 100644
+index e90723e52644d8697395176e30f9d60e949ad985..2336a368a73a0fe12260136caae938a7a58a0346 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2739,6 +2739,8 @@ PRIVATE
+@@ -2742,6 +2742,8 @@ PRIVATE
      tele/tele_gifts.h
      tele/tele_ghost.cpp
      tele/tele_ghost.h
@@ -819,10 +819,10 @@ index fd4cad014e5a8fbc18849651a4b0c40915cb6b24..f90d2e23b45c1493b691068a033452f8
  		} else if (spec.kind == Kind::Backgrounds) {
  			value = NormalizeChatBackgrounds(value, HasFile({}));
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index d2e7f331bf51c8bb1265f0f69494a8a7d2177f1d..4f83705d4619eeac2f82728f2d7f14b82335058f 100644
+index cb72942ed5f19d0f23443a1cc4e36e33a100ef03..dbbbbd6a91593765cbd9a3ad599acbe501bd1712 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -133,6 +133,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_deleted_section.h"
  #include "tele/tele_download_folders.h"
  #include "tele/tele_ghost.h"
@@ -830,7 +830,7 @@ index d2e7f331bf51c8bb1265f0f69494a8a7d2177f1d..4f83705d4619eeac2f82728f2d7f14b8
  #include "tele/tele_ignored.h"
  #include "tele/tele_jump_to_first.h"
  #include "tele/tele_local_names.h"
-@@ -1968,6 +1969,7 @@ void Filler::fillHistoryActions() {
+@@ -1969,6 +1970,7 @@ void Filler::fillHistoryActions() {
  	Tele::AddPinnedBarAction(_controller, _thread, _addAction);
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
  	Tele::AddLocalNameAction(_controller, _peer, _addAction);

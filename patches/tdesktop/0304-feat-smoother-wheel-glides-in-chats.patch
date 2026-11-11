@@ -26,10 +26,10 @@ Subject: [PATCH] feat: smoother wheel glides in chats
  create mode 100644 Telegram/SourceFiles/tele/tele_scroll_stats.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ba6ee7425b917dc3916c64d1d0c683b97f818f3c..503f6ef5d3124d2f3618f04c10d6299689fcef3c 100644
+index 6e76365a32e0c54f3374bfa85ae770f161603b88..9bb8fa676792b7734156e29a398b353c51936239 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3064,6 +3064,10 @@ PRIVATE
+@@ -3067,6 +3067,10 @@ PRIVATE
      tele/tele_rmb_beside_bubble.h
      tele/tele_screen_capture.cpp
      tele/tele_screen_capture.h
@@ -3289,7 +3289,7 @@ index 384e117649a3112403f5b5cdeac05da069c63f95..d1bd63a886cacf15ece22623ffac7f15
  					}
  
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 5b7c0e9d820e9f0c054bc449d66a308cbf343024..50d9276359c3972717e91d34fb2068aa4581aebb 100644
+index 527396c87bf063be11b7ac483baa6d9cceb99830..0af85df28fc05c451cedb0fa29cdad31bcf0568a 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

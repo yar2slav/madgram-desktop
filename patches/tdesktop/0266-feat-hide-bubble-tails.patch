@@ -17,10 +17,10 @@ Subject: [PATCH] feat: hide bubble tails
  10 files changed, 58 insertions(+), 7 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 8eae6e95edc19cdf6b4ef2e5758fd875ca943a78..ef78ce3117132317b9ade942ce659a877e009939 100644
+index 350170c8f9f81188faf7ed8051a11ec2b6ee79e3..d39ba4e0be9aea72ede7a06806429743bcb8260e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -6655,7 +6655,8 @@ Ui::BubbleRounding Message::countMessageRounding() const {
+@@ -6730,7 +6730,8 @@ Ui::BubbleRounding Message::countMessageRounding() const {
  		|| (rich && richMediaAtBottom())
  		|| (keyboard != nullptr)
  		|| item->isFakeAboutView()

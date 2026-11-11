@@ -6,7 +6,7 @@
 
 сначала спасибо [nitreojs](https://github.com/nitreojs) за [tele](https://github.com/nitreojs/tele). почти всё, что умеет mad, сделано там: гостмод, сохранённые удалённые сообщения, скрипты, mtproto-консоль, shots, локальные папки и ещё три с лишним сотни патчей. mad это форк tele с нашими патчами поверх
 
-сам tele это очередь патчей поверх каждого стабильного релиза [telegram desktop](https://github.com/telegramdesktop/tdesktop). mad устроен так же: `UPSTREAM` фиксирует тег tdesktop (сейчас `v7.4.1`), `patches/` хранит всю очередь, сборки делает github actions в этом репозитории
+сам tele это очередь патчей поверх каждого стабильного релиза [telegram desktop](https://github.com/telegramdesktop/tdesktop). mad устроен так же: `UPSTREAM` фиксирует тег tdesktop (сейчас `v7.4.2`), `patches/` хранит всю очередь, сборки делает github actions в этом репозитории
 
 ### скачать
 
@@ -76,7 +76,7 @@ windows x64 и macos. сборки не подписаны сертификат�
 
 ```
 git clone https://github.com/yar2slav/madgram-desktop.git mad
-git clone --branch v7.4.1 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
+git clone --branch v7.4.2 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
 python mad/tele.py --tdesktop tdesktop apply
 python mad/configure-mad.py
 python mad/build-mad.py
@@ -167,7 +167,7 @@ same as tele: install what tdesktop needs for the tag in `UPSTREAM`, apply the q
 
 ```
 git clone https://github.com/yar2slav/madgram-desktop.git mad
-git clone --branch v7.4.1 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
+git clone --branch v7.4.2 --recurse-submodules https://github.com/telegramdesktop/tdesktop.git tdesktop
 python mad/tele.py --tdesktop tdesktop apply
 python mad/configure-mad.py
 python mad/build-mad.py

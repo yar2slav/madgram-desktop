@@ -25,7 +25,7 @@ Subject: [PATCH] feat: lowercase tele's own texts too
  18 files changed, 116 insertions(+), 100 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 2afcdd5005ac3b9711d3db9f05152b11b41a97c2..0089def69b2e0a3e60b03285c96079ee11eef1fd 100644
+index 845bcf030d5e0b1828121839bd6d00f11f1c6fbd..9688fa2eb64106bb35a40f79f63a47f91a8c01d0 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -114,7 +114,7 @@ PreLaunchLabel::PreLaunchLabel(QWidget *parent) : QLabel(parent) {
@@ -107,7 +107,7 @@ index 49a477144e4a3a7494582e31b979554bcfa8a223..be9392d75f764e8acc96511e500a69e6
  }
  
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 2613ee50d3e55a5102652279ed17f413b367b97a..09fd02a0b8c59c532b26b6fd76048c0745a9b072 100644
+index 532c0559b5dd0f01b524de062ef541d7e92a7097..f1ab34e957730ab5a1fae43f79b43b0434320f36 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

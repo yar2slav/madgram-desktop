@@ -19,10 +19,10 @@ Subject: [PATCH] feat: show online members in big groups
  create mode 100644 Telegram/SourceFiles/tele/tele_onlines.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e04c2f3e7e6f51b8f5db2d8c4f81a8389db0feee..1d6930835e2610f9b1381f20957d5c1462be157c 100644
+index 0014c624b7acab1696c93195e54fda2c501da43b..b4d050ad12cfe9cbf39b48b760edbfd85c2e46d6 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2880,6 +2880,8 @@ PRIVATE
+@@ -2883,6 +2883,8 @@ PRIVATE
      tele/tele_notices_section.h
      tele/tele_online_notify.cpp
      tele/tele_online_notify.h
@@ -32,10 +32,10 @@ index e04c2f3e7e6f51b8f5db2d8c4f81a8389db0feee..1d6930835e2610f9b1381f20957d5c14
      tele/tele_jump_to_first.h
      tele/tele_link_previews.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index b2ca7a57d689501d05d56036ab71f7fdec1a527b..9d62a8b9351130aeaa31828c4de7bebbebead6b8 100644
+index 506b5f9d145ff6a0b5bc47e70ca280ef8743bae4..460f79e15e5ab502f3b1f54baca42d9794f2b8ea 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "api/api_chat_participants.h"
  #include "tele/tele_calls.h"
  #include "tele/tele_invisible.h"
@@ -43,7 +43,7 @@ index b2ca7a57d689501d05d56036ab71f7fdec1a527b..9d62a8b9351130aeaa31828c4de7bebb
  #include "tele/tele_phones.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -953,6 +954,13 @@ void TopBarWidget::setActiveChat(
+@@ -954,6 +955,13 @@ void TopBarWidget::setActiveChat(
  						Data::kStoriesAlbumIdArchive);
  				}
  			}
@@ -57,7 +57,7 @@ index b2ca7a57d689501d05d56036ab71f7fdec1a527b..9d62a8b9351130aeaa31828c4de7bebb
  		}
  
  		if (const auto history = _activeChat.key.history()) {
-@@ -2022,6 +2030,10 @@ void TopBarWidget::updateOnlineDisplay() {
+@@ -2023,6 +2031,10 @@ void TopBarWidget::updateOnlineDisplay() {
  			} else {
  				text = tr::lng_group_status(tr::now);
  			}

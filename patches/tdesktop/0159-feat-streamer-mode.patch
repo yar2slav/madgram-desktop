@@ -28,10 +28,10 @@ Subject: [PATCH] feat: streamer mode
  create mode 100644 Telegram/SourceFiles/tele/tele_streamer_mode.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f3b3544bd23a285ff6ee36fa0bd26b0b4dd66e38..000e776170cb21ec9886e51e4813b962b6c8592b 100644
+index 13a13a638a3c3f19cda51decf986b4b9bf099a0b..8b39446fc7fa37821f04703c1e2d8fb494099324 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2833,6 +2833,8 @@ PRIVATE
+@@ -2836,6 +2836,8 @@ PRIVATE
      tele/tele_silent.h
      tele/tele_spoilers.cpp
      tele/tele_spoilers.h
@@ -570,10 +570,10 @@ index b7b5e337474c4aa513ca9ea8ec0554dcab0c1225..2d053272c125810c4f97f335c00bbd8b
  	not_null<Window::Controller*> window);
  
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 26e529442a4899c1ebeacf22fd418f52cf638c2c..aa95130f12115d88ca63c83bd4175fc82275503d 100644
+index ea9cb1b335d8b80b19a0c6c32a337010352d1c09..3b3b1e56f7d83a813e365ba5444afaea88b5d7cb 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
-@@ -914,7 +914,7 @@ void MainWindow::updateTitle() {
+@@ -935,7 +935,7 @@ void MainWindow::updateTitle() {
  
  	const auto suffix = nativeTitleSuffix();
  	const auto settings = Core::App().settings().windowTitleContent();

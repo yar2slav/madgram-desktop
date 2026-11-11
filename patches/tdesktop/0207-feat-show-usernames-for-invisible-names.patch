@@ -24,10 +24,10 @@ Subject: [PATCH] feat: show usernames for invisible names
  create mode 100644 Telegram/SourceFiles/tele/tele_invisible.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index c694c5977c6593fc6769df1f92896284f49b1341..e056d7fbf0c2e2d8452b01a2ee11a4ca9543586d 100644
+index a8e71868758bad5332f3456f88929268f690ef41..00e829bd1683b24a884772d8718d00d1d8a15eb0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2798,6 +2798,8 @@ PRIVATE
+@@ -2801,6 +2801,8 @@ PRIVATE
      tele/tele_inline_text.h
      tele/tele_inline_via.cpp
      tele/tele_inline_via.h
@@ -155,10 +155,10 @@ index 2474fa2790f713175fa64775c72a3fbb75d30a9e..1a0ea00cc5d0ba5045b933870f18abd2
  			chatListName(),
  			Ui::NameTextOptions());
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index d0c423e7a5b1967fa48c625dd96e46999eea0bbc..b2ca7a57d689501d05d56036ab71f7fdec1a527b 100644
+index 5ae827334d11b17c604f48ec57ba952f5bc0254e..506b5f9d145ff6a0b5bc47e70ca280ef8743bae4 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "api/api_chat_participants.h"
  #include "tele/tele_calls.h"
@@ -166,7 +166,7 @@ index d0c423e7a5b1967fa48c625dd96e46999eea0bbc..b2ca7a57d689501d05d56036ab71f7fd
  #include "tele/tele_phones.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -679,7 +680,8 @@ void TopBarWidget::paintTopBar(Painter &p) {
+@@ -680,7 +681,8 @@ void TopBarWidget::paintTopBar(Painter &p) {
  	} else if (namePeer) {
  		if (_titleNameVersion < namePeer->nameVersion()) {
  			_titleNameVersion = namePeer->nameVersion();
@@ -290,7 +290,7 @@ index 172a9d8d1848d5b30105da5bcb7cadc407c833b0..28f71c8efe46df739269116cb7909d7e
  	AddGroupTitle(builder, u"Gifts"_q);
  	AddOptionToggle(builder, ::Tele::kOptionShowGiftIds);
 diff --git a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
-index d069c07a763c41a53e9bf928e2a5fbe3187c66e3..ef3acc77d5d1fdfc5620b62371f2cc7c4cbc5b65 100644
+index 8d3e7e88c42de7a8a6613c7057e1b8d478c4de97..c710e972e9cba3058efca68e7ea15eab15767b0e 100644
 --- a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 +++ b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 @@ -4,6 +4,7 @@
@@ -315,10 +315,10 @@ index d069c07a763c41a53e9bf928e2a5fbe3187c66e3..ef3acc77d5d1fdfc5620b62371f2cc7c
  	}
 -	auto text = TextWithEntities{ peer->name() };
 +	auto text = InvisibleNameMarked(peer->name());
- 	if (const auto icon = VerifyIcon(peer)) {
- 		text = Data::SingleCustomEmoji(icon).append(' ').append(
- 			std::move(text));
-@@ -109,6 +114,9 @@ void SetBubbleName(
+ 	const auto session = &peer->session();
+ 	name.setMarkedText(st::msgNameStyle, text, Ui::NameTextOptions(), {
+ 		.repaint = std::move(repaint),
+@@ -105,6 +110,9 @@ void SetBubbleName(
  				QStringView data,
  				const Ui::Text::MarkedContext &context)
  		-> std::unique_ptr<Ui::Text::CustomEmoji> {

@@ -18,10 +18,10 @@ Subject: [PATCH] feat: use the blurred profile photo as the profile background
  create mode 100644 Telegram/SourceFiles/tele/tele_profile_photo_bg.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4088db5f3036bf6723779f6c3b5df8860bd5deec..dcc6ff9e8cf6b3c922d8cbdc5bd6b3519fa1661a 100644
+index af74bb7b38142b2215c9f71053300d36c9eb91b4..636d7fb10793246c288af29a851098dc1fde8608 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2941,6 +2941,8 @@ PRIVATE
+@@ -2944,6 +2944,8 @@ PRIVATE
      tele/tele_phones.h
      tele/tele_pin_sets.cpp
      tele/tele_pin_sets.h

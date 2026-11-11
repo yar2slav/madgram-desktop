@@ -17,10 +17,10 @@ Subject: [PATCH] feat: compute messages starting with = via calcmula
  create mode 100644 Telegram/SourceFiles/tele/tele_calcmula.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 2f9376076c6a8aa134fc6c2f610e07c89006adae..f82b287240f1eb06adba382019c0754022fe4578 100644
+index c9aee13dfdbcecffde75734c977729469c3cd7be..e9cae34036f4a411eea586bbb690ebf3babd87d5 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2651,6 +2651,8 @@ PRIVATE
+@@ -2654,6 +2654,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -59,7 +59,7 @@ index 5035f0f09fee41b39a9b6ca28316e0f42d819eb0..460a81edc5c2dce50c47750fe5d991f5
  	const auto peer = history->peer;
  	const auto session = &history->session();
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index d34d7c6a982ba90d376c613d9ffd49c9d42b99ad..bac24da82c8b247420bcff4a1e505e979fab0406 100644
+index be51adc3850ddeb5aaaea49b64715d6e3bb92d01..ba50f14e8ec9a8f904633f7f694be5a8bcc38998 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -110,6 +110,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

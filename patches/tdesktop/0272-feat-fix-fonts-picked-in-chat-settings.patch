@@ -12,10 +12,10 @@ Subject: [PATCH] feat: fix fonts picked in chat settings
  5 files changed, 24 insertions(+)
 
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 25141c423c5774c35ccd14bd60770083bbe378f5..2364d5b563c750abb57d389c3ca5558d08d99aa0 100644
+index 4f09b6eb69d9e4e2c3dcd0bb33602f0b1061e778..89b15274b54a7c98c6659ab7530186b59f0e5b56 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -114,6 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_counters.h"
  #include "tele/tele_bubble_padding.h"
  #include "tele/tele_freeze_watchdog.h"
@@ -23,7 +23,7 @@ index 25141c423c5774c35ccd14bd60770083bbe378f5..2364d5b563c750abb57d389c3ca5558d
  #include "tele/tele_start_menu.h"
  
  #include <QtCore/QStandardPaths>
-@@ -327,6 +328,7 @@ void Application::run() {
+@@ -328,6 +329,7 @@ void Application::run() {
  	startLocalStorage();
  
  	style::SetCustomFont(settings().customFontFamily());

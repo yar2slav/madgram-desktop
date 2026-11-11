@@ -18,10 +18,10 @@ Subject: [PATCH] feat: regex search in loaded history
  create mode 100644 Telegram/SourceFiles/tele/tele_regex_search.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1bc2bc1dc21eaa6d140a7a73f5ea5a4f3d9b2dc6..d836c20ff3cc04fa51031ec84f387f82da7d0d5e 100644
+index 2336a368a73a0fe12260136caae938a7a58a0346..37a4acde8da1512d9f282e0003258e37060063d6 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2813,6 +2813,8 @@ PRIVATE
+@@ -2816,6 +2816,8 @@ PRIVATE
      tele/tele_recent_emoji.h
      tele/tele_reduce_motion.cpp
      tele/tele_reduce_motion.h
@@ -31,10 +31,10 @@ index 1bc2bc1dc21eaa6d140a7a73f5ea5a4f3d9b2dc6..d836c20ff3cc04fa51031ec84f387f82
      tele/tele_rich_timestamps.h
      tele/tele_rmb_beside_bubble.cpp
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f113b89d4d4 100644
+index 98e8b59a92cfa1bde7b4a6f5d1805c05d143467a..f2665716ea1e963b1543a673a082baf2ae391bbb 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-@@ -99,6 +99,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -96,6 +96,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_chats_selection.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_folders.h"
@@ -42,7 +42,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  #include "tele/tele_updater.h"
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
-@@ -718,6 +719,27 @@ Widget::Widget(
+@@ -715,6 +716,27 @@ Widget::Widget(
  	_chooseFromUser->entity()->setClickedCallback([=] { showSearchFrom(); });
  	_chooseFromUser->entity()->setAccessibleName(
  		tr::lng_search_messages_from(tr::now));
@@ -70,7 +70,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  	rpl::single(rpl::empty) | rpl::then(
  		session().domain().local().localPasscodeChanged()
  	) | rpl::on_next([=] {
-@@ -1099,7 +1121,10 @@ void Widget::chosenRow(const ChosenRow &row) {
+@@ -1096,7 +1118,10 @@ void Widget::chosenRow(const ChosenRow &row) {
  	} else if (const auto topic = row.key.topic()) {
  		auto params = Window::SectionShow(
  			Window::SectionShow::Way::ClearStack);
@@ -82,7 +82,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  		if (row.newWindow) {
  			controller()->showInNewWindow(
  				Window::SeparateId(topic),
-@@ -1191,7 +1216,10 @@ void Widget::chosenRow(const ChosenRow &row) {
+@@ -1188,7 +1213,10 @@ void Widget::chosenRow(const ChosenRow &row) {
  		) ? ShowAtUnreadMsgId : row.message.fullId.msg;
  		auto params = Window::SectionShow(
  			Window::SectionShow::Way::ClearStack);
@@ -94,7 +94,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  		if (row.newWindow) {
  			controller()->showInNewWindow(peer, showAtMsgId);
  			closeSuggestions();
-@@ -3204,6 +3232,9 @@ void Widget::loadMoreBlockedByDate() {
+@@ -3203,6 +3231,9 @@ void Widget::loadMoreBlockedByDate() {
  }
  
  bool Widget::search(bool inCache, SearchRequestDelay delay) {
@@ -104,7 +104,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  	_processingSearch = true;
  	const auto guard = gsl::finally([&] {
  		_processingSearch = false;
-@@ -3514,6 +3545,9 @@ void Widget::searchTopics() {
+@@ -3513,6 +3544,9 @@ void Widget::searchTopics() {
  }
  
  void Widget::searchMore() {
@@ -114,7 +114,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  	const auto process = currentSearchProcess();
  	if (process->requestId
  		|| _historiesRequest
-@@ -4661,6 +4695,7 @@ void Widget::updateSearchFromVisibility(bool fast) {
+@@ -4662,6 +4696,7 @@ void Widget::updateSearchFromVisibility(bool fast) {
  		}
  		_search->setAdditionalMargins(additional);
  	}
@@ -122,7 +122,7 @@ index 99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4..6f85d257b3d4bd3eaca76a39a4a59f11
  }
  
  void Widget::updateControlsGeometry() {
-@@ -4776,6 +4811,8 @@ void Widget::updateControlsGeometry() {
+@@ -4777,6 +4812,8 @@ void Widget::updateControlsGeometry() {
  	putBottomButton(_updateTelegram);
  	putBottomButton(_downloadBar);
  	putBottomButton(_loadMoreChats);

@@ -11,7 +11,7 @@ Subject: [PATCH] feat: send crash reports without a dump
  4 files changed, 47 insertions(+), 6 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 7c8bc677ab3d2ab3299e2ae6d00c03387717d4c7..5a2a33c6969a0deb37928d091303a9fa0af5314c 100644
+index 0f9653630531c14d352487058bc067d1a08284d6..ebe2d97e66b4b5af88833f52281d3dc330a4e098 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -319,6 +319,13 @@ LastCrashedWindow::LastCrashedWindow(

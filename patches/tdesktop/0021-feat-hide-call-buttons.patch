@@ -13,10 +13,10 @@ Subject: [PATCH] feat: hide call buttons
  6 files changed, 36 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 3ce5d330893839ca6ed9b84f5cfdbf6622428b64..9377b9427bb9658703dcc5f039ba307d2d3c15cf 100644
+index 6a1fae913f325b150e60b9c7eba01774f7cfb3c5..768f22d5f5fe0847808958803e08a27aba777db6 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "support/support_helper.h"
  #include "apiwrap.h"
  #include "api/api_chat_participants.h"
@@ -24,7 +24,7 @@ index 3ce5d330893839ca6ed9b84f5cfdbf6622428b64..9377b9427bb9658703dcc5f039ba307d
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
-@@ -259,6 +260,11 @@ TopBarWidget::TopBarWidget(
+@@ -260,6 +261,11 @@ TopBarWidget::TopBarWidget(
  		updateConnectingState();
  	}, lifetime());
  
@@ -36,7 +36,7 @@ index 3ce5d330893839ca6ed9b84f5cfdbf6622428b64..9377b9427bb9658703dcc5f039ba307d
  	setCursor(style::cur_pointer);
  	_call->setAccessibleName(tr::lng_profile_action_short_call(tr::now));
  	_groupCall->setAccessibleName(tr::lng_group_call_title(tr::now));
-@@ -1437,7 +1443,8 @@ void TopBarWidget::updateControlsVisibility() {
+@@ -1438,7 +1444,8 @@ void TopBarWidget::updateControlsVisibility() {
  	}();
  	_call->setVisible(historyMode
  		&& callsEnabled

@@ -18,10 +18,10 @@ Subject: [PATCH] feat: keep the edit history of messages
  create mode 100644 Telegram/SourceFiles/tele/tele_edit_history.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 01fb63ca962e1e0dd359944e62d1ca126a951708..d51a629616f1351c01b15c843c410d7a5a38966f 100644
+index 3433f4667944e20fe6988900477c22228281c80a..451a13c4c9e9fc9d6c98d638d7d83a91df14201e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2649,6 +2649,8 @@ PRIVATE
+@@ -2652,6 +2652,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -31,7 +31,7 @@ index 01fb63ca962e1e0dd359944e62d1ca126a951708..d51a629616f1351c01b15c843c410d7a
      tele/tele_gifts.h
      tele/tele_ignored.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index c0deb139d88e3394abb72b372a69c78622898e7f..7d172b4ffcbb538f619cb9f071e58bed8704af05 100644
+index 90a93a980ff2b50a4b0a2af7fbea3b2514821a61..5e1160be241bb980d8b49d76d5989e0cd63d6d96 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

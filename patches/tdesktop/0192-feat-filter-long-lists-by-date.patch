@@ -21,10 +21,10 @@ Subject: [PATCH] feat: filter long lists by date
  create mode 100644 Telegram/SourceFiles/tele/tele_list_dates.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b882f3ceb642d76e0cba32d290db744932b520cb..0c03a283cd1adf10592defc6debf256fd8ea2901 100644
+index be2944d3009fd7bd2444a6cbb962ffc36eb823e3..9d786f90957171fd0a45084e7f1ae27b3f6d8960 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2811,6 +2811,8 @@ PRIVATE
+@@ -2814,6 +2814,8 @@ PRIVATE
      tele/tele_launch_flags.h
      tele/tele_links.cpp
      tele/tele_links.h

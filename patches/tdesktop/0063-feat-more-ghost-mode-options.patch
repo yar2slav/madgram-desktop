@@ -27,7 +27,7 @@ index 793065a25756940bdd01c4dd3c27119bfbbdf0f2..5c3272da9e681d6ea818e8f40923cc54
  						id.peer,
  						newId);
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 6a1568b6ba5b83ee2f389aa9bb54290647ec4c5e..dfbacbe9f006bc7d556cb3ef23c3e1bf34f85337 100644
+index 9bff60c257c5d48671ccaf9ce478a14f127dcc13..9436cce25e2d305f7d300e08143cf30ae46c5474 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -1475,7 +1475,7 @@ void ApiWrap::markContentsRead(

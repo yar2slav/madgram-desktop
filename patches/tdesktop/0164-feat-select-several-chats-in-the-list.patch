@@ -18,10 +18,10 @@ Subject: [PATCH] feat: select several chats in the list
  create mode 100644 Telegram/SourceFiles/tele/tele_chats_selection.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e3409cdd4330d59a4e5863e2ac56493f53da9913..9cd17b373274e0f33434e77ea929b3cf5dc3e36d 100644
+index 1115696f62e895addb1891d5440478d977e61214..e90723e52644d8697395176e30f9d60e949ad985 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2677,6 +2677,8 @@ PRIVATE
+@@ -2680,6 +2680,8 @@ PRIVATE
      tele/tele_changelog_section.h
      tele/tele_chat_backgrounds.cpp
      tele/tele_chat_backgrounds.h
@@ -88,10 +88,10 @@ index 3ee3c198355c8e8f047b4c620ac6f550dde06b37..49d7370c31b863648b0a4ca2ab355670
  	updateCommunityRequestableGeometry();
  }
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index 28c2526440d48e2a50c9dcc50ce6c15d87018c7e..99a4c1cfbe58f27d4a3c4011f50bb211b285ecd4 100644
+index d92a82804470dd8772ed79a73e3974ca06252597..98e8b59a92cfa1bde7b4a6f5d1805c05d143467a 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-@@ -96,6 +96,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -93,6 +93,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "info/info_memento.h"
  #include "inline_bots/bot_attach_web_view.h"
  #include "tele/tele_calls.h"
@@ -99,7 +99,7 @@ index 28c2526440d48e2a50c9dcc50ce6c15d87018c7e..99a4c1cfbe58f27d4a3c4011f50bb211
  #include "tele/tele_communities.h"
  #include "tele/tele_folders.h"
  #include "tele/tele_updater.h"
-@@ -486,6 +487,7 @@ Widget::Widget(
+@@ -483,6 +484,7 @@ Widget::Widget(
  			_childListPeerId.value(),
  			_childListShown.value(),
  			makeChildListShown)));

@@ -20,10 +20,10 @@ Subject: [PATCH] feat: ignore users by hiding or fading their messages
  create mode 100644 Telegram/SourceFiles/tele/tele_ignored.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index be5be7bd349f3421db6ba7236433c2dca2ccb270..4d09634c904048a6bf8868f096596e59bc72a3ab 100644
+index 2bcedd66a1eb73bc952a75b2b1be0ec40c3692b5..ed01e6532ee5374674b46e16de734bc788d306ed 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2651,6 +2651,8 @@ PRIVATE
+@@ -2654,6 +2654,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_gifts.cpp
      tele/tele_gifts.h
@@ -33,7 +33,7 @@ index be5be7bd349f3421db6ba7236433c2dca2ccb270..4d09634c904048a6bf8868f096596e59
      tele/tele_options.h
      tele/tele_peer_id.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 78c2bf87ca2e4df7b8d79c7e88be9a4f55468970..c0deb139d88e3394abb72b372a69c78622898e7f 100644
+index 64e31c6eef66a527e521dd0d2b0c16b8d0739b73..90a93a980ff2b50a4b0a2af7fbea3b2514821a61 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -90,7 +90,7 @@ index c7086658aad9da4e8cba89d5fa8885135678a801..3294916e3653f7ddff1adeef4eee81e5
  
  void Element::Hovered(Element *view) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index c0e8d04bc504c7395d12e073c4476853d1aa2390..6e1a57db9edc3beed0c40570d35a80899543c8e1 100644
+index f309b8bf9d7547e859d55e7abaa8ca36a160d569..c365a9d6093e09d21abc359af99195d138ae6b0a 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 @@ -104,6 +104,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -122,10 +122,10 @@ index c0e8d04bc504c7395d12e073c4476853d1aa2390..6e1a57db9edc3beed0c40570d35a8089
  			Window::AddSenderUserpicModerateAction(
  				controller(),
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index f4ed937c4922d5dbe4afc01a2ce22a7fd0365a1a..20e8c0a944beffd7fc68955072d3f1315738a276 100644
+index d03a698b3d4e6597470960e1b8e131397ff84d1d..7df623af1c3841d4017cd022f2e2fa63e46de48f 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "api/api_rich_tasks.h"
  #include "tele/tele_bubble_badges.h"
@@ -133,7 +133,7 @@ index f4ed937c4922d5dbe4afc01a2ce22a7fd0365a1a..20e8c0a944beffd7fc68955072d3f131
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_chat_style.h"
-@@ -1846,6 +1847,7 @@ void Message::draw(Painter &p, const PaintContext &context) const {
+@@ -1863,6 +1864,7 @@ void Message::draw(Painter &p, const PaintContext &context) const {
  	if (isHidden()) {
  		return;
  	}
@@ -820,10 +820,10 @@ index d1bebdec494e8825ae4e325ff3eb1060651c091f..0e1aabd4e07b37ff98696589a659f0fb
  void SetServerUrl(const QString &url);
  [[nodiscard]] rpl::producer<QString> ServerUrlValue();
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 25a3d52d0ef258f33fa673f9eb53f6346233393f..d56ca5015c1a0761faf25f1505a908254e9d7891 100644
+index 461532a5999088cc25b63d333773d40eaf93cdd0..280a5418f4e04dd4a65bed7737347c0cec472f12 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peers/edit_peer_info_box.h"
  #include "boxes/peers/manage_community_box.h"
  #include "boxes/premium_preview_box.h"
@@ -831,7 +831,7 @@ index 25a3d52d0ef258f33fa673f9eb53f6346233393f..d56ca5015c1a0761faf25f1505a90825
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_credits.h"
-@@ -4533,6 +4534,7 @@ void FillSenderUserpicMenu(
+@@ -4534,6 +4535,7 @@ void FillSenderUserpicMenu(
  			}
  		}
  	}

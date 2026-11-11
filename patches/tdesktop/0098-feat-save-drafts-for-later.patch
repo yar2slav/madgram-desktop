@@ -42,10 +42,10 @@ Subject: [PATCH] feat: save drafts for later
  create mode 100644 Telegram/SourceFiles/tele/tele_drafts_section.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ccf549d7035623f6f29e765a34bae33a8412a83d..876515e1c99fa3c62697bc75a99472a971df4719 100644
+index 4586884cdc3768da99bdd607dd9c39aa5ee77572..235a35df97c43a7f664653ad6a6b0f92eb28e6c2 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2679,6 +2679,16 @@ PRIVATE
+@@ -2682,6 +2682,16 @@ PRIVATE
      tele/tele_custom_emoji.h
      tele/tele_debug_logs.cpp
      tele/tele_debug_logs.h
@@ -125,7 +125,7 @@ index 523b2490d03f4ac86b2fc94610b4488fb68a3ced..9f55433d149a013bb718ab8a7ee2332e
  	using MenuDetails = SendMenu::Details;
  
 diff --git a/Telegram/SourceFiles/history/history.cpp b/Telegram/SourceFiles/history/history.cpp
-index 0756c310d8b70dd20e728613712e748b2a74d46f..341aefddab08e462eb0d83fe7176e5ffc32f883e 100644
+index 1459433539397483ec6dca1b48d663cc384b081b..0c1f154f6faf47b0a13bf8994e54cb49c67484fb 100644
 --- a/Telegram/SourceFiles/history/history.cpp
 +++ b/Telegram/SourceFiles/history/history.cpp
 @@ -71,6 +71,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -145,7 +145,7 @@ index 0756c310d8b70dd20e728613712e748b2a74d46f..341aefddab08e462eb0d83fe7176e5ff
  	if (!draft) {
  		clearLocalDraft(topicRootId, monoforumPeerId);
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7cb05b72b0 100644
+index 13708b9f7692ca75370e14cf19d011225af0ebf1..d3cae21d39223cfc493498f488046a96f816ebff 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -177,6 +177,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -156,7 +156,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
-@@ -550,6 +551,30 @@ HistoryWidget::HistoryWidget(
+@@ -551,6 +552,30 @@ HistoryWidget::HistoryWidget(
  				: FullMsgId();
  		},
  	});
@@ -187,7 +187,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  	Data::AmPremiumValue(&session()) | rpl::on_next([=] {
  		checkCharsLimitation();
  		updateAiButtonVisibility();
-@@ -644,6 +669,7 @@ HistoryWidget::HistoryWidget(
+@@ -645,6 +670,7 @@ HistoryWidget::HistoryWidget(
  		if (_scheduled) {
  			_scheduled->setVisible(!hide);
  		}
@@ -195,7 +195,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  		updateFieldSize();
  		moveFieldControls();
  	}, lifetime());
-@@ -4558,6 +4584,11 @@ void HistoryWidget::updateControlsVisibility() {
+@@ -4559,6 +4585,11 @@ void HistoryWidget::updateControlsVisibility() {
  					rightButtonsChanged = true;
  				}
  			}
@@ -207,7 +207,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  			if (_toggleSuggestPost) {
  				const auto was = _toggleSuggestPost->isVisible();
  				const auto now = !_suggestOptions;
-@@ -5948,6 +5979,9 @@ void HistoryWidget::sendVoice(const VoiceToSend &data) {
+@@ -5949,6 +5980,9 @@ void HistoryWidget::sendVoice(const VoiceToSend &data) {
  void HistoryWidget::send(Api::SendOptions options) {
  	if (!_history) {
  		return;
@@ -217,7 +217,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  	} else if (_editMsgId) {
  		saveEditMessage({});
  		return;
-@@ -6258,7 +6292,7 @@ SendMenu::Details HistoryWidget::saveMenuDetails() const {
+@@ -6259,7 +6293,7 @@ SendMenu::Details HistoryWidget::saveMenuDetails() const {
  auto HistoryWidget::computeSendButtonType() const {
  	using Type = Ui::SendButton::Type;
  
@@ -226,7 +226,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  		return Type::Save;
  	} else if (_isInlineBot) {
  		return Type::Cancel;
-@@ -6289,11 +6323,15 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
+@@ -6290,11 +6324,15 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
  	}
  	const auto type = computeSendButtonType();
  	if (type == Type::Save) {
@@ -244,7 +244,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  }
  
  SendMenu::Details HistoryWidget::sendButtonDefaultDetails() const {
-@@ -7764,6 +7802,7 @@ void HistoryWidget::moveFieldControls() {
+@@ -7765,6 +7803,7 @@ void HistoryWidget::moveFieldControls() {
  		_scheduled->moveToRight(right, buttonsBottom);
  		right += _scheduled->width();
  	}
@@ -252,7 +252,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  	if (_ttlInfo) {
  		_ttlInfo->move(width() - right - _ttlInfo->width(), buttonsBottom);
  	}
-@@ -7775,6 +7814,12 @@ void HistoryWidget::moveFieldControls() {
+@@ -7776,6 +7815,12 @@ void HistoryWidget::moveFieldControls() {
  	_fieldBarCancel->moveToRight(
  		0,
  		_field->y() - st::historySendPadding - _fieldBarCancel->height());
@@ -265,7 +265,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  	if (_inlineResults) {
  		_inlineResults->moveBottom(_field->y() - st::historySendPadding);
  	}
-@@ -7833,6 +7878,7 @@ void HistoryWidget::updateFieldSize() {
+@@ -7834,6 +7879,7 @@ void HistoryWidget::updateFieldSize() {
  	if (_scheduled && !_scheduled->isHidden()) {
  		fieldWidth -= _scheduled->width();
  	}
@@ -273,7 +273,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  	if (_ttlInfo && _ttlInfo->isVisible()) {
  		fieldWidth -= _ttlInfo->width();
  	}
-@@ -8776,6 +8822,7 @@ void HistoryWidget::updateHistoryGeometry(
+@@ -8777,6 +8823,7 @@ void HistoryWidget::updateHistoryGeometry(
  			|| _suggestOptions) {
  			newScrollHeight -= st::historyReplyHeight;
  		}
@@ -281,7 +281,7 @@ index b8418f8d28528e08d46eb619f3373770a31e5c22..73db8884a4aa5cf755bbaaee8ce63b7c
  		if (_kbShown) {
  			newScrollHeight -= _kbScroll->height();
  		}
-@@ -9332,6 +9379,7 @@ int HistoryWidget::computeMaxFieldHeight() const {
+@@ -9333,6 +9380,7 @@ int HistoryWidget::computeMaxFieldHeight() const {
  			|| _previewDrawPreview)
  			? st::historyReplyHeight
  			: 0)
@@ -312,7 +312,7 @@ index e1920869386d1ff91bde2ee2b9574dd3ba0208f2..77d93e84a40e567bd3223207e844611c
 +
  };
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2c9c5dde6 100644
+index 4065c686cacf2950decfe7d553710002085c2b4e..94887ec8dd078cedf7cc9eac8034b58c658a4bb1 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -116,6 +116,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -323,7 +323,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  #include "tele/tele_emoji_panel.h"
  #include "support/support_helper.h"
  #include "ui/item_text_options.h"
-@@ -1569,6 +1570,39 @@ void ComposeControls::setHistory(SetHistoryArgs &&args) {
+@@ -1570,6 +1571,39 @@ void ComposeControls::setHistory(SetHistoryArgs &&args) {
  		: Ui::InputField::Mode::MultiLine);
  }
  
@@ -363,7 +363,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  void ComposeControls::initLikeButton() {
  	if (_like) {
  		_like->setClickedCallback([=] { _likeToggled.fire({}); });
-@@ -2230,7 +2264,8 @@ rpl::producer<MessageToEdit> ComposeControls::editRequests() const {
+@@ -2231,7 +2265,8 @@ rpl::producer<MessageToEdit> ComposeControls::editRequests() const {
  	auto toValue = rpl::map([=] { return _header->queryToEdit(); });
  	auto filter = rpl::filter([=] {
  		return (_send->type() == Ui::SendButton::Type::Save)
@@ -373,7 +373,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  	});
  	return rpl::merge(
  		_send->clicks() | filter | toValue,
-@@ -3531,7 +3566,11 @@ void ComposeControls::fieldChanged() {
+@@ -3532,7 +3567,11 @@ void ComposeControls::fieldChanged() {
  	const auto hideExtra = hideExtraButtons()
  		|| isEditingMessage()
  		|| textExceedsMaxSize();
@@ -386,7 +386,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  		|| menuRefreshed
  		|| likeShown
  		|| (giftToUserVisible != (_giftToUser
-@@ -4918,13 +4957,18 @@ void ComposeControls::updateWrappingVisibility() {
+@@ -4919,13 +4958,18 @@ void ComposeControls::updateWrappingVisibility() {
  
  auto ComposeControls::baseSendButtonType() const {
  	using Type = Ui::SendButton::Type;
@@ -407,7 +407,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  		return Type::Save;
  	} else if (_isInlineBot) {
  		return Type::Cancel;
-@@ -4978,7 +5022,9 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
+@@ -4979,7 +5023,9 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
  	}
  	const auto type = computeSendButtonType();
  	if (type == Ui::SendButton::Type::Save) {
@@ -418,7 +418,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  	} else if (type != Ui::SendButton::Type::Send) {
  		return SendMenu::Details();
  	}
-@@ -4986,6 +5032,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
+@@ -4987,6 +5033,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
  	if (!hasSendableContent() && !_previewShown) {
  		result.effectAllowed = false;
  	}
@@ -426,7 +426,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  	return result;
  }
  
-@@ -5103,6 +5150,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
+@@ -5104,6 +5151,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
  		- ((_scheduled && !_scheduled->isHidden())
  			? _scheduled->width()
  			: 0)
@@ -434,7 +434,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  		- (_botKeyboardShow ? _botKeyboardShow->width() : 0)
  		- (_botKeyboardHide ? _botKeyboardHide->width() : 0)
  		- ((_ttlInfo && _ttlInfo->isVisible()) ? _ttlInfo->width() : 0)
-@@ -5164,6 +5212,12 @@ void ComposeControls::updateControlsGeometry(QSize size) {
+@@ -5165,6 +5213,12 @@ void ComposeControls::updateControlsGeometry(QSize size) {
  	_header->moveToLeft(
  		0,
  		fieldTop - _st.padding.top() - _header->height());
@@ -447,7 +447,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  
  	auto right = 0;
  	if (_starsReaction) {
-@@ -5228,6 +5282,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
+@@ -5229,6 +5283,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
  			right += _scheduled->width();
  		}
  	}
@@ -455,7 +455,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  	if (_ttlInfo) {
  		_ttlInfo->move(size.width() - right - _ttlInfo->width(), buttonsTop);
  	}
-@@ -5277,6 +5332,7 @@ void ComposeControls::updateControlsVisibility() {
+@@ -5278,6 +5333,7 @@ void ComposeControls::updateControlsVisibility() {
  	if (_scheduled) {
  		_scheduled->setVisible(!hide);
  	}
@@ -463,7 +463,7 @@ index 8b8e8f46eb91bf6cdaaa16aac5e5238298e409ea..e2c137adb1b2a504b5aee8ea553e42b2
  	if (_giftToUser) {
  		_giftToUser->setVisible(showGiftToUser);
  	}
-@@ -5897,6 +5953,7 @@ int ComposeControls::composeFieldHeight() const {
+@@ -5898,6 +5954,7 @@ int ComposeControls::composeFieldHeight() const {
  
  void ComposeControls::updateHeight() {
  	const auto height = (_header->isDisplayed() ? _header->height() : 0)

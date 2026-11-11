@@ -15,10 +15,10 @@ Subject: [PATCH] feat: find any group member when mentioning
  create mode 100644 Telegram/SourceFiles/tele/tele_mention_search.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 4169657579daa376c65e2b8cc90220e17435e19e..ca1a372c852c6219051639727998962ab7cd5935 100644
+index 8f09d878cabb608628c52ceff6fd02851d39c723..29d8bdf8fcb027545bcc530f2c4d2c7dc369b942 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2824,6 +2824,8 @@ PRIVATE
+@@ -2827,6 +2827,8 @@ PRIVATE
      tele/tele_lowercase.h
      tele/tele_maps.cpp
      tele/tele_maps.h
@@ -131,10 +131,10 @@ index 5e6ea4874936cce92198cbdafbc022c542c1e0b5..1d2346ffff24193f7ccaee18486f5e75
  void InitFieldAutocomplete(
  	std::unique_ptr<FieldAutocomplete> &autocomplete,
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index a08750263161161d62464ebe5b6959c95486e619..715376d8c78394c8f861f0dccb6ed014c923f6c9 100644
+index 3c3a24503b997ee34c71b5be4fceb2fbd1874868..a3ddcee584a19e6656a0d1365889af86dd7a6d0e 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-@@ -3507,6 +3507,7 @@ void ComposeControls::initFieldAutocomplete() {
+@@ -3508,6 +3508,7 @@ void ComposeControls::initFieldAutocomplete() {
  				return _moderateKeyActivateCallback(key);
  			})
  			: nullptr),

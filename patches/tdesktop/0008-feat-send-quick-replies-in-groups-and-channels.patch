@@ -18,10 +18,10 @@ Subject: [PATCH] feat: send quick replies in groups and channels
  create mode 100644 Telegram/SourceFiles/tele/tele_shortcuts.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 969b10be8346ab2b86ac38fe5601920c723dcc26..2ed02b34cab2934c2ac426a0891b1fc30ed3fa87 100644
+index 3311375abaa44827986600dcf33e868f225c4ec5..67ecbe4bb91f3200b6dc240a22c2fabb80fa8e92 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2645,6 +2645,8 @@ PRIVATE
+@@ -2648,6 +2648,8 @@ PRIVATE
      tele/tele_button_payload.h
      tele/tele_options.cpp
      tele/tele_options.h
@@ -105,7 +105,7 @@ index 416b167977c01bd7a7fdb6c0e1fb3e5f1b233b03..22e0145a7dee370c476896aeec93925c
  	) | rpl::on_next([=](FieldAutocomplete::BotCommandChosen data) {
  		if (!features().autocompleteCommands) {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index a2697162d72e280a3e0847703835b36bff9da222..a0f8f24c79372a5211f1e5cc3bc5ccb45d1017a7 100644
+index 93fcf6e03adb1cb6bc25c60688bf5fb2a0c6d670..de6c46a200d7b309ed244454696ed814e9fbd0c8 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -174,6 +174,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -116,7 +116,7 @@ index a2697162d72e280a3e0847703835b36bff9da222..a0f8f24c79372a5211f1e5cc3bc5ccb4
  #include "media/audio/media_audio.h"
  #include "media/audio/media_audio_capture.h"
  #include "media/player/media_player_instance.h"
-@@ -2042,7 +2043,12 @@ void HistoryWidget::initFieldAutocomplete() {
+@@ -2043,7 +2044,12 @@ void HistoryWidget::initFieldAutocomplete() {
  				controller(),
  				PremiumFeature::QuickReplies);
  		} else if (shortcutId) {

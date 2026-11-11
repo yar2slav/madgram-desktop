@@ -19,10 +19,10 @@ Subject: [PATCH] feat: choose the map service for locations
  create mode 100644 Telegram/SourceFiles/tele/tele_maps.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ec10ec3720f371aee9e0bfada50e6e236691c321..5e73906d92e80c010b7b3c97b118ef4e6d39d21d 100644
+index a0f8007b883efe93c0757ae416522602bc7abe3f..10c633474df8ca33b3ff67ed2881d2b7d2b2c874 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2741,6 +2741,8 @@ PRIVATE
+@@ -2744,6 +2744,8 @@ PRIVATE
      tele/tele_local_pins.h
      tele/tele_lowercase.cpp
      tele/tele_lowercase.h

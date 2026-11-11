@@ -77,10 +77,10 @@ index 660d43d8e89369a2acf2c4d65f1c88dbc3d5ea0a..20c1b2bca5d811c28b219352c9b0aeb5
  	not_null<Window::SessionController*> controller,
  	const Dialogs::EntryState &request,
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 9a2eb1017804b52c0051a985876b359b69c74c22..c3bc3e914af0d165142cca1ce0517daf09c8c0e4 100644
+index d46be943b0496ec549930f8e57bf6ec85a902cb1..ec95ccd381fb9edc01730695c5265bffca1c5702 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -3428,7 +3428,7 @@ void SessionController::cancelUploadLayer(not_null<HistoryItem*> item) {
+@@ -3421,7 +3421,7 @@ void SessionController::cancelUploadLayer(not_null<HistoryItem*> item) {
  void SessionController::showSection(
  		std::shared_ptr<SectionMemento> memento,
  		const SectionShow &params) {

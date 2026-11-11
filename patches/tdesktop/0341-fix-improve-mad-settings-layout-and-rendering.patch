@@ -24,10 +24,10 @@ Subject: [PATCH] fix: improve mad settings layout and rendering
  create mode 100644 Telegram/SourceFiles/tele/tele_settings_widgets.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 37f1a8da97f425624401e63b862b5eb70c33e090..10138fcda74ca31701d648254c7122ee4a89292b 100644
+index 1e56a7a22e8ba70740c3f65721eae6a5646a1c6a..e5831a205785c92cf7218079ebdf9784ebcf68d4 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2646,6 +2646,8 @@ PRIVATE
+@@ -2649,6 +2649,8 @@ PRIVATE
      tele/tele_history_records.h
      tele/tele_history_crypto.cpp
      tele/tele_history_crypto.h

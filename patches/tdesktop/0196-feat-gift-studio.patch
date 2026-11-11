@@ -61,10 +61,10 @@ Subject: [PATCH] feat: gift studio
  create mode 100644 Telegram/SourceFiles/tele/tele_tgs_rules.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 23e79529e023a3650c4db3826d35e1e1f7a67748..d5e7fb8e5343e6f41a056e525bc1d21574837ecc 100644
+index 8f5515f20bbb9a3b46824bd54da23134e491388f..0d16316d15b9e3bff964564b70feb09277781985 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2741,6 +2741,26 @@ PRIVATE
+@@ -2744,6 +2744,26 @@ PRIVATE
      tele/tele_gif_video.h
      tele/tele_gift_quantity.cpp
      tele/tele_gift_quantity.h
@@ -91,7 +91,7 @@ index 23e79529e023a3650c4db3826d35e1e1f7a67748..d5e7fb8e5343e6f41a056e525bc1d215
      tele/tele_gift_list.cpp
      tele/tele_gift_list.h
      tele/tele_gift_search.cpp
-@@ -2877,6 +2897,8 @@ PRIVATE
+@@ -2880,6 +2900,8 @@ PRIVATE
      tele/tele_sticker_captions.h
      tele/tele_sticker_truth.cpp
      tele/tele_sticker_truth.h

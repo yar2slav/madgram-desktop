@@ -22,10 +22,10 @@ Subject: [PATCH] feat: call the app tele everywhere
  create mode 100644 Telegram/SourceFiles/tele/tele_app_name.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7657dfa3a87380d5516b5f49ee724bc837e59f8d..526b3a21af5710cf8c20bcd345045067f75cf9dd 100644
+index be068ed0d075c1cd19224b552908aebe05fc2de8..148d26372ee42b83866b51636009cc18f7be4228 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2641,6 +2641,8 @@ PRIVATE
+@@ -2644,6 +2644,8 @@ PRIVATE
      settings/settings_tele.h
      tele/tele_account_badges.cpp
      tele/tele_account_badges.h
@@ -35,7 +35,7 @@ index 7657dfa3a87380d5516b5f49ee724bc837e59f8d..526b3a21af5710cf8c20bcd345045067
      tele/tele_badges.h
      tele/tele_build.cpp
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 13bb6dbb47c6a4de4aef8551d8625a7d68d6b7b9..2c8f97b42226866491a654ee60538a3116248e6b 100644
+index 10a56f90aa493905f382dfe076f2debc97a4d9b2..5da92c208378927dae5b1878d8c7b5ae92c27ad5 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

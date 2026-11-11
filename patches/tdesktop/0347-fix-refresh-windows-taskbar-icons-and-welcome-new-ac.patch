@@ -17,10 +17,10 @@ Subject: [PATCH] fix: refresh windows taskbar icons and welcome new accounts
  create mode 100644 Telegram/SourceFiles/tele/tele_welcome.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 80ba77934f934afe3c73d76669c7c8f088314779..000cd77123d15a74686fe3f35f16a9d0ce186a4a 100644
+index 24f4b517875f9282277fabf230570b8a3c2448a5..8735e4d536538836e8c17b58e6d6705ac5877c12 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3168,6 +3168,8 @@ PRIVATE
+@@ -3171,6 +3171,8 @@ PRIVATE
      tele/tele_tgs_rules.h
      tele/tele_quick_modes.cpp
      tele/tele_quick_modes.h

@@ -29,10 +29,10 @@ Subject: [PATCH] feat: folders past the limit
  create mode 100644 Telegram/SourceFiles/tele/tele_local_folders.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7ede79408b73472a7d1d168a61078c72b0c17a61..25fa92abd3129904aacd35783aea515cd02b5ccd 100644
+index ac139dbefa45f1a1eab927c235c48ada54b8fda0..7494168cd903642ba1b28e54b427628124f4e998 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2725,6 +2725,8 @@ PRIVATE
+@@ -2728,6 +2728,8 @@ PRIVATE
      tele/tele_inline_via.h
      tele/tele_local_drafts.cpp
      tele/tele_local_drafts.h
@@ -274,7 +274,7 @@ index 9d4dd91fcaa17336c99ed239fea8cd459f37eb83..25d87d1e55557815ee76f7b19cf0d3f9
  	const auto raw = controller.get();
  	auto initBox = [=](not_null<Ui::BoxContent*> box) {
 diff --git a/Telegram/SourceFiles/boxes/moderate_messages_box.cpp b/Telegram/SourceFiles/boxes/moderate_messages_box.cpp
-index 0cca5007c9442e7d0b1fb5529200f9cb19185c69..2221ce576cc3465371dc716aa94d02c29c9a9890 100644
+index 15932b877a975ad445d23e886a85407ce577fe5e..98f93d9a7f80aaa346adfe6b145a40d6b3e60529 100644
 --- a/Telegram/SourceFiles/boxes/moderate_messages_box.cpp
 +++ b/Telegram/SourceFiles/boxes/moderate_messages_box.cpp
 @@ -71,6 +71,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -389,7 +389,7 @@ index 7eba8addc7a361eee5e5e806d6836d25df75d269..294e6eaeec48901b977d75a4efc5f2af
  }
  
 diff --git a/Telegram/SourceFiles/data/data_session.cpp b/Telegram/SourceFiles/data/data_session.cpp
-index c8c2890d99d38d53aa5658160fd7eb7f1fdc5858..87c279e9864960ef90fe411c063a1c65f8565542 100644
+index b01cb0a8f0887e273bd4bb982677443f0982fdd5..430716dce4fa36f8d9765d7ef9dffc08e8e08d0e 100644
 --- a/Telegram/SourceFiles/data/data_session.cpp
 +++ b/Telegram/SourceFiles/data/data_session.cpp
 @@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -400,7 +400,7 @@ index c8c2890d99d38d53aa5658160fd7eb7f1fdc5858..87c279e9864960ef90fe411c063a1c65
  #include "tele/tele_local_pins.h"
  
  namespace Data {
-@@ -2931,7 +2932,7 @@ int Session::pinnedChatsLimit(Data::Folder *folder) const {
+@@ -2957,7 +2958,7 @@ int Session::pinnedChatsLimit(Data::Folder *folder) const {
  
  int Session::pinnedChatsLimit(FilterId filterId) const {
  	const auto limits = Data::PremiumLimits(_session);
@@ -409,7 +409,7 @@ index c8c2890d99d38d53aa5658160fd7eb7f1fdc5858..87c279e9864960ef90fe411c063a1c65
  }
  
  int Session::pinnedChatsLimit(not_null<Data::Forum*> forum) const {
-@@ -2967,10 +2968,10 @@ rpl::producer<int> Session::maxPinnedChatsLimitValue(
+@@ -2993,10 +2994,10 @@ rpl::producer<int> Session::maxPinnedChatsLimitValue(
  	// We always use premium limit in the MainList limit producer,
  	// because it slices the list to that limit. We don't want to slice
  	// premium-ly added chats from the pinned list because of sync issues.
@@ -1616,10 +1616,10 @@ index 7e4811ece0ef462b3070cd74c240571207d7221e..71d0f680afd46b977248621158170923
  	const auto &list = Tele::FolderTabs(&_session->session());
  	const auto premiumFrom = (reorderAll ? 0 : 1) + maxLimit - hidden;
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 7750448cbdc8519ca8a6fbedf7f21a874df247f0..9a2eb1017804b52c0051a985876b359b69c74c22 100644
+index 6ba035541a4d43720193d119f74517ec38db1bb5..d46be943b0496ec549930f8e57bf6ec85a902cb1 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -132,6 +132,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_changelog_chat.h"
  #include "tele/tele_communities.h"
  #include "tele/tele_folders.h"
@@ -1627,7 +1627,7 @@ index 7750448cbdc8519ca8a6fbedf7f21a874df247f0..9a2eb1017804b52c0051a985876b359b
  #include "tele/tele_options.h"
  #include "tele/tele_username_aliases.h"
  #include "styles/style_chat_helpers.h"
-@@ -4368,6 +4369,7 @@ bool CheckAndJumpToNearChatsFilter(
+@@ -4365,6 +4366,7 @@ bool CheckAndJumpToNearChatsFilter(
  		return false;
  	}
  	if (changed > Data::PremiumLimits(session).dialogFiltersCurrent()

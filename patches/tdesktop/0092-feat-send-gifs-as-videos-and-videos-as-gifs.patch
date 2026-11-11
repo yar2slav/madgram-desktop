@@ -26,10 +26,10 @@ Subject: [PATCH] feat: send gifs as videos and videos as gifs
  create mode 100644 Telegram/SourceFiles/tele/tele_send_files.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5db1a8e57c11e5dd6359fcaace3de5fa5631a233..74c370ca8fe118222ddbb23639067c806d7c6763 100644
+index 099e12cc5105e4e75fbfbceda5a34666c0ada6b1..bed0877ca2a9ef0229ece93d029810c56061e6d3 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2695,6 +2695,8 @@ PRIVATE
+@@ -2698,6 +2698,8 @@ PRIVATE
      tele/tele_edit_history_section.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -38,7 +38,7 @@ index 5db1a8e57c11e5dd6359fcaace3de5fa5631a233..74c370ca8fe118222ddbb23639067c80
      tele/tele_gifts.cpp
      tele/tele_gifts.h
      tele/tele_ghost.cpp
-@@ -2739,6 +2741,8 @@ PRIVATE
+@@ -2742,6 +2744,8 @@ PRIVATE
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
      tele/tele_secret_media.h
@@ -78,7 +78,7 @@ index 992735071b2b7ba9f798a6737c4a20ed746763d3..bf04500c033568b730249e4390e51317
  		const auto canSetTtl = !hasPrice()
  			&& (_sendType == Api::SendType::Normal)
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index 70688114fe2aba93c8b8ad98533200bc333abebd..089e1937d60abd6e8a2a7ec6d523f6ab9c4dc7ac 100644
+index 597af283e1169a33d50b7fc52d77f57c394bcd0a..a0760e4f88aba7870389664f8611775c4e3d72cd 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -102,7 +102,7 @@ index 70688114fe2aba93c8b8ad98533200bc333abebd..089e1937d60abd6e8a2a7ec6d523f6ab
  	}
  
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 955fd3be8d07cdc2e77d3c8c81b1f9d97c9c666f..afc461182023c6d1cf452a9281dcd7a3e02a693f 100644
+index 5b16359564bad67695c3142ffb960187304fd907..0fb91e313d29340fdab658dd9813b25780353970 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -138,6 +138,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

@@ -14,10 +14,10 @@ Subject: [PATCH] feat: remember when your messages were read
  create mode 100644 Telegram/SourceFiles/tele/tele_read_log.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ff8298eea0bc9333a976814963fc6bb505557c27..9e498053cff6e418407633ed80f04e65ee5a5ec4 100644
+index 55e600319151bd572d76ae0703b58a001594ad87..e8bebf875854c15e0bf676c6f245089be52fab5b 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2789,6 +2789,8 @@ PRIVATE
+@@ -2792,6 +2792,8 @@ PRIVATE
      tele/tele_protected.h
      tele/tele_punctual_scheduled.cpp
      tele/tele_punctual_scheduled.h
@@ -27,7 +27,7 @@ index ff8298eea0bc9333a976814963fc6bb505557c27..9e498053cff6e418407633ed80f04e65
      tele/tele_recent_emoji.h
      tele/tele_rich_timestamps.cpp
 diff --git a/Telegram/SourceFiles/history/history.cpp b/Telegram/SourceFiles/history/history.cpp
-index 8f6b5021803f2bbe0edda0a241772085848a5118..440237caadd132922105218947d35f31b09e196a 100644
+index f52a3d6caaf263b26a7376db820e5d53f9e60cfc..75026bbac4f9b0a0bb71b469aac8e5a0c2be26a1 100644
 --- a/Telegram/SourceFiles/history/history.cpp
 +++ b/Telegram/SourceFiles/history/history.cpp
 @@ -88,6 +88,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

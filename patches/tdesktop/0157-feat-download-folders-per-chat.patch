@@ -23,10 +23,10 @@ Subject: [PATCH] feat: download folders per chat
  create mode 100644 Telegram/SourceFiles/tele/tele_download_folders.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index aae47a9825116c33d5be77b82b6633dbdfa9a813..dcd89b259d791b0acf0f7b822487b989071fd983 100644
+index 4b9d51c14189b023537d79840824629d9c478d9d..cdfbf138601c2717d2715f836fc641280a618c41 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2699,6 +2699,8 @@ PRIVATE
+@@ -2702,6 +2702,8 @@ PRIVATE
      tele/tele_debug_logs.h
      tele/tele_docked_media.cpp
      tele/tele_docked_media.h
@@ -106,7 +106,7 @@ index 70b020e9fa7873bb735a8eb6bd456244e8e2faa7..528527729c7a77f9e200c399766a7768
  			if (started) {
  				started();
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 6f595b7e0f48cbf10a4f4d49395a859816c99586..c8216b22f9b8c267aa0e45f242f3ba9521f735fc 100644
+index 128c5346f65c47d2c9cbf737dc80b871993961a7..eb27fff4e9d9240b36ea405f8e9f58cbf7ad82be 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -120,6 +120,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -714,10 +714,10 @@ index 386c0ff2bfb069fa5377485d21854a28f5a67ad4..ef75640bde4e8d5ffc49026752b46eef
  		Toggle(kOptionDockedGrid),
  		Toggle(kOptionNoPhoneInHeader),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 3743b5bbd9498b3dcc527bbd0f49a60685b5c2bb..bc8c9901d4e7b0c34d84cdcff50965e8311984a2 100644
+index 05ed186ec8cffaaeae1e7e796355d2434457c8ae..91a5ca66515d99854bfd74508a64b0de81efce39 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -132,6 +132,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_changelog_chat.h"
  #include "tele/tele_chat_backgrounds.h"
  #include "tele/tele_deleted_section.h"
@@ -725,7 +725,7 @@ index 3743b5bbd9498b3dcc527bbd0f49a60685b5c2bb..bc8c9901d4e7b0c34d84cdcff50965e8
  #include "tele/tele_ghost.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_jump_to_first.h"
-@@ -1973,6 +1974,7 @@ void Filler::fillHistoryActions() {
+@@ -1974,6 +1975,7 @@ void Filler::fillHistoryActions() {
  	addCreateTodoList();
  	addThemeEdit();
  	Tele::AddChatBackgroundAction(_controller, _peer, _addAction);

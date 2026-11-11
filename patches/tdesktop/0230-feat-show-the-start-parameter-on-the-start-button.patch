@@ -18,10 +18,10 @@ Subject: [PATCH] feat: show the start parameter on the start button
  create mode 100644 Telegram/SourceFiles/tele/tele_start_param.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9cbe669c290584b5297c30c66f20c5ed853a0a98..b9a5975a5f3ece5ea4fdc395d1e3e1caf4a302e3 100644
+index 07819e26dc243a012153c5b09f9289af26bc464e..b68d8e445dc39c7cd6cf071597533bec88f00a6c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2940,6 +2940,8 @@ PRIVATE
+@@ -2943,6 +2943,8 @@ PRIVATE
      tele/tele_spoilers.h
      tele/tele_stars_tools.cpp
      tele/tele_stars_tools.h
@@ -31,7 +31,7 @@ index 9cbe669c290584b5297c30c66f20c5ed853a0a98..b9a5975a5f3ece5ea4fdc395d1e3e1ca
      tele/tele_sticker_captions.h
      tele/tele_sticker_truth.cpp
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index cec30460997a7cfdcbb456c08ee6d6ca68e420b0..50c12fbf0fd3c6274b3e40068e1997510ebf7374 100644
+index f1c63ef5e3d05110d052ea0ff3c41f96c65705e7..dcb42212469c470461e9df95f7d77d5bfa4a7424 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -179,6 +179,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -42,7 +42,7 @@ index cec30460997a7cfdcbb456c08ee6d6ca68e420b0..50c12fbf0fd3c6274b3e40068e199751
  #include "tele/tele_confirm_send.h"
  #include "tele/tele_drafts_compose.h"
  #include "tele/tele_docked_media.h"
-@@ -4512,12 +4513,14 @@ void HistoryWidget::updateControlsVisibility() {
+@@ -4513,12 +4514,14 @@ void HistoryWidget::updateControlsVisibility() {
  		} else if (isReportMessages()) {
  			toggle(_reportMessages);
  		} else if (isBlocked()) {

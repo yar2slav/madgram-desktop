@@ -19,10 +19,10 @@ Subject: [PATCH] feat: live previews in settings
  create mode 100644 Telegram/SourceFiles/tele/tele_profile_preview.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ae16f44bf4691b78f4b8f137698c242da54d4122..fde073ffb19244947adcea45222a6fc801aeefa9 100644
+index 9c30612ebc7a5d211c498eb3d157b2c1c70afd27..1e12e5cf12ffa27de3c1163933140006f4879628 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2802,6 +2802,8 @@ PRIVATE
+@@ -2805,6 +2805,8 @@ PRIVATE
      tele/tele_gifts.h
      tele/tele_ghost.cpp
      tele/tele_ghost.h
@@ -31,7 +31,7 @@ index ae16f44bf4691b78f4b8f137698c242da54d4122..fde073ffb19244947adcea45222a6fc8
      tele/tele_ghost_pending.cpp
      tele/tele_ghost_pending.h
      tele/tele_hidden_words.cpp
-@@ -2898,6 +2900,8 @@ PRIVATE
+@@ -2901,6 +2903,8 @@ PRIVATE
      tele/tele_phones.h
      tele/tele_pin_sets.cpp
      tele/tele_pin_sets.h

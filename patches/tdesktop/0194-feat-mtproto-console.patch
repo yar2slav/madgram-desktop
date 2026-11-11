@@ -33,10 +33,10 @@ Subject: [PATCH] feat: mtproto console
  create mode 100644 Telegram/SourceFiles/tele/tele_tl_runtime.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b6eaf7d2ce8a2a4c31ade9ea7b82863d13ed486c..23e79529e023a3650c4db3826d35e1e1f7a67748 100644
+index 74261c43d96787b330169cc47703230f231c3d68..8f5515f20bbb9a3b46824bd54da23134e491388f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2785,6 +2785,10 @@ PRIVATE
+@@ -2788,6 +2788,10 @@ PRIVATE
      tele/tele_menu_registry.h
      tele/tele_message_menu.cpp
      tele/tele_message_menu.h
@@ -47,7 +47,7 @@ index b6eaf7d2ce8a2a4c31ade9ea7b82863d13ed486c..23e79529e023a3650c4db3826d35e1e1
      tele/tele_mtp_dump.cpp
      tele/tele_mtp_dump.h
      tele/tele_mtp_inspector.cpp
-@@ -2885,6 +2889,8 @@ PRIVATE
+@@ -2888,6 +2892,8 @@ PRIVATE
      tele/tele_title_box.h
      tele/tele_title_template.cpp
      tele/tele_title_template.h
@@ -57,10 +57,10 @@ index b6eaf7d2ce8a2a4c31ade9ea7b82863d13ed486c..23e79529e023a3650c4db3826d35e1e1
      tele/tele_translate_out.h
      tele/tele_unsorted_folder.cpp
 diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
-index 17e00060aaa4b2dbe698e130e07cd82ea0fa4e9e..9151a27685004ba85ee2776591d7b92a4783c724 100644
+index 13236d6e81e33a16a4915b035dc857d26db6b821..ec6235a9e88ae9f85d1d46cd0b4c438ad6494a82 100644
 --- a/Telegram/Resources/qrc/telegram/telegram.qrc
 +++ b/Telegram/Resources/qrc/telegram/telegram.qrc
-@@ -98,6 +98,9 @@
+@@ -100,6 +100,9 @@
    <qresource prefix="/tele">
      <file alias="api.tl">../../../SourceFiles/mtproto/scheme/api.tl</file>
      <file alias="mtproto.tl">../../../SourceFiles/mtproto/scheme/mtproto.tl</file>
@@ -4198,10 +4198,10 @@ index 0000000000000000000000000000000000000000..ad7c9aa727ff60ca71466e7988c1420f
 +document.addEventListener('DOMContentLoaded', init);
 +})();
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 2a6e7db1cc2c6fdddf7df0c004453ecb54d8a04b..2acdcd6f5a5d8bb1822f15a2f1e4f2c343f606e6 100644
+index 22b4f30bcdf4d548dcf08800976a194a5045a1a0..771a2280ccdec1025ec4a5faa2633d5cd0cbd9fb 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -110,6 +110,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_badges.h"
  #include "tele/tele_reduce_motion.h"
  #include "tele/tele_list_keys.h"
@@ -4209,7 +4209,7 @@ index 2a6e7db1cc2c6fdddf7df0c004453ecb54d8a04b..2acdcd6f5a5d8bb1822f15a2f1e4f2c3
  #include "tele/tele_counters.h"
  
  #include <QtCore/QStandardPaths>
-@@ -367,6 +368,7 @@ void Application::run() {
+@@ -368,6 +369,7 @@ void Application::run() {
  	Tele::StartBadges();
  	Tele::StartReduceMotion();
  	Tele::StartListKeys();

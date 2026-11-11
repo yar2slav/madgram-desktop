@@ -11,10 +11,10 @@ Subject: [PATCH] feat: open the mtproto inspector and console as panels
  4 files changed, 182 insertions(+), 135 deletions(-)
 
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 02783e19ccd4ee55ac4718b2288ea8c2b48fec25..bba8948e0df3d7f111904611b29b21c188dd6735 100644
+index 364f188ea34374a1bf4afe4b6505f5993318b586..5466c73ba78b175c9437018fda59f176400ae906 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -112,6 +112,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_reduce_motion.h"
  #include "tele/tele_list_keys.h"
  #include "tele/tele_mtp_console.h"
@@ -22,7 +22,7 @@ index 02783e19ccd4ee55ac4718b2288ea8c2b48fec25..bba8948e0df3d7f111904611b29b21c1
  #include "tele/tele_counters.h"
  #include "tele/tele_bubble_padding.h"
  #include "tele/tele_freeze_watchdog.h"
-@@ -1892,7 +1893,8 @@ bool Application::closeActiveWindow() {
+@@ -1949,7 +1950,8 @@ bool Application::closeActiveWindow() {
  		|| Iv::Editor::CloseActiveWindow()
  		|| calls().closeCurrentActiveCall()
  		|| (_savedWindows && _savedWindows->closeActiveShell())
@@ -32,7 +32,7 @@ index 02783e19ccd4ee55ac4718b2288ea8c2b48fec25..bba8948e0df3d7f111904611b29b21c1
  		return true;
  	} else if (const auto window = activeWindow()) {
  		if (window->widget()->isActive()) {
-@@ -1910,7 +1912,8 @@ bool Application::minimizeActiveWindow() {
+@@ -1967,7 +1969,8 @@ bool Application::minimizeActiveWindow() {
  	} else if (_iv->minimizeActive()
  		|| Iv::Editor::MinimizeActiveWindow()
  		|| calls().minimizeCurrentActiveCall()

@@ -23,10 +23,10 @@ Subject: [PATCH] feat: fake gift upgrades
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_studio_roll.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index d5e7fb8e5343e6f41a056e525bc1d21574837ecc..006ee8f634298e40b81140479b298d9af6c3ca9a 100644
+index 0d16316d15b9e3bff964564b70feb09277781985..791d101ab780e7ffd3575ae796e6a34126f1c8cf 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2739,6 +2739,8 @@ PRIVATE
+@@ -2742,6 +2742,8 @@ PRIVATE
      tele/tele_full_preview.h
      tele/tele_gif_video.cpp
      tele/tele_gif_video.h
@@ -35,7 +35,7 @@ index d5e7fb8e5343e6f41a056e525bc1d21574837ecc..006ee8f634298e40b81140479b298d9a
      tele/tele_gift_quantity.cpp
      tele/tele_gift_quantity.h
      tele/tele_gift_studio.cpp
-@@ -2753,6 +2755,8 @@ PRIVATE
+@@ -2756,6 +2758,8 @@ PRIVATE
      tele/tele_gift_studio_owned.h
      tele/tele_gift_studio_render.cpp
      tele/tele_gift_studio_render.h
@@ -45,10 +45,10 @@ index d5e7fb8e5343e6f41a056e525bc1d21574837ecc..006ee8f634298e40b81140479b298d9a
      tele/tele_gift_studio_sticker.h
      tele/tele_gift_studio_store.cpp
 diff --git a/Telegram/SourceFiles/boxes/star_gift_box.cpp b/Telegram/SourceFiles/boxes/star_gift_box.cpp
-index 4888cfd6c82619e7e59c8390afed3a226fb52e50..1ef2073c6acbdb32fcdded72dc23592e589863bf 100644
+index e4f706063d3921bc302886a3536bd16a21c3df68..cf4e60f05e0601b981c2c52318ba0ace4f3e429f 100644
 --- a/Telegram/SourceFiles/boxes/star_gift_box.cpp
 +++ b/Telegram/SourceFiles/boxes/star_gift_box.cpp
-@@ -80,6 +80,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -73,6 +73,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "settings/sections/settings_credits.h"
  #include "settings/settings_credits_graphics.h"
  #include "settings/sections/settings_premium.h"
@@ -56,7 +56,7 @@ index 4888cfd6c82619e7e59c8390afed3a226fb52e50..1ef2073c6acbdb32fcdded72dc23592e
  #include "tele/tele_gift_quantity.h"
  #include "tele/tele_local_password.h"
  #include "ui/boxes/about_cocoon_box.h" // Ui::AddUniqueCloseButton
-@@ -1322,6 +1323,9 @@ void UpgradeGift(
+@@ -1311,6 +1312,9 @@ void UpgradeGift(
  		int stars,
  		Fn<void(bool, std::shared_ptr<Data::GiftUpgradeResult>)> done) {
  	//AssertIsDebug(); return;

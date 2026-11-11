@@ -23,10 +23,10 @@ Subject: [PATCH] feat: open mad settings from welcome links and deep links
  create mode 100644 Telegram/SourceFiles/tele/tests/mad_links_tests.cpp
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 000cd77123d15a74686fe3f35f16a9d0ce186a4a..c7e56c42629fa1ceddc0e69b92a4195481ad7fa9 100644
+index 8735e4d536538836e8c17b58e6d6705ac5877c12..0e4d32a7654805c42b89ebf1f5ac348143526c09 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3168,6 +3168,9 @@ PRIVATE
+@@ -3171,6 +3171,9 @@ PRIVATE
      tele/tele_tgs_rules.h
      tele/tele_quick_modes.cpp
      tele/tele_quick_modes.h
@@ -51,7 +51,7 @@ index 46967d0182073bff52945a16cacbe7d8ba8d42cf..f2d71c1d7d7fe59297e119db359fdca2
 +  "Telegram Desktop with extra privacy, chat and appearance options.": "telegram desktop с дополнительными настройками приватности, чатов и оформления."
  }
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 20ac46738897c8fedea5a049f56bc614bc48b883..f38a017c92ce97c0358ffc3f1aefcd39d5f345c5 100644
+index d6d3942bcbdaad30f83ca5f47f6d762780821aad..e0d182575d03b62a34e95d66c31a26399b0667e2 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
 @@ -6,6 +6,7 @@ For license and copyright information please follow this link:
@@ -62,7 +62,7 @@ index 20ac46738897c8fedea5a049f56bc614bc48b883..f38a017c92ce97c0358ffc3f1aefcd39
  #include "tele/tele_quick_modes.h"
  #include "tele/tele_mad_badges.h"
  
-@@ -331,6 +332,7 @@ void Application::run() {
+@@ -332,6 +333,7 @@ void Application::run() {
  
  	startLocalStorage();
  	Tele::ApplyQuickModesAtStartup();
@@ -70,7 +70,7 @@ index 20ac46738897c8fedea5a049f56bc614bc48b883..f38a017c92ce97c0358ffc3f1aefcd39
  
  	style::SetCustomFont(settings().customFontFamily());
  	style::SetCustomFontFix(Tele::FontFix());
-@@ -1351,6 +1353,9 @@ void Application::registerWindowActivation(not_null<QWidget*> window) {
+@@ -1352,6 +1354,9 @@ void Application::registerWindowActivation(not_null<QWidget*> window) {
  }
  
  bool Application::openLocalUrl(const QString &url, QVariant context) {

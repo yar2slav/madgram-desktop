@@ -24,10 +24,10 @@ Subject: [PATCH] feat: confirm stickers, gifs and voice messages before
  create mode 100644 Telegram/SourceFiles/tele/tele_confirm_send.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 2849b6ece28324c3ae4c1bc73d62163594304631..00a7b56c0e69f427d41394656c35b0ed9b3ec464 100644
+index b562add2c0d7d7b9779283625505031dca3102c9..559cd4c543ed7571c1a2544290808aa43ca44a8c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2677,6 +2677,8 @@ PRIVATE
+@@ -2680,6 +2680,8 @@ PRIVATE
      tele/tele_chat_backgrounds.h
      tele/tele_collectible_price.cpp
      tele/tele_collectible_price.h
@@ -71,7 +71,7 @@ index efec13a9371cedd785815cdd31d22deb26c94984..5c530b0bf5cbd0a5808d687c5574cf98
  	chooseSelected(FieldAutocomplete::ChooseMethod::ByClick);
  }
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index 089e1937d60abd6e8a2a7ec6d523f6ab9c4dc7ac..5fb7e440b0b22a8694f24c9c3ebbf5ba7a6a77a2 100644
+index a0760e4f88aba7870389664f8611775c4e3d72cd..e01e90f57a85d8868b35e58b40a650db35e7aa38 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -140,7 +140,7 @@ index b3a92c7dc1e7d0b3920bf420c21d1eeb4ea17bb7..33ad6da408c5d41b9a45d28e2e40772a
  					.document = document,
  					.messageSendingFrom = messageSentAnimationInfo(
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index c7af5cad3f05170d8a80f9b94ddc7805a73a4b1f..202be13db01cf66467c704b60af4a3d9de5b4c67 100644
+index 31c20fdb6ab85751872944cdda3b4b85ddba12ef..ab6a8b3fdfb913f89dea9fffad4fbb0f34252b76 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -177,6 +177,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -151,7 +151,7 @@ index c7af5cad3f05170d8a80f9b94ddc7805a73a4b1f..202be13db01cf66467c704b60af4a3d9
  #include "tele/tele_drafts_compose.h"
  #include "tele/tele_docked_media.h"
  #include "tele/tele_ghost.h"
-@@ -1799,6 +1800,7 @@ void HistoryWidget::initTabbedSelector() {
+@@ -1800,6 +1801,7 @@ void HistoryWidget::initTabbedSelector() {
  	});
  
  	const auto selector = controller()->tabbedSelector();
@@ -160,7 +160,7 @@ index c7af5cad3f05170d8a80f9b94ddc7805a73a4b1f..202be13db01cf66467c704b60af4a3d9
  	base::install_event_filter(this, selector, [=](not_null<QEvent*> e) {
  		if (_tabbedPanel && e->type() == QEvent::ParentChange) {
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index d54f7fc0566b300ec502866f9b3419368c8dadf8..e8cad415ee81c6eafed69a89b8e9351547270e15 100644
+index 6ddef68d305c5a372fe147d472a0f93f5ed9cb29..c47b6e9411a1295f70d372e23f062bb78f33f517 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -116,6 +116,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -171,7 +171,7 @@ index d54f7fc0566b300ec502866f9b3419368c8dadf8..e8cad415ee81c6eafed69a89b8e93515
  #include "tele/tele_drafts_compose.h"
  #include "tele/tele_docked_media.h"
  #include "tele/tele_emoji_panel.h"
-@@ -4143,6 +4144,7 @@ void ComposeControls::initTabbedSelector() {
+@@ -4144,6 +4145,7 @@ void ComposeControls::initTabbedSelector() {
  		return base::EventFilterResult::Continue;
  	});
  

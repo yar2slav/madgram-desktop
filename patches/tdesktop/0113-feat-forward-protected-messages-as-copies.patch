@@ -29,10 +29,10 @@ Subject: [PATCH] feat: forward protected messages as copies
  create mode 100644 Telegram/SourceFiles/tele/tele_protected.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5213d45404575b9edee31b9b34b72537da288a70..984a388c2749f0cfe189b19690580634f30a3f93 100644
+index dddc7e8f01181d56e299becec961f25112deab36..a01387629c2f9ace8f6091e8ca5df9e8f64bfa8a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2759,6 +2759,8 @@ PRIVATE
+@@ -2762,6 +2762,8 @@ PRIVATE
      tele/tele_peer_id.h
      tele/tele_phones.cpp
      tele/tele_phones.h
@@ -42,7 +42,7 @@ index 5213d45404575b9edee31b9b34b72537da288a70..984a388c2749f0cfe189b19690580634
      tele/tele_punctual_scheduled.h
      tele/tele_rich_timestamps.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 8d6c1ad6d52b3ac3a9fff49390761ace7d3dd459..8288c7d1cf932d9ad01c31c9fdc13941c4033063 100644
+index c37197fb9537e3382a8b3994403d74911932ae57..93d1851989fe08d0060d806efd59df59adb203c3 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -109,7 +109,7 @@ index 8f1890c5e2bcfde1406ff751e730bf4543914ff4..b0d88a789a8167b325eb9be3d323d283
  	ItemPreview toPreview(ToPreviewOptions options) const override;
  	TextWithEntities notificationText() const override;
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 3c2e7426fa7842348434e39d1a0a30dd6a6d9160..0e4a029f7da45d950d2a466c2f910a28379de8e7 100644
+index f3367d13c4e7d01ee9fa8a1e9b8795bb6e6c0853..48a1ba0e641b2d02c7b577e5267915f47108058c 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -144,6 +144,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -247,7 +247,7 @@ index a4b3223b1313e3181b0c9f23a69b4c02df711a8b..c6b783bc17119203e34886f5f361a499
  		return;
  	}
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index f6c566fd890fe035076626eeadade95dcb2170c6..43bd8b7afa2a9ce3cb5b1ddda8aa9cafb4017d23 100644
+index fd452e560afa1004b49ae23a35d00b7871e5ca9c..e46f278e37fd5da036201a818c668ccc22c88b43 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 @@ -107,6 +107,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -332,10 +332,10 @@ index f6c566fd890fe035076626eeadade95dcb2170c6..43bd8b7afa2a9ce3cb5b1ddda8aa9caf
  		: peer->isUser()
  		? CopyRestrictionType::User
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 16783ab495ba9851e9c86d0a87e91608b01d4935..2e45b1b58dcb6d040a28ffdb65e0dcfb8bb73142 100644
+index 3d05f85aa1fccb2f44eaae5f9731acee5d5688fc..a308259356c08885ca50f27d3391915d6b3ded6b 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -70,6 +70,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_deleted.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_ignored.h"
@@ -343,7 +343,7 @@ index 16783ab495ba9851e9c86d0a87e91608b01d4935..2e45b1b58dcb6d040a28ffdb65e0dcfb
  #include "tele/tele_shot.h"
  #include "tele/tele_shot_sharp.h"
  #include "styles/style_chat.h"
-@@ -6028,7 +6029,7 @@ std::optional<QSize> Message::rightActionSize() const {
+@@ -6101,7 +6102,7 @@ std::optional<QSize> Message::rightActionSize() const {
  bool Message::displayFastShare() const {
  	const auto item = data();
  	const auto peer = item->history()->peer;
@@ -461,7 +461,7 @@ index 8566e085724038e47c8d2b9658f87d33c0c3322b..055535165d5e00d1b73b6488bc293d21
  
  void Session::appConfigRefreshed() {
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 5800d260a34c85c35cd79702a229ae6d12bd68dd..9cda1a0f82832f28fcf0d94a6f96998991489f93 100644
+index 13783b7e99496b6d8b1f1af86acc8cd4b853c590..79889c84189eefd01898b216ef7e7ea438c2028d 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

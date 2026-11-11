@@ -21,10 +21,10 @@ Subject: [PATCH] feat: notify when people come online
  create mode 100644 Telegram/SourceFiles/tele/tele_online_notify.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b8411ad2cdc3804f7732214773f30a903deb68e2..fc258aa5aabe0b764f9c9362f7be72ceffc17954 100644
+index 82e9b7ea702fcdfa23ad81742691ed15487132e2..4059059ac0510c2076cf8758127283e199443526 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2761,6 +2761,8 @@ PRIVATE
+@@ -2764,6 +2764,8 @@ PRIVATE
      tele/tele_new_settings.h
      tele/tele_no_ai.cpp
      tele/tele_no_ai.h
@@ -753,10 +753,10 @@ index 7a2356101d1d082ac8d86c5b6791f96a022dbf16..6d29842413b5a608b055836f193ab530
  	object_ptr<Ui::RoundButton> _reply;
  	object_ptr<Background> _background = { nullptr };
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index a4864e3576228e8561d0fe328ddcf9f7386cc634..3743b5bbd9498b3dcc527bbd0f49a60685b5c2bb 100644
+index 2a0b1922edf65ec9d4e38589f14ad87a272e22b3..05ed186ec8cffaaeae1e7e796355d2434457c8ae 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -137,6 +137,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -138,6 +138,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_local_names.h"
  #include "tele/tele_local_pins.h"
  #include "tele/tele_mtp_inspector.h"
@@ -764,7 +764,7 @@ index a4864e3576228e8561d0fe328ddcf9f7386cc634..3743b5bbd9498b3dcc527bbd0f49a606
  #include "tele/tele_show_pinned.h"
  #include "tele/tele_silent.h"
  #include "tele/tele_username_aliases.h"
-@@ -1955,6 +1956,7 @@ void Filler::fillHistoryActions() {
+@@ -1956,6 +1957,7 @@ void Filler::fillHistoryActions() {
  	addToggleMuteSubmenu(true);
  	Tele::AddGhostChatAction(_peer, _addAction);
  	Tele::AddSilentChatAction(_peer, _addAction);
@@ -772,7 +772,7 @@ index a4864e3576228e8561d0fe328ddcf9f7386cc634..3743b5bbd9498b3dcc527bbd0f49a606
  	addCreateTopic();
  	addInfo();
  	Tele::AddJumpToFirstAction(_controller, _thread, _addAction);
-@@ -1991,6 +1993,7 @@ void Filler::fillProfileActions() {
+@@ -1992,6 +1994,7 @@ void Filler::fillProfileActions() {
  	addEditContact();
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
  	Tele::AddLocalNameAction(_controller, _peer, _addAction);

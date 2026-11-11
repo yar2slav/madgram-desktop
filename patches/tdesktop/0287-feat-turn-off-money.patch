@@ -22,10 +22,10 @@ Subject: [PATCH] feat: turn off money
  create mode 100644 Telegram/SourceFiles/tele/tele_no_money.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 6d4820ca69b2205e9d77ab96c4ee3412e7ae5603..e3c76ea344765ba4b26027b4af6b3aef450f4da1 100644
+index a32bd0e04008e11932f7105572a77e03c0e0d19d..d7ed768f8d6ad620a063c98aae927c80a72df524 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2897,6 +2897,8 @@ PRIVATE
+@@ -2900,6 +2900,8 @@ PRIVATE
      tele/tele_new_settings.h
      tele/tele_no_ai.cpp
      tele/tele_no_ai.h

@@ -14,7 +14,7 @@ Subject: [PATCH] feat: turn off touchpad gestures
  7 files changed, 60 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 3d80ed0b44199961cfae0b03403f36c10ab96b32..cbb9cd2713efd818f45f09f45f9c94708591fb7a 100644
+index 1e4093a9ece225b4d803323d90fda1b890ce0969..9b4095c647641f39f0792ceab675f23b7b3db136 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -762,6 +762,9 @@ void HistoryInner::setupSwipeReplyAndBack() {

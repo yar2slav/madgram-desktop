@@ -16,10 +16,10 @@ Subject: [PATCH] feat: hide the mentions and reactions buttons
  create mode 100644 Telegram/SourceFiles/tele/tele_corner_buttons.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5237c80420f50065ac6d16eb613948a043d6c655..1d69086773a0520cfce696e7c8c3fda037dc5fc5 100644
+index 7a04817403c943507e835d23ff005d64acb178cc..41cdc25e0499a174b7e61ba14861df8eb77b40f8 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2661,6 +2661,8 @@ PRIVATE
+@@ -2664,6 +2664,8 @@ PRIVATE
      tele/tele_changelog.h
      tele/tele_chat_backgrounds.cpp
      tele/tele_chat_backgrounds.h

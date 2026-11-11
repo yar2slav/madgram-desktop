@@ -12,7 +12,7 @@ Subject: [PATCH] feat: copy the text of service messages
  5 files changed, 54 insertions(+), 8 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index ce58b88e49e5df5e7b02acb4d8cf11437dea7d56..924a1953dbc8d5a89bb63d71fe4f087e0d222cce 100644
+index d63a745d32740a69b178cbab308dcd6a459c614b..4a06ab6650bdc0ad29063320d74484db8f44293a 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -3798,6 +3798,12 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {

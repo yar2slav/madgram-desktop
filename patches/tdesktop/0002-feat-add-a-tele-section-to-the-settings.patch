@@ -13,10 +13,10 @@ Subject: [PATCH] feat: add a tele section to the settings
  create mode 100644 Telegram/SourceFiles/settings/settings_tele.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index df13c86e151c5a2a231ee43fa2afcaf1be9f9780..0591fe8e0feec7350f68f1cf6bce0398b670bce3 100644
+index 15a8f3c755fc154a51a687bd3ec67c70acabc53f..2098a465bea4670b1d6253ea1e08099dda309709 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2637,6 +2637,8 @@ endif()
+@@ -2640,6 +2640,8 @@ endif()
  set(TELE_BUILD 0 CACHE STRING "tele release number, 0 for local builds")
  nice_target_sources(Telegram ${src_loc}
  PRIVATE

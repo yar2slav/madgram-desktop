@@ -21,10 +21,10 @@ Subject: [PATCH] feat: number the lines of long code blocks
  create mode 100644 Telegram/SourceFiles/tele/tele_code_lines.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 370b701e0fdb232739566fcca53e480b976fd7b8..54b7193811199e01c60ea52b7b89e9745cd1dae6 100644
+index c892192abf60b388c608891e76acbe7060460532..c112c6553cb21e021ee8c01853d767035a849dc0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2675,6 +2675,8 @@ PRIVATE
+@@ -2678,6 +2678,8 @@ PRIVATE
      tele/tele_changelog_section.h
      tele/tele_chat_backgrounds.cpp
      tele/tele_chat_backgrounds.h
@@ -67,10 +67,10 @@ index 89a1f6b8e8ddae5321f3147f04383aae43cd6d0c..cc4a549c178a9cb3e25b5d847273ad6b
  			// If server has allowed some text that we've trim-ed entirely,
  			// just replace it with something so that UI won't look buggy.
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index dc29f59e4c103ccd8a8a9a03a4566271f20a951a..a37786cc97a5022dbc24957bce238f33d61ef3dc 100644
+index 1ba8cf655ac99ea44bffda2b209ace6a61f2db4c..c5d4a6d18760afbbca0d5cea322863d29152af06 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "api/api_rich_tasks.h"
  #include "tele/tele_bubble_badges.h"
@@ -78,7 +78,7 @@ index dc29f59e4c103ccd8a8a9a03a4566271f20a951a..a37786cc97a5022dbc24957bce238f33
  #include "tele/tele_deleted.h"
  #include "tele/tele_deleted_reply.h"
  #include "tele/tele_ignored.h"
-@@ -3156,6 +3157,13 @@ void Message::paintText(
+@@ -3222,6 +3223,13 @@ void Message::paintText(
  		.useFullWidth = true,
  		.linePostprocess = linePostprocess ? &*linePostprocess : nullptr,
  	});

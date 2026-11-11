@@ -138,7 +138,7 @@ index ad6174320296be87de16f90cbbedcf3e61422289..a57f7c1b25fbda359f060f4e3f9543e1
  		Toggle(kOptionShowChangelog),
  		Toggle(kOptionGroupQuickReplies),
 diff --git a/Telegram/SourceFiles/ui/chat/attach/attach_bot_webview.cpp b/Telegram/SourceFiles/ui/chat/attach/attach_bot_webview.cpp
-index 7af1791d869fe32399fbb8633d35d1831624dba3..3cbd9cb0b65c8dd81ff8384d2c61be8c15bfc867 100644
+index af3231d42d815d5a8d6543e4758f0c6c7553dc6e..df12debe937fd1025e74e9150d8af6f1ad711422 100644
 --- a/Telegram/SourceFiles/ui/chat/attach/attach_bot_webview.cpp
 +++ b/Telegram/SourceFiles/ui/chat/attach/attach_bot_webview.cpp
 @@ -34,6 +34,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

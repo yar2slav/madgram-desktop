@@ -18,10 +18,10 @@ Subject: [PATCH] feat: select service messages
  create mode 100644 Telegram/SourceFiles/tele/tele_select_service.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 28b9ca52fd59ca2501e83cb3ca62e70de7510b1c..da5bd7af96aa782c47ca4f8b67af212f3fe3ffa4 100644
+index 33f65ca3a37177cc5ce5c6725bb8a66d0525e778..f666152e81516ff88258d4ba044f678701b63efa 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2877,6 +2877,8 @@ PRIVATE
+@@ -2880,6 +2880,8 @@ PRIVATE
      tele/tele_screen_capture.h
      tele/tele_secret_media.cpp
      tele/tele_secret_media.h
@@ -31,7 +31,7 @@ index 28b9ca52fd59ca2501e83cb3ca62e70de7510b1c..da5bd7af96aa782c47ca4f8b67af212f
      tele/tele_send_files.h
      tele/tele_send_order.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 2d6e429ec6bf51c553c710ac03e72883bb80aa70..e29a1619c2fff8b3cb4c6e784cb49bafffb9127f 100644
+index a523eab3e94ca5b54e93e7087c0e6dc71e966d7a..28190c31444fb4f1e91860bf0e4cad6dbaa16973 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -149,6 +149,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -87,7 +87,7 @@ index b8c363e638dbe6d21523f434a52a77d8196f9d32..b72ef9d61a6da3b60786a13c0e01fb28
  		|| list->hasSelectRestriction()) {
  		return false;
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 8c8da058f65163116f6f15832faec49343f854dc..eacf553a15ca7a9ee685a773fea50fc6cbcd2b32 100644
+index a19e70037bc09639d14d2f8ab3c712089cc91cff..736ee93a91ff85938f4a7c658bffbd7a3c38a05e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 @@ -111,6 +111,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

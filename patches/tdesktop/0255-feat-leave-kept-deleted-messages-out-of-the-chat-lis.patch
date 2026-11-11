@@ -14,7 +14,7 @@ Subject: [PATCH] feat: leave kept deleted messages out of the chat list
  7 files changed, 158 insertions(+), 4 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history.cpp b/Telegram/SourceFiles/history/history.cpp
-index 440237caadd132922105218947d35f31b09e196a..6e0310494ba0b1d082dae53dfa7f56228f8b22b3 100644
+index 75026bbac4f9b0a0bb71b469aac8e5a0c2be26a1..aa592416efbc720c7c60879a3a88606e963dc396 100644
 --- a/Telegram/SourceFiles/history/history.cpp
 +++ b/Telegram/SourceFiles/history/history.cpp
 @@ -280,7 +280,8 @@ void History::itemVanished(not_null<HistoryItem*> item) {

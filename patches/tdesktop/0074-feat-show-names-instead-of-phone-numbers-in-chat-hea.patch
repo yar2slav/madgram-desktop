@@ -16,10 +16,10 @@ Subject: [PATCH] feat: show names instead of phone numbers in chat headers
  create mode 100644 Telegram/SourceFiles/tele/tele_phones.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index bfd52661988f60eca7220059515dd7da0a87f3d8..487dc3ffeb8d5ca5871c6d2892ac970a92346fc7 100644
+index 370fb14e47edab4dfb852e82870d0d2add9f61e1..34364271dd177c46d08eeb303c484833292c40bb 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2705,6 +2705,8 @@ PRIVATE
+@@ -2708,6 +2708,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_peer_id.cpp
      tele/tele_peer_id.h
@@ -29,10 +29,10 @@ index bfd52661988f60eca7220059515dd7da0a87f3d8..487dc3ffeb8d5ca5871c6d2892ac970a
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 97a604743937c1ddfe22426089192d1b19d462ad..d0c423e7a5b1967fa48c625dd96e46999eea0bbc 100644
+index 537237dcb7571e2c5cce88202946674cc62d90f2..5ae827334d11b17c604f48ec57ba952f5bc0254e 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -67,6 +67,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "apiwrap.h"
  #include "api/api_chat_participants.h"
  #include "tele/tele_calls.h"
@@ -40,7 +40,7 @@ index 97a604743937c1ddfe22426089192d1b19d462ad..d0c423e7a5b1967fa48c625dd96e4699
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
-@@ -97,7 +98,7 @@ QString TopBarNameText(
+@@ -98,7 +99,7 @@ QString TopBarNameText(
  			return tr::lng_hidden_author_messages(tr::now);
  		}
  	}

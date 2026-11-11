@@ -14,10 +14,10 @@ Subject: [PATCH] feat: send an inline bot query as text
  create mode 100644 Telegram/SourceFiles/tele/tele_inline_text.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index a719e128081f9dec5443d9b688fc70610470a60f..614e7a656d1898109225fb9b055868b5fc40a842 100644
+index 2a7da1924cc4f193b8a61151876023ccd5e8c1c8..69475f42dc9283e84995ad5af2fd99611620d4d9 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2713,6 +2713,8 @@ PRIVATE
+@@ -2716,6 +2716,8 @@ PRIVATE
      tele/tele_ghost.h
      tele/tele_ignored.cpp
      tele/tele_ignored.h
@@ -27,7 +27,7 @@ index a719e128081f9dec5443d9b688fc70610470a60f..614e7a656d1898109225fb9b055868b5
      tele/tele_inline_via.h
      tele/tele_local_drafts.cpp
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 73db8884a4aa5cf755bbaaee8ce63b7cb05b72b0..7970c8f04753362ee248329ae913250c7e511410 100644
+index d3cae21d39223cfc493498f488046a96f816ebff..a471e1da1714bbe8de7e95584eb7aa6b0ec3e66e 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -182,6 +182,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -38,7 +38,7 @@ index 73db8884a4aa5cf755bbaaee8ce63b7cb05b72b0..7970c8f04753362ee248329ae913250c
  #include "media/audio/media_audio.h"
  #include "media/audio/media_audio_capture.h"
  #include "media/player/media_player_instance.h"
-@@ -541,6 +542,10 @@ HistoryWidget::HistoryWidget(
+@@ -542,6 +543,10 @@ HistoryWidget::HistoryWidget(
  		},
  		.send = [=] { sendWithModifiers(Qt::KeyboardModifiers()); },
  	});
@@ -49,7 +49,7 @@ index 73db8884a4aa5cf755bbaaee8ce63b7cb05b72b0..7970c8f04753362ee248329ae913250c
  	Tele::SetupAddLinkPreview({
  		.field = _field.data(),
  		.show = controller->uiShow(),
-@@ -6326,6 +6331,10 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
+@@ -6327,6 +6332,10 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
  		auto result = saveMenuDetails();
  		Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
  		return result;
@@ -61,7 +61,7 @@ index 73db8884a4aa5cf755bbaaee8ce63b7cb05b72b0..7970c8f04753362ee248329ae913250c
  		return {};
  	}
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index e2c137adb1b2a504b5aee8ea553e42b2c9c5dde6..97c063bcc6157449c069869bbd0d2523aa4dc500 100644
+index 94887ec8dd078cedf7cc9eac8034b58c658a4bb1..93d6f6f1684b9559119cf97101743378effb8aa3 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -118,6 +118,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -72,7 +72,7 @@ index e2c137adb1b2a504b5aee8ea553e42b2c9c5dde6..97c063bcc6157449c069869bbd0d2523
  #include "support/support_helper.h"
  #include "ui/item_text_options.h"
  #include "ui/text/text_options.h"
-@@ -3315,6 +3316,10 @@ void ComposeControls::initField() {
+@@ -3316,6 +3317,10 @@ void ComposeControls::initField() {
  		},
  		.send = [=] { _fieldSubmits.fire({}); },
  	});
@@ -83,7 +83,7 @@ index e2c137adb1b2a504b5aee8ea553e42b2c9c5dde6..97c063bcc6157449c069869bbd0d2523
  	Tele::SetupAddLinkPreview({
  		.field = _field,
  		.show = _show,
-@@ -5025,6 +5030,12 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
+@@ -5026,6 +5031,12 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
  		auto result = saveMenuDetails();
  		Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
  		return result;

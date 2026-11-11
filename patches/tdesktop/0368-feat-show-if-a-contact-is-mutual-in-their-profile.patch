@@ -18,10 +18,10 @@ Subject: [PATCH] feat: show if a contact is mutual in their profile
  create mode 100644 Telegram/SourceFiles/tele/tele_mutual_contact.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index d854a39017b9d6792e80d6e1bfd953d60bfe6e89..24bf79cc3d872d959e6824cae15aed01d3307bd8 100644
+index 1be11bffd54990023e1352e1e257f8f009d1faaf..4967d04fa51eac872711cd74f567b46389a72b3f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3026,6 +3026,8 @@ PRIVATE
+@@ -3029,6 +3029,8 @@ PRIVATE
      tele/tele_mtp_log.h
      tele/tele_mute.cpp
      tele/tele_mute.h

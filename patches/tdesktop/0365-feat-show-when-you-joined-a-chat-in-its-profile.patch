@@ -18,10 +18,10 @@ Subject: [PATCH] feat: show when you joined a chat in its profile
  create mode 100644 Telegram/SourceFiles/tele/tele_chat_dates.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ab7bb0425414187c3a5524f1fd80de303f8dec4e..2245def1066b6ae6d1bec26f0a0c879517d92596 100644
+index d47f3cfdda4ea9aedf14f1b5d4141d3baa75f789..ce2986fafb951eb7c9feb5465227372038bcc916 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2811,6 +2811,8 @@ PRIVATE
+@@ -2814,6 +2814,8 @@ PRIVATE
      tele/tele_changelog_section.h
      tele/tele_chat_backgrounds.cpp
      tele/tele_chat_backgrounds.h

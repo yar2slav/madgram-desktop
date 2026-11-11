@@ -149,7 +149,7 @@ index 822cbbe6218d0814b0915d50cfd188334479eee0..b2bc5788d721896d1533aba840dbabe0
 +  "About this setting": "об этой настройке"
  }
 diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
-index 0496ed259e250af7ddaf48a2003e844214fed323..e4b4c4020da77856167f71816ae920d509062602 100644
+index 2a91d25ad705d2fb9e6912cdb0f5292ce5278c52..0d2f5783f58ba048f3313e46c698fc02d7372eed 100644
 --- a/Telegram/Resources/qrc/telegram/telegram.qrc
 +++ b/Telegram/Resources/qrc/telegram/telegram.qrc
 @@ -6,6 +6,7 @@
@@ -160,7 +160,7 @@ index 0496ed259e250af7ddaf48a2003e844214fed323..e4b4c4020da77856167f71816ae920d5
      <file alias="art/mad.png">../../art/mad.png</file>
      <file alias="art/logo_256.png">../../art/logo_256.png</file>
      <file alias="art/logo_256_no_margin.png">../../art/logo_256_no_margin.png</file>
-@@ -101,7 +102,6 @@
+@@ -103,7 +104,6 @@
    <qresource prefix="/tele">
      <file alias="api.tl">../../../SourceFiles/mtproto/scheme/api.tl</file>
      <file alias="mtproto.tl">../../../SourceFiles/mtproto/scheme/mtproto.tl</file>
@@ -1130,10 +1130,10 @@ index ba71cbeea98cb920520a81011d6ca22c90586933..e04c99ce7b728eeffec121782878953f
  	const auto directory = QDir(CacheDirectory());
  	for (const auto &file : directory.entryInfoList(QDir::Files)) {
 diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
-index 3b29ebd653309a2623bce2b893792debdac0e667..08734039d3ae0299149b7dffc656307179b79522 100644
+index ca98b39faa70867f3320fbc600b985f767f78b32..f81d8b4482a0672e12651a368a29a52d0277c3a0 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.cpp
 +++ b/Telegram/SourceFiles/ui/unread_badge.cpp
-@@ -244,7 +244,7 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
+@@ -256,7 +256,7 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
  		return drawTelegramBadges(p, std::move(descriptor));
  	}
  	const auto size = descriptor.rectForName.height();

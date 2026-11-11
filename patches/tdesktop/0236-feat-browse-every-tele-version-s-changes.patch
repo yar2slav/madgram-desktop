@@ -21,10 +21,10 @@ Subject: [PATCH] feat: browse every tele version's changes
  create mode 100644 Telegram/SourceFiles/tele/tele_changelog_history.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 3c907a3d907a5dbfbd8fed14d5980064d311b742..ae16f44bf4691b78f4b8f137698c242da54d4122 100644
+index d92de9ce6e1e2ba7c11dd96afcbfb8eb995b55f0..9c30612ebc7a5d211c498eb3d157b2c1c70afd27 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2677,6 +2677,8 @@ PRIVATE
+@@ -2680,6 +2680,8 @@ PRIVATE
      tele/tele_changelog.h
      tele/tele_changelog_chat.cpp
      tele/tele_changelog_chat.h
@@ -34,10 +34,10 @@ index 3c907a3d907a5dbfbd8fed14d5980064d311b742..ae16f44bf4691b78f4b8f137698c242d
      tele/tele_changelog_section.h
      tele/tele_chat_backgrounds.cpp
 diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
-index 9151a27685004ba85ee2776591d7b92a4783c724..782809408f0cc27414a5c542bd5fbc6762cceb32 100644
+index ec6235a9e88ae9f85d1d46cd0b4c438ad6494a82..989dd58b816c584b7ce3e3c9eef8c0c1eb70df28 100644
 --- a/Telegram/Resources/qrc/telegram/telegram.qrc
 +++ b/Telegram/Resources/qrc/telegram/telegram.qrc
-@@ -98,6 +98,7 @@
+@@ -100,6 +100,7 @@
    <qresource prefix="/tele">
      <file alias="api.tl">../../../SourceFiles/mtproto/scheme/api.tl</file>
      <file alias="mtproto.tl">../../../SourceFiles/mtproto/scheme/mtproto.tl</file>

@@ -15,10 +15,10 @@ Subject: [PATCH] feat: pick brush colors from the image
  create mode 100644 Telegram/SourceFiles/tele/tele_editor_eyedropper.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 024fa5366e1beb78150d2d2d3e57d4c83ccc98a3..295d15f4a97ee13408ef07aa283e6917e0a94928 100644
+index 0f36a827ac08916d213b7341f6f3310e426a334f..4035c25ced503d6244491f0b8e8f3631197679dc 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2665,6 +2665,8 @@ PRIVATE
+@@ -2668,6 +2668,8 @@ PRIVATE
      tele/tele_deleted_section.h
      tele/tele_edit_history.cpp
      tele/tele_edit_history.h

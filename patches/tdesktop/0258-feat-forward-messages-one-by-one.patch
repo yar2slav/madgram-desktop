@@ -17,10 +17,10 @@ Subject: [PATCH] feat: forward messages one by one
  create mode 100644 Telegram/SourceFiles/tele/tele_forward.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7add1c6f995b8a4524d798333814f8ca322baa23..ffe65a0a62f9c9291c1b2101efba64e500e47bfa 100644
+index 925a79ecf5f7401b5558dc8fe48f3c694218d824..3546431f5e3906dedd4ad96ba2e139c4379fa1b2 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2744,6 +2744,8 @@ PRIVATE
+@@ -2747,6 +2747,8 @@ PRIVATE
      tele/tele_flood_wait.h
      tele/tele_folders.cpp
      tele/tele_folders.h

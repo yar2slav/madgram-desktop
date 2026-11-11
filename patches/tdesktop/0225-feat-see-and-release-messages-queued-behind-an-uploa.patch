@@ -13,7 +13,7 @@ Subject: [PATCH] feat: see and release messages queued behind an upload
  6 files changed, 172 insertions(+), 7 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 6df800ecca518f92cae3d2c6cdf40909b9d63772..39e3084b90cc72b6597b3cfb98f4018ddc57e44f 100644
+index 2602b3345c92927df64bc2d6ed0b540b2ed5f8b7..0afaf2706f391746210fa7b86a5738d16692a490 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -151,6 +151,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

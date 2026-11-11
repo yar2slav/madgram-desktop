@@ -21,10 +21,10 @@ Subject: [PATCH] feat: keep saved gifs and stickers past the limit
  create mode 100644 Telegram/SourceFiles/tele/tele_past_limit.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f7c100387b466f745206ba0dcc872e6d0a4600b5..e3409cdd4330d59a4e5863e2ac56493f53da9913 100644
+index 45fee9c531e0bc6272b1dc7b4601b3292a93dbb7..1115696f62e895addb1891d5440478d977e61214 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2791,6 +2791,8 @@ PRIVATE
+@@ -2794,6 +2794,8 @@ PRIVATE
      tele/tele_name_badges.h
      tele/tele_options.cpp
      tele/tele_options.h
@@ -55,7 +55,7 @@ index 6c28df197d78f6404d6444e4b6ea3eccc324f945..43bfd703aea66d75e966b2773893f7fa
  	auto done = [=] {
  		document->owner().stickers().setFaved(show, document, faved);
 diff --git a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
-index 5fb7e440b0b22a8694f24c9c3ebbf5ba7a6a77a2..e4068d3b39ed3214987d07e8f240958ca73df0d0 100644
+index e01e90f57a85d8868b35e58b40a650db35e7aa38..1e39b5fb43379893794806b30d568ff90acb64a1 100644
 --- a/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 +++ b/Telegram/SourceFiles/chat_helpers/gifs_list_widget.cpp
 @@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

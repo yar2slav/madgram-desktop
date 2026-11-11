@@ -19,10 +19,10 @@ Subject: [PATCH] feat: copy messages as markdown or html
  create mode 100644 Telegram/SourceFiles/tele/tele_copy_markdown.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5e73906d92e80c010b7b3c97b118ef4e6d39d21d..e6479b72ed5002199f46dee34244f0c5fb52dea9 100644
+index 10c633474df8ca33b3ff67ed2881d2b7d2b2c874..b3579dd35e8178e99d214aabfe059afec5afacff 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2681,6 +2681,8 @@ PRIVATE
+@@ -2684,6 +2684,8 @@ PRIVATE
      tele/tele_confirm_send.h
      tele/tele_communities.cpp
      tele/tele_communities.h
@@ -32,7 +32,7 @@ index 5e73906d92e80c010b7b3c97b118ef4e6d39d21d..e6479b72ed5002199f46dee34244f0c5
      tele/tele_corner_buttons.h
      tele/tele_counters.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index cbb9cd2713efd818f45f09f45f9c94708591fb7a..83d6131da9b4018a555823e0e5308c45477e4c52 100644
+index 9b4095c647641f39f0792ceab675f23b7b3db136..73fdac662c40cac7480c871635b22a93a01464a0 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -136,6 +136,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

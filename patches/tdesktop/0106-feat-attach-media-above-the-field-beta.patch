@@ -32,10 +32,10 @@ Subject: [PATCH] feat: attach media above the field (beta)
  create mode 100644 Telegram/SourceFiles/tele/tele_docked_media.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f61625fdbab88f734e01198183811bca45a3ac74..39ea6e029524eff12648e0215a0647e9a6dee117 100644
+index c7db3d8306c3d9a06d67a74797d0facb83e2458d..a6a9c4c7784e85d010553c179e347a1c05a8eafc 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2681,6 +2681,8 @@ PRIVATE
+@@ -2684,6 +2684,8 @@ PRIVATE
      tele/tele_custom_emoji.h
      tele/tele_debug_logs.cpp
      tele/tele_debug_logs.h
@@ -45,7 +45,7 @@ index f61625fdbab88f734e01198183811bca45a3ac74..39ea6e029524eff12648e0215a0647e9
      tele/tele_drafts.h
      tele/tele_drafts_box.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 5c13a50d4b0d407e7050a80164ee66e9bec50999..8d6c1ad6d52b3ac3a9fff49390761ace7d3dd459 100644
+index c916b786ba241826f692c17a23057d930e8beb6e..c37197fb9537e3382a8b3994403d74911932ae57 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -116,7 +116,7 @@ index dd2fd649a725bdea61b49630090aa98b093b9dd0..fbb7b882942b76bb594bc624759194d4
  		}
  		return nullptr;
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0ef3256c9b 100644
+index a471e1da1714bbe8de7e95584eb7aa6b0ec3e66e..95c99b28bc89393ae534e893e1ead345cbbf596b 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
 @@ -178,6 +178,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -127,7 +127,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  #include "tele/tele_ghost.h"
  #include "tele/tele_shortcuts.h"
  #include "tele/tele_deleted_reply.h"
-@@ -580,6 +581,27 @@ HistoryWidget::HistoryWidget(
+@@ -581,6 +582,27 @@ HistoryWidget::HistoryWidget(
  			.rich = [=] { return shownRichMessage(); },
  			.clearRich = [=] { clearRichDraft(); },
  		});
@@ -155,7 +155,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  	Data::AmPremiumValue(&session()) | rpl::on_next([=] {
  		checkCharsLimitation();
  		updateAiButtonVisibility();
-@@ -5655,7 +5677,9 @@ void HistoryWidget::setupSendMenu(
+@@ -5656,7 +5678,9 @@ void HistoryWidget::setupSendMenu(
  		controller()->uiShow(),
  		[=] { return sendButtonMenuDetails(); },
  		[=](Action value, Details details) {
@@ -166,7 +166,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  				|| value.type == ActionType::CaptionDown
  				|| value.type == ActionType::SpoilerOn
  				|| value.type == ActionType::SpoilerOff
-@@ -5987,6 +6011,8 @@ void HistoryWidget::send(Api::SendOptions options) {
+@@ -5988,6 +6012,8 @@ void HistoryWidget::send(Api::SendOptions options) {
  	} else if (!options.starsApproved
  		&& Tele::ComposeDraftsIntercept(_teleDrafts.get())) {
  		return;
@@ -175,7 +175,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  	} else if (_editMsgId) {
  		saveEditMessage({});
  		return;
-@@ -6330,6 +6356,7 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
+@@ -6331,6 +6357,7 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
  	if (type == Type::Save) {
  		auto result = saveMenuDetails();
  		Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
@@ -183,7 +183,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  		return result;
  	} else if (type == Type::Cancel) {
  		return Tele::InlineAsTextMenu(
-@@ -6340,6 +6367,7 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
+@@ -6341,6 +6368,7 @@ SendMenu::Details HistoryWidget::sendButtonMenuDetails() const {
  	}
  	auto result = sendButtonDefaultDetails();
  	Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
@@ -191,7 +191,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  	return result;
  }
  
-@@ -7578,7 +7606,9 @@ bool HistoryWidget::fieldHasSendText() const {
+@@ -7579,7 +7607,9 @@ bool HistoryWidget::fieldHasSendText() const {
  }
  
  bool HistoryWidget::hasSendableContent() const {
@@ -202,7 +202,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  }
  
  bool HistoryWidget::hideExtraButtons() const {
-@@ -7823,12 +7853,19 @@ void HistoryWidget::moveFieldControls() {
+@@ -7824,12 +7854,19 @@ void HistoryWidget::moveFieldControls() {
  	_fieldBarCancel->moveToRight(
  		0,
  		_field->y() - st::historySendPadding - _fieldBarCancel->height());
@@ -227,7 +227,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  	if (_inlineResults) {
  		_inlineResults->moveBottom(_field->y() - st::historySendPadding);
  	}
-@@ -7965,6 +8002,8 @@ void HistoryWidget::updateFieldPlaceholder() {
+@@ -7966,6 +8003,8 @@ void HistoryWidget::updateFieldPlaceholder() {
  			return tr::lng_edit_message_text();
  		} else if (!peer) {
  			return tr::lng_message_ph();
@@ -236,7 +236,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  		} else if ((_kbShown || _keyboard->forceReply())
  			&& !_keyboard->placeholder().isEmpty()) {
  			return rpl::single(_keyboard->placeholder());
-@@ -8178,6 +8217,8 @@ bool HistoryWidget::confirmSendingFiles(
+@@ -8179,6 +8218,8 @@ bool HistoryWidget::confirmSendingFiles(
  		return false;
  	} else if (!_peer || showSendingFilesError(list)) {
  		return false;
@@ -245,7 +245,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  	}
  
  	const auto cursor = _field->textCursor();
-@@ -8832,6 +8873,7 @@ void HistoryWidget::updateHistoryGeometry(
+@@ -8833,6 +8874,7 @@ void HistoryWidget::updateHistoryGeometry(
  			newScrollHeight -= st::historyReplyHeight;
  		}
  		newScrollHeight -= Tele::ComposeDraftsBarHeight(_teleDrafts.get());
@@ -253,7 +253,7 @@ index 7970c8f04753362ee248329ae913250c7e511410..903f900d3caa1003cf5f7f619976aa0e
  		if (_kbShown) {
  			newScrollHeight -= _kbScroll->height();
  		}
-@@ -9389,6 +9431,7 @@ int HistoryWidget::computeMaxFieldHeight() const {
+@@ -9390,6 +9432,7 @@ int HistoryWidget::computeMaxFieldHeight() const {
  			? st::historyReplyHeight
  			: 0)
  		- Tele::ComposeDraftsBarHeight(_teleDrafts.get())
@@ -281,7 +281,7 @@ index 77d93e84a40e567bd3223207e844611c3b7e478a..e43bdf6dfddf6e62c74c61abfc2e6f48
  
  };
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d34463267596 100644
+index 93d6f6f1684b9559119cf97101743378effb8aa3..5eeebb7a65c70208e0c69e3bde4b409c5b9ac806 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 @@ -117,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -292,7 +292,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  #include "tele/tele_emoji_panel.h"
  #include "tele/tele_inline_text.h"
  #include "support/support_helper.h"
-@@ -1604,6 +1605,42 @@ void ComposeControls::setupTeleDrafts() {
+@@ -1605,6 +1606,42 @@ void ComposeControls::setupTeleDrafts() {
  	updateControlsGeometry(_wrap->size());
  }
  
@@ -335,7 +335,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  void ComposeControls::initLikeButton() {
  	if (_like) {
  		_like->setClickedCallback([=] { _likeToggled.fire({}); });
-@@ -2234,7 +2271,9 @@ rpl::producer<Api::SendOptions> ComposeControls::scrollToMaxRequests() const {
+@@ -2235,7 +2272,9 @@ rpl::producer<Api::SendOptions> ComposeControls::scrollToMaxRequests() const {
  rpl::producer<Api::SendOptions> ComposeControls::sendRequests() const {
  	return sendContentRequests(
  		SendRequestType::Text
@@ -346,7 +346,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  		if (!_chosenStarsCount) {
  			return true;
  		}
-@@ -3456,6 +3495,8 @@ void ComposeControls::updateFieldPlaceholder() {
+@@ -3457,6 +3496,8 @@ void ComposeControls::updateFieldPlaceholder() {
  			return tr::lng_edit_message_text();
  		} else if (!peer) {
  			return tr::lng_message_ph();
@@ -355,7 +355,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  		} else if (const auto stars = ephemeralReply
  			? 0
  			: peer->starsPerMessageChecked()) {
-@@ -4223,7 +4264,9 @@ void ComposeControls::setupSendMenu(
+@@ -4224,7 +4265,9 @@ void ComposeControls::setupSendMenu(
  		Fn<void(Api::SendOptions)> send) {
  	using namespace SendMenu;
  	const auto sendAction = [=](Action action, Details details) {
@@ -366,7 +366,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  			_chosenStarsCount = details.price.value_or(0);
  			updateSendButtonType();
  		} else if (action.type == ActionType::CaptionUp
-@@ -5029,6 +5072,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
+@@ -5030,6 +5073,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
  	if (type == Ui::SendButton::Type::Save) {
  		auto result = saveMenuDetails();
  		Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
@@ -374,7 +374,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  		return result;
  	} else if (type == Ui::SendButton::Type::Cancel) {
  		auto result = sendMenuDetails();
-@@ -5044,6 +5088,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
+@@ -5045,6 +5089,7 @@ SendMenu::Details ComposeControls::sendButtonMenuDetails() const {
  		result.effectAllowed = false;
  	}
  	Tele::ComposeDraftsMenu(_teleDrafts.get(), result);
@@ -382,7 +382,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  	return result;
  }
  
-@@ -5223,12 +5268,17 @@ void ComposeControls::updateControlsGeometry(QSize size) {
+@@ -5224,12 +5269,17 @@ void ComposeControls::updateControlsGeometry(QSize size) {
  	_header->moveToLeft(
  		0,
  		fieldTop - _st.padding.top() - _header->height());
@@ -403,7 +403,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  
  	auto right = 0;
  	if (_starsReaction) {
-@@ -5623,7 +5673,9 @@ bool ComposeControls::hasVisibleSendText() const {
+@@ -5624,7 +5674,9 @@ bool ComposeControls::hasVisibleSendText() const {
  }
  
  bool ComposeControls::hasSendableContent() const {
@@ -414,7 +414,7 @@ index 97c063bcc6157449c069869bbd0d2523aa4dc500..1064b3d31f271e30af98e14e0276d344
  }
  
  bool ComposeControls::hideExtraButtons() const {
-@@ -5965,6 +6017,7 @@ int ComposeControls::composeFieldHeight() const {
+@@ -5966,6 +6018,7 @@ int ComposeControls::composeFieldHeight() const {
  void ComposeControls::updateHeight() {
  	const auto height = (_header->isDisplayed() ? _header->height() : 0)
  		+ Tele::ComposeDraftsBarHeight(_teleDrafts.get())
@@ -494,7 +494,7 @@ index 091a94535ffd7a0d33bc8a48d000ed5a43e39f32..d2824eea4a36bc696ae280d5d5e02851
  
  	auto box = Box<SendFilesBox>(
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index 6110b0a1bf2a08cbd7064f9eda0da5114999a076..15f4814aebb1a1988cb170aeae905206756dd4d2 100644
+index e7f5c93ed8567df86697031b3cc158c2009ebd92..567ee682ac4100261ea6129ca9cbaf767e72c106 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 @@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -505,7 +505,7 @@ index 6110b0a1bf2a08cbd7064f9eda0da5114999a076..15f4814aebb1a1988cb170aeae905206
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
  
-@@ -592,7 +593,8 @@ bool Gif::underCursor(bool fullFeatured) const {
+@@ -585,7 +586,8 @@ bool Gif::underCursor(bool fullFeatured) const {
  }
  
  bool Gif::autoplayEnabled() const {
@@ -515,7 +515,7 @@ index 6110b0a1bf2a08cbd7064f9eda0da5114999a076..15f4814aebb1a1988cb170aeae905206
  		return false;
  	} else if (_realParent->isSponsored()) {
  		return true;
-@@ -2297,6 +2299,7 @@ void Gif::setStatusSize(int64 newSize) const {
+@@ -2290,6 +2292,7 @@ void Gif::setStatusSize(int64 newSize) const {
  			_data->isVideoFile() ? (_data->duration() / 1000) : -2,
  			0);
  	}

@@ -14,24 +14,24 @@ Subject: [PATCH] feat: show checkmarks and custom verification everywhere
  .../SourceFiles/settings/settings_tele.cpp    |   1 +
  .../SourceFiles/tele/tele_account_badges.cpp  | 103 ++++++++++++++++++
  .../SourceFiles/tele/tele_account_badges.h    |  48 ++++++++
- .../SourceFiles/tele/tele_bubble_badges.cpp   |  95 ++++++++++++++++
+ .../SourceFiles/tele/tele_bubble_badges.cpp   |  91 ++++++++++++++++
  .../SourceFiles/tele/tele_bubble_badges.h     |  20 ++++
  Telegram/SourceFiles/tele/tele_options.cpp    |  12 ++
  Telegram/SourceFiles/tele/tele_options.h      |   2 +
  Telegram/SourceFiles/ui/unread_badge.cpp      |  29 ++---
  .../SourceFiles/window/window_main_menu.cpp   |  32 ++++--
  .../SourceFiles/window/window_main_menu.h     |   5 +
- 17 files changed, 447 insertions(+), 56 deletions(-)
+ 17 files changed, 443 insertions(+), 56 deletions(-)
  create mode 100644 Telegram/SourceFiles/tele/tele_account_badges.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_account_badges.h
  create mode 100644 Telegram/SourceFiles/tele/tele_bubble_badges.cpp
  create mode 100644 Telegram/SourceFiles/tele/tele_bubble_badges.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 27f5a046e84bc69b1aa8c6a2e05d570099e2bb63..cfdd52a0034f0515a04f67aa0d719d1ea9b7aa6a 100644
+index f816ec236a592a4c20296eec0e768a80bb4b3ba0..74687a9a0651ce32ec5660e343f2648426a969e3 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2639,10 +2639,14 @@ nice_target_sources(Telegram ${src_loc}
+@@ -2642,10 +2642,14 @@ nice_target_sources(Telegram ${src_loc}
  PRIVATE
      settings/settings_tele.cpp
      settings/settings_tele.h
@@ -136,10 +136,10 @@ index ad73644d916bdc6ec6f39af559e9b9ab88373da2..28ca8b6f65722f30bcf30bca06820a03
  
  	_top->geometryValue() | rpl::on_next([=](QRect geometry) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7fd0365a1a 100644
+index 9e2a0cfc5aa411382d3674e1ac83a0be89c363bb..d03a698b3d4e6597470960e1b8e131397ff84d1d 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -65,6 +65,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "window/window_session_controller.h"
  #include "apiwrap.h"
  #include "api/api_rich_tasks.h"
@@ -147,7 +147,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_chat_style.h"
-@@ -1604,6 +1605,7 @@ QSize Message::performCountOptimalSize() {
+@@ -1621,6 +1622,7 @@ QSize Message::performCountOptimalSize() {
  					+ (_fromNameStatus
  						? st::dialogsPremiumIcon.icon.width()
  						: 0)
@@ -155,7 +155,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  					+ st::msgPadding.right();
  				if (via && !displayForwardedFrom()) {
  					namew += st::msgServiceFont->spacew + via->maxWidth
-@@ -2533,6 +2535,9 @@ void Message::paintFromName(
+@@ -2589,6 +2591,9 @@ void Message::paintFromName(
  	const auto statusWidth = _fromNameStatus
  		? st::dialogsPremiumIcon.icon.width()
  		: 0;
@@ -165,7 +165,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  	const auto via = item->Get<HistoryMessageVia>();
  	const auto viaShown = via && !displayForwardedFrom() && via->width;
  	const auto viaSkipWidth = viaShown
-@@ -2541,7 +2546,7 @@ void Message::paintFromName(
+@@ -2597,7 +2602,7 @@ void Message::paintFromName(
  	const auto nameAvailableWidth = std::max(
  		((statusWidth && availableWidth > statusWidth)
  			? (availableWidth - statusWidth)
@@ -174,7 +174,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  		0);
  	if (statusWidth && availableWidth > statusWidth) {
  		const auto x = availableLeft
-@@ -2580,6 +2585,17 @@ void Message::paintFromName(
+@@ -2636,6 +2641,17 @@ void Message::paintFromName(
  			st::dialogsPremiumIcon.icon.paint(p, x, y, width(), color);
  		}
  	}
@@ -192,10 +192,10 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  	p.setFont(st::msgNameFont);
  	p.setPen(nameFg);
  	const auto nameLinkHandler = fromLink();
-@@ -2600,9 +2616,12 @@ void Message::paintFromName(
- 		nameLinkHandler,
- 		QRect(availableLeft, trect.top(), nameWidth, st::msgNameFont->height),
- 		trect.topLeft());
+@@ -2666,9 +2682,12 @@ void Message::paintFromName(
+ 		trect.topLeft(),
+ 		nameFg,
+ 		context.now);
 +	prepareCustomEmojiPaint(p, context, *nameText);
  	nameText->draw(p, {
  		.position = { availableLeft, trect.top() },
@@ -205,7 +205,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  		.elisionLines = 1,
  	});
  	const auto skipWidth = nameWidth
-@@ -2610,6 +2629,7 @@ void Message::paintFromName(
+@@ -2676,6 +2695,7 @@ void Message::paintFromName(
  			? (st::dialogsPremiumIcon.icon.width()
  				+ st::msgServiceFont->spacew)
  			: 0)
@@ -213,15 +213,15 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  		+ st::msgServiceFont->spacew;
  	availableLeft += skipWidth;
  	availableWidth -= skipWidth;
-@@ -3836,6 +3856,7 @@ bool Message::hasHeavyPart() const {
- void Message::unloadHeavyPart() {
+@@ -3904,6 +3924,7 @@ void Message::unloadHeavyPart() {
  	Element::unloadHeavyPart();
  	_comments = nullptr;
+ 	_fromNameVerification = nullptr;
 +	_fromName.unloadPersistentAnimation();
  	if (_fromNameStatus) {
  		_fromNameStatus->custom = nullptr;
  		_fromNameStatus->id = EmojiStatusId();
-@@ -4255,6 +4276,9 @@ bool Message::getStateFromName(
+@@ -4328,6 +4349,9 @@ bool Message::getStateFromName(
  		const auto statusWidth = (from && _fromNameStatus)
  			? st::dialogsPremiumIcon.icon.width()
  			: 0;
@@ -231,7 +231,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  		const auto via = item->Get<HistoryMessageVia>();
  		const auto viaShown = via && !displayForwardedFrom() && via->width;
  		const auto viaSkipWidth = viaShown
-@@ -4263,7 +4287,7 @@ bool Message::getStateFromName(
+@@ -4336,7 +4360,7 @@ bool Message::getStateFromName(
  		const auto nameAvailableWidth = std::max(
  			((statusWidth && availableWidth > statusWidth)
  				? (availableWidth - statusWidth)
@@ -240,7 +240,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  			0);
  		const auto nameWidth = std::min(
  			nameText->maxWidth(),
-@@ -4297,6 +4321,7 @@ bool Message::getStateFromName(
+@@ -4370,6 +4394,7 @@ bool Message::getStateFromName(
  				? (st::dialogsPremiumIcon.icon.width()
  					+ st::msgServiceFont->spacew)
  				: 0)
@@ -248,7 +248,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  			+ st::msgServiceFont->spacew;
  		availableLeft += skipWidth;
  		availableWidth -= skipWidth;
-@@ -5477,12 +5502,21 @@ void Message::validateFromNameText(PeerData *from) const {
+@@ -5550,12 +5575,21 @@ void Message::validateFromNameText(PeerData *from) const {
  		return;
  	}
  	const auto version = from->nameVersion();
@@ -275,7 +275,7 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  	}
  	if (from->isPremium()
  		|| (from->isChannel()
-@@ -6397,7 +6431,8 @@ void Message::fromNameUpdated(int width) const {
+@@ -6472,7 +6506,8 @@ void Message::fromNameUpdated(int width) const {
  		- (_fromNameStatus
  			? (st::dialogsPremiumIcon.icon.width()
  				+ st::msgServiceFont->spacew)
@@ -286,12 +286,12 @@ index 712d82a2be612b3841df8cf72c9e6aaa72fb6844..f4ed937c4922d5dbe4afc01a2ce22a7f
  	if (via && !displayForwardedFrom()) {
  		via->resize(available - st::msgServiceFont->spacew);
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.h b/Telegram/SourceFiles/history/view/history_view_message.h
-index dfa1c27e4d4bf6bf0883688f1521986fbc9b411d..f6d5c5ec72c25e92f84f5fe5884b801ab94a8263 100644
+index 10d7d686d247df5fea44483b6a3ff47bc0aed883..78ba64ddcca4674ba50ce03dc5cb69eb3f3b24e8 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.h
 +++ b/Telegram/SourceFiles/history/view/history_view_message.h
-@@ -551,6 +551,7 @@ private:
- 
+@@ -558,6 +558,7 @@ private:
  	mutable Ui::Text::String _fromName;
+ 	mutable std::unique_ptr<Ui::Text::CustomEmoji> _fromNameVerification;
  	mutable std::unique_ptr<FromNameStatus> _fromNameStatus;
 +	mutable uint64 _fromNameBadges = 0;
  	mutable std::unique_ptr<Ui::RoundCheckbox> _selectionRoundCheckbox;
@@ -670,10 +670,10 @@ index 0000000000000000000000000000000000000000..91830f6fe2ddb3dbd9c79400c6a9e601
 +} // namespace Tele
 diff --git a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..e89de87be5eedecc5b5606d5aae30d6de115ac2c
+index 0000000000000000000000000000000000000000..6ca8513da7348890a8920847e146b2737ee53694
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
-@@ -0,0 +1,95 @@
+@@ -0,0 +1,91 @@
 +#include "tele/tele_bubble_badges.h"
 +
 +#include "data/data_peer.h"
@@ -750,10 +750,6 @@ index 0000000000000000000000000000000000000000..e89de87be5eedecc5b5606d5aae30d6d
 +		return;
 +	}
 +	auto text = TextWithEntities{ peer->name() };
-+	if (const auto icon = VerifyIcon(peer)) {
-+		text = Data::SingleCustomEmoji(icon).append(' ').append(
-+			std::move(text));
-+	}
 +	const auto session = &peer->session();
 +	name.setMarkedText(st::msgNameStyle, text, Ui::NameTextOptions(), {
 +		.repaint = std::move(repaint),
@@ -853,10 +849,10 @@ index e9c02d9d15db82825e0f07d17908db92e7fa0ed6..f331dae73618b0814fed9f6c9cce9f74
  void SetServerUrl(const QString &url);
  [[nodiscard]] rpl::producer<QString> ServerUrlValue();
 diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
-index 18df642360f66a7bcc50f034cf5f77f015f944e3..245397d3a463ce38840383de7fa71c6709f0d9a7 100644
+index 1f7afedec511fb70d8040d11c9d72f24b6c1dae8..08596e3a22e60616b195530c2ee7f696cd9d7251 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.cpp
 +++ b/Telegram/SourceFiles/ui/unread_badge.cpp
-@@ -251,22 +251,20 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
+@@ -263,22 +263,20 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
  		&& !emojiStatus
  		&& peer->isPremium();
  
@@ -890,7 +886,7 @@ index 18df642360f66a7bcc50f034cf5f77f015f944e3..245397d3a463ce38840383de7fa71c67
  		if (!paintVerify) {
  			return result;
  		}
-@@ -277,11 +275,8 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
+@@ -289,11 +287,8 @@ int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
  	}
  	if (paintVerify) {
  		result += drawVerifyCheck(p, descriptor);

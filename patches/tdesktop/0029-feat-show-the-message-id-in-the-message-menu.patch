@@ -17,10 +17,10 @@ Subject: [PATCH] feat: show the message id in the message menu
  create mode 100644 Telegram/SourceFiles/tele/tele_message_menu.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 31891320a920c6b0d8cd43df6c9456be569c1351..643070c786044cf2c106784d8e8cd805e5a94460 100644
+index dbad9423c653aa221d99be0fba5d6aff548a1238..2b24886f627cc229e2b4c478e1d792e98af2c57c 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2661,6 +2661,8 @@ PRIVATE
+@@ -2664,6 +2664,8 @@ PRIVATE
      tele/tele_ignored.h
      tele/tele_lowercase.cpp
      tele/tele_lowercase.h
@@ -30,7 +30,7 @@ index 31891320a920c6b0d8cd43df6c9456be569c1351..643070c786044cf2c106784d8e8cd805
      tele/tele_options.h
      tele/tele_peer_id.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index c617dc33ef1c591831e8a0213d8b9e1b1866aa10..62593b99c837da400f9ecf894760d334d8936783 100644
+index 7cae4df7aa71b7e0684a16da260550f4ab0c635c..755a64a358f86b621ab841039efa30f5fb0f8ce6 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -139,6 +139,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

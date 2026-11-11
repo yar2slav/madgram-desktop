@@ -12,7 +12,7 @@ Subject: [PATCH] feat: close the media viewer with mouse back
  5 files changed, 24 insertions(+)
 
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index a4789941f02fdda72e5ea152d41e20fbe6b8c803..1f31542e10f9ecd72cfc889cd1d4d85ffd7e13fa 100644
+index 21fc8746ccbaa4810784d338ec4ba9f661fce97a..f0ff65a248c09d79d35988b9547c1707aa080050 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -8164,6 +8164,11 @@ void OverlayWidget::handleMousePress(

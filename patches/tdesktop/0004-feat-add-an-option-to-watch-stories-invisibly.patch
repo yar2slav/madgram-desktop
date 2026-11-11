@@ -33,7 +33,7 @@ index fe383a63ef6ae699c9c393a3969a7407137979b8..3a4486fcdf7ff97f8a5710048252c104
  	}
  	if (!_markReadPending.contains(id.peer)) {
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 963a24d80a9bbe8d48d7049977531c8bbf8c61d6..4c3d7850a4335fb3acc0eb7a99091153d9e98be7 100644
+index 2eb09de8149e2d032d5d85ac2989aa23e2fb140d..21c7d842242d1365f82f0d2787228c80faa7316f 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -4585,6 +4585,9 @@ void OverlayWidget::show(OpenRequest request) {

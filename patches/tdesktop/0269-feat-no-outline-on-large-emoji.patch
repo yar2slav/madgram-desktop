@@ -18,10 +18,10 @@ Subject: [PATCH] feat: no outline on large emoji
  create mode 100644 Telegram/SourceFiles/tele/tele_emoji_outline.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7871e9fdbc04589c2d197887fd766bf608e7149d..2504ec3da49948097aec23939b1737d8fe86ef03 100644
+index 60e3c9ad5b6bc12db0c5e6210e4317f41d8fdf7e..82d04657c4860b6b6277bc5ad0b36f0c67296227 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2735,6 +2735,8 @@ PRIVATE
+@@ -2738,6 +2738,8 @@ PRIVATE
      tele/tele_editor_brush.h
      tele/tele_editor_eyedropper.cpp
      tele/tele_editor_eyedropper.h

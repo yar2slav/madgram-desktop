@@ -14,10 +14,10 @@ Subject: [PATCH] feat: send crash reports to the tele server
  create mode 100644 Telegram/SourceFiles/tele/tele_crash.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 58f3db0e00266ade1bef2063b8d81e4d664e479d..a0988b516333a0f3b5f90cc19c9d6dffd257343b 100644
+index 8e06c0b9ce052fd58a8d0b73306a45b4c2aafd21..4fb02b6d25b6d5628d32d96a78afabf623520b83 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2649,6 +2649,8 @@ PRIVATE
+@@ -2652,6 +2652,8 @@ PRIVATE
      tele/tele_bubble_badges.h
      tele/tele_button_payload.cpp
      tele/tele_button_payload.h
@@ -27,7 +27,7 @@ index 58f3db0e00266ade1bef2063b8d81e4d664e479d..a0988b516333a0f3b5f90cc19c9d6dff
      tele/tele_deleted.h
      tele/tele_deleted_section.cpp
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 0089def69b2e0a3e60b03285c96079ee11eef1fd..13bb6dbb47c6a4de4aef8551d8625a7d68d6b7b9 100644
+index 9688fa2eb64106bb35a40f79f63a47f91a8c01d0..10a56f90aa493905f382dfe076f2debc97a4d9b2 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -80,7 +80,7 @@ index 0089def69b2e0a3e60b03285c96079ee11eef1fd..13bb6dbb47c6a4de4aef8551d8625a7d
  
  	connect(
 diff --git a/Telegram/SourceFiles/core/crash_reports.cpp b/Telegram/SourceFiles/core/crash_reports.cpp
-index 70fbd01e568106dab4f83ad82899aa869dfa6a7f..d0eeaba2b80ab471e6c148a9ff744eb8d9d47229 100644
+index d89cd9d579d049a72835b64f73b0860919bdb91a..2d820dd2bf8485fe988af5e2591038a09be1b3e3 100644
 --- a/Telegram/SourceFiles/core/crash_reports.cpp
 +++ b/Telegram/SourceFiles/core/crash_reports.cpp
 @@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

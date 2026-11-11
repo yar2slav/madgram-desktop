@@ -18,10 +18,10 @@ Subject: [PATCH] feat: customize the window title and format template values
  create mode 100644 Telegram/SourceFiles/tele/tele_title_template.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 526b3a21af5710cf8c20bcd345045067f75cf9dd..e693673d9196addfc281f458a73cd425a0f7686a 100644
+index 148d26372ee42b83866b51636009cc18f7be4228..de1ac6dd91300a29c8df6d94aa191bfa5d457017 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2687,6 +2687,8 @@ PRIVATE
+@@ -2690,6 +2690,8 @@ PRIVATE
      tele/tele_time.h
      tele/tele_title.cpp
      tele/tele_title.h
@@ -1262,7 +1262,7 @@ index 0000000000000000000000000000000000000000..b226ba5e1026ac14a8561a293e9ddbdb
 +
 +} // namespace Tele::Titles
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 0aef2a3b150101a937faf07e2bc293ace61ddcad..43a0fc1e4813027c14edb6b659b856bb86b2c01a 100644
+index 1f0aac165bedd12664f121add8e4018bebc8d3bc..54b8bdbc8b2f5a689ae24e46a285f128c3f25024 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
 @@ -580,6 +580,11 @@ void MainWindow::init() {
@@ -1277,7 +1277,7 @@ index 0aef2a3b150101a937faf07e2bc293ace61ddcad..43a0fc1e4813027c14edb6b659b856bb
  
  	updateTitle();
  	updateWindowIcon();
-@@ -892,6 +897,10 @@ void MainWindow::updateTitle() {
+@@ -913,6 +918,10 @@ void MainWindow::updateTitle() {
  	if (Core::Quitting()) {
  		return;
  	}

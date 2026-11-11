@@ -13,7 +13,7 @@ Subject: [PATCH] feat: copy and open transaction links from money transfer
  5 files changed, 75 insertions(+), 11 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 924a1953dbc8d5a89bb63d71fe4f087e0d222cce..3f59e44ecbb5a2e1e738ea6498da0dd1b7ebb527 100644
+index 4a06ab6650bdc0ad29063320d74484db8f44293a..598aeaf96d31e54bfcb85efd4668c1cca21491bb 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -154,6 +154,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

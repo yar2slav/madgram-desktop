@@ -17,10 +17,10 @@ Subject: [PATCH] fix: gifts in money look like gift cards instead of a blurry
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_tile.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 0b6a464855c842683d34cb60b87e6c8bad3a3a15..5b2176cfb17488a60054a41b2b8e0f7f91c22ea2 100644
+index dcc32787385f45c844ee25a88be97f5a3e11ca03..217f5a80899ee9f4aabd7f0cc5dcd6a4fbc44164 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2912,6 +2912,8 @@ PRIVATE
+@@ -2915,6 +2915,8 @@ PRIVATE
      tele/tele_gift_studio_video.h
      tele/tele_gift_studio_widgets.cpp
      tele/tele_gift_studio_widgets.h

@@ -20,10 +20,10 @@ Subject: [PATCH] feat: show pending ghost-scheduled messages
  create mode 100644 Telegram/SourceFiles/tele/tele_ghost_pending.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ca1a372c852c6219051639727998962ab7cd5935..327111684a01eb7da545b387b13ad0fa6c02d650 100644
+index 29d8bdf8fcb027545bcc530f2c4d2c7dc369b942..3e164970d6fe0512a37727fa54bdb2a0545f8e27 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2796,6 +2796,8 @@ PRIVATE
+@@ -2799,6 +2799,8 @@ PRIVATE
      tele/tele_gifts.h
      tele/tele_ghost.cpp
      tele/tele_ghost.h
@@ -33,7 +33,7 @@ index ca1a372c852c6219051639727998962ab7cd5935..327111684a01eb7da545b387b13ad0fa
      tele/tele_hidden_words.h
      tele/tele_ignored.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index 39e3084b90cc72b6597b3cfb98f4018ddc57e44f..4b4ed955fdd348c10ad2eef41d5c83cb1fbcc58d 100644
+index 0afaf2706f391746210fa7b86a5738d16692a490..c207a0d6115ea222313d62900d91e3d7c214e61e 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -141,6 +141,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

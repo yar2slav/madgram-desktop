@@ -19,10 +19,10 @@ Subject: [PATCH] feat: mentions and replies in the notification centre
  create mode 100644 Telegram/SourceFiles/tele/tele_notices_mentions.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index b9a5975a5f3ece5ea4fdc395d1e3e1caf4a302e3..cec12ad97be8994203bdf5e32add4f4e2eb93067 100644
+index b68d8e445dc39c7cd6cf071597533bec88f00a6c..893e4020c04fc35c474ae917a14bbce057e9b1c6 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2858,6 +2858,8 @@ PRIVATE
+@@ -2861,6 +2861,8 @@ PRIVATE
      tele/tele_no_ai.h
      tele/tele_notices.cpp
      tele/tele_notices.h

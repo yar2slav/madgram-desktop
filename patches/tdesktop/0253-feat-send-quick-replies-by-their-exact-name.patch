@@ -37,10 +37,10 @@ index 2ebf7d3b03140e42daa670639c3fd718f68bdf21..920f36a02b71bbe22934da1cdbd9dadc
  	raw->botCommandChosen(
  	) | rpl::on_next([=](FieldAutocomplete::BotCommandChosen data) {
 diff --git a/Telegram/SourceFiles/history/history_widget.cpp b/Telegram/SourceFiles/history/history_widget.cpp
-index 2b6a60a04a335523130ee3d06e7a2dc748106974..8eb5a51ef78e305617d52f176b834ea871632698 100644
+index de1edd86f745c6651362f1ed765137e2c27956c4..56b757cb0d585c0fe66eaa28fb7158635c9b94d9 100644
 --- a/Telegram/SourceFiles/history/history_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_widget.cpp
-@@ -6090,6 +6090,8 @@ void HistoryWidget::send(Api::SendOptions options) {
+@@ -6091,6 +6091,8 @@ void HistoryWidget::send(Api::SendOptions options) {
  	} else if (const auto page = shownRichMessage()) {
  		sendRichDraft(page, options);
  		return;

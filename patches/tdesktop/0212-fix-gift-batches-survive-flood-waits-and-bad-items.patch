@@ -15,10 +15,10 @@ Subject: [PATCH] fix: gift batches survive flood waits and bad items
  create mode 100644 Telegram/SourceFiles/tele/tele_gift_batch.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e056d7fbf0c2e2d8452b01a2ee11a4ca9543586d..72ff651f2e8c6d9522fe19004712890442862ff6 100644
+index 00e829bd1683b24a884772d8718d00d1d8a15eb0..37b47ba83ae88afc2764615ddb1a6699912b1dea 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2742,6 +2742,8 @@ PRIVATE
+@@ -2745,6 +2745,8 @@ PRIVATE
      tele/tele_full_preview.h
      tele/tele_gif_video.cpp
      tele/tele_gif_video.h

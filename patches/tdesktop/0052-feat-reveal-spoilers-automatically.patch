@@ -24,10 +24,10 @@ Subject: [PATCH] feat: reveal spoilers automatically
  create mode 100644 Telegram/SourceFiles/tele/tele_spoilers.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 08df45b19adadf44e252aa7d0ea06eef776a79a1..ef4792364ae57252ebe67759b40dd5823e36a859 100644
+index 6bf4ea2efcd4bfe6bc34ae7a0e14a9515c99d14b..b607dbb753ccc6978921ab8e952d3b3fdde3a31a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2693,6 +2693,8 @@ PRIVATE
+@@ -2696,6 +2696,8 @@ PRIVATE
      tele/tele_send_order.h
      tele/tele_shortcuts.cpp
      tele/tele_shortcuts.h
@@ -159,7 +159,7 @@ index 64e565d78223e580362dd33f41fe292a39065962..f63be855712f832a49c4eb32ac43f7ef
  		const auto weak = base::make_weak(view);
  		text.setBlockquoteExpandCallback([=](int quoteIndex, bool expanded) {
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index 9c4b0f82084b8cccfacf9eed78ba8b66873df450..4ae0d8289c309e0ec18a70babc0dd7a587273ed3 100644
+index 6b2a3591267c97f618c312833a36b7b184a4c501..c67b0b384b1a5faf33ed0cd4705b2798bec999fe 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 @@ -64,6 +64,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -170,7 +170,7 @@ index 9c4b0f82084b8cccfacf9eed78ba8b66873df450..4ae0d8289c309e0ec18a70babc0dd7a5
  #include "styles/style_chat.h"
  #include "styles/style_chat_style.h"
  
-@@ -258,6 +259,7 @@ Gif::Gif(
+@@ -257,6 +258,7 @@ Gif::Gif(
  
  	if (_spoiler) {
  		createSpoilerLink(_spoiler.get());
@@ -219,7 +219,7 @@ index d5e8aeabe52937d980c419b27528324867ecffc4..82b75bfd529d126d39f3a7f7584a27ee
  		leaf->setSpoilerLinkFilter([](const ClickContext &context) {
  			return context.button == Qt::LeftButton;
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 09fd02a0b8c59c532b26b6fd76048c0745a9b072..b718d99cec7c64a31e76629d753b353564859725 100644
+index f1ab34e957730ab5a1fae43f79b43b0434320f36..1271892ca87fbe6d210c53c787fc46b0e526f0f8 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -123,6 +123,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

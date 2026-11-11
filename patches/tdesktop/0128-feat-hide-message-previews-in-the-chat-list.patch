@@ -20,10 +20,10 @@ Subject: [PATCH] feat: hide message previews in the chat list
  create mode 100644 Telegram/SourceFiles/tele/tele_list_previews.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 65b543594aac43edcc64b88026255cc1e94c754f..2849b6ece28324c3ae4c1bc73d62163594304631 100644
+index 1825d01102cf520bb6a0b4ceb5c80d9aac9aedc7..b562add2c0d7d7b9779283625505031dca3102c9 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2761,6 +2761,8 @@ PRIVATE
+@@ -2764,6 +2764,8 @@ PRIVATE
      tele/tele_launch_flags.h
      tele/tele_links.cpp
      tele/tele_links.h

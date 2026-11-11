@@ -23,7 +23,7 @@ index d1bd63a886cacf15ece22623ffac7f1595dbf9da..afd69a5288fc2723752aeae6fdf15915
  	Core::App().notifications().settingsChanged(
  	) | rpl::on_next([=](Window::Notifications::ChangeType change) {
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index cfdabb5ca44d3ab30c44a2797e45440c77e5f23b..9fc551881434ac2743092581de4d9c4c20694c51 100644
+index b57b4ecc981601b717af5d6cefc2d8f07ffd642b..11cd5f86f945ccce50a40dd35cae8dc63eacc1a6 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -150,7 +150,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

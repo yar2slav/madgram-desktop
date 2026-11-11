@@ -23,10 +23,10 @@ Subject: [PATCH] feat: pin chats past the limit
  create mode 100644 Telegram/SourceFiles/tele/tele_local_pins.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ea36c4f88079587c81f5ca414a17878972a0ddab..7ede79408b73472a7d1d168a61078c72b0c17a61 100644
+index dd6f77ef9509050f5c57cba1cbd5ebd299d2a876..ac139dbefa45f1a1eab927c235c48ada54b8fda0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2727,6 +2727,8 @@ PRIVATE
+@@ -2730,6 +2730,8 @@ PRIVATE
      tele/tele_local_drafts.h
      tele/tele_local_names.cpp
      tele/tele_local_names.h
@@ -36,7 +36,7 @@ index ea36c4f88079587c81f5ca414a17878972a0ddab..7ede79408b73472a7d1d168a61078c72
      tele/tele_lowercase.h
      tele/tele_menu_order.cpp
 diff --git a/Telegram/SourceFiles/data/data_session.cpp b/Telegram/SourceFiles/data/data_session.cpp
-index 7079d99264d5494f629b6680b30be45a53969b9f..c8c2890d99d38d53aa5658160fd7eb7f1fdc5858 100644
+index a236c618d6c463457593d1b8135cd39908b665ae..b01cb0a8f0887e273bd4bb982677443f0982fdd5 100644
 --- a/Telegram/SourceFiles/data/data_session.cpp
 +++ b/Telegram/SourceFiles/data/data_session.cpp
 @@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -47,7 +47,7 @@ index 7079d99264d5494f629b6680b30be45a53969b9f..c8c2890d99d38d53aa5658160fd7eb7f
  
  namespace Data {
  namespace {
-@@ -3033,6 +3034,9 @@ void Session::reorderTwoPinnedChats(
+@@ -3059,6 +3060,9 @@ void Session::reorderTwoPinnedChats(
  	Expects(key1.entry()->folderKnown() && key2.entry()->folderKnown());
  	Expects(filterId || (key1.entry()->folder() == key2.entry()->folder()));
  
@@ -1378,10 +1378,10 @@ index fc7333aab5545af34b83cc85677a9bb227c6cd34..32a6b46cc1e024f6446affe579e4414c
  			.id = kOptionCallButton,
  			.kind = Kind::Choice,
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea246680fd00132 100644
+index bdea2543f4f1cfef7731c8f92433bb5a1754d43c..2e52c309499c1dac729677e4beb23e1c0fe4209f 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -134,6 +134,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -135,6 +135,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ignored.h"
  #include "tele/tele_jump_to_first.h"
  #include "tele/tele_local_names.h"
@@ -1389,7 +1389,7 @@ index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea24668
  #include "tele/tele_mtp_inspector.h"
  #include "tele/tele_username_aliases.h"
  #include "tele/tele_view_tl.h"
-@@ -447,6 +448,9 @@ void TogglePinnedThread(
+@@ -448,6 +449,9 @@ void TogglePinnedThread(
  	if (!entry->folderKnown()) {
  		return;
  	}
@@ -1399,7 +1399,7 @@ index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea24668
  	const auto owner = &entry->owner();
  	const auto isPinned = !entry->isPinnedDialog(FilterId());
  	if (isPinned && PinnedLimitReached(controller, entry)) {
-@@ -470,7 +474,7 @@ void TogglePinnedThread(
+@@ -471,7 +475,7 @@ void TogglePinnedThread(
  			if (onToggled) {
  				onToggled();
  			}
@@ -1408,7 +1408,7 @@ index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea24668
  		if (isPinned) {
  			controller->content()->dialogsToUp();
  		}
-@@ -485,7 +489,7 @@ void TogglePinnedThread(
+@@ -486,7 +490,7 @@ void TogglePinnedThread(
  			if (onToggled) {
  				onToggled();
  			}
@@ -1417,7 +1417,7 @@ index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea24668
  	} else if (const auto sublist = entry->asSublist()) {
  		const auto flags = isPinned
  			? MTPmessages_ToggleSavedDialogPin::Flag::f_pinned
-@@ -498,7 +502,7 @@ void TogglePinnedThread(
+@@ -499,7 +503,7 @@ void TogglePinnedThread(
  			if (onToggled) {
  				onToggled();
  			}
@@ -1426,7 +1426,7 @@ index b2421cb268b991f123bf43f96ba0b2c758b54393..3208cdcf53125f0145a9c1665ea24668
  		//if (isPinned) {
  		//	controller->content()->dialogsToUp();
  		//}
-@@ -4692,6 +4696,10 @@ void TogglePinnedThread(
+@@ -4693,6 +4697,10 @@ void TogglePinnedThread(
  		return;
  	}
  

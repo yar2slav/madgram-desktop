@@ -17,10 +17,10 @@ Subject: [PATCH] feat: move late-sent messages to the bottom
  create mode 100644 Telegram/SourceFiles/tele/tele_send_order.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f82b287240f1eb06adba382019c0754022fe4578..3fc55156489efd1af4d049aad6ed973bb35151c9 100644
+index e9cae34036f4a411eea586bbb690ebf3babd87d5..e8965db0b4acf348ef47aac3e63e4308a716681a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2685,6 +2685,8 @@ PRIVATE
+@@ -2688,6 +2688,8 @@ PRIVATE
      tele/tele_rich_timestamps.h
      tele/tele_secret_media.cpp
      tele/tele_secret_media.h

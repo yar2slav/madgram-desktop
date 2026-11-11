@@ -2755,10 +2755,10 @@ index 1174c2b9020a222340616de7623322b20a87a083..eb112c10b33c9d66643377aa249ea348
  	[[nodiscard]] bool forwardOfForward() const {
  		return savedFromSender || savedFromHiddenSenderInfo;
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index ef78ce3117132317b9ade942ce659a877e009939..e6f70499589b82fa365bc6efc6ca57c272a0828e 100644
+index d39ba4e0be9aea72ede7a06806429743bcb8260e..226bb170d7272f2b6eabdb822e7dd38689bed508 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -1391,6 +1391,11 @@ QRect Message::effectIconGeometry() const {
+@@ -1407,6 +1407,11 @@ QRect Message::effectIconGeometry() const {
  
  QSize Message::performCountOptimalSize() {
  	const auto item = data();
@@ -2770,7 +2770,7 @@ index ef78ce3117132317b9ade942ce659a877e009939..e6f70499589b82fa365bc6efc6ca57c2
  
  	const auto replyData = item->Get<HistoryMessageReply>();
  	const auto &summary = item->summaryEntry();
-@@ -2326,6 +2331,18 @@ void Message::draw(Painter &p, const PaintContext &context) const {
+@@ -2343,6 +2348,18 @@ void Message::draw(Painter &p, const PaintContext &context) const {
  			}
  		}
  	}
@@ -2790,11 +2790,11 @@ index ef78ce3117132317b9ade942ce659a877e009939..e6f70499589b82fa365bc6efc6ca57c2
  		p.translate(-gestureShift, 0);
  		if (context.reactionInfo && context.reactionInfo->effectPaint) {
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.h b/Telegram/SourceFiles/history/view/history_view_message.h
-index f6d5c5ec72c25e92f84f5fe5884b801ab94a8263..b189be8de9ffacb07fc56a4c7b612d5f5966eea4 100644
+index 78ba64ddcca4674ba50ce03dc5cb69eb3f3b24e8..58436850f7238658f4518aaabb7166821e3b3b5f 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.h
 +++ b/Telegram/SourceFiles/history/view/history_view_message.h
-@@ -552,6 +552,7 @@ private:
- 	mutable Ui::Text::String _fromName;
+@@ -559,6 +559,7 @@ private:
+ 	mutable std::unique_ptr<Ui::Text::CustomEmoji> _fromNameVerification;
  	mutable std::unique_ptr<FromNameStatus> _fromNameStatus;
  	mutable uint64 _fromNameBadges = 0;
 +	mutable uint64 _forwardedBadges = 0;
@@ -2859,7 +2859,7 @@ index a1fbc8c795895490b6cdf73ed0c5d204719b8f02..dc1bebec5256ba3ea6be680c8eeef6bb
  	uint8 _hasQuoteIcon : 1 = 0;
  	uint8 _hasBackgroundEmoji : 1 = 0;
 diff --git a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
-index ef3acc77d5d1fdfc5620b62371f2cc7c4cbc5b65..230eaefac605f94239f3735c2ea03ee4a53746da 100644
+index c710e972e9cba3058efca68e7ea15eab15767b0e..275daf33a60e21432585062474de5512b2dbfe31 100644
 --- a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 +++ b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 @@ -21,11 +21,107 @@ namespace {
@@ -2970,7 +2970,7 @@ index ef3acc77d5d1fdfc5620b62371f2cc7c4cbc5b65..230eaefac605f94239f3735c2ea03ee4
  } // namespace
  
  uint64 BubbleBadgesKey(not_null<PeerData*> peer) {
-@@ -124,4 +220,39 @@ void SetBubbleName(
+@@ -120,4 +216,39 @@ void SetBubbleName(
  	});
  }
  

@@ -16,10 +16,10 @@ Subject: [PATCH] feat: jump to the first message of a chat
  create mode 100644 Telegram/SourceFiles/tele/tele_jump_to_first.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 812982d2595e1a4b1e9cb26d945617cdfa28c3cb..ff40df304adc0c7d6069b5232a9eb9871dc6500d 100644
+index 497c9382f515755edc22331afc07ee5cadcf5b89..654d072a70cfa25d90793e2bd54d3140c8277d7a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2665,6 +2665,8 @@ PRIVATE
+@@ -2668,6 +2668,8 @@ PRIVATE
      tele/tele_lowercase.h
      tele/tele_message_menu.cpp
      tele/tele_message_menu.h
@@ -187,10 +187,10 @@ index eaf058704d83cdd7117c6ddd98b0de88bc418e1e..db0fc99215c2a3c9dd163d3a98de82cd
  [[nodiscard]] bool PeerIdsWithoutSpaces();
  [[nodiscard]] bool BotApiPeerIds();
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index ebfda48205a404cfeb7636d807d1795d9d035b73..93370686893e4625972b1e339254890cb9e0fbdf 100644
+index adf0937b89f464a2506bbfeed7617a7db2919c22..8bfb36cd2e666796af575c5e63d752ed3fb248ff 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -130,6 +130,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/premium_preview_box.h"
  #include "tele/tele_deleted_section.h"
  #include "tele/tele_ignored.h"
@@ -198,7 +198,7 @@ index ebfda48205a404cfeb7636d807d1795d9d035b73..93370686893e4625972b1e339254890c
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_credits.h"
-@@ -1940,6 +1941,7 @@ void Filler::fillHistoryActions() {
+@@ -1941,6 +1942,7 @@ void Filler::fillHistoryActions() {
  	addToggleMuteSubmenu(true);
  	addCreateTopic();
  	addInfo();
@@ -206,7 +206,7 @@ index ebfda48205a404cfeb7636d807d1795d9d035b73..93370686893e4625972b1e339254890c
  	addViewAsTopics();
  	addManageChat();
  	addStoryArchive();
-@@ -1993,6 +1995,7 @@ void Filler::fillProfileActions() {
+@@ -1994,6 +1996,7 @@ void Filler::fillProfileActions() {
  void Filler::fillRepliesActions() {
  	if (_topic) {
  		addInfo();

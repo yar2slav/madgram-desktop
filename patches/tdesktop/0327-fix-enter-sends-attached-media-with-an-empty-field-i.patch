@@ -8,10 +8,10 @@ Subject: [PATCH] fix: enter sends attached media with an empty field in topics
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-index 99dc9bb1a3a9f847ce469a5526e78efaa32f8e69..6d3a88c5d0d3b821605613e15e35e1e8d54332c3 100644
+index b744ba5f6214e77ea1672a1cf6bc0a561c0a1df8..cace17cbe2b4d8ca9a20ed4c0300539017e74858 100644
 --- a/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
 +++ b/Telegram/SourceFiles/history/view/controls/history_view_compose_controls.cpp
-@@ -3377,7 +3377,8 @@ void ComposeControls::initField() {
+@@ -3378,7 +3378,8 @@ void ComposeControls::initField() {
  		if (_mode == Mode::Normal
  			&& !isEditingMessage()
  			&& !_voiceRecordBar->isListenState()

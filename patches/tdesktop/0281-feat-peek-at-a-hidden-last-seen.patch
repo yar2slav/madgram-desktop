@@ -21,10 +21,10 @@ Subject: [PATCH] feat: peek at a hidden last seen
  create mode 100644 Telegram/SourceFiles/tele/tele_peek.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 8218e1ba59a6cab32af4a734058e1b9a3c69eb22..a0b9fbfe1c16f74cbc50f6b58006c39678a26f51 100644
+index c063164491b8880046a524592b7e6efd03a5c496..8eeb07160961221ca363196f34bac365874af06f 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2914,6 +2914,8 @@ PRIVATE
+@@ -2917,6 +2917,8 @@ PRIVATE
      tele/tele_options.h
      tele/tele_past_limit.cpp
      tele/tele_past_limit.h
@@ -34,10 +34,10 @@ index 8218e1ba59a6cab32af4a734058e1b9a3c69eb22..a0b9fbfe1c16f74cbc50f6b58006c396
      tele/tele_peer_id.h
      tele/tele_phones.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index 9d62a8b9351130aeaa31828c4de7bebbebead6b8..d91c78baf326a08733bf111fefcb02c9f85b1afc 100644
+index 460f79e15e5ab502f3b1f54baca42d9794f2b8ea..4e00822c9eb54f964d5f40ebce7896cd1fda51a3 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -70,6 +70,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_calls.h"
  #include "tele/tele_invisible.h"
  #include "tele/tele_onlines.h"
@@ -45,7 +45,7 @@ index 9d62a8b9351130aeaa31828c4de7bebbebead6b8..d91c78baf326a08733bf111fefcb02c9
  #include "tele/tele_phones.h"
  #include "styles/style_window.h"
  #include "styles/style_dialogs.h"
-@@ -926,6 +927,7 @@ void TopBarWidget::setActiveChat(
+@@ -927,6 +928,7 @@ void TopBarWidget::setActiveChat(
  		_titleNameVersion = 0;
  		_emojiInteractionSeen = nullptr;
  		_activeChatLifetime.destroy();
@@ -53,7 +53,7 @@ index 9d62a8b9351130aeaa31828c4de7bebbebead6b8..d91c78baf326a08733bf111fefcb02c9
  		if (const auto peer = _activeChat.key.peer()) {
  			session().changes().peerFlagsValue(
  				peer,
-@@ -1959,7 +1961,10 @@ void TopBarWidget::updateOnlineDisplay() {
+@@ -1960,7 +1962,10 @@ void TopBarWidget::updateOnlineDisplay() {
  			text = QString::fromUtf8("\xe2\x9a\xa0\xef\xb8\x8f check info");
  			titlePeerTextOnline = false;
  		} else {
@@ -1035,10 +1035,10 @@ index 69bc34c55482381ff2db6e263d5645df0b945917..22848ab6f11877ab1fcbbebfedda1e22
  		Toggle(kOptionNoticesLimits),
  		Toggle(kOptionNoticesLogLimits),
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index b4f5e03cf96b2ebb883af48f9a5a2311cba6738e..145e9b44e78d5c53c3bec6fb821451dd1f0bbecb 100644
+index a3caeac7cbc64f02bea3e81aab8ec26d7fdd2a77..9e831c543f213e5c9321f32efc4bd5496eb1e67d 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -141,6 +141,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -142,6 +142,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_menu_apply.h"
  #include "tele/tele_mtp_inspector.h"
  #include "tele/tele_online_notify.h"
@@ -1046,7 +1046,7 @@ index b4f5e03cf96b2ebb883af48f9a5a2311cba6738e..145e9b44e78d5c53c3bec6fb821451dd
  #include "tele/tele_show_pinned.h"
  #include "tele/tele_silent.h"
  #include "tele/tele_unsorted_folder.h"
-@@ -1963,6 +1964,7 @@ void Filler::fillHistoryActions() {
+@@ -1964,6 +1965,7 @@ void Filler::fillHistoryActions() {
  	Tele::AddGhostChatAction(_peer, _addAction);
  	Tele::AddSilentChatAction(_peer, _addAction);
  	Tele::AddOnlineNotifyAction(_peer, _addAction);
@@ -1054,7 +1054,7 @@ index b4f5e03cf96b2ebb883af48f9a5a2311cba6738e..145e9b44e78d5c53c3bec6fb821451dd
  	addCreateTopic();
  	addInfo();
  	Tele::AddJumpToFirstAction(_controller, _thread, _addAction);
-@@ -2005,6 +2007,7 @@ void Filler::fillProfileActions() {
+@@ -2006,6 +2008,7 @@ void Filler::fillProfileActions() {
  	Tele::AddChatBackgroundAction(_controller, _peer, _addAction);
  	Tele::AddDownloadFolderAction(_controller, _peer, _addAction);
  	Tele::AddOnlineNotifyAction(_peer, _addAction);

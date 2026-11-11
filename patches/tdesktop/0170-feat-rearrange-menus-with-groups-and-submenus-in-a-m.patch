@@ -50,10 +50,10 @@ Subject: [PATCH] feat: rearrange menus with groups and submenus in a menu
  create mode 100644 Telegram/SourceFiles/tele/tele_menu_registry.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index d836c20ff3cc04fa51031ec84f387f82da7d0d5e..cb5fb8ac86ded6566705a81253dc0ec85f22178a 100644
+index 37a4acde8da1512d9f282e0003258e37060063d6..dda76008ca626cbcfe8c73d374162ecbad2665f8 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2759,8 +2759,14 @@ PRIVATE
+@@ -2762,8 +2762,14 @@ PRIVATE
      tele/tele_lowercase.h
      tele/tele_maps.cpp
      tele/tele_maps.h
@@ -71,7 +71,7 @@ index d836c20ff3cc04fa51031ec84f387f82da7d0d5e..cb5fb8ac86ded6566705a81253dc0ec8
      tele/tele_message_menu.h
      tele/tele_mtp_dump.cpp
 diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
-index c00e2a886a075f4ff13f80bd2baadad6bfbaac01..0fe1870aebeb07bf4398719ac48d24fa1da2eb16 100644
+index 620fb34ba78917f44a94380afe70e184f05e901d..dbf9e5d781064d141f81eed3532d4ec9bbbc3aa3 100644
 --- a/Telegram/SourceFiles/history/history_inner_widget.cpp
 +++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
 @@ -4012,7 +4012,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
@@ -160,7 +160,7 @@ index d3fc23ddcc3de9861cb3f7939674016b4fd5c09d..ed8e5a0e79ebef1d6ffd6b8958992144
  
  void AddEphemeralMessageActions(
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 7d3057d3f8a00ff37b80c401227d92845b3fdc2a..15f68ae63d95efcb6a8e7690e58701b1489007b9 100644
+index 4c21049d7667d81b7893cca981df51d6d52ceefa..dd220e973e3c7e0ed575867fcfe931a37051e99a 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 @@ -105,6 +105,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -7360,10 +7360,10 @@ index 025162dd89c7e94cb078cee39b6e3d681273da61..eb270030937f3dba048693ee580d5b9d
  		_popupMenu = nullptr;
  		return;
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 4f83705d4619eeac2f82728f2d7f14b82335058f..b4f5e03cf96b2ebb883af48f9a5a2311cba6738e 100644
+index dbbbbd6a91593765cbd9a3ad599acbe501bd1712..a3caeac7cbc64f02bea3e81aab8ec26d7fdd2a77 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -138,6 +138,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -139,6 +139,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_jump_to_first.h"
  #include "tele/tele_local_names.h"
  #include "tele/tele_local_pins.h"
@@ -7371,7 +7371,7 @@ index 4f83705d4619eeac2f82728f2d7f14b82335058f..b4f5e03cf96b2ebb883af48f9a5a2311
  #include "tele/tele_mtp_inspector.h"
  #include "tele/tele_online_notify.h"
  #include "tele/tele_show_pinned.h"
-@@ -2000,7 +2001,11 @@ void Filler::fillProfileActions() {
+@@ -2001,7 +2002,11 @@ void Filler::fillProfileActions() {
  	addEditContact();
  	Tele::AddUsernameAliasAction(_controller, _peer, _addAction);
  	Tele::AddLocalNameAction(_controller, _peer, _addAction);
@@ -7383,7 +7383,7 @@ index 4f83705d4619eeac2f82728f2d7f14b82335058f..b4f5e03cf96b2ebb883af48f9a5a2311
  	addBotToGroup();
  	addNewMembers();
  	addSendGift();
-@@ -4428,9 +4433,11 @@ void FillDialogsEntryMenu(
+@@ -4429,9 +4434,11 @@ void FillDialogsEntryMenu(
  	if (Tele::FillChangelogMenu(controller, request, callback)) {
  		return;
  	}

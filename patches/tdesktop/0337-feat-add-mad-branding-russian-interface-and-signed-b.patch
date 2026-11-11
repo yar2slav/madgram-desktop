@@ -57,7 +57,7 @@ Subject: [PATCH] feat: add mad branding russian interface and signed badges
  .../SourceFiles/tele/tele_audio_voice.cpp     |   11 +-
  Telegram/SourceFiles/tele/tele_bookmarks.cpp  |   18 +-
  .../SourceFiles/tele/tele_bookmarks_box.cpp   |    6 +-
- .../SourceFiles/tele/tele_bubble_badges.cpp   |   18 +-
+ .../SourceFiles/tele/tele_bubble_badges.cpp   |   16 +-
  Telegram/SourceFiles/tele/tele_build.cpp      |    8 +-
  Telegram/SourceFiles/tele/tele_calcmula.cpp   |    2 +-
  .../tele/tele_calcmula_preview.cpp            |    2 +-
@@ -193,7 +193,7 @@ Subject: [PATCH] feat: add mad branding russian interface and signed badges
  .../window/window_restore_shell.cpp           |    2 +-
  .../window/window_saved_windows.cpp           |    2 +-
  Telegram/cmake/mad_tests.cmake                |   13 +
- 189 files changed, 5033 insertions(+), 1842 deletions(-)
+ 189 files changed, 5032 insertions(+), 1841 deletions(-)
  create mode 100644 Telegram/Resources/art/mad.png
  create mode 100644 Telegram/Resources/langs/mad_ru.json
  create mode 100644 Telegram/SourceFiles/tele/tele_mad_badges.cpp
@@ -205,7 +205,7 @@ Subject: [PATCH] feat: add mad branding russian interface and signed badges
  create mode 100644 Telegram/cmake/mad_tests.cmake
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index f6263a8b6f51e41e47f1cbf477b707a997bf66de..a63113004ab45660921cde801e7af191510ae726 100644
+index 83bb82e7a78c813e97f5549f80a971d3193ea624..4ff993f9220fb24976778e16db17a3af9a548c18 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
 @@ -47,6 +47,11 @@ include(cmake/td_webauthn.cmake)
@@ -220,7 +220,7 @@ index f6263a8b6f51e41e47f1cbf477b707a997bf66de..a63113004ab45660921cde801e7af191
  if (DESKTOP_APP_TEST_APPS)
      include(cmake/tests.cmake)
  endif()
-@@ -2634,9 +2639,14 @@ if (TDESKTOP_L10N_CAPTURE)
+@@ -2637,9 +2642,14 @@ if (TDESKTOP_L10N_CAPTURE)
      include(${TDESKTOP_L10N_CAPTURE}/capture.cmake)
  endif()
  
@@ -236,7 +236,7 @@ index f6263a8b6f51e41e47f1cbf477b707a997bf66de..a63113004ab45660921cde801e7af191
      settings/settings_tele.cpp
      settings/settings_tele.h
      tele/scripting/tele_script_app.cpp
-@@ -3411,12 +3421,12 @@ if (build_macstore)
+@@ -3414,12 +3424,12 @@ if (build_macstore)
      )
  else()
      if (CMAKE_GENERATOR STREQUAL Xcode)
@@ -252,7 +252,7 @@ index f6263a8b6f51e41e47f1cbf477b707a997bf66de..a63113004ab45660921cde801e7af191
  endif()
  
  if (CMAKE_GENERATOR STREQUAL Xcode)
-@@ -3452,6 +3462,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Telegram PREFIX Resources FILES ${
+@@ -3455,6 +3465,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Telegram PREFIX Resources FILES ${
  target_include_directories(Telegram PRIVATE ${src_loc})
  target_include_directories(Telegram PRIVATE ${quickjs_loc})
  
@@ -9688,7 +9688,7 @@ index 0000000000000000000000000000000000000000..842c4c097a0674059d285f1b53ddd3b0
 +  " · reading...": " · чтение..."
 +}
 diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
-index 3a6a3f0043c66dfd107fc78e810edc53d5e6cad5..0496ed259e250af7ddaf48a2003e844214fed323 100644
+index 0726f0c8692385daab76b006181e8cb56f61980c..2a91d25ad705d2fb9e6912cdb0f5292ce5278c52 100644
 --- a/Telegram/Resources/qrc/telegram/telegram.qrc
 +++ b/Telegram/Resources/qrc/telegram/telegram.qrc
 @@ -1,10 +1,12 @@
@@ -10386,7 +10386,7 @@ index e10953d54a19f0f4522a71ea8c69287b07d56ddc..5dcf07f86f22f3234e847d3580869e27
  	tree.appendChild(root);
  	box.appendChild(tree);
 diff --git a/Telegram/Resources/winrc/Telegram.rc b/Telegram/Resources/winrc/Telegram.rc
-index bd225175dcafb9dd2402075223759dbddf075d90..c785be45e04c06d1333a15b3b3231a19e8f2b39d 100644
+index 07bde020acfbe7d730443857f4d9e5c311539daf..ba7e2686aa87c0d153824d17f8edd39d793575cf 100644
 --- a/Telegram/Resources/winrc/Telegram.rc
 +++ b/Telegram/Resources/winrc/Telegram.rc
 @@ -60,11 +60,11 @@ BEGIN
@@ -10397,11 +10397,11 @@ index bd225175dcafb9dd2402075223759dbddf075d90..c785be45e04c06d1333a15b3b3231a19
 -            VALUE "FileDescription", "tele"
 +            VALUE "CompanyName", "mad"
 +            VALUE "FileDescription", "mad"
-             VALUE "FileVersion", "7.4.1.0"
+             VALUE "FileVersion", "7.4.2.0"
              VALUE "LegalCopyright", "Copyright (C) 2014-2026"
 -            VALUE "ProductName", "tele"
 +            VALUE "ProductName", "mad"
-             VALUE "ProductVersion", "7.4.1.0"
+             VALUE "ProductVersion", "7.4.2.0"
          END
      END
 diff --git a/Telegram/SourceFiles/api/api_authorizations.cpp b/Telegram/SourceFiles/api/api_authorizations.cpp
@@ -10453,7 +10453,7 @@ index bda9af442fbb75eb62abd0cbc45b9db6147a4d6f..dd2716e333733422f960bb463a452fb0
  			style::al_center);
  	} else {
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index bba8948e0df3d7f111904611b29b21c188dd6735..e50fdee200a5a5f1c38b082c64155d55495d5f5f 100644
+index 5466c73ba78b175c9437018fda59f176400ae906..f6b2782fc5c988b516cec61173ffa0850e48a9a8 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
 @@ -6,6 +6,7 @@ For license and copyright information please follow this link:
@@ -10464,7 +10464,7 @@ index bba8948e0df3d7f111904611b29b21c188dd6735..e50fdee200a5a5f1c38b082c64155d55
  
  #include "data/data_abstract_structure.h"
  #include "data/data_channel.h"
-@@ -374,6 +375,7 @@ void Application::run() {
+@@ -375,6 +376,7 @@ void Application::run() {
  	Tele::StartUpdater();
  	Tele::StartChangelog();
  	Tele::StartBadges();
@@ -10473,7 +10473,7 @@ index bba8948e0df3d7f111904611b29b21c188dd6735..e50fdee200a5a5f1c38b082c64155d55
  	Tele::StartSmoothScroll();
  	Tele::StartListKeys();
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 63f6e2c51a67658934d5007d69de77d9b46a635d..f10db49bb3f101b2b1fdcbc64000f32fd6c3a4b9 100644
+index 662ded7ddbd5f5ed491a253bee054e0ed7f09ab6..a9a3f6006a2a4989edf0640eaca4ffada29a0c16 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -249,7 +249,7 @@ NotStartedWindow::NotStartedWindow()
@@ -10554,7 +10554,7 @@ index 1104af2599b503148bb9cd086083bc560babd6c5..504f53e6372990e02ff0e79642822c72
  		return tele;
  	}
 diff --git a/Telegram/SourceFiles/core/version.h b/Telegram/SourceFiles/core/version.h
-index 00841a3793848aafccbf784fba86c40c1067e7b5..dd0fde537ee662de43cac96b263c688e19c59f73 100644
+index a208f4e833caaf36af50409c5d972486339ca8a7..b9d51926e8835bc72f6bb926d87b7080581edf0d 100644
 --- a/Telegram/SourceFiles/core/version.h
 +++ b/Telegram/SourceFiles/core/version.h
 @@ -19,9 +19,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -10567,8 +10567,8 @@ index 00841a3793848aafccbf784fba86c40c1067e7b5..dd0fde537ee662de43cac96b263c688e
 +constexpr auto AppNameOld = "mad"_cs;
 +constexpr auto AppName = "mad"_cs;
 +constexpr auto AppFile = "mad"_cs;
- constexpr auto AppVersion = 7004001;
- constexpr auto AppVersionStr = "7.4.1";
+ constexpr auto AppVersion = 7004002;
+ constexpr auto AppVersionStr = "7.4.2";
  constexpr auto AppBetaVersion = false;
 diff --git a/Telegram/SourceFiles/data/stickers/data_custom_emoji.cpp b/Telegram/SourceFiles/data/stickers/data_custom_emoji.cpp
 index 3dada5ab2d8daee3382e8575d993e5af8527d8ba..1c9f43c92de7c6d41fc363f5697defb9ddf4c4d5 100644
@@ -10622,10 +10622,10 @@ index afd69a5288fc2723752aeae6fdf15915e36ad3c3..1df69bfa1c02df0aa201f2b09e47833a
  			this,
  			_shownList,
 diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
-index eb84e81e5723ae9564d71627d06a546ae1190ef0..0972efbba7c6226d86fc877d4fdb4d6dfc476657 100644
+index b2fe65d21196c7976f17e6a68cb8847238a960af..df89fb275e412442754257467b10ba86f750c779 100644
 --- a/Telegram/SourceFiles/history/view/history_view_message.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
-@@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -69,6 +69,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/scripting/tele_script_quick.h"
  #include "tele/tele_bot_edited.h"
  #include "tele/tele_bubble_badges.h"
@@ -10633,7 +10633,7 @@ index eb84e81e5723ae9564d71627d06a546ae1190ef0..0972efbba7c6226d86fc877d4fdb4d6d
  #include "tele/tele_code_lines.h"
  #include "tele/tele_deleted.h"
  #include "tele/tele_deleted_reply.h"
-@@ -4430,6 +4431,11 @@ bool Message::getStateFromName(
+@@ -4503,6 +4504,11 @@ bool Message::getStateFromName(
  		const auto nameWidth = std::min(
  			nameText->maxWidth(),
  			nameAvailableWidth);
@@ -10645,7 +10645,7 @@ index eb84e81e5723ae9564d71627d06a546ae1190ef0..0972efbba7c6226d86fc877d4fdb4d6d
  		if (statusWidth
  			&& availableWidth > statusWidth
  			&& (from->isPremium() || fromNameStatusId(from))) {
-@@ -4746,6 +4752,10 @@ bool Message::getStateReplyInfo(
+@@ -4819,6 +4825,10 @@ bool Message::getStateReplyInfo(
  				trect.width(),
  				height - margins.top() - margins.bottom());
  			if (g.contains(point)) {
@@ -10721,10 +10721,10 @@ index dc1bebec5256ba3ea6be680c8eeef6bb171c09c5..f6ba5d0cad9c49ed347c699d4b94b230
  	uint8 _hasQuoteIcon : 1 = 0;
  	uint8 _hasBackgroundEmoji : 1 = 0;
 diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-index f0d1029c5d1edcebe8af763ca31339b1300726a8..a3b2d3c399cd1f365e6c205b3908d4a1cf263518 100644
+index 289e12ec5901a19711ed41ad3ceeac3841c90b86..d9a39ce0de126f148769a76f4c74f4707113b1b6 100644
 --- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
-@@ -855,6 +855,10 @@ QRect TopBarWidget::getMembersShowAreaGeometry() const {
+@@ -856,6 +856,10 @@ QRect TopBarWidget::getMembersShowAreaGeometry() const {
  }
  
  void TopBarWidget::mousePressEvent(QMouseEvent *e) {
@@ -10874,10 +10874,10 @@ index 086b2e6c5a8b447c622d06b71eaedcdf73ccf13f..a0c9263477ce35419eb8c7671e323ea6
  
  [[nodiscard]] QString PinnedIconsPath() {
 diff --git a/Telegram/SourceFiles/settings/sections/settings_notifications.cpp b/Telegram/SourceFiles/settings/sections/settings_notifications.cpp
-index d4bb51f1bae8205a1d2e33c1cd2aa20ee382e09d..8a8b07563928c0c9b190a6efdca8d00bd6a29cd3 100644
+index ad8736a2ffbfc61e6cf64e15d12d68b325fee920..020cdd7b2c25c5b71ed1f5526aefad7a29605f39 100644
 --- a/Telegram/SourceFiles/settings/sections/settings_notifications.cpp
 +++ b/Telegram/SourceFiles/settings/sections/settings_notifications.cpp
-@@ -495,7 +495,7 @@ void NotificationsCount::prepareNotificationSampleLarge() {
+@@ -496,7 +496,7 @@ void NotificationsCount::prepareNotificationSampleLarge() {
  		p.setPen(st::dialogsNameFg);
  		p.setFont(st::msgNameFont);
  
@@ -14232,7 +14232,7 @@ index f336d148ca73ac06871b989ea3f433bb88a44302..8752bb7fae067056a6f5d40b3433b694
  				st::boxRowPadding);
  			return;
 diff --git a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
-index 230eaefac605f94239f3735c2ea03ee4a53746da..346327614efb158a63d6c9fc25b762fc5178f3cf 100644
+index 275daf33a60e21432585062474de5512b2dbfe31..25a62a0e870da60b28fd20e248689069ba90f468 100644
 --- a/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 +++ b/Telegram/SourceFiles/tele/tele_bubble_badges.cpp
 @@ -1,4 +1,5 @@
@@ -14253,18 +14253,16 @@ index 230eaefac605f94239f3735c2ea03ee4a53746da..346327614efb158a63d6c9fc25b762fc
  	if (!BubbleBadges()) {
  		return 0;
  	}
-@@ -198,8 +204,8 @@ void SetBubbleName(
+@@ -198,7 +204,7 @@ void SetBubbleName(
  			Ui::NameTextOptions());
  		return;
  	}
 -	auto text = InvisibleNameMarked(peer->name());
--	if (const auto icon = VerifyIcon(peer)) {
 +	auto text = WithMadBadge(peer, InvisibleNameMarked(peer->name()));
-+	if (const auto icon = BubbleBadges() ? VerifyIcon(peer) : DocumentId()) {
- 		text = Data::SingleCustomEmoji(icon).append(' ').append(
- 			std::move(text));
- 	}
-@@ -221,11 +227,15 @@ void SetBubbleName(
+ 	const auto session = &peer->session();
+ 	name.setMarkedText(st::msgNameStyle, text, Ui::NameTextOptions(), {
+ 		.repaint = std::move(repaint),
+@@ -217,11 +223,15 @@ void SetBubbleName(
  }
  
  TextWithEntities BadgedHeaderName(PeerData *peer, TextWithEntities name) {
@@ -24358,7 +24356,7 @@ index 0000000000000000000000000000000000000000..0b6edf4c4a0fe8451b9a530705cbdd32
 +	return 0;
 +}
 diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
-index 811a3765fd940e38aaca28e8e450afba1c42cea1..3b29ebd653309a2623bce2b893792debdac0e667 100644
+index 09f43461e6c8a053140c4f959d11b8d53383552c..ca98b39faa70867f3320fbc600b985f767f78b32 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.cpp
 +++ b/Telegram/SourceFiles/ui/unread_badge.cpp
 @@ -6,6 +6,7 @@ For license and copyright information please follow this link:
@@ -24369,7 +24367,7 @@ index 811a3765fd940e38aaca28e8e450afba1c42cea1..3b29ebd653309a2623bce2b893792deb
  
  #include "data/data_emoji_statuses.h"
  #include "data/data_peer.h"
-@@ -234,6 +235,60 @@ PeerBadge::PeerBadge() = default;
+@@ -246,6 +247,60 @@ PeerBadge::PeerBadge() = default;
  PeerBadge::~PeerBadge() = default;
  
  int PeerBadge::drawGetWidth(Painter &p, Descriptor &&descriptor) {
@@ -24431,7 +24429,7 @@ index 811a3765fd940e38aaca28e8e450afba1c42cea1..3b29ebd653309a2623bce2b893792deb
  
  	const auto peer = descriptor.peer;
 diff --git a/Telegram/SourceFiles/ui/unread_badge.h b/Telegram/SourceFiles/ui/unread_badge.h
-index 9baa7a3f226b49c38e4e9111ee1b378afdc343ae..e22b63553267115d43ee24e6fbb77d0db855cf00 100644
+index 7c8d68833015a2c0dd47f93d00c0361218858a89..7f06c8471561576d9e71bf78f8251d99c52b8c4c 100644
 --- a/Telegram/SourceFiles/ui/unread_badge.h
 +++ b/Telegram/SourceFiles/ui/unread_badge.h
 @@ -14,6 +14,10 @@ namespace style {
@@ -24445,7 +24443,7 @@ index 9baa7a3f226b49c38e4e9111ee1b378afdc343ae..e22b63553267115d43ee24e6fbb77d0d
  namespace Ui {
  
  class UnreadBadge : public RpWidget {
-@@ -67,6 +71,8 @@ public:
+@@ -72,6 +76,8 @@ public:
  		bool paused = false;
  	};
  	int drawGetWidth(Painter &p, Descriptor &&descriptor);
@@ -24454,7 +24452,7 @@ index 9baa7a3f226b49c38e4e9111ee1b378afdc343ae..e22b63553267115d43ee24e6fbb77d0d
  	[[nodiscard]] QRect emojiStatusRect() const;
  	void paintEmojiStatusFrame(QPainter &p, crl::time now, bool paused);
  	void paintEmojiStatusFrame(
-@@ -91,6 +97,11 @@ public:
+@@ -96,6 +102,11 @@ public:
  private:
  	struct EmojiStatus;
  	struct BotVerifiedData;
@@ -24509,10 +24507,10 @@ index d19b805a1b309c2865ef98c6aad16b5797c56120..f253a86a5fd68f4c9303aaef9ea65db9
  			"Settings."_q)),
  		st::defaultBoxCheckbox);
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 1f8c907bddd615fa2fe82697e1246471b1d57b98..caf2c7bd05b7b41a81b57c50cba5390e9c9697cf 100644
+index 48404676ad32fec40bfdccd7ecee4dabdd960f4a..d45072950ec18c96d450a3b87ed06b02549c3ce5 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
-@@ -945,7 +945,7 @@ void MainWindow::updateTitle() {
+@@ -966,7 +966,7 @@ void MainWindow::updateTitle() {
  		: Dialogs::Key();
  	const auto thread = key ? key.thread() : nullptr;
  	if (!thread) {
@@ -24563,10 +24561,10 @@ index 4b94562f4878e7539b12c717afda70b2f4038b11..7188cdfc7c3fbb008969414554f15b31
  		QSize(st::windowShellMinWidth, st::windowShellMinHeight));
  	setupBody();
 diff --git a/Telegram/SourceFiles/window/window_saved_windows.cpp b/Telegram/SourceFiles/window/window_saved_windows.cpp
-index 0c654f0e7203eb0e13d94f3e4967b6977283798f..1a81a82abedd507dc007699ef0a4f4bacd239efb 100644
+index b26788b3884e40a64fcff7a698e4ddacc8c96eff..646d151cd1c3eccdfa2805515f6b9dea62f3068e 100644
 --- a/Telegram/SourceFiles/window/window_saved_windows.cpp
 +++ b/Telegram/SourceFiles/window/window_saved_windows.cpp
-@@ -967,7 +967,7 @@ QString SavedWindows::shellTitle(
+@@ -1089,7 +1089,7 @@ QString SavedWindows::shellTitle(
  		? st::wrap_rtl(session->user()->name())
  		: QString();
  	return name.isEmpty()

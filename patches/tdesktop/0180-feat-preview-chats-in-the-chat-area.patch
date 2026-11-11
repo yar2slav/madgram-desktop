@@ -18,10 +18,10 @@ Subject: [PATCH] feat: preview chats in the chat area
  create mode 100644 Telegram/SourceFiles/tele/tele_full_preview.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 9f22830028cf475ab34ba8f5de2bbb5114ea270c..73df2e88d825de58c72e601c80b95c11324c976a 100644
+index 1730fc21d30278f44b1089a2098c91aa4afffbcc..1394d06ea2e46e79731972bc91e5ead1a41d58ed 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2735,6 +2735,8 @@ PRIVATE
+@@ -2738,6 +2738,8 @@ PRIVATE
      tele/tele_field_resize.h
      tele/tele_folders.cpp
      tele/tele_folders.h
@@ -31,7 +31,7 @@ index 9f22830028cf475ab34ba8f5de2bbb5114ea270c..73df2e88d825de58c72e601c80b95c11
      tele/tele_gif_video.h
      tele/tele_gifts.cpp
 diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
-index 15f68ae63d95efcb6a8e7690e58701b1489007b9..8c8da058f65163116f6f15832faec49343f854dc 100644
+index dd220e973e3c7e0ed575867fcfe931a37051e99a..a19e70037bc09639d14d2f8ab3c712089cc91cff 100644
 --- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 +++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
 @@ -108,6 +108,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

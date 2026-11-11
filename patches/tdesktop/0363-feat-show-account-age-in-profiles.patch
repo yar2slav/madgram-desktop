@@ -18,10 +18,10 @@ Subject: [PATCH] feat: show account age in profiles
  create mode 100644 Telegram/SourceFiles/tele/tele_account_age.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 5b6090e2c892572c420c98b682e78d14b9e490cd..ab7bb0425414187c3a5524f1fd80de303f8dec4e 100644
+index d22f75fd1e0f8ebcf30203d20b21cadbdcd71495..d47f3cfdda4ea9aedf14f1b5d4141d3baa75f789 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2759,6 +2759,8 @@ PRIVATE
+@@ -2762,6 +2762,8 @@ PRIVATE
      tele/secret/secret_vault.h
      tele/secret/secret_viewer.cpp
      tele/secret/secret_viewer.h

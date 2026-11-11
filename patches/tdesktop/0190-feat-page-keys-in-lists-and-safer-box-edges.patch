@@ -17,10 +17,10 @@ Subject: [PATCH] feat: page keys in lists and safer box edges
  create mode 100644 Telegram/SourceFiles/tele/tele_list_keys.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index d24411bacf0fdf76bf1c9d1b26ed84e6b935b7a4..9c672b8c51e67c1bc41639cd2273047b810993e2 100644
+index 92f2e936d16ec51a8387eed2042f7af1ff2eecff..0abb06856e75cf13ab5b00c792aa6ab8a3908b27 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2759,6 +2759,8 @@ PRIVATE
+@@ -2762,6 +2762,8 @@ PRIVATE
      tele/tele_inline_via.h
      tele/tele_kept_store.cpp
      tele/tele_kept_store.h
@@ -30,10 +30,10 @@ index d24411bacf0fdf76bf1c9d1b26ed84e6b935b7a4..9c672b8c51e67c1bc41639cd2273047b
      tele/tele_local_drafts.h
      tele/tele_local_folders.cpp
 diff --git a/Telegram/SourceFiles/core/application.cpp b/Telegram/SourceFiles/core/application.cpp
-index 5787d4679d61b1fd6f95ff931a9438a9b016319f..2a6e7db1cc2c6fdddf7df0c004453ecb54d8a04b 100644
+index 6f112ca8fb09c85aa8db3c41dae3a9299dde4bb8..22b4f30bcdf4d548dcf08800976a194a5045a1a0 100644
 --- a/Telegram/SourceFiles/core/application.cpp
 +++ b/Telegram/SourceFiles/core/application.cpp
-@@ -109,6 +109,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -110,6 +110,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_changelog.h"
  #include "tele/tele_badges.h"
  #include "tele/tele_reduce_motion.h"
@@ -41,7 +41,7 @@ index 5787d4679d61b1fd6f95ff931a9438a9b016319f..2a6e7db1cc2c6fdddf7df0c004453ecb
  #include "tele/tele_counters.h"
  
  #include <QtCore/QStandardPaths>
-@@ -365,6 +366,7 @@ void Application::run() {
+@@ -366,6 +367,7 @@ void Application::run() {
  	Tele::StartChangelog();
  	Tele::StartBadges();
  	Tele::StartReduceMotion();

@@ -17,10 +17,10 @@ Subject: [PATCH] feat: record voice without fading
  create mode 100644 Telegram/SourceFiles/tele/tele_voice_fade.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index e99cc3453af142a3e393ddf4e71ec7b18ce80d40..094c150599c966001ed83752e944820921ab7919 100644
+index 6ffd62bf9d9f8eebfbda95d75c1fe49d371a09c6..178f2d061bbcdb3d204fd51af2758c07163d8a0a 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2826,6 +2826,8 @@ PRIVATE
+@@ -2829,6 +2829,8 @@ PRIVATE
      tele/tele_verify_details.h
      tele/tele_view_tl.cpp
      tele/tele_view_tl.h
@@ -30,7 +30,7 @@ index e99cc3453af142a3e393ddf4e71ec7b18ce80d40..094c150599c966001ed83752e9448209
      tele/tele_who_read.h
  )
 diff --git a/Telegram/SourceFiles/media/audio/media_audio_capture.cpp b/Telegram/SourceFiles/media/audio/media_audio_capture.cpp
-index c816566339622e87a10184c566d9806872b1dfff..f4ec082085f97641533026f79f51e358aeb71cb6 100644
+index f4b6c964a5e09ecd62c1fcb648f4ad08221de60e..72ab6c2e5617622a742d334e40e71b7ab9fb5732 100644
 --- a/Telegram/SourceFiles/media/audio/media_audio_capture.cpp
 +++ b/Telegram/SourceFiles/media/audio/media_audio_capture.cpp
 @@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

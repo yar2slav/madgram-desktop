@@ -25,10 +25,10 @@ Subject: [PATCH] feat: view messages and telegram objects as tl
  create mode 100644 Telegram/SourceFiles/tele/tele_view_tl.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 21f5e718b4fe74fc35fa4f72cf7205e45145065b..58f3db0e00266ade1bef2063b8d81e4d664e479d 100644
+index 8b8a779cfcdee9648db633f3cd92df28bff2c8a0..8e06c0b9ce052fd58a8d0b73306a45b4c2aafd21 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2683,6 +2683,8 @@ PRIVATE
+@@ -2686,6 +2686,8 @@ PRIVATE
      tele/tele_title.h
      tele/tele_updater.cpp
      tele/tele_updater.h
@@ -137,7 +137,7 @@ index 0dbb90a8260fdfea3b17ac21c93e969843bebf97..ab47587167d8760473e2ca76866e14c2
  		menu->addSeparator();
  		menu->addAction(
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index 9b92d5af5a159d10211b4215650328c12c2b8ca2..2613ee50d3e55a5102652279ed17f413b367b97a 100644
+index 89d6661aee4ada4c2044f75f4f09581eeb3cf743..532c0559b5dd0f01b524de062ef541d7e92a7097 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -122,6 +122,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -859,10 +859,10 @@ index 47629b8ab7064bdf8f2cc3aae163373b33693872..7e4811ece0ef462b3070cd74c2405712
  		_popupMenu = nullptr;
  		return;
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 5328646de6f60ba5b960c851acc37437d9ee933d..c197dd5aebf84e622470c673dec06881b377a195 100644
+index f6f10deed723d7bd18662abc6f1e2ff4cb07fb87..8d6b1d523a6eddbd920868b70e4404be7a2daea5 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -131,6 +131,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -132,6 +132,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "tele/tele_ghost.h"
  #include "tele/tele_ignored.h"
  #include "tele/tele_jump_to_first.h"
@@ -870,7 +870,7 @@ index 5328646de6f60ba5b960c851acc37437d9ee933d..c197dd5aebf84e622470c673dec06881
  #include "styles/style_chat.h"
  #include "styles/style_chat_helpers.h"
  #include "styles/style_credits.h"
-@@ -4392,6 +4393,7 @@ void FillDialogsEntryMenu(
+@@ -4393,6 +4394,7 @@ void FillDialogsEntryMenu(
  		Dialogs::EntryState request,
  		const PeerMenuCallback &callback) {
  	Filler(controller, request, callback).fill();
@@ -878,7 +878,7 @@ index 5328646de6f60ba5b960c851acc37437d9ee933d..c197dd5aebf84e622470c673dec06881
  }
  
  bool FillVideoChatMenu(
-@@ -4542,6 +4544,7 @@ void FillSenderUserpicMenu(
+@@ -4543,6 +4545,7 @@ void FillSenderUserpicMenu(
  		}
  	}
  	Tele::AddIgnoreAction(peer, addAction);

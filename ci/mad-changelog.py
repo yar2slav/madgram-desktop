@@ -89,7 +89,7 @@ def main():
         raise SystemExit("--tag, --repo and --output are required")
     number = re.fullmatch(r"v[0-9.]+-mad\.([1-9][0-9]*)", args.tag)
     if not number:
-        raise SystemExit("tag must look like v7.4.1-mad.9")
+        raise SystemExit("tag must look like v7.4.2-mad.9")
     version = int(number.group(1))
     texts = russian()
     upstream = (ROOT / "UPSTREAM").read_text(encoding="utf-8").strip()

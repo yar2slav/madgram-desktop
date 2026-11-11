@@ -16,10 +16,10 @@ Subject: [PATCH] feat: show the peer id as its own profile row
  create mode 100644 Telegram/SourceFiles/tele/tele_peer_id.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index fff4a5079574bf17a5b875ed90c0d9133ab8a4ca..be5be7bd349f3421db6ba7236433c2dca2ccb270 100644
+index 1ac41831f3f4f70980b4a37aa01d185eaf10dd87..2bcedd66a1eb73bc952a75b2b1be0ec40c3692b5 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2653,6 +2653,8 @@ PRIVATE
+@@ -2656,6 +2656,8 @@ PRIVATE
      tele/tele_gifts.h
      tele/tele_options.cpp
      tele/tele_options.h

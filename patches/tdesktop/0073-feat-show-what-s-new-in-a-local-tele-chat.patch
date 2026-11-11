@@ -34,10 +34,10 @@ Subject: [PATCH] feat: show what's new in a local tele chat
  create mode 100644 Telegram/SourceFiles/tele/tele_changelog_section.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 1d69086773a0520cfce696e7c8c3fda037dc5fc5..bfd52661988f60eca7220059515dd7da0a87f3d8 100644
+index 41cdc25e0499a174b7e61ba14861df8eb77b40f8..370fb14e47edab4dfb852e82870d0d2add9f61e1 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2659,6 +2659,10 @@ PRIVATE
+@@ -2662,6 +2662,10 @@ PRIVATE
      tele/tele_calls.h
      tele/tele_changelog.cpp
      tele/tele_changelog.h
@@ -268,7 +268,7 @@ literal 0
 HcmV?d00001
 
 diff --git a/Telegram/Resources/qrc/telegram/telegram.qrc b/Telegram/Resources/qrc/telegram/telegram.qrc
-index 5799e6664e34ec0be787819fd3acc9264a0a4fa5..f310e5b5c2fe9371e48a6ec6c4c0fb0ffad2f442 100644
+index 95921b15c68fe48098983e3ee63415c7ee32e6ae..2f0182f39275180eede8fe07765aaedfae04813e 100644
 --- a/Telegram/Resources/qrc/telegram/telegram.qrc
 +++ b/Telegram/Resources/qrc/telegram/telegram.qrc
 @@ -9,6 +9,7 @@
@@ -280,7 +280,7 @@ index 5799e6664e34ec0be787819fd3acc9264a0a4fa5..f310e5b5c2fe9371e48a6ec6c4c0fb0f
      <file alias="art/premium/flecks.png">../../art/premium/flecks.png</file>
      <file alias="art/premium/star_texture.svg">../../art/premium/star_texture.svg</file>
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index d4246f488ea821ac8788735dda9b3c880c798e44..08df43fed5511006edfca712fb239b50d1fe18de 100644
+index 5d8e2bd32f54957cf80beb35cd4b5dcb6d17a572..78850917cd8525aeaeb4e4636119e0da886768a7 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -112,6 +112,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -442,10 +442,10 @@ index 2b3608261e5110f0fc56ab048a4d02ecd40ddbb0..7605d08388ee7b62f1e1a02f1bb2a3e1
  	if (const auto community = QuickActionUngroupCommunity(history, action)) {
  		Window::PeerMenuUngroupCommunity(controller, community);
 diff --git a/Telegram/SourceFiles/mainwidget.cpp b/Telegram/SourceFiles/mainwidget.cpp
-index ec9a349fb27fe8ed4b128734ca254bc9651fd4b5..67b0391ce5cdad1262aab5802f34fdef16e69ded 100644
+index 7374e835ef165f64603cf71e5fd87a223ef78c4a..22eb3fc3df6bfd976a4410aac0e5f8e370074306 100644
 --- a/Telegram/SourceFiles/mainwidget.cpp
 +++ b/Telegram/SourceFiles/mainwidget.cpp
-@@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -98,6 +98,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "main/main_app_config.h"
  #include "settings/sections/settings_premium.h"
  #include "storage/storage_user_photos.h"
@@ -453,7 +453,7 @@ index ec9a349fb27fe8ed4b128734ca254bc9651fd4b5..67b0391ce5cdad1262aab5802f34fdef
  #include "styles/style_dialogs.h"
  #include "styles/style_chat.h"
  #include "styles/style_window.h"
-@@ -1490,6 +1491,8 @@ void MainWidget::showHistory(
+@@ -1484,6 +1485,8 @@ void MainWidget::showHistory(
  		return;
  	} else if (showHistoryInDifferentWindow(peerId, params, showAtMsgId)) {
  		return;
@@ -2324,10 +2324,10 @@ index 86b69a5edead00cc51df7fde7ef1529586f186e9..fe64b81961f5a5ac51a32f073fefcabe
  
  } // namespace
 diff --git a/Telegram/SourceFiles/window/window_peer_menu.cpp b/Telegram/SourceFiles/window/window_peer_menu.cpp
-index 74a2f1212f47bccd1e5bd36bb1a867d01e93610c..2ce1cae8f9129a0426ce03a9167b0defd66a35c6 100644
+index 3b36508e42a71097b09ddb8ec8c715a41a17b62f..6111c635fe7661d45a0919f8cce59a12ed82eb44 100644
 --- a/Telegram/SourceFiles/window/window_peer_menu.cpp
 +++ b/Telegram/SourceFiles/window/window_peer_menu.cpp
-@@ -127,6 +127,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "boxes/peers/edit_peer_info_box.h"
  #include "boxes/peers/manage_community_box.h"
  #include "boxes/premium_preview_box.h"
@@ -2335,7 +2335,7 @@ index 74a2f1212f47bccd1e5bd36bb1a867d01e93610c..2ce1cae8f9129a0426ce03a9167b0def
  #include "tele/tele_chat_backgrounds.h"
  #include "tele/tele_deleted_section.h"
  #include "tele/tele_ghost.h"
-@@ -4398,6 +4399,9 @@ void FillDialogsEntryMenu(
+@@ -4399,6 +4400,9 @@ void FillDialogsEntryMenu(
  		not_null<SessionController*> controller,
  		Dialogs::EntryState request,
  		const PeerMenuCallback &callback) {
@@ -2346,10 +2346,10 @@ index 74a2f1212f47bccd1e5bd36bb1a867d01e93610c..2ce1cae8f9129a0426ce03a9167b0def
  	Tele::AddViewTlAction(callback, controller->uiShow(), request);
  }
 diff --git a/Telegram/SourceFiles/window/window_session_controller.cpp b/Telegram/SourceFiles/window/window_session_controller.cpp
-index 4811a82c2182f6c4b1572c02d4adfa59332f6db6..e52d867f663acbdbe44b6f5b5f8b2a6df3310e00 100644
+index 7848dfb7b5d6c42fd77a670d8877a8fcc7489708..2978991c80a4f3b0dfd30a3ed061de81f3eb6892 100644
 --- a/Telegram/SourceFiles/window/window_session_controller.cpp
 +++ b/Telegram/SourceFiles/window/window_session_controller.cpp
-@@ -128,6 +128,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -129,6 +129,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "settings/sections/settings_main.h"
  #include "settings/sections/settings_premium.h"
  #include "settings/sections/settings_privacy_security.h"
@@ -2357,7 +2357,7 @@ index 4811a82c2182f6c4b1572c02d4adfa59332f6db6..e52d867f663acbdbe44b6f5b5f8b2a6d
  #include "tele/tele_folders.h"
  #include "tele/tele_username_aliases.h"
  #include "styles/style_chat_helpers.h"
-@@ -3420,7 +3421,9 @@ void SessionController::cancelUploadLayer(not_null<HistoryItem*> item) {
+@@ -3413,7 +3414,9 @@ void SessionController::cancelUploadLayer(not_null<HistoryItem*> item) {
  void SessionController::showSection(
  		std::shared_ptr<SectionMemento> memento,
  		const SectionShow &params) {

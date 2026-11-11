@@ -17,10 +17,10 @@ Subject: [PATCH] feat: record voice in higher quality
  create mode 100644 Telegram/SourceFiles/tele/tele_voice_quality.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index ffe65a0a62f9c9291c1b2101efba64e500e47bfa..319b895a00c02d1e28f2120019affa1537f461c6 100644
+index 3546431f5e3906dedd4ad96ba2e139c4379fa1b2..e2a9403d60ffb2e4b7a6c9fbc4294859d9ade29e 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -3007,6 +3007,8 @@ PRIVATE
+@@ -3010,6 +3010,8 @@ PRIVATE
      tele/tele_view_tl_window.h
      tele/tele_voice_fade.cpp
      tele/tele_voice_fade.h
@@ -30,7 +30,7 @@ index ffe65a0a62f9c9291c1b2101efba64e500e47bfa..319b895a00c02d1e28f2120019affa15
      tele/tele_who_reacted.h
      tele/tele_who_read.cpp
 diff --git a/Telegram/SourceFiles/media/audio/media_audio_capture.cpp b/Telegram/SourceFiles/media/audio/media_audio_capture.cpp
-index f4ec082085f97641533026f79f51e358aeb71cb6..21e4baf11da554a871b792202ecaa0b3e1781960 100644
+index 72ab6c2e5617622a742d334e40e71b7ab9fb5732..d717833800ae1805b44efc5fa0ca35fe0c3106be 100644
 --- a/Telegram/SourceFiles/media/audio/media_audio_capture.cpp
 +++ b/Telegram/SourceFiles/media/audio/media_audio_capture.cpp
 @@ -13,6 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL

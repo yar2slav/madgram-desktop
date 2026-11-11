@@ -35,7 +35,7 @@ index a336782ebbd8f095c5fc64c6e1bd89be48eb7ebb..e02833d198e94db1e068e1e12f400288
  	base::install_event_filter(layer.get(), [=](not_null<QEvent*> e) {
  		if (e->type() == QEvent::KeyPress) {
 diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
-index d7a60f03ac4a90e269530b54d9933c1b49bf3819..9b92d5af5a159d10211b4215650328c12c2b8ca2 100644
+index bf3ea61b2a4d008759b33382b3d89e8192ce297f..89d6661aee4ada4c2044f75f4f09581eeb3cf743 100644
 --- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 +++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
 @@ -6161,7 +6161,7 @@ bool OverlayWidget::contentNeedsScreenshotProtection() const {

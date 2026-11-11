@@ -10,10 +10,10 @@ Subject: [PATCH] fix: saving or copying a shot of a gif no longer crashes tele
  3 files changed, 17 insertions(+), 3 deletions(-)
 
 diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-index 3c9ead768a8287ec5deb1a34f770520bbd42d868..e90a3fc3e2c012c50fcfdefee7eca962e486d72d 100644
+index a526282bdd40e52a0a9b68d6c23abd561082b009..38c007959ebed6c114c27e3391ef23b806c92968 100644
 --- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
 +++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
-@@ -790,7 +790,7 @@ void Gif::draw(Painter &p, const PaintContext &context) const {
+@@ -783,7 +783,7 @@ void Gif::draw(Painter &p, const PaintContext &context) const {
  			validateRoundingMask(request.outer);
  			request.mask = _roundingMask;
  		} else {
@@ -22,7 +22,7 @@ index 3c9ead768a8287ec5deb1a34f770520bbd42d868..e90a3fc3e2c012c50fcfdefee7eca962
  		}
  		if (!activeRoundPlaying && activeOwnPlaying->instance.playerLocked()) {
  			if (activeOwnPlaying->frozenFrame.isNull()) {
-@@ -1891,7 +1891,7 @@ void Gif::drawGrouped(
+@@ -1884,7 +1884,7 @@ void Gif::drawGrouped(
  		auto request = ::Media::Streaming::FrameRequest{
  			.resize = pixSize * ratio,
  			.outer = scaled * ratio,

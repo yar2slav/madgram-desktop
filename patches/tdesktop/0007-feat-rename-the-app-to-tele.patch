@@ -23,10 +23,10 @@ Subject: [PATCH] feat: rename the app to tele
  16 files changed, 28 insertions(+), 55 deletions(-)
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 7bdaf3eafa093c8e7814558260532d0942df7bc3..969b10be8346ab2b86ac38fe5601920c723dcc26 100644
+index bb50145f6e50c9f5ed8353f998c49911f1261df4..3311375abaa44827986600dcf33e868f225c4ec5 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2861,12 +2861,12 @@ if (build_macstore)
+@@ -2864,12 +2864,12 @@ if (build_macstore)
      )
  else()
      if (CMAKE_GENERATOR STREQUAL Xcode)
@@ -43,7 +43,7 @@ index 7bdaf3eafa093c8e7814558260532d0942df7bc3..969b10be8346ab2b86ac38fe5601920c
  
  if (CMAKE_GENERATOR STREQUAL Xcode)
 diff --git a/Telegram/Resources/winrc/Telegram.rc b/Telegram/Resources/winrc/Telegram.rc
-index 567f3dd0557ff99fa9cfcde65d5aee814f488989..bd225175dcafb9dd2402075223759dbddf075d90 100644
+index e3d00828005d51eff1408669377c33402442ed34..07bde020acfbe7d730443857f4d9e5c311539daf 100644
 --- a/Telegram/Resources/winrc/Telegram.rc
 +++ b/Telegram/Resources/winrc/Telegram.rc
 @@ -61,10 +61,10 @@ BEGIN
@@ -52,11 +52,11 @@ index 567f3dd0557ff99fa9cfcde65d5aee814f488989..bd225175dcafb9dd2402075223759dbd
              VALUE "CompanyName", "Telegram FZ-LLC"
 -            VALUE "FileDescription", "Telegram Desktop"
 +            VALUE "FileDescription", "tele"
-             VALUE "FileVersion", "7.4.1.0"
+             VALUE "FileVersion", "7.4.2.0"
              VALUE "LegalCopyright", "Copyright (C) 2014-2026"
 -            VALUE "ProductName", "Telegram Desktop"
 +            VALUE "ProductName", "tele"
-             VALUE "ProductVersion", "7.4.1.0"
+             VALUE "ProductVersion", "7.4.2.0"
          END
      END
 diff --git a/Telegram/SourceFiles/api/api_authorizations.cpp b/Telegram/SourceFiles/api/api_authorizations.cpp
@@ -99,7 +99,7 @@ index 3e436f7087c3408cf06921031769eb27830a59af..f67141f7fed9b27976a89e7aef26bae0
  #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
  	// fallback session management is useless for tdesktop since it doesn't have
 diff --git a/Telegram/SourceFiles/core/version.h b/Telegram/SourceFiles/core/version.h
-index 4975f868c4fd72c9737917da220e3b7641849749..00841a3793848aafccbf784fba86c40c1067e7b5 100644
+index 4f9c9a96ac16a0c02cc3605588fb7f80f9d051b2..a208f4e833caaf36af50409c5d972486339ca8a7 100644
 --- a/Telegram/SourceFiles/core/version.h
 +++ b/Telegram/SourceFiles/core/version.h
 @@ -20,8 +20,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -110,8 +110,8 @@ index 4975f868c4fd72c9737917da220e3b7641849749..00841a3793848aafccbf784fba86c40c
 -constexpr auto AppFile = "Telegram"_cs;
 +constexpr auto AppName = "tele"_cs;
 +constexpr auto AppFile = "tele"_cs;
- constexpr auto AppVersion = 7004001;
- constexpr auto AppVersionStr = "7.4.1";
+ constexpr auto AppVersion = 7004002;
+ constexpr auto AppVersionStr = "7.4.2";
  constexpr auto AppBetaVersion = false;
 diff --git a/Telegram/SourceFiles/intro/intro_start.cpp b/Telegram/SourceFiles/intro/intro_start.cpp
 index d1b835a09a28eddf5b8e6d8a072b4b4f9315fdc2..49a477144e4a3a7494582e31b979554bcfa8a223 100644
@@ -209,10 +209,10 @@ index 3d051f4ce0afcf33207141b0d0355f1accee7ba7..262d6e88840e0f34e92c481060c515df
  
  [[nodiscard]] QString PinnedIconsPath() {
 diff --git a/Telegram/SourceFiles/settings/sections/settings_notifications.cpp b/Telegram/SourceFiles/settings/sections/settings_notifications.cpp
-index a16c3ee9690de934d795a2803ada0e82c3f9db94..d4bb51f1bae8205a1d2e33c1cd2aa20ee382e09d 100644
+index 75eacd626bef2de2a8f83d0519ac84921ae1c286..ad8736a2ffbfc61e6cf64e15d12d68b325fee920 100644
 --- a/Telegram/SourceFiles/settings/sections/settings_notifications.cpp
 +++ b/Telegram/SourceFiles/settings/sections/settings_notifications.cpp
-@@ -495,7 +495,7 @@ void NotificationsCount::prepareNotificationSampleLarge() {
+@@ -496,7 +496,7 @@ void NotificationsCount::prepareNotificationSampleLarge() {
  		p.setPen(st::dialogsNameFg);
  		p.setFont(st::msgNameFont);
  
@@ -222,10 +222,10 @@ index a16c3ee9690de934d795a2803ada0e82c3f9db94..d4bb51f1bae8205a1d2e33c1cd2aa20e
  
  		st::notifyClose.icon.paint(p, w - st::notifyClosePos.x() - st::notifyClose.width + st::notifyClose.iconPosition.x(), st::notifyClosePos.y() + st::notifyClose.iconPosition.y(), w);
 diff --git a/Telegram/SourceFiles/window/main_window.cpp b/Telegram/SourceFiles/window/main_window.cpp
-index 3f153a2004cda2188af3b93c9c4120adcba4d1db..f8260bb5d80265a8c1f225a1478ac9455a7c9660 100644
+index ef8e61640b1ffb7cdbc5410e061c854caca4f61b..9f45372d7db30e20ee31ccbbd945c7ac40da88cf 100644
 --- a/Telegram/SourceFiles/window/main_window.cpp
 +++ b/Telegram/SourceFiles/window/main_window.cpp
-@@ -911,7 +911,7 @@ void MainWindow::updateTitle() {
+@@ -932,7 +932,7 @@ void MainWindow::updateTitle() {
  		: Dialogs::Key();
  	const auto thread = key ? key.thread() : nullptr;
  	if (!thread) {
@@ -276,10 +276,10 @@ index 3e49f93cf3cd08500cb3848c11d1b94d613b74cf..4b94562f4878e7539b12c717afda70b2
  		QSize(st::windowShellMinWidth, st::windowShellMinHeight));
  	setupBody();
 diff --git a/Telegram/SourceFiles/window/window_saved_windows.cpp b/Telegram/SourceFiles/window/window_saved_windows.cpp
-index 593ac755b7abe4bd5457a6a58899a1f3930a6d2b..fde28ccf276c443e310a97d5142bc209a0c56c57 100644
+index d32b25207f1f75178c82cac02d1108ce18b0ad00..10c252497661b6d2207c7e33d83b794405de9de0 100644
 --- a/Telegram/SourceFiles/window/window_saved_windows.cpp
 +++ b/Telegram/SourceFiles/window/window_saved_windows.cpp
-@@ -964,7 +964,7 @@ QString SavedWindows::shellTitle(
+@@ -1086,7 +1086,7 @@ QString SavedWindows::shellTitle(
  		? st::wrap_rtl(session->user()->name())
  		: QString();
  	return name.isEmpty()

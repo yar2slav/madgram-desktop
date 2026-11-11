@@ -72,10 +72,10 @@ Subject: [PATCH] feat: notification centre
  create mode 100644 Telegram/SourceFiles/tele/tele_rate_limits.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index fa3570edd39b2dead5c39e1ff1fa8b10734bd11c..550d84feb6743ae464684085ed7bdfc0bb497a32 100644
+index 68ea569ba8ccf0021ae77f8d2576680d78d7a30a..df2fd5f12304872957f2b9ee8bf61ee4187daec0 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2733,6 +2733,7 @@ PRIVATE
+@@ -2736,6 +2736,7 @@ PRIVATE
      tele/tele_edit_history_section.h
      tele/tele_field_resize.cpp
      tele/tele_field_resize.h
@@ -83,7 +83,7 @@ index fa3570edd39b2dead5c39e1ff1fa8b10734bd11c..550d84feb6743ae464684085ed7bdfc0
      tele/tele_folders.cpp
      tele/tele_folders.h
      tele/tele_freeze_watchdog.cpp
-@@ -2839,6 +2840,10 @@ PRIVATE
+@@ -2842,6 +2843,10 @@ PRIVATE
      tele/tele_new_settings.h
      tele/tele_no_ai.cpp
      tele/tele_no_ai.h
@@ -94,7 +94,7 @@ index fa3570edd39b2dead5c39e1ff1fa8b10734bd11c..550d84feb6743ae464684085ed7bdfc0
      tele/tele_online_notify.cpp
      tele/tele_online_notify.h
      tele/tele_jump_to_first.cpp
-@@ -2873,6 +2878,8 @@ PRIVATE
+@@ -2876,6 +2881,8 @@ PRIVATE
      tele/tele_protected.h
      tele/tele_punctual_scheduled.cpp
      tele/tele_punctual_scheduled.h
@@ -104,7 +104,7 @@ index fa3570edd39b2dead5c39e1ff1fa8b10734bd11c..550d84feb6743ae464684085ed7bdfc0
      tele/tele_read_log.h
      tele/tele_recent_emoji.cpp
 diff --git a/Telegram/SourceFiles/core/crash_report_window.cpp b/Telegram/SourceFiles/core/crash_report_window.cpp
-index 413ebcaf95ff90dd347ea8da2f42e37cb7ad8478..63f6e2c51a67658934d5007d69de77d9b46a635d 100644
+index af2a0a654a9d80c5931e91b18e18e8b4122f6f9d..662ded7ddbd5f5ed491a253bee054e0ed7f09ab6 100644
 --- a/Telegram/SourceFiles/core/crash_report_window.cpp
 +++ b/Telegram/SourceFiles/core/crash_report_window.cpp
 @@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -124,17 +124,17 @@ index 413ebcaf95ff90dd347ea8da2f42e37cb7ad8478..63f6e2c51a67658934d5007d69de77d9
  		_sendReply->deleteLater();
  		_sendReply = nullptr;
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_top_bar_suggestion.cpp b/Telegram/SourceFiles/dialogs/dialogs_top_bar_suggestion.cpp
-index 514d9d283120c770e9857757b88bcd63947ec188..26949b9137322dd59906c535322685d6070f2df8 100644
+index 2413f03f34faf357b3cded00ab55a9f13fa3a16e..deaaff7376a5b28c4cb6872d9f13d8d717403f4f 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_top_bar_suggestion.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_top_bar_suggestion.cpp
-@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  #include "dialogs/ui/dialogs_top_bar_suggestion_content.h"
  #include "main/main_session.h"
  #include "mainwindow.h"
 +#include "tele/tele_rate_limits.h"
  #include "ui/ui_utility.h"
  #include "ui/wrap/slide_wrap.h"
- #include "window/window_controller.h"
+ #include "window/window_columns.h"
 @@ -250,7 +251,8 @@ rpl::producer<Ui::SlideWrap<Ui::RpWidget>*> TopBarSuggestionValue(
  			session->promoSuggestions().value(),
  			session->api().authorizations().unreviewedChanges(),

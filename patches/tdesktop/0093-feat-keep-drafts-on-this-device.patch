@@ -19,10 +19,10 @@ Subject: [PATCH] feat: keep drafts on this device
  create mode 100644 Telegram/SourceFiles/tele/tele_local_drafts.h
 
 diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
-index 74c370ca8fe118222ddbb23639067c806d7c6763..d9d3941a0724e551225d85cb5ea37f4fae94218d 100644
+index bed0877ca2a9ef0229ece93d029810c56061e6d3..092217e248823b02b8abf26014bc8298bfac05b7 100644
 --- a/Telegram/CMakeLists.txt
 +++ b/Telegram/CMakeLists.txt
-@@ -2705,6 +2705,8 @@ PRIVATE
+@@ -2708,6 +2708,8 @@ PRIVATE
      tele/tele_ignored.h
      tele/tele_inline_via.cpp
      tele/tele_inline_via.h
@@ -32,7 +32,7 @@ index 74c370ca8fe118222ddbb23639067c806d7c6763..d9d3941a0724e551225d85cb5ea37f4f
      tele/tele_local_names.h
      tele/tele_lowercase.cpp
 diff --git a/Telegram/SourceFiles/apiwrap.cpp b/Telegram/SourceFiles/apiwrap.cpp
-index 08df43fed5511006edfca712fb239b50d1fe18de..5c13a50d4b0d407e7050a80164ee66e9bec50999 100644
+index 78850917cd8525aeaeb4e4636119e0da886768a7..c916b786ba241826f692c17a23057d930e8beb6e 100644
 --- a/Telegram/SourceFiles/apiwrap.cpp
 +++ b/Telegram/SourceFiles/apiwrap.cpp
 @@ -116,6 +116,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -54,7 +54,7 @@ index 08df43fed5511006edfca712fb239b50d1fe18de..5c13a50d4b0d407e7050a80164ee66e9
  	const auto history = thread->owningHistory();
  	const auto topicRootId = thread->topicRootId();
 diff --git a/Telegram/SourceFiles/history/history.cpp b/Telegram/SourceFiles/history/history.cpp
-index 46bb6dddb00bd160ad87f2f04ae5746db713aa4f..0756c310d8b70dd20e728613712e748b2a74d46f 100644
+index 46eda30150b469d48e61066152364d004a454037..1459433539397483ec6dca1b48d663cc384b081b 100644
 --- a/Telegram/SourceFiles/history/history.cpp
 +++ b/Telegram/SourceFiles/history/history.cpp
 @@ -84,6 +84,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
