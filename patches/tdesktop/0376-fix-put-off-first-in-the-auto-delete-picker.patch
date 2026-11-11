@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:08:48 +0300
+Subject: [PATCH] fix: put off first in the auto-delete picker
+
+---
+ Telegram/SourceFiles/menu/menu_ttl.cpp | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/Telegram/SourceFiles/menu/menu_ttl.cpp b/Telegram/SourceFiles/menu/menu_ttl.cpp
+index 691ff1d0a2d67f93baf9f06206e8e0f42dfdd8a4..b7a00550f042ed2f39c3a5c940a854632f4cffb6 100644
+--- a/Telegram/SourceFiles/menu/menu_ttl.cpp
++++ b/Telegram/SourceFiles/menu/menu_ttl.cpp
+@@ -25,7 +25,7 @@ void TTLBox(not_null<Ui::GenericBox*> box, Args args) {
+ 			st::boxLabel));
+ 	}
+ 
+-	const auto ttls = std::vector<TimeId>{
++	auto ttls = std::vector<TimeId>{
+ 		(86400 * 1),
+ 		(86400 * 2),
+ 		(86400 * 3),
+@@ -43,9 +43,14 @@ void TTLBox(not_null<Ui::GenericBox*> box, Args args) {
+ 		(86400 * 31 * 6),
+ 		(86400 * 365),
+ 	};
++	if (!args.hideDisable) {
++		ttls.insert(ttls.begin(), 0);
++	}
+ 	const auto phrases = ranges::views::all(
+ 		ttls
+-	) | ranges::views::transform(Ui::FormatTTL) | ranges::to_vector;
++	) | ranges::views::transform([](TimeId ttl) {
++		return ttl ? Ui::FormatTTL(ttl) : tr::lng_settings_ttl_after_off(tr::now);
++	}) | ranges::to_vector;
+ 
+ 	const auto pickerTtl = TimePickerBox(box, ttls, phrases, args.startTtl);
+ 
+@@ -58,12 +63,6 @@ void TTLBox(not_null<Ui::GenericBox*> box, Args args) {
+ 	});
+ 
+ 	box->setTitle(tr::lng_manage_messages_ttl_title());
+-
+-	if (args.startTtl && !args.hideDisable) {
+-		box->addLeftButton(tr::lng_manage_messages_ttl_disable(), [=] {
+-			args.callback(0, [=] { box->closeBox(); });
+-		});
+-	}
+ }
+ 
+ } // namespace TTLMenu
