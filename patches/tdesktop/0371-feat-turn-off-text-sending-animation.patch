@@ -1,0 +1,127 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:00:55 +0300
+Subject: [PATCH] feat: turn off text sending animation
+
+---
+ Telegram/Resources/langs/mad_ru.json                   |  1 +
+ Telegram/SourceFiles/settings/settings_tele.cpp        |  1 +
+ Telegram/SourceFiles/tele/tele_options.cpp             | 10 ++++++++++
+ Telegram/SourceFiles/tele/tele_options.h               |  2 ++
+ Telegram/SourceFiles/tele/tele_settings_io.cpp         |  1 +
+ .../ui/effects/message_sending_text_flight.cpp         |  4 ++++
+ 6 files changed, 19 insertions(+)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index d98fe78e2a32042b6369e5860edffdea755cf353..6d14461ab79f02d55837efb02887a842691bc969 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -888,6 +888,7 @@
+   "Move chats instantly in the list": "Перемещать чаты в списке без анимации",
+   "Move into": "Переместить в",
+   "Move late-sent messages to the bottom": "Перемещать задержанные сообщения вниз",
++  "Turn off text sending animation": "Отключить анимацию отправки текста",
+   "Move left": "Переместить влево",
+   "Move right": "Переместить вправо",
+   "Move to submenu": "Переместить в подменю",
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 5f39646c3710dd5156e4aefb50b02bd07fa5b2bf..62ff994aae7ef026286338dfac4171284faac09e 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3226,6 +3226,7 @@ void FillSending(SectionBuilder &builder) {
+ 				::Tele::kOptionQueueBehindMedia);
+ 		});
+ 	AddOptionToggle(builder, ::Tele::kOptionSentToBottom);
++	AddOptionToggle(builder, ::Tele::kOptionNoTextSendingAnimation);
+ 	AddOptionToggle(
+ 		builder,
+ 		::Tele::kOptionForwardOneByOne,
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index f2ca3552fcb9b1f08f679aa9faa66e01617db623..895faa50e194645ffcb91a0aebc1d12b15fb0295 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -177,6 +177,7 @@ const char kOptionTitleBuildHash[] = "tele-title-build-hash";
+ const char kOptionMenuLayouts[] = "tele-menu-layouts";
+ const char kOptionMessageMenuLegacy[] = "tele-message-menu";
+ const char kOptionSentToBottom[] = "tele-sent-to-bottom";
++const char kOptionNoTextSendingAnimation[] = "tele-no-text-sending-animation";
+ const char kOptionQueueBehindMedia[] = "tele-queue-behind-media";
+ const char kOptionSendOlderReplies[] = "tele-send-older-replies";
+ const char kOptionDoubleEnterSend[] = "tele-double-enter-send";
+@@ -1316,6 +1317,11 @@ base::options::toggle SentToBottomOption({
+ 	.description = "When a slow upload finishes after newer messages.",
+ });
+ 
++base::options::toggle NoTextSendingAnimationOption({
++	.id = kOptionNoTextSendingAnimation,
++	.name = "Turn off text sending animation",
++});
++
+ base::options::toggle QueueBehindMediaOption({
+ 	.id = kOptionQueueBehindMedia,
+ 	.name = "Queue messages behind uploading media",
+@@ -3319,6 +3325,10 @@ bool SentToBottom() {
+ 	return SentToBottomOption.value();
+ }
+ 
++bool NoTextSendingAnimation() {
++	return NoTextSendingAnimationOption.value();
++}
++
+ bool QueueBehindMedia() {
+ 	return QueueBehindMediaOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 4c7e3e3d74163217e19972fd32543415c915e582..69c70d57da7977422cf35253cdd3a9d217033d0a 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -172,6 +172,7 @@ extern const char kOptionTitleBuildHash[];
+ extern const char kOptionMenuLayouts[];
+ extern const char kOptionMessageMenuLegacy[];
+ extern const char kOptionSentToBottom[];
++extern const char kOptionNoTextSendingAnimation[];
+ extern const char kOptionQueueBehindMedia[];
+ extern const char kOptionSendOlderReplies[];
+ extern const char kOptionDoubleEnterSend[];
+@@ -532,6 +533,7 @@ void SetMenuLayouts(const QString &value);
+ [[nodiscard]] QString MessageMenuLegacy();
+ void ClearMessageMenuLegacy();
+ [[nodiscard]] bool SentToBottom();
++[[nodiscard]] bool NoTextSendingAnimation();
+ [[nodiscard]] bool QueueBehindMedia();
+ [[nodiscard]] rpl::producer<> QueueBehindMediaChanges();
+ [[nodiscard]] bool SendOlderReplies();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index e79a9881b2b7f50ab5df85d86dfa9ce9bffe3ef3..cc2c551d2631d4e4b16e2b635c44c7ab15603296 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -255,6 +255,7 @@ struct Spec {
+ 		Toggle(kOptionServerUsernames),
+ 		Toggle(kOptionNoticesServer),
+ 		Toggle(kOptionSentToBottom),
++		Toggle(kOptionNoTextSendingAnimation),
+ 		Toggle(kOptionForwardOneByOne),
+ 		Toggle(kOptionQueueBehindMedia),
+ 		Toggle(kOptionSendOlderReplies),
+diff --git a/Telegram/SourceFiles/ui/effects/message_sending_text_flight.cpp b/Telegram/SourceFiles/ui/effects/message_sending_text_flight.cpp
+index c8f0cd8570152c8e48e44a3f5d8eb2350966ea2b..59b7867453c232b0408d0718a8f741c46c88b288 100644
+--- a/Telegram/SourceFiles/ui/effects/message_sending_text_flight.cpp
++++ b/Telegram/SourceFiles/ui/effects/message_sending_text_flight.cpp
+@@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "history/view/history_view_element.h"
+ #include "history/history.h"
+ #include "history/history_item.h"
++#include "tele/tele_options.h"
+ #include "ui/chat/chat_style.h"
+ #include "ui/chat/chat_style_radius.h"
+ #include "ui/effects/animation_value.h"
+@@ -538,6 +539,9 @@ std::optional<MessageSendingAnimationFrom> PrepareTextSending(
+ 		const TextWithTags &sending,
+ 		MsgId localId,
+ 		bool scheduled) {
++	if (Tele::NoTextSendingAnimation()) {
++		return std::nullopt;
++	}
+ 	auto fieldText = scheduled
+ 		? std::nullopt
+ 		: GrabSendingFieldText(field, sending);
