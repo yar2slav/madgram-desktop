@@ -593,6 +593,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           previous=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // ""')
+          echo "PREVIOUS=$previous" >> "$GITHUB_ENV"
           python3 mad/ci/mad-changelog.py --tag "$TAG" --previous "$previous"             --repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" --output dist
 
       - name: publish the release
@@ -614,3 +615,20 @@ jobs:
           fi
           gh release create "$TAG" "${files[@]}" \
             --target "$GITHUB_SHA" --title "mad $TAG" --notes-file release-notes.md --latest
+
+      - name: announce in the channel
+        continue-on-error: true
+        env:
+          BOT_TOKEN: ${{ secrets.MAD_BOT_TOKEN }}
+          CHANNEL: ${{ secrets.MAD_CHANNEL }}
+        run: |
+          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL" ]; then
+            echo "no MAD_BOT_TOKEN / MAD_CHANNEL secrets, not announcing"
+            exit 0
+          fi
+          macos=()
+          if [ -f "dist/mad-$TAG-macos.dmg" ]; then
+            macos=(--macos)
+          fi
+          python3 mad/ci/mad-announce.py --changelog dist/mad-changelog.json --previous "$PREVIOUS" \
+            --url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "${macos[@]}"

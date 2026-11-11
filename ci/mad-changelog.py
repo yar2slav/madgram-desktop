@@ -7,10 +7,19 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 ROW = re.compile(r"^\| \[(\d+)\]\(\.\./(patches/[^)]+)\) \| (.+) \| ([^|]+) \|$")
-SETTINGS_PAGE = re.compile(r"settings → mad → ([a-z ]+)")
+SETTINGS_PAGE = re.compile(r"(?:settings → mad|tele) → ([a-z ]+)")
+WITH = re.compile(r"^with (\d+)")
 PAGES = {
     "interface": "интерфейс",
+    "chats": "чаты",
+    "messages": "сообщения",
+    "sending": "отправка",
+    "notifications": "уведомления",
+    "menus": "меню",
     "privacy": "приватность",
+    "profiles and ids": "профили и идентификаторы",
+    "bots": "боты",
+    "debug": "отладка",
     "server": "сервер",
     "updates": "обновления",
     "mad badges": "бейджи mad",
@@ -39,8 +48,12 @@ def previous_table(tag):
     return result.stdout
 
 
+def current_rows():
+    return rows((ROOT / "docs/releases.md").read_text(encoding="utf-8"))
+
+
 def fresh_rows(previous):
-    current = rows((ROOT / "docs/releases.md").read_text(encoding="utf-8"))
+    current = current_rows()
     known = {row["text"] for row in rows(previous_table(previous))}
     return [row for row in current if row["text"] not in known]
 
@@ -59,6 +72,16 @@ def category(where):
     if name:
         return PAGES.get(name, name)
     return CATEGORIES["always on" if where.startswith("always on") else "other"]
+
+
+def resolve(where, wheres, seen=()):
+    match = WITH.match(where)
+    if not match:
+        return where
+    number = int(match.group(1))
+    if number in seen or number not in wheres:
+        return where
+    return resolve(wheres[number], wheres, (*seen, number))
 
 
 def place(where):
@@ -96,11 +119,12 @@ def main():
     previous_upstream = re.match(r"(v[0-9.]+)-mad\.", args.previous or "")
     moved = previous_upstream and previous_upstream.group(1) != upstream
     url = f"{args.repo}/releases/tag/{args.tag}"
+    wheres = {row["number"]: row["where"] for row in current_rows()}
     items = [{
         "number": row["number"],
         "text": texts.get(str(row["number"]), row["text"]),
         "where": place(row["where"]),
-        "category": category(row["where"]),
+        "category": category(resolve(row["where"], wheres)),
         "url": f"{args.repo}/blob/{args.tag}/{row['path']}",
     } for row in fresh_rows(args.previous)]
     items = [item for item in items if item["text"]]
