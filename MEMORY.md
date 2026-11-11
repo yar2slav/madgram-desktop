@@ -7,7 +7,7 @@
 - mad это форк [tele](https://github.com/nitreojs/tele): очередь патчей поверх telegram desktop. репо [yar2slav/madgram-desktop](https://github.com/yar2slav/madgram-desktop) это гитхаб-форк tele, `upstream` у локального клона смотрит на nitreojs/tele
 - тег telegram desktop лежит в `UPSTREAM`, патчи в `patches/tdesktop` и `patches/Telegram/<сабмодуль>`
 - свои патчи mad идут в конце очереди, у каждого строка в таблице [docs/releases.md](docs/releases.md) в секции `mad dev`
-- только windows x64
+- windows x64 и macos (один `mad.app` под arm64 и x86_64, собирается только в ci, без автообновления)
 
 ## локальная сборка
 
@@ -27,7 +27,7 @@
 
 ## ci и релизы
 
-- workflow [.github/workflows/build.yml](.github/workflows/build.yml), запуск вручную: actions → mad windows release
+- workflow [.github/workflows/build.yml](.github/workflows/build.yml), запуск вручную: actions → mad release. флажок macos добавляет сборку под macos, её библиотеки лежат в ghcr, а не в кеше actions
 - тег `v<upstream>-mad.<N>`, по умолчанию N это номер запуска workflow. N зашивается в клиент как `TELE_BUILD`, апдейтер сравнивает сначала версию telegram, потом N
 - библиотеки и ccache лежат в кеше actions и сохраняются даже при упавшей сборке. первая сборка на новом теге идёт часа 2-3, дальше около часа
 - раннер на visual studio 2026 с тулсетом 14.44. сборка идёт через ninja и ccache, без pdb (с pdb линкер кончается по памяти). при `C1060 out of heap space` шаг сам дособирает в 2 и в 1 поток

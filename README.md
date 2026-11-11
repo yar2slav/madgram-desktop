@@ -17,7 +17,7 @@
 | `mad.exe` | один файл. при запуске распаковывает нужное сам, данные хранит в `%localappdata%/mad-single/profile` |
 | `mad-<версия>-win64.zip` | распакуй куда угодно и запусти `mad.exe`. данные лежат рядом с exe |
 
-пока только windows x64. сборки не подписаны сертификатом, так что windows может ругнуться при первом запуске. mad обновляется сам: раз в 3 часа проверяет релизы, качает новую версию в фоне и предлагает перезапуститься. фид обновлений подписан, так что сборку не отсюда он не поставит. выключается в настройки → mad → обновления. к каждому релизу приложены `SHA256SUMS` и `source-manifest.json` с хешами патчей, из которых он собран
+windows x64 и macos. сборки не подписаны сертификатом, так что windows может ругнуться при первом запуске, а на macos после переноса в программы нужно один раз выполнить `xattr -dr com.apple.quarantine /Applications/mad.app`. сама обновляется пока только версия для windows. mad обновляется сам: раз в 3 часа проверяет релизы, качает новую версию в фоне и предлагает перезапуститься. фид обновлений подписан, так что сборку не отсюда он не поставит. выключается в настройки → mad → обновления. к каждому релизу приложены `SHA256SUMS` и `source-manifest.json` с хешами патчей, из которых он собран
 
 ### что есть из tele
 
@@ -108,7 +108,7 @@ grab the latest build from [releases](https://github.com/yar2slav/madgram-deskto
 | `mad.exe` | a single file. it unpacks what it needs on launch and keeps its data in `%localappdata%/mad-single/profile` |
 | `mad-<version>-win64.zip` | unpack anywhere and run `mad.exe`. data stays next to the exe |
 
-windows x64 only for now. builds aren't code-signed, so windows may warn you on first launch. mad updates itself: it checks these releases every 3 hours, downloads new builds in the background and asks you to restart. the feed is signed, so a build that isn't from here won't be installed. turn it off in settings → mad → updates. every release comes with `SHA256SUMS` and a `source-manifest.json` listing the hashes of the patches it was built from
+windows x64 and macos. builds aren't code-signed, so windows may warn you on first launch, and on macos run `xattr -dr com.apple.quarantine /Applications/mad.app` once after moving it to applications. only the windows build updates itself so far. mad updates itself: it checks these releases every 3 hours, downloads new builds in the background and asks you to restart. the feed is signed, so a build that isn't from here won't be installed. turn it off in settings → mad → updates. every release comes with `SHA256SUMS` and a `source-manifest.json` listing the hashes of the patches it was built from
 
 ### what comes from tele
 

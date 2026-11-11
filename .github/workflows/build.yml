@@ -1,4 +1,4 @@
-name: mad windows release
+name: mad release
 
 on:
   workflow_dispatch:
@@ -11,12 +11,16 @@ on:
         description: release tag, empty for automatic version
         type: string
         default: ''
+      macos:
+        description: also build macos, arm64 and x86_64 joined into one app
+        type: boolean
+        default: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: mad-windows-release
+  group: mad-release
   cancel-in-progress: false
 
 jobs:
@@ -301,9 +305,239 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  macos-libs:
+    if: inputs.macos
+    runs-on: macos-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      key: ${{ steps.key.outputs.key }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: checkout mad
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: mad
+          persist-credentials: false
+
+      - name: set up
+        run: bash mad/ci/macos-setup.sh
+
+      - name: clone and apply the exact patch queue
+        run: |
+          upstream=$(tr -d '[:space:]' < mad/UPSTREAM)
+          git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
+            --branch "$upstream" https://github.com/telegramdesktop/tdesktop.git tdesktop
+          git config --global user.name mad-ci
+          git config --global user.email ci@mad.invalid
+          python3 mad/tele.py --tdesktop "$GITHUB_WORKSPACE/tdesktop" apply
+
+      - name: pick the libraries
+        id: key
+        run: |
+          key=macos-$(shasum -a 256 < tdesktop/Telegram/build/prepare/prepare.py | cut -c1-16)
+          echo "LIBS_KEY=$key" >> "$GITHUB_ENV"
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+
+      - name: restore libraries
+        run: |
+          bash mad/ci/macos-libs.sh pull "$LIBS_KEY" latest || true
+          if [ -f Libraries/cache_keys/tdesktop_rust ] && [ ! -f Libraries/local/src/wallet_engine/wallet_engine.cpp ]; then
+            rm -f Libraries/cache_keys/tdesktop_rust Libraries/cache_keys/tlottie Libraries/cache_keys/wallet-engine Libraries/cache_keys/mad-prepared
+          fi
+          state=$( { find ThirdParty/cache_keys Libraries/cache_keys -type f -exec shasum -a 256 {} + 2>/dev/null || true; } | sort | shasum -a 256)
+          echo "LIBS_STATE=$state" >> "$GITHUB_ENV"
+          for s in tlottie wallet-engine; do
+            if [ -f "Libraries/cache_keys/$s" ] && [ ! -f "Libraries/$s/Cargo.toml" ]; then
+              rm -f "Libraries/cache_keys/$s"
+            fi
+          done
+          if [ "$(cat Libraries/cache_keys/mad-prepared 2>/dev/null)" = "$LIBS_KEY" ]; then
+            echo "READY=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: prepare libraries
+        id: prepare
+        if: env.READY != 'true'
+        timeout-minutes: 300
+        run: ./tdesktop/Telegram/build/prepare/mac.sh silent
+
+      - name: trim and save libraries
+        if: always() && steps.prepare.outcome != 'skipped'
+        env:
+          PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
+        run: |
+          [ -d Libraries ] || exit 0
+          find Libraries '(' '(' ! '(' -name '*.a' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/src/wallet_engine/*' -o -perm +111 ')' -type f ')' -o -empty ')' -delete
+          if [ "$PREPARE_OUTCOME" = success ]; then
+            echo "$LIBS_KEY" > Libraries/cache_keys/mad-prepared
+          fi
+          du -sh Libraries ThirdParty || true
+          state=$( { find ThirdParty/cache_keys Libraries/cache_keys -type f -exec shasum -a 256 {} + 2>/dev/null || true; } | sort | shasum -a 256)
+          if [ "$state" != "$LIBS_STATE" ]; then
+            bash mad/ci/macos-libs.sh push "$LIBS_KEY"
+          fi
+
+  macos-build:
+    needs: macos-libs
+    runs-on: macos-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
+    permissions:
+      contents: read
+      packages: read
+    env:
+      LIBS_KEY: ${{ needs.macos-libs.outputs.key }}
+      ARCH: ${{ matrix.arch }}
+      GH_TOKEN: ${{ github.token }}
+      REQUESTED_TAG: ${{ inputs.tag }}
+    steps:
+      - name: checkout mad
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: mad
+          persist-credentials: false
+
+      - name: set up
+        run: bash mad/ci/macos-setup.sh
+
+      - name: clone and apply the exact patch queue
+        run: |
+          upstream=$(tr -d '[:space:]' < mad/UPSTREAM)
+          tag=${REQUESTED_TAG:-$upstream-mad.$GITHUB_RUN_NUMBER}
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-mad\.([1-9][0-9]*)$ ]]; then
+            echo "::error::tag must look like v7.3.3-mad.1"
+            exit 1
+          fi
+          echo "MAD_BUILD=${BASH_REMATCH[1]}" >> "$GITHUB_ENV"
+          git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
+            --branch "$upstream" https://github.com/telegramdesktop/tdesktop.git tdesktop
+          git config --global user.name mad-ci
+          git config --global user.email ci@mad.invalid
+          python3 mad/tele.py --tdesktop "$GITHUB_WORKSPACE/tdesktop" apply
+
+      - name: restore libraries
+        run: |
+          bash mad/ci/macos-libs.sh pull "$LIBS_KEY"
+          if [ "$(cat Libraries/cache_keys/mad-prepared 2>/dev/null)" != "$LIBS_KEY" ]; then
+            echo "::error::the macos libraries for $LIBS_KEY aren't fully prepared yet, re-run once macos-libs finishes"
+            exit 1
+          fi
+
+      - name: build
+        env:
+          API_ID: ${{ secrets.TDESKTOP_API_ID }}
+          API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
+        run: |
+          if [ "$ARCH" != "$(uname -m)" ] && ! arch "-$ARCH" /usr/bin/true 2> /dev/null; then
+            sudo softwareupdate --install-rosetta --agree-to-license
+          fi
+          cd tdesktop/Telegram
+          ./configure.sh -D CMAKE_CONFIGURATION_TYPES=Release -D CMAKE_OSX_ARCHITECTURES="$ARCH" \
+            -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
+            -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON \
+            -D TDESKTOP_API_ID="$API_ID" -D TDESKTOP_API_HASH="$API_HASH" -D TELE_BUILD="$MAD_BUILD"
+          cmake --build ../out --config Release --parallel --target Telegram -- -quiet
+
+      - name: pack
+        run: |
+          release="$GITHUB_WORKSPACE/tdesktop/out/Release"
+          test -x "$release/mad.app/Contents/MacOS/mad"
+          archs=$(lipo -archs "$release/mad.app/Contents/MacOS/mad")
+          if [ "$archs" != "$ARCH" ]; then
+            echo "::error::the $ARCH build holds $archs"
+            exit 1
+          fi
+          COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --no-acls -cf "mad-macos-$ARCH.tar" \
+            -C "$release" mad.app -C "$GITHUB_WORKSPACE/tdesktop/Telegram/Telegram" Telegram.entitlements
+
+      - name: upload the build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: macos-app-${{ matrix.arch }}
+          path: mad-macos-${{ matrix.arch }}.tar
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+  macos:
+    needs: macos-build
+    runs-on: macos-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      REQUESTED_TAG: ${{ inputs.tag }}
+    steps:
+      - name: checkout mad
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: mad
+          persist-credentials: false
+
+      - name: set up
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          upstream=$(tr -d '[:space:]' < mad/UPSTREAM)
+          echo "RELEASE_TAG=${REQUESTED_TAG:-$upstream-mad.$GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
+      - name: download the builds
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: macos-app-*
+          path: ${{ runner.temp }}/parts
+
+      - name: join the architectures
+        run: |
+          parts="$RUNNER_TEMP/parts"
+          for arch in x86_64 arm64; do
+            mkdir -p "$parts/$arch"
+            tar -xf "$parts/macos-app-$arch/mad-macos-$arch.tar" -C "$parts/$arch"
+          done
+          bash mad/ci/macos-merge.sh "$parts/x86_64" "$parts/arm64" out/Release
+          mv out/Release/Telegram.entitlements "$RUNNER_TEMP/Telegram.entitlements"
+
+      - name: sign and package
+        run: |
+          app=out/Release/mad.app
+          test -x "$app/Contents/MacOS/mad"
+          lipo -archs "$app/Contents/MacOS/mad"
+          strip "$app/Contents/MacOS/mad"
+          find "$app/Contents/Helpers" -type f -perm -u+x -print0 2>/dev/null \
+            | xargs -0 -I{} codesign --force --sign - --timestamp=none "{}"
+          codesign --force --sign - --timestamp=none --entitlements "$RUNNER_TEMP/Telegram.entitlements" "$app"
+          codesign --verify --strict --deep --verbose=2 "$app"
+          mkdir -p dist
+          zip="$GITHUB_WORKSPACE/dist/mad-$RELEASE_TAG-macos.zip"
+          (cd out/Release && zip -qry -X "$zip" mad.app)
+          [ -z "$(unzip -Z1 "$zip" | grep -v '^mad\.app/')" ]
+          dmg="$GITHUB_WORKSPACE/dist/mad-$RELEASE_TAG-macos.dmg"
+          rm -rf "$RUNNER_TEMP/dmg" "$RUNNER_TEMP/mounted" && mkdir "$RUNNER_TEMP/dmg" "$RUNNER_TEMP/mounted"
+          ditto "$app" "$RUNNER_TEMP/dmg/mad.app"
+          ln -s /Applications "$RUNNER_TEMP/dmg/Applications"
+          hdiutil create -quiet -volname mad -srcfolder "$RUNNER_TEMP/dmg" -fs HFS+ -format UDZO -ov "$dmg"
+          hdiutil attach -quiet -nobrowse -readonly -mountpoint "$RUNNER_TEMP/mounted" "$dmg"
+          codesign --verify --strict --deep "$RUNNER_TEMP/mounted/mad.app"
+          hdiutil detach -quiet "$RUNNER_TEMP/mounted"
+
+      - name: upload the build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: release-macos
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
   publish:
-    needs: windows
-    if: inputs.publish
+    needs: [windows, macos]
+    if: ${{ !cancelled() && inputs.publish && needs.windows.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -323,6 +557,13 @@ jobs:
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: release-win64
+          path: dist
+
+      - name: download the macos build
+        if: needs.macos.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: release-macos
           path: dist
 
       - name: sign the update feed
@@ -364,5 +605,12 @@ jobs:
             echo "::error::release $TAG already exists, choose a new tag"
             exit 1
           fi
-          gh release create "$TAG" mad.exe "mad-$TAG-win64.zip" mad-update-win64.json mad-changelog.json SHA256SUMS source-manifest.json \
+          files=(mad.exe "mad-$TAG-win64.zip" mad-update-win64.json mad-changelog.json SHA256SUMS source-manifest.json)
+          if [ -f "mad-$TAG-macos.dmg" ]; then
+            sha256sum "mad-$TAG-macos.dmg" "mad-$TAG-macos.zip" >> SHA256SUMS
+            files+=("mad-$TAG-macos.dmg" "mad-$TAG-macos.zip")
+          else
+            sed -i '/macos/d' release-notes.md
+          fi
+          gh release create "$TAG" "${files[@]}" \
             --target "$GITHUB_SHA" --title "mad $TAG" --notes-file release-notes.md --latest
