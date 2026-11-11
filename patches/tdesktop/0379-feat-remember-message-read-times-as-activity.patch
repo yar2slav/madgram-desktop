@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:13:29 +0300
+Subject: [PATCH] feat: remember message read times as activity
+
+---
+ Telegram/SourceFiles/api/api_who_reacted.cpp | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/Telegram/SourceFiles/api/api_who_reacted.cpp b/Telegram/SourceFiles/api/api_who_reacted.cpp
+index 45c6a87bd62119aacf9639fcf6e035a7c570a1b0..763be684e106445c47b6c760d7f3bdcb565f48ee 100644
+--- a/Telegram/SourceFiles/api/api_who_reacted.cpp
++++ b/Telegram/SourceFiles/api/api_who_reacted.cpp
+@@ -29,6 +29,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "ui/controls/who_reacted_context_action.h"
+ #include "apiwrap.h"
+ #include "tele/tele_who_reacted.h"
++#include "tele/tele_observed_activity.h"
++#include "tele/tele_options.h"
+ #include "styles/style_chat_helpers.h"
+ 
+ namespace Api {
+@@ -670,6 +672,16 @@ rpl::producer<Ui::WhoReadContent> WhoReacted(
+ 			state->current.state = peers.state;
+ 			state->current.fullReadCount = int(peers.read.size());
+ 			state->current.fullReactionsCount = peers.fullReactionsCount;
++			if (Tele::ObservedActivity()) {
++				const auto &owner = item->history()->owner();
++				for (const auto &read : peers.read) {
++					if (const auto peer = owner.peerLoaded(read.peer)) {
++						if (const auto user = peer->asUser()) {
++							Tele::NoteActivity(user, read.date);
++						}
++					}
++				}
++			}
+ 			if (whoReadIds) {
+ 				const auto reacted = peers.list.size() - ranges::count(
+ 					peers.list,
