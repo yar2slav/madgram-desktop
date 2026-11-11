@@ -46,6 +46,8 @@ settings → tele → interface.
 | [304](../patches/tdesktop/0304-feat-smoother-wheel-glides-in-chats.patch) | wheel glides step at your monitor's refresh rate, chats move a cached image while they glide, animated stickers, emoji and gifs pause until the glide ends, and the chat list only repaints rows that changed. tele → debug → log scroll frame rate writes each glide's timings to log.txt | with 274 |
 | [317](../patches/tdesktop/0317-feat-close-the-media-viewer-with-mouse-back.patch) | the mouse back button (mouse 4) closes the media viewer: photos, videos, the windowed viewer and stories | tele → interface, off |
 | [332](../patches/tdesktop/0332-fix-smooth-scrolling-no-longer-leaves-blank-areas.patch) | the chat list and the chat no longer go blank or black in places while the other one scrolls smoothly: they keep painting during the glide | with 304 |
+| [375](../patches/tdesktop/0375-feat-separate-music-video-voice-and-round-video-volu.patch) | music, videos, voice messages and round videos have separate saved volumes and mute levels. interface → playback → volumes has four sliders; the player, viewer, picture-in-picture and system controls change only their current media's volume | tele → interface |
+| [377](../patches/tdesktop/0377-feat-stop-selected-bots-without-deleting-their-chats.patch) | stop selected bots without deleting their chats, with a confirmation showing how many. people, groups and already stopped bots are skipped; narrow chat columns keep the action in an overflow menu | with 164 |
 | [1004](../patches/Telegram/lib_ui/0004-feat-ease-mouse-wheel-steps-in-scroll-areas.patch) | the part of smooth wheel scrolling that lives in the ui library's scroll areas | with 274 |
 | [1007](../patches/Telegram/lib_ui/0007-feat-glide-at-the-screen-refresh-rate.patch) | the part of smoother glides that lives in the ui library: a glide ticks at the monitor's refresh rate while other animations keep their pace | with 274 |
 
@@ -86,6 +88,7 @@ settings → tele → chats.
 | [309](../patches/tdesktop/0309-feat-hide-the-other-balances-above-the-money-card.patch) | hide the "you also have …" rows above the money card | tele → chats, off |
 | [313](../patches/tdesktop/0313-feat-filter-stickers-and-emoji-by-format.patch) | filter your sticker and emoji sets by format (static, animated, video or mixed), sort them, and archive or remove every shown set at once. the panel's search filters by format too, and custom emoji sets get their own list under stickers you have | tele → chats, off |
 | [322](../patches/tdesktop/0322-feat-open-json-code-text-and-csv-files-in-tele.patch) | json, code, text, log and csv files up to 1 mb open in tele's markdown viewer instead of another app: json is pretty-printed, code is highlighted, csv and tsv show as tables. long files come in parts of about 2,000 lines with continuing line numbers | tele → chats, on |
+| [357](../patches/tdesktop/0357-fix-turning-off-money-hides-profile-balances.patch) | turning off money also hides wallet balances in every profile, without leaving an empty space | with 287 |
 
 ## messages
 
@@ -129,6 +132,8 @@ settings → tele → messages.
 | [329](../patches/tdesktop/0329-fix-deleted-messages-only-lists-messages-deleted-one.patch) | messages kept because you left or deleted the whole chat no longer count as deleted messages: while the chat is kept they have no trash icon or fade, and the chat's deleted messages page and its count only list messages deleted one by one. when a deleted chat with a person or bot comes back, its old messages get the mark but stay off the page | with 282 |
 | [330](../patches/tdesktop/0330-feat-bigger-video-messages-while-playing.patch) | video messages grow to 400 px while they play or are paused, as far as the chat's width allows, and shrink back when they stop | tele → messages, off |
 | [331](../patches/tdesktop/0331-feat-seek-anywhere-on-video-messages.patch) | drag anywhere on a video message except its middle to seek, not only along its edge | tele → messages, off |
+| [374](../patches/tdesktop/0374-feat-add-optional-composer-editing-helpers.patch) | three independent composer helpers: wrap selected text in quotes, brackets, bold markers or backticks; auto-close brackets and end-of-line triple-backtick blocks; keep indentation on newlines. doubled angle brackets produce matching «guillemets». untouched automatic pairs delete together, each operation undoes in one step, and sending shortcuts stay unchanged. works in chats, topics, replies and captions | tele → messages, off |
+| [380](../patches/tdesktop/0380-feat-indent-selected-composer-lines.patch) | Tab indents selected lines and Shift+Tab removes one level, using 2 spaces, 4 spaces or tabs. formatting, custom emoji and selection direction stay intact, and each operation undoes in one step. ordinary Tab completion and focus navigation stay unchanged; works in chats, topics, replies and captions | tele → messages, off |
 
 ## sending
 
@@ -169,6 +174,9 @@ settings → tele → sending.
 | [279](../patches/tdesktop/0279-feat-mention-several-people-in-a-row.patch) | right-click or tab in the @ list adds the person and opens the list again for the next one, and ctrl+click mentions by name instead of @username | tele → sending, off |
 | [311](../patches/tdesktop/0311-fix-confirm-stickers-sent-from-sticker-set-boxes.patch) | stickers sent from a sticker set's box also wait for a second click | with 129 |
 | [327](../patches/tdesktop/0327-fix-enter-sends-attached-media-with-an-empty-field-i.patch) | in topics, comments and saved messages chats, enter sends the media attached above the field even when there's no text, instead of only marking the chat as read | with 106 |
+| [371](../patches/tdesktop/0371-feat-turn-off-text-sending-animation.patch) | turn off the text sending animation immediately, without changing media animations or the order messages are sent in | tele → sending, off |
+| [372](../patches/tdesktop/0372-fix-disabled-composer-resize-handles-stay-hidden.patch) | the message field's resize handle stays hidden when resizing is off, including after opening topics or replies | with 158 |
+| [373](../patches/tdesktop/0373-feat-pad-extreme-image-shapes-for-photo-sending.patch) | narrow and wide images get just enough black padding to send as photos, without stretching or cropping. the preview shows the padding; the original file stays untouched and sending as a file stays unpadded | tele → sending, off |
 
 ## notifications
 
@@ -210,6 +218,7 @@ settings → tele → menus.
 | [300](../patches/tdesktop/0300-feat-remove-all-your-messages-from-a-chat.patch) | remove my messages in the chat menu deletes all your messages in a chat, group or topic for everyone, newest first, after saying how many. the same item stops it | tele → menus, off |
 | [318](../patches/tdesktop/0318-feat-show-skipped-messages-in-shots.patch) | a shot of messages that aren't next to each other can show how many were skipped between them, as a "2 messages skipped" badge | with 86 |
 | [319](../patches/tdesktop/0319-feat-restrict-members-from-message-menus-and-find-th.patch) | group admins can restrict someone from their message or userpic menu without deleting the message, and the add exception, add admin and remove user pickers find people tele already knows by their numeric id, members or not | tele → menus, on |
+| [356](../patches/tdesktop/0356-fix-saving-or-copying-a-shot-of-a-gif-no-longer-cras.patch) | saving or copying a shot with a playing gif or video no longer crashes mad, and its corners are rounded like in the chat instead of far more | with 104 |
 | [1003](../patches/Telegram/lib_ui/0003-fix-icon-emoji-stay-sharp-in-renders-at-a-higher-rat.patch) | icons drawn inside text, like the boost mark next to names, stay sharp in shots scaled up | with 104 |
 
 ## privacy
@@ -235,6 +244,7 @@ settings → tele → privacy.
 | [227](../patches/tdesktop/0227-feat-ignored-users-and-hidden-words-can-stay-silent.patch) | messages from ignored users and with hidden words don't notify or count as unread, and the chat list doesn't preview them | tele → privacy, on |
 | [228](../patches/tdesktop/0228-fix-invisible-stories-follow-ghost-settings-and-surv.patch) | watching stories invisibly follows per-chat ghost settings, keeps who you watched across restarts, and asks before a live story, which shows you to its author | with 4 |
 | [292](../patches/tdesktop/0292-fix-closing-the-rich-editor-keeps-drafts-on-this-dev.patch) | closing the rich message editor saves its draft on this device and closes, when drafts stay on this device and in secret chats, instead of trying the cloud | with 93 |
+| [367](../patches/tdesktop/0367-fix-go-offline-right-after-marking-messages-as-read-.patch) | ghost mode sets you offline again right after mark as read up to here or reading a chat when you reply, instead of leaving you online for five minutes | with 32 |
 
 ## profiles and ids
 
@@ -277,6 +287,8 @@ settings → tele → profiles and ids.
 | [302](../patches/tdesktop/0302-feat-fill-the-whole-profile-with-the-blurred-photo-s.patch) | with the blurred photo background on, the whole profile takes the colour of the photo's lower edge, not only its header, with the text kept readable | with 298 |
 | [324](../patches/tdesktop/0324-feat-show-the-last-activity-next-to-a-hidden-last-se.patch) | for people whose last seen is hidden, the chat header and profile show when tele last saw them write, type, read your messages or react: last seen recently (14:32). remembered across restarts | tele → profiles and ids, off |
 | [328](../patches/tdesktop/0328-feat-show-typing-in-the-chat-list-with-a-hidden-last.patch) | chat list rows show typing, recording and choosing a sticker for people whose last seen is hidden, which telegram only shows in the open chat. bots stay as they are | tele → profiles and ids, off |
+| [364](../patches/tdesktop/0364-feat-open-the-owner-of-a-sticker-set-from-its-menu.patch) | the menu of a sticker or emoji set opens the profile of the account that made it, when this account already knows that person | with 265 |
+| [379](../patches/tdesktop/0379-feat-remember-message-read-times-as-activity.patch) | opening read info also remembers the DM and group read timestamps Telegram exposes. cached results count too, older receipts never replace newer activity, and no background lookups are added | with 324 |
 
 ### gift studio
 
@@ -454,10 +466,15 @@ always on, or without a switch of their own.
 | [339](../patches/tdesktop/0339-fix-separate-badges-and-organize-mad-settings.patch) | separates mad badges from premium icons, avoids repeated image disk reads, moves mad settings to the top, adds categories and paperclip explanations, and starts a fresh mad changelog | always on |
 | [345](../patches/tdesktop/0345-fix-clarify-russian-translations-and-remove-joke-lab.patch) | rewrites russian labels, explanations, permissions and errors for their actual meaning, replaces joke link-cleaning names in both languages, and fixes translated settings import summaries and plural forms | always on |
 | [351](../patches/tdesktop/0351-feat-remove-the-notification-centre.patch) | removes tele's notification centre: no main menu entry, no settings group and no stored notice history | always on |
-| [352](../patches/tdesktop/0352-feat-open-mad-links-from-message-text-and-switch-mod.patch) | mad:// links in any message become clickable, mad://ghost/on|off and mad://streamer/on|off switch the modes, and copied setting links use mad- ids | always on |
+| [352](../patches/tdesktop/0352-feat-open-mad-links-from-message-text-and-switch-mod.patch) | mad:// links in any message become clickable, mad://ghost/on, /off and mad://streamer/on, /off switch the modes, and copied setting links use mad- ids | always on |
 | [355](../patches/tdesktop/0355-fix-clear-old-windows-notifications-behind-the-taskb.patch) | old mad notifications are cleared from the windows notification centre at launch and when nothing is unread, so the taskbar badge shows a real count | always on |
+| [358](../patches/tdesktop/0358-fix-let-telegram-keep-the-first-line-s-indent-in-cod.patch) | telegram 7.4 keeps the indent of a code block's first line by itself, so the extra character 321 put in front of it is gone and quoting code that starts with spaces works like in telegram | with 321 |
+| [361](../patches/tdesktop/0361-feat-load-what-s-new-from-mad-releases.patch) | what's new lists every mad release with its changes, loaded from this repository's releases, and a fresh update posts its changes in the mad chat | always on |
+| [376](../patches/tdesktop/0376-fix-put-off-first-in-the-auto-delete-picker.patch) | the per-chat auto-delete picker starts with off, selected when auto-delete is disabled, instead of a separate disable button | always on |
+| [378](../patches/tdesktop/0378-fix-keep-pending-sends-stable-on-confirmation.patch) | pending messages keep their place as more messages are sent and confirmed, including in topics, replies, Saved Messages and channel DMs. genuinely late sends still follow Telegram's server order, with text sending animations on or off | always on |
 | [1001](../patches/Telegram/lib_ui/0001-fix-unbreakable-characters-no-longer-scroll-text-fie.patch) | a text field with a long run of characters that can't wrap no longer scrolls sideways and hides everything else | always on |
 | [1005](../patches/Telegram/lib_ui/0005-fix-the-maximize-button-follows-the-real-window-stat.patch) | the maximize button of a window shows and does the right thing after resizing or moving the window drops its maximized or full screen state | always on |
+| [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 
 ## other
 
@@ -481,5 +498,14 @@ everything else.
 | [350](../patches/tdesktop/0350-feat-update-mad-from-its-own-signed-releases.patch) | updates mad from this repository's signed releases with its own key; the single-file launcher keeps an updated client instead of restoring the packed one | settings → mad → updates, on |
 | [353](../patches/tdesktop/0353-feat-guide-history-sync-setup-step-by-step.patch) | the history sync window explains where connection.json comes from and walks through the first pc and every next pc step by step | settings → mad → server |
 | [354](../patches/tdesktop/0354-feat-smooth-typing.patch) | the text cursor in input fields glides to its new place while you type, delete, click or move it instead of jumping, and new letters fade in | settings → mad → interface, off |
+| [359](../patches/tdesktop/0359-fix-change-the-taskbar-and-start-menu-icon-together-.patch) | changing the app icon also changes it on the taskbar and in the start menu, including pinned shortcuts | settings → mad → interface |
+| [360](../patches/tdesktop/0360-feat-choose-the-smooth-typing-speed.patch) | choose how fast smooth typing moves the cursor and fades in letters: fast, normal, slow or very slow | settings → mad → interface, with 354 |
+| [362](../patches/tdesktop/0362-feat-show-seconds-in-last-seen.patch) | a profile's last seen shows seconds, like last seen today at 22:42:13, also for the time mad noticed or peeked when last seen is hidden. the chat header keeps telegram's own last seen | settings → mad → messages → show seconds in message times, off |
+| [363](../patches/tdesktop/0363-feat-show-account-age-in-profiles.patch) | profiles of people and bots show roughly when the account was made, like ≈ march 2019, estimated from its id | settings → mad → profiles and ids, off |
+| [365](../patches/tdesktop/0365-feat-show-when-you-joined-a-chat-in-its-profile.patch) | group and channel profiles show when you joined, or when the chat was created if you're not in it | settings → mad → profiles and ids, off |
+| [366](../patches/tdesktop/0366-feat-show-when-members-joined-a-group.patch) | the menu of a member in a group's members list shows when they joined. telegram only says who invited you | settings → mad → profiles and ids, off |
+| [368](../patches/tdesktop/0368-feat-show-if-a-contact-is-mutual-in-their-profile.patch) | profiles of your contacts say whether the contact is mutual, that is whether they added you back | settings → mad → profiles and ids, off |
+| [369](../patches/tdesktop/0369-feat-show-message-details-in-the-message-menu.patch) | the message menu has details: the exact date with seconds, the original date of a forward, views, forwards, and the file's name, size, resolution, duration, bitrate, type and data center. click a line to copy it | settings → mad → menus, off |
+| [370](../patches/tdesktop/0370-feat-copy-usernames-in-profiles-as-links.patch) | clicking a username in a profile copies its t.me link instead of the @username. the username menu still has copy mention | settings → mad → profiles and ids, off |
 | [1006](../patches/Telegram/lib_ui/0006-feat-let-scripts-swap-label-texts-and-find-full-widt.patch) | text a script changed in tele's windows comes back exactly as it was, formatting and custom emoji included, when the script stops, and rows a script adds to info tables stay above their last full-width line | with 301 |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
