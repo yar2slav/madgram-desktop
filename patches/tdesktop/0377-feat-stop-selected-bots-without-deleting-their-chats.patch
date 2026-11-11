@@ -1,0 +1,203 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:11:01 +0300
+Subject: [PATCH] feat: stop selected bots without deleting their chats
+
+---
+ Telegram/Resources/langs/mad_ru.json          |  8 ++
+ .../SourceFiles/tele/tele_chats_selection.cpp | 93 ++++++++++++++++++-
+ 2 files changed, 99 insertions(+), 2 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 04201981745a885a58795f325dbc3fcae1771075..76653c1b385da2bc8a0b8b34019e94cae7fd670f 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -28,6 +28,14 @@
+     "%1 чата",
+     "%1 чатов"
+   ],
++  "Stop bots": "Остановить ботов",
++  "More actions": "Другие действия",
++  "Stop %1 bot?": "Остановить %1 бота?",
++  "Stop %1 bots?": [
++    "Остановить %1 бота?",
++    "Остановить %1 бота?",
++    "Остановить %1 ботов?"
++  ],
+   "%1 converted to %2 stars": "%1 обменено на звёзды: %2",
+   "%1 deleted messages": "Удалённых сообщений: %1",
+   "%1 discarded": "Отброшено: %1",
+diff --git a/Telegram/SourceFiles/tele/tele_chats_selection.cpp b/Telegram/SourceFiles/tele/tele_chats_selection.cpp
+index d4d440cfde421e8c3c1689113cf4e6033716e2a6..985be3138aee481d91c5db42181624e71487ddaa 100644
+--- a/Telegram/SourceFiles/tele/tele_chats_selection.cpp
++++ b/Telegram/SourceFiles/tele/tele_chats_selection.cpp
+@@ -1,10 +1,12 @@
+ #include "tele/tele_chats_selection.h"
+ 
++#include "api/api_blocked_peers.h"
+ #include "apiwrap.h"
+ #include "base/event_filter.h"
+ #include "boxes/choose_filter_box.h"
+ #include "boxes/premium_limits_box.h"
+ #include "core/application.h"
++#include "data/data_changes.h"
+ #include "data/data_channel.h"
+ #include "data/data_chat.h"
+ #include "data/data_chat_filters.h"
+@@ -161,6 +163,12 @@ void SelectRange(
+ 		: TrCount(count, u"1 chat"_q, u"%1 chats"_q);
+ }
+ 
++[[nodiscard]] bool CanStopBot(not_null<PeerData*> peer) {
++	const auto user = peer->asUser();
++	return user && user->isBot() && !user->isSelf()
++		&& !user->isInaccessible() && !user->isBlocked();
++}
++
+ class Bar final : public Ui::RpWidget {
+ public:
+ 	Bar(not_null<Ui::RpWidget*> area, not_null<State*> state);
+@@ -184,7 +192,9 @@ private:
+ 	void mute(TimeId period);
+ 	void showFoldersMenu();
+ 	void addToFolder(FilterId id);
++	void stopBots();
+ 	void deleteAndLeave();
++	void showActionsMenu();
+ 	void popup(not_null<Ui::IconButton*> button);
+ 
+ 	const not_null<Ui::RpWidget*> _area;
+@@ -195,6 +205,8 @@ private:
+ 	Ui::IconButton *_archive = nullptr;
+ 	Ui::IconButton *_mute = nullptr;
+ 	Ui::IconButton *_folder = nullptr;
++	Ui::IconButton *_stopBots = nullptr;
++	Ui::IconButton *_delete = nullptr;
+ 	base::unique_qptr<Ui::PopupMenu> _menu;
+ 	rpl::lifetime _escape;
+ 	QString _text;
+@@ -202,6 +214,7 @@ private:
+ 	int _textLeft = 0;
+ 	int _textRight = 0;
+ 	bool _fits = false;
++	bool _overflow = false;
+ 
+ };
+ 
+@@ -232,10 +245,14 @@ Bar::Bar(not_null<Ui::RpWidget*> area, not_null<State*> state)
+ 		st::menuIconAddToFolder,
+ 		tr::lng_filters_menu_add(tr::now),
+ 		[=] { showFoldersMenu(); });
+-	addAction(
++	_stopBots = addAction(
++		st::menuIconBlock,
++		Tr(u"Stop bots"_q),
++		[=] { stopBots(); });
++	_delete = addAction(
+ 		st::menuIconDelete,
+ 		tr::lng_profile_clear_and_exit(tr::now),
+-		[=] { deleteAndLeave(); });
++		[=] { _overflow ? showActionsMenu() : deleteAndLeave(); });
+ 
+ 	hide();
+ 	sizeValue() | rpl::on_next([=] {
+@@ -244,6 +261,15 @@ Bar::Bar(not_null<Ui::RpWidget*> area, not_null<State*> state)
+ 	_state->changes.events() | rpl::on_next([=] {
+ 		refresh();
+ 	}, lifetime());
++	session()->changes().peerUpdates(
++		Data::PeerUpdate::Flag::IsBlocked
++	) | rpl::on_next([=](const Data::PeerUpdate &update) {
++		if (ranges::any_of(_state->chats, [&](not_null<History*> history) {
++			return history->peer == update.peer;
++		})) {
++			refresh();
++		}
++	}, lifetime());
+ }
+ 
+ not_null<Ui::IconButton*> Bar::addAction(
+@@ -274,6 +300,9 @@ void Bar::refresh() {
+ 	if (count) {
+ 		setGeometry(_area->geometry());
+ 		_folder->setVisible(session()->data().chatsFilters().has());
++		_stopBots->setVisible(ranges::any_of(
++			_state->chats,
++			[](not_null<History*> history) { return CanStopBot(history->peer); }));
+ 		updateControlsGeometry();
+ 	}
+ 	if (!count || !_fits) {
+@@ -301,6 +330,22 @@ void Bar::refresh() {
+ 
+ void Bar::updateControlsGeometry() {
+ 	const auto skip = st::dialogsFilterPadding;
++	auto required = _clear->width() + 2 * skip.x();
++	for (const auto &button : _actions) {
++		if (!button->isHidden()) {
++			required += button->width();
++		}
++	}
++	_overflow = !_stopBots->isHidden() && width() < required;
++	if (_overflow) {
++		_stopBots->hide();
++	}
++	_delete->setIconOverride(
++		_overflow ? &st::dialogsMenuToggle.icon : &st::menuIconDelete,
++		_overflow ? &st::dialogsMenuToggle.iconOver : &st::menuIconDelete);
++	_delete->setAccessibleName(_overflow
++		? Tr(u"More actions"_q)
++		: tr::lng_profile_clear_and_exit(tr::now));
+ 	_clear->moveToLeft(skip.x(), skip.y());
+ 	auto right = width() - skip.x();
+ 	for (const auto &button : ranges::views::reverse(_actions)) {
+@@ -525,6 +570,50 @@ void Bar::addToFolder(FilterId id) {
+ 	Clear(_state);
+ }
+ 
++void Bar::showActionsMenu() {
++	_menu = base::make_unique_q<Ui::PopupMenu>(this, st::popupMenuWithIcons);
++	_menu->addAction(
++		Tr(u"Stop bots"_q),
++		[=] { stopBots(); },
++		&st::menuIconBlock);
++	_menu->addAction(
++		tr::lng_profile_clear_and_exit(tr::now),
++		[=] { deleteAndLeave(); },
++		&st::menuIconDelete);
++	popup(_delete);
++}
++
++void Bar::stopBots() {
++	if (_controller->showFrozenError()) {
++		return;
++	}
++	auto bots = std::vector<not_null<PeerData*>>();
++	for (const auto &history : _state->chats) {
++		if (CanStopBot(history->peer)) {
++			bots.push_back(history->peer);
++		}
++	}
++	if (bots.empty()) {
++		return;
++	}
++	const auto count = int(bots.size());
++	const auto clear = crl::guard(this, [=] { Clear(_state); });
++	_controller->show(Ui::MakeConfirmBox({
++		.text = TrCount(count, u"Stop %1 bot?"_q, u"Stop %1 bots?"_q),
++		.confirmed = [=](Fn<void()> close) {
++			for (const auto &bot : bots) {
++				if (CanStopBot(bot)) {
++					bot->session().api().blockedPeers().block(bot);
++				}
++			}
++			clear();
++			close();
++		},
++		.confirmText = rpl::single(Tr(u"Stop bots"_q)),
++		.confirmStyle = &st::attentionBoxButton,
++	}));
++}
++
+ void Bar::deleteAndLeave() {
+ 	if (_controller->showFrozenError()) {
+ 		return;
