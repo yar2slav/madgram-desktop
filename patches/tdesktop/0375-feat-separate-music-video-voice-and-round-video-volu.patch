@@ -1,0 +1,1394 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:08:02 +0300
+Subject: [PATCH] feat: separate music video voice and round video volumes
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |   2 +
+ .../SourceFiles/media/audio/media_audio.cpp   |  85 ++-----
+ .../SourceFiles/media/audio/media_audio.h     |  16 +-
+ .../media/audio/media_audio_loaders.cpp       |   2 +-
+ .../player/media_player_volume_controller.cpp |  40 ++--
+ .../player/media_player_volume_controller.h   |   9 +-
+ .../media/player/media_player_widget.cpp      |  19 +-
+ .../stories/media_stories_controller.cpp      |   3 +-
+ .../media/stories/media_stories_header.cpp    |   7 +
+ .../media/system_media_controls_manager.cpp   |  50 +++--
+ .../media/system_media_controls_manager.h     |   2 +
+ .../media/system_media_controls_video.h       |   3 +
+ .../media/view/media_view_overlay_widget.cpp  |  34 +--
+ .../media/view/media_view_overlay_widget.h    |   1 -
+ .../SourceFiles/media/view/media_view_pip.cpp |  21 +-
+ .../SourceFiles/media/view/media_view_pip.h   |   1 -
+ .../view/media_view_playback_controls.cpp     |   8 +
+ .../media/view/media_view_video_stream.cpp    |   6 +-
+ .../SourceFiles/settings/settings_tele.cpp    |  65 ++++++
+ .../SourceFiles/tele/tele_settings_io.cpp     |  35 ++-
+ Telegram/SourceFiles/tele/tele_volumes.cpp    | 208 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_volumes.h      |  39 ++++
+ 23 files changed, 500 insertions(+), 158 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_volumes.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_volumes.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 28fae0435e9b0737f1202f87f286ff7a99bc1734..7ce0256b631ab6994ee060b424d4906ff1d82376 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3074,6 +3074,8 @@ PRIVATE
+     tele/tele_composer_editing.h
+     tele/tele_photo_padding.cpp
+     tele/tele_photo_padding.h
++    tele/tele_volumes.cpp
++    tele/tele_volumes.h
+     tele/tele_past_limit.cpp
+     tele/tele_past_limit.h
+     tele/tele_peek.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index a37f2f0ac76e6b7ade9728b0476db1854c7d76f7..04201981745a885a58795f325dbc3fcae1771075 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -1569,6 +1569,8 @@
+   "Time": "Время",
+   "Title": "Название",
+   "Title bar": "Строка заголовка",
++  "Playback": "Воспроизведение",
++  "Volumes": "Громкость",
+   "Title bar label": "Подпись в заголовке окна",
+   "Title build hash": "Хеш сборки в заголовке",
+   "To": "До",
+diff --git a/Telegram/SourceFiles/media/audio/media_audio.cpp b/Telegram/SourceFiles/media/audio/media_audio.cpp
+index 915a24919fb8b372aba7bf76aa5342eaa4066a67..90e8adba450abda785751ed444f30c54fc2021fe 100644
+--- a/Telegram/SourceFiles/media/audio/media_audio.cpp
++++ b/Telegram/SourceFiles/media/audio/media_audio.cpp
+@@ -232,7 +232,6 @@ bool SupportsSpeedControl() {
+ namespace Player {
+ namespace {
+ 
+-constexpr auto kVolumeRound = 10000;
+ constexpr auto kPreloadSeconds = 2LL; // preload next part if less than 2 seconds remains
+ constexpr auto kFadeDuration = crl::time(500);
+ constexpr auto kCheckPlaybackPositionTimeout = crl::time(100); // 100ms per check audio position
+@@ -248,17 +247,13 @@ rpl::producer<AudioMsgId> Updated() {
+ }
+ 
+ // Thread: Any. Must be locked: AudioMutex.
+-float64 ComputeVolume(AudioMsgId::Type type) {
+-	const auto gain = [&] {
+-		switch (type) {
+-		case AudioMsgId::Type::Voice:
+-			return VolumeMultiplierAll * mixer()->getSongVolume();
+-		case AudioMsgId::Type::Song:
+-			return VolumeMultiplierSong * mixer()->getSongVolume();
+-		case AudioMsgId::Type::Video: return mixer()->getVideoVolume();
+-		}
+-		return 1.;
+-	}();
++float64 ComputeVolume(AudioMsgId::Type type, Tele::PlaybackCategory category) {
++	const auto volume = Tele::AudioPlaybackVolume(category);
++	const auto gain = (type == AudioMsgId::Type::Voice)
++		? VolumeMultiplierAll * volume
++		: (type == AudioMsgId::Type::Song)
++		? VolumeMultiplierSong * volume
++		: volume;
+ 	return gain * gain * gain;
+ }
+ 
+@@ -321,7 +316,7 @@ void Mixer::Track::reattach(AudioMsgId::Type type) {
+ 	if (!IsStopped(state.state)
+ 		&& (state.state != State::PausedAtEnd)
+ 		&& !state.waitingForData) {
+-		alSourcef(stream.source, AL_GAIN, ComputeVolume(type) * volume);
++		alSourcef(stream.source, AL_GAIN, ComputeVolume(type, category) * volume);
+ 		alSourcePlay(stream.source);
+ 		if (IsPaused(state.state)) {
+ 			// We must always start the source if we want the AL_SAMPLE_OFFSET to be applied.
+@@ -464,25 +459,16 @@ Mixer::Track::~Track() = default;
+ 
+ Mixer::Mixer(not_null<Audio::Instance*> instance)
+ : _instance(instance)
+-, _volumeVideo(kVolumeRound)
+-, _volumeSong(kVolumeRound)
+ , _fader(new Fader(&_faderThread))
+ , _loader(new Loaders(&_loaderThread)) {
+ 	connect(this, SIGNAL(suppressSong()), _fader, SLOT(onSuppressSong()));
+ 	connect(this, SIGNAL(unsuppressSong()), _fader, SLOT(onUnsuppressSong()));
+ 	connect(this, SIGNAL(suppressAll(qint64)), _fader, SLOT(onSuppressAll(qint64)));
+ 
+-	Core::App().settings().songVolumeChanges(
++	Tele::PlaybackVolumeChanges(
+ 	) | rpl::on_next([=] {
+ 		InvokeQueued(_fader, [fader = _fader] {
+-			fader->songVolumeChanged();
+-		});
+-	}, _lifetime);
+-
+-	Core::App().settings().videoVolumeChanges(
+-	) | rpl::on_next([=] {
+-		InvokeQueued(_fader, [fader = _fader] {
+-			fader->videoVolumeChanged();
++			fader->volumesChanged();
+ 		});
+ 	}, _lifetime);
+ 
+@@ -673,8 +659,8 @@ void Mixer::play(
+ 	Expects(externalData != nullptr);
+ 	Expects(audio.externalPlayId() != 0);
+ 
+-	setSongVolume(Core::App().settings().songVolume());
+-	setVideoVolume(Core::App().settings().videoVolume());
++	Tele::InitializePlaybackVolumes();
++	const auto category = Tele::PlaybackCategoryFor(audio);
+ 
+ 	auto type = audio.type();
+ 	AudioMsgId stopped;
+@@ -713,6 +699,7 @@ void Mixer::play(
+ 
+ 		current->clear(); // Clear all previous state.
+ 		current->state.id = audio;
++		current->category = category;
+ 		current->lastUpdateWhen = 0;
+ 		current->lastUpdatePosition = 0;
+ 		current->setExternalData(std::move(externalData));
+@@ -775,7 +762,7 @@ void Mixer::setVolumeFromExternal(
+ 		alSourcef(
+ 			track->stream.source,
+ 			AL_GAIN,
+-			ComputeVolume(type) * volume);
++			ComputeVolume(type, track->category) * volume);
+ 		checkCurrentALError(type);
+ 	}
+ }
+@@ -906,7 +893,7 @@ void Mixer::resume(const AudioMsgId &audio, bool fast) {
+ 					alSourcef(
+ 						track->stream.source,
+ 						AL_GAIN,
+-						ComputeVolume(type) * track->volume);
++						ComputeVolume(type, track->category) * track->volume);
+ 					if (!checkCurrentALError(type)) return;
+ 
+ 					if (state == AL_STOPPED) {
+@@ -1078,22 +1065,6 @@ void Mixer::reattachTracks() {
+ 	_videoTrack.reattach(AudioMsgId::Type::Video);
+ }
+ 
+-void Mixer::setSongVolume(float64 volume) {
+-	_volumeSong.storeRelease(int(base::SafeRound(volume * kVolumeRound)));
+-}
+-
+-float64 Mixer::getSongVolume() const {
+-	return float64(_volumeSong.loadAcquire()) / kVolumeRound;
+-}
+-
+-void Mixer::setVideoVolume(float64 volume) {
+-	_volumeVideo.storeRelease(int(base::SafeRound(volume * kVolumeRound)));
+-}
+-
+-float64 Mixer::getVideoVolume() const {
+-	return float64(_volumeVideo.loadAcquire()) / kVolumeRound;
+-}
+-
+ Fader::Fader(QThread *thread) : QObject()
+ , _timer(this)
+ , _suppressVolumeAll(1., 1.)
+@@ -1155,7 +1126,7 @@ void Fader::onTimer() {
+ 	auto hasFading = (_suppressAll || _suppressSongAnim);
+ 	auto hasPlaying = false;
+ 
+-	auto updatePlayback = [this, &hasPlaying, &hasFading](AudioMsgId::Type type, int index, float64 volumeMultiplier, bool suppressGainChanged) {
++	auto updatePlayback = [this, &hasPlaying, &hasFading](AudioMsgId::Type type, int index, bool suppressGainChanged) {
+ 		auto track = mixer()->trackForType(type, index);
+ 		if (IsStopped(track->state.state) || track->state.state == State::Paused || !track->isStreamCreated()) return;
+ 
+@@ -1163,23 +1134,20 @@ void Fader::onTimer() {
+ 			track,
+ 			hasPlaying,
+ 			hasFading,
+-			volumeMultiplier * track->volume,
++			ComputeVolume(type, track->category) * track->volume,
+ 			suppressGainChanged);
+ 		if (emitSignals & EmitError) error(track->state.id);
+ 		if (emitSignals & EmitStopped) audioStopped(track->state.id);
+ 		if (emitSignals & EmitPositionUpdated) playPositionUpdated(track->state.id);
+ 		if (emitSignals & EmitNeedToPreload) needToPreload(track->state.id);
+ 	};
+-	auto suppressGainForMusic = ComputeVolume(AudioMsgId::Type::Song);
+-	auto suppressGainForMusicChanged = volumeChangedSong || _volumeChangedSong;
+-	auto suppressGainForVoice = ComputeVolume(AudioMsgId::Type::Voice);
++	const auto musicChanged = volumeChangedSong || _volumeChangedSong;
++	const auto voiceChanged = volumeChangedAll || _volumeChangedSong;
+ 	for (auto i = 0; i != kTogetherLimit; ++i) {
+-		updatePlayback(AudioMsgId::Type::Voice, i, suppressGainForVoice, suppressGainForMusicChanged);
+-		updatePlayback(AudioMsgId::Type::Song, i, suppressGainForMusic, suppressGainForMusicChanged);
++		updatePlayback(AudioMsgId::Type::Voice, i, voiceChanged);
++		updatePlayback(AudioMsgId::Type::Song, i, musicChanged);
+ 	}
+-	auto suppressGainForVideo = ComputeVolume(AudioMsgId::Type::Video);
+-	auto suppressGainForVideoChanged = volumeChangedAll || _volumeChangedVideo;
+-	updatePlayback(AudioMsgId::Type::Video, 0, suppressGainForVideo, suppressGainForVideoChanged);
++	updatePlayback(AudioMsgId::Type::Video, 0, _volumeChangedVideo);
+ 
+ 	_volumeChangedSong = _volumeChangedVideo = false;
+ 
+@@ -1347,13 +1315,8 @@ void Fader::onSuppressAll(qint64 duration) {
+ 	onTimer();
+ }
+ 
+-void Fader::songVolumeChanged() {
+-	_volumeChangedSong = true;
+-	onTimer();
+-}
+-
+-void Fader::videoVolumeChanged() {
+-	_volumeChangedVideo = true;
++void Fader::volumesChanged() {
++	_volumeChangedSong = _volumeChangedVideo = true;
+ 	onTimer();
+ }
+ 
+diff --git a/Telegram/SourceFiles/media/audio/media_audio.h b/Telegram/SourceFiles/media/audio/media_audio.h
+index 5dd2e42cb45a7d62258a702bfc075ab661a6e99b..bde03aa533a9c03819bd6d95ce7f016c140061c8 100644
+--- a/Telegram/SourceFiles/media/audio/media_audio.h
++++ b/Telegram/SourceFiles/media/audio/media_audio.h
+@@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "data/data_audio_msg_id.h"
+ #include "base/bytes.h"
+ #include "base/timer.h"
++#include "tele/tele_volumes.h"
+ 
+ #include <QtCore/QTimer>
+ 
+@@ -68,7 +69,7 @@ class Loaders;
+ 
+ [[nodiscard]] rpl::producer<AudioMsgId> Updated();
+ 
+-float64 ComputeVolume(AudioMsgId::Type type);
++float64 ComputeVolume(AudioMsgId::Type type, Tele::PlaybackCategory category);
+ 
+ enum class State {
+ 	Stopped = 0x01,
+@@ -175,12 +176,6 @@ public:
+ 	// Thread: Any. Must be locked: AudioMutex.
+ 	void reattachTracks();
+ 
+-	// Thread: Any.
+-	void setSongVolume(float64 volume);
+-	float64 getSongVolume() const;
+-	void setVideoVolume(float64 volume);
+-	float64 getVideoVolume() const;
+-
+ 	void scheduleFaderCallback();
+ 
+ 	~Mixer();
+@@ -236,6 +231,7 @@ private:
+ 		~Track();
+ 
+ 		TrackState state;
++		Tele::PlaybackCategory category = Tele::PlaybackCategory::Video;
+ 
+ 		Core::FileLocation file;
+ 		QByteArray data;
+@@ -303,9 +299,6 @@ private:
+ 
+ 	Track _videoTrack;
+ 
+-	QAtomicInt _volumeVideo;
+-	QAtomicInt _volumeSong;
+-
+ 	friend class Fader;
+ 	friend class Loaders;
+ 
+@@ -325,8 +318,7 @@ class Fader : public QObject {
+ public:
+ 	Fader(QThread *thread);
+ 
+-	void songVolumeChanged();
+-	void videoVolumeChanged();
++	void volumesChanged();
+ 
+ Q_SIGNALS:
+ 	void error(const AudioMsgId &audio);
+diff --git a/Telegram/SourceFiles/media/audio/media_audio_loaders.cpp b/Telegram/SourceFiles/media/audio/media_audio_loaders.cpp
+index 3566895a13623e78c87f5c0f420f159b0209ca60..b921188362bce8724a715ed788917e44e00a605b 100644
+--- a/Telegram/SourceFiles/media/audio/media_audio_loaders.cpp
++++ b/Telegram/SourceFiles/media/audio/media_audio_loaders.cpp
+@@ -343,7 +343,7 @@ void Loaders::loadData(AudioMsgId audio, crl::time positionMs) {
+ 	alSourcef(
+ 		track->stream.source,
+ 		AL_GAIN,
+-		ComputeVolume(type) * track->volume);
++		ComputeVolume(type, track->category) * track->volume);
+ 	if (!internal::audioCheckError()) {
+ 		setStoppedState(track, State::StoppedAtError);
+ 		emitError(type);
+diff --git a/Telegram/SourceFiles/media/player/media_player_volume_controller.cpp b/Telegram/SourceFiles/media/player/media_player_volume_controller.cpp
+index 51818c7d111d8592015d049f4231c95f10f86200..8fd52f50fd0f8e567febde6111b127b8df95f5dd 100644
+--- a/Telegram/SourceFiles/media/player/media_player_volume_controller.cpp
++++ b/Telegram/SourceFiles/media/player/media_player_volume_controller.cpp
+@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ 
+ #include "media/audio/media_audio.h"
+ #include "media/player/media_player_dropdown.h"
++#include "media/player/media_player_instance.h"
+ #include "ui/widgets/buttons.h"
+ #include "ui/widgets/shadow.h"
+ #include "ui/widgets/continuous_sliders.h"
+@@ -27,27 +28,29 @@ namespace Media::Player {
+ 
+ VolumeController::VolumeController(
+ 	QWidget *parent,
+-	not_null<Window::SessionController*> controller)
++	not_null<Window::SessionController*> controller,
++	Fn<Tele::PlaybackCategory()> category)
+ : RpWidget(parent)
+-, _slider(this, st::mediaPlayerPanelPlayback) {
++, _slider(this, st::mediaPlayerPanelPlayback)
++, _category(std::move(category)) {
+ 	_slider->setMoveByWheel(true);
+ 	_slider->setChangeProgressCallback([=](float64 volume) {
+ 		applyVolumeChange(volume);
+ 	});
+ 	_slider->setChangeFinishedCallback([=](float64 volume) {
+-		if (volume > 0) {
+-			Core::App().settings().setRememberedSongVolume(volume);
+-		}
+ 		applyVolumeChange(volume);
+ 		Core::App().saveSettingsDelayed();
+ 	});
+-	Core::App().settings().songVolumeChanges(
+-	) | rpl::on_next([=](float64 volume) {
++	rpl::merge(
++		Tele::PlaybackVolumeChanges(),
++		instance()->trackChanged() | rpl::to_empty,
++		instance()->updatedNotifier() | rpl::to_empty
++	) | rpl::on_next([=] {
+ 		if (!_slider->isChanging()) {
+-			_slider->setValue(volume);
++			_slider->setValue(Tele::PlaybackVolume(_category()));
+ 		}
+ 	}, lifetime());
+-	setVolume(Core::App().settings().songVolume());
++	_slider->setValue(Tele::PlaybackVolume(_category()));
+ 
+ 	resize(st::mediaPlayerPanelVolumeWidth, 2 * st::mediaPlayerPanelPlaybackPadding + st::mediaPlayerPanelPlayback.width);
+ }
+@@ -66,28 +69,19 @@ void VolumeController::resizeEvent(QResizeEvent *e) {
+ 	_slider->setGeometry(rect());
+ }
+ 
+-void VolumeController::setVolume(float64 volume) {
+-	_slider->setValue(volume);
+-	if (volume > 0) {
+-		Core::App().settings().setRememberedSongVolume(volume);
+-	}
+-	applyVolumeChange(volume);
+-}
+-
+ void VolumeController::applyVolumeChange(float64 volume) {
+-	if (volume != Core::App().settings().songVolume()) {
+-		mixer()->setSongVolume(volume);
+-		Core::App().settings().setSongVolume(volume);
+-	}
++	Tele::SetPlaybackVolume(_category(), volume);
+ }
+ 
+ void PrepareVolumeDropdown(
+ 		not_null<Dropdown*> dropdown,
+ 		not_null<Window::SessionController*> controller,
+-		rpl::producer<not_null<QWheelEvent*>> outerWheelEvents) {
++		rpl::producer<not_null<QWheelEvent*>> outerWheelEvents,
++		Fn<Tele::PlaybackCategory()> category) {
+ 	const auto volume = Ui::CreateChild<VolumeController>(
+ 		dropdown.get(),
+-		controller);
++		controller,
++		std::move(category));
+ 	volume->show();
+ 	volume->setIsVertical(true);
+ 
+diff --git a/Telegram/SourceFiles/media/player/media_player_volume_controller.h b/Telegram/SourceFiles/media/player/media_player_volume_controller.h
+index 49b4c8cb47ff6c92f8ea4119ec8160a61e0014a2..35433490493293b791786ef5e0e561a576f3fdd2 100644
+--- a/Telegram/SourceFiles/media/player/media_player_volume_controller.h
++++ b/Telegram/SourceFiles/media/player/media_player_volume_controller.h
+@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ 
+ #include "ui/rp_widget.h"
+ #include "base/object_ptr.h"
++#include "tele/tele_volumes.h"
+ 
+ class QWheelEvent;
+ 
+@@ -28,7 +29,8 @@ class VolumeController final : public Ui::RpWidget {
+ public:
+ 	VolumeController(
+ 		QWidget *parent,
+-		not_null<Window::SessionController*> controller);
++		not_null<Window::SessionController*> controller,
++		Fn<Tele::PlaybackCategory()> category);
+ 
+ 	void setIsVertical(bool vertical);
+ 	void outerWheelEvent(not_null<QWheelEvent*> e);
+@@ -37,16 +39,17 @@ protected:
+ 	void resizeEvent(QResizeEvent *e) override;
+ 
+ private:
+-	void setVolume(float64 volume);
+ 	void applyVolumeChange(float64 volume);
+ 
+ 	object_ptr<Ui::MediaSlider> _slider;
++	const Fn<Tele::PlaybackCategory()> _category;
+ 
+ };
+ 
+ void PrepareVolumeDropdown(
+ 	not_null<Dropdown*> dropdown,
+ 	not_null<Window::SessionController*> controller,
+-	rpl::producer<not_null<QWheelEvent*>> outerWheelEvents);
++	rpl::producer<not_null<QWheelEvent*>> outerWheelEvents,
++	Fn<Tele::PlaybackCategory()> category);
+ 
+ } // namespace Media::Player
+diff --git a/Telegram/SourceFiles/media/player/media_player_widget.cpp b/Telegram/SourceFiles/media/player/media_player_widget.cpp
+index a8d2852e13c11622481616c6feab021a84ccb399..6709d3b01d6d2651761874780d8eb0646db63282 100644
+--- a/Telegram/SourceFiles/media/player/media_player_widget.cpp
++++ b/Telegram/SourceFiles/media/player/media_player_widget.cpp
+@@ -31,6 +31,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "media/player/media_player_instance.h"
+ #include "media/player/media_player_dropdown.h"
+ #include "media/player/media_player_volume_controller.h"
++#include "tele/tele_volumes.h"
+ #include "history/history_item.h"
+ #include "history/history_item_helpers.h"
+ #include "storage/storage_account.h"
+@@ -129,14 +130,10 @@ Widget::Widget(
+ 
+ 	updateVolumeToggleIcon();
+ 	_volumeToggle->setClickedCallback([=] {
+-		const auto volume = (Core::App().settings().songVolume() > 0)
+-			? 0.
+-			: Core::App().settings().rememberedSongVolume();
+-		Core::App().settings().setSongVolume(volume);
+-		Core::App().saveSettingsDelayed();
+-		mixer()->setSongVolume(volume);
++		Tele::TogglePlaybackVolume(
++			Tele::PlaybackCategoryFor(instance()->current(_type)));
+ 	});
+-	Core::App().settings().songVolumeChanges(
++	Tele::PlaybackVolumeChanges(
+ 	) | rpl::on_next([=] {
+ 		updateVolumeToggleIcon();
+ 	}, lifetime());
+@@ -205,7 +202,7 @@ Widget::Widget(
+ 		return (e->type() == QEvent::Wheel);
+ 	}) | rpl::map([=](not_null<QEvent*> e) {
+ 		return not_null{ static_cast<QWheelEvent*>(e.get()) };
+-	}));
++	}), [=] { return Tele::PlaybackCategoryFor(instance()->current(_type)); });
+ 	_volumeToggle->installEventFilter(_volume.get());
+ 	_volume->events(
+ 	) | rpl::on_next([=](not_null<QEvent*> e) {
+@@ -299,8 +296,9 @@ void Widget::setupRightControls() {
+ }
+ 
+ void Widget::updateVolumeToggleIcon() {
+-	_volumeToggle->setIconOverride([] {
+-		const auto volume = Core::App().settings().songVolume();
++	_volumeToggle->setIconOverride([&] {
++		const auto volume = Tele::PlaybackVolume(
++			Tele::PlaybackCategoryFor(instance()->current(_type)));
+ 		return (volume == 0.)
+ 			? &st::mediaPlayerVolumeIcon0
+ 			: (volume < 0.66)
+@@ -657,6 +655,7 @@ bool Widget::hasPlaybackSpeedControl() const {
+ }
+ 
+ void Widget::updateControlsVisibility() {
++	updateVolumeToggleIcon();
+ 	_repeatToggle->setVisible(_type == AudioMsgId::Type::Song);
+ 	_orderToggle->setVisible(_type == AudioMsgId::Type::Song);
+ 	_speedToggle->setVisible(hasPlaybackSpeedControl());
+diff --git a/Telegram/SourceFiles/media/stories/media_stories_controller.cpp b/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
+index 15040f7a461d404e20e7ae4f2af74bc049ee9d2f..d5b19bf46b007499eeb6f1e3793265fbee66abf4 100644
+--- a/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
++++ b/Telegram/SourceFiles/media/stories/media_stories_controller.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "media/stories/media_stories_controller.h"
++#include "tele/tele_volumes.h"
+ 
+ #include "base/platform/base_platform_info.h"
+ #include "base/power_save_blocker.h"
+@@ -1150,7 +1151,7 @@ PauseState Controller::pauseState() const {
+ }
+ 
+ float64 Controller::currentVolume() const {
+-	return Core::App().settings().videoVolume();
++	return Tele::PlaybackVolume(Tele::PlaybackCategory::Video);
+ }
+ 
+ void Controller::toggleVolume() {
+diff --git a/Telegram/SourceFiles/media/stories/media_stories_header.cpp b/Telegram/SourceFiles/media/stories/media_stories_header.cpp
+index 4b0742c75107fcf79fdfc647d6f2a02808f2ac88..b40a7413f4c2b5ea0b040560fd79119dfcb88665 100644
+--- a/Telegram/SourceFiles/media/stories/media_stories_header.cpp
++++ b/Telegram/SourceFiles/media/stories/media_stories_header.cpp
+@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "media/stories/media_stories_controller.h"
+ #include "lang/lang_keys.h"
+ #include "tele/tele_peer_id.h"
++#include "tele/tele_volumes.h"
+ #include "ui/controls/userpic_button.h"
+ #include "ui/layers/box_content.h"
+ #include "ui/text/custom_emoji_helper.h"
+@@ -889,6 +890,12 @@ void Header::rebuildVolumeControls(
+ 		updateVolumeIcon();
+ 	});
+ 	slider->setValue(_controller->currentVolume());
++	Tele::PlaybackVolumeChanges() | rpl::on_next([=] {
++		if (!slider->isChanging()) {
++			slider->setValue(_controller->currentVolume());
++		}
++		updateVolumeIcon();
++	}, slider->lifetime());
+ 
+ 	const auto size = button->width()
+ 		+ st::storiesVolumeSize
+diff --git a/Telegram/SourceFiles/media/system_media_controls_manager.cpp b/Telegram/SourceFiles/media/system_media_controls_manager.cpp
+index c24b52bf53b1b83d1160ee6672f9d32af9b19c51..f443ccb22474938c826a8f41a86472800c06d9f4 100644
+--- a/Telegram/SourceFiles/media/system_media_controls_manager.cpp
++++ b/Telegram/SourceFiles/media/system_media_controls_manager.cpp
+@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "media/streaming/media_streaming_instance.h"
+ #include "media/streaming/media_streaming_player.h"
+ #include "media/system_media_controls_video.h"
++#include "tele/tele_volumes.h"
+ #include "ui/text/format_song_document_name.h"
+ 
+ namespace Media {
+@@ -79,6 +80,12 @@ float64 SystemMediaControlsManager::lookupPlaybackRate() const {
+ 		: Core::App().settings().voicePlaybackSpeed();
+ }
+ 
++void SystemMediaControlsManager::publishVolume(float64 volume) {
++	const auto previous = std::exchange(_publishingVolume, true);
++	const auto guard = gsl::finally([=] { _publishingVolume = previous; });
++	_controls->setVolume(volume);
++}
++
+ void SystemMediaControlsManager::applyPlayerTrack(AudioMsgId::Type audioType) {
+ 	const auto mediaPlayer = Media::Player::instance();
+ 	_lifetimeDownload.destroy();
+@@ -102,6 +109,10 @@ void SystemMediaControlsManager::applyPlayerTrack(AudioMsgId::Type audioType) {
+ 		: Ui::Text::FormatSongNameFor(document).composedName();
+ 	_controls->setArtist(performer);
+ 	_controls->setTitle(title);
++	if (_controls->volumeSupported()) {
++		publishVolume(Tele::PlaybackVolume(
++			Tele::PlaybackCategoryFor(current)));
++	}
+ 
+ 	if (_controls->seekingSupported()) {
+ 		const auto state = mediaPlayer->getState(audioType);
+@@ -510,24 +521,28 @@ SystemMediaControlsManager::SystemMediaControlsManager()
+ 	}, _lifetime);
+ 
+ 	if (_controls->volumeSupported()) {
+-		rpl::single(
+-			Core::App().settings().songVolume()
+-		) | rpl::then(
+-			Core::App().settings().songVolumeChanges()
+-		) | rpl::on_next([=](float64 volume) {
+-			if (_videoDelegate) {
+-				return;
+-			}
+-			_controls->setVolume(volume);
++		rpl::merge(
++			rpl::single(rpl::empty_value()),
++			Tele::PlaybackVolumeChanges(),
++			mediaPlayer->trackChanged() | rpl::to_empty,
++			mediaPlayer->updatedNotifier() | rpl::to_empty
++		) | rpl::map([=] {
++			return Tele::PlaybackVolume(_videoDelegate
++				? _videoState.volumeCategory
++				: Tele::PlaybackCategoryFor(_lastAudioMsgId));
++		}) | rpl::distinct_until_changed(
++		) | rpl::on_next([=](double volume) {
++			publishVolume(volume);
+ 		}, _lifetime);
+ 
+ 		_controls->volumeChangeRequests(
+-		) | rpl::on_next([](float64 volume) {
+-			Player::mixer()->setSongVolume(volume);
+-			if (volume > 0) {
+-				Core::App().settings().setRememberedSongVolume(volume);
++		) | rpl::on_next([=](float64 volume) {
++			if (_publishingVolume) {
++				return;
+ 			}
+-			Core::App().settings().setSongVolume(volume);
++			Tele::SetPlaybackVolume(_videoDelegate
++				? _videoState.volumeCategory
++				: Tele::PlaybackCategoryFor(_lastAudioMsgId), volume);
+ 		}, _lifetime);
+ 	}
+ 
+@@ -553,6 +568,9 @@ void SystemMediaControlsManager::videoStart(
+ 	_controls->setTitle(state.title);
+ 	_controls->setArtist(state.artist);
+ 	_controls->clearThumbnail();
++	if (_controls->volumeSupported()) {
++		publishVolume(Tele::PlaybackVolume(state.volumeCategory));
++	}
+ 	if (_controls->seekingSupported()) {
+ 		_controls->setDuration(state.duration);
+ 		_controls->setPosition(state.position);
+@@ -586,6 +604,10 @@ void SystemMediaControlsManager::videoUpdate(VideoState state) {
+ 	if (state.previousAvailable != _videoState.previousAvailable) {
+ 		_controls->setIsPreviousEnabled(state.previousAvailable);
+ 	}
++	if (_controls->volumeSupported()
++		&& state.volumeCategory != _videoState.volumeCategory) {
++		publishVolume(Tele::PlaybackVolume(state.volumeCategory));
++	}
+ 	const auto statusChanged = (state.playing != _videoState.playing);
+ 	if (_controls->seekingSupported()) {
+ 		if (state.duration != _videoState.duration) {
+diff --git a/Telegram/SourceFiles/media/system_media_controls_manager.h b/Telegram/SourceFiles/media/system_media_controls_manager.h
+index 154f83d85ece7e39f462cb748cc395d031a7f966..4dcc0217d53fbc46bbee35c5d7df765298f23a1b 100644
+--- a/Telegram/SourceFiles/media/system_media_controls_manager.h
++++ b/Telegram/SourceFiles/media/system_media_controls_manager.h
+@@ -50,6 +50,7 @@ private:
+ 	[[nodiscard]] float64 lookupPlaybackRate() const;
+ 	void applyPlayerTrack(AudioMsgId::Type audioType);
+ 	void syncPlayerStateToControls();
++	void publishVolume(float64 volume);
+ 
+ 	const std::unique_ptr<base::Platform::SystemMediaControls> _controls;
+ 
+@@ -59,6 +60,7 @@ private:
+ 	AudioMsgId _lastAudioMsgId;
+ 	OrderMode _lastOrderMode = OrderMode::Default;
+ 	bool _inited = false;
++	bool _publishingVolume = false;
+ 	SystemMediaControlsVideoDelegate *_videoDelegate = nullptr;
+ 	VideoState _videoState;
+ 
+diff --git a/Telegram/SourceFiles/media/system_media_controls_video.h b/Telegram/SourceFiles/media/system_media_controls_video.h
+index 65e801f340a36620c91687c91aaf17eacd59428d..f11b10375dc62032c4800f19c19ceca57a46a434 100644
+--- a/Telegram/SourceFiles/media/system_media_controls_video.h
++++ b/Telegram/SourceFiles/media/system_media_controls_video.h
+@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #pragma once
+ 
++#include "tele/tele_volumes.h"
++
+ namespace Media {
+ 
+ class SystemMediaControlsVideoDelegate {
+@@ -28,6 +30,7 @@ public:
+ 	struct VideoState {
+ 		QString title;
+ 		QString artist;
++		Tele::PlaybackCategory volumeCategory = Tele::PlaybackCategory::Video;
+ 		crl::time position = 0;
+ 		crl::time duration = 0;
+ 		bool playing = false;
+diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
+index 1f31542e10f9ecd72cfc889cd1d4d85ffd7e13fa..a6c45f0788056c52632472f462c9703f646b3c8d 100644
+--- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
++++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "media/view/media_view_overlay_widget.h"
++#include "tele/tele_volumes.h"
+ 
+ #include "apiwrap.h"
+ #include "api/api_attached_stickers.h"
+@@ -706,10 +707,6 @@ OverlayWidget::OverlayWidget()
+ 		refreshLang();
+ 	}, lifetime());
+ 
+-	_lastPositiveVolume = (Core::App().settings().videoVolume() > 0.)
+-		? Core::App().settings().videoVolume()
+-		: Core::Settings::kDefaultVolume;
+-
+ 	_saveMsgTimer.setCallback([=, delay = st::mediaviewSaveMsgHiding] {
+ 		_saveMsgAnimation.start([=] { updateSaveMsg(); }, 1., 0., delay);
+ 	});
+@@ -5789,30 +5786,32 @@ void OverlayWidget::playbackControlsSeekFinished(crl::time position) {
+ }
+ 
+ void OverlayWidget::playbackControlsVolumeChanged(float64 volume) {
+-	if (_streamed) {
+-		Player::mixer()->setVideoVolume(volume);
+-	} else if (_videoStream) {
++	Tele::SetPlaybackVolume(_stories
++		? Tele::PlaybackCategory::Video
++		: Tele::PlaybackCategoryFor(_document), volume);
++	if (_videoStream) {
+ 		_videoStream->setVolume(volume);
+ 	}
+-	Core::App().settings().setVideoVolume(volume);
+-	Core::App().saveSettingsDelayed();
+ }
+ 
+ float64 OverlayWidget::playbackControlsCurrentVolume() {
+-	return Core::App().settings().videoVolume();
++	return Tele::PlaybackVolume(_stories
++		? Tele::PlaybackCategory::Video
++		: Tele::PlaybackCategoryFor(_document));
+ }
+ 
+ void OverlayWidget::playbackControlsVolumeToggled() {
+-	const auto volume = Core::App().settings().videoVolume();
+-	playbackControlsVolumeChanged(volume ? 0. : _lastPositiveVolume);
++	const auto category = _stories
++		? Tele::PlaybackCategory::Video
++		: Tele::PlaybackCategoryFor(_document);
++	Tele::TogglePlaybackVolume(category);
++	if (_videoStream) {
++		_videoStream->setVolume(Tele::PlaybackVolume(category));
++	}
+ 	activateControls();
+ }
+ 
+ void OverlayWidget::playbackControlsVolumeChangeFinished() {
+-	const auto volume = Core::App().settings().videoVolume();
+-	if (volume > 0.) {
+-		_lastPositiveVolume = volume;
+-	}
+ 	activateControls();
+ }
+ 
+@@ -6248,6 +6247,9 @@ void OverlayWidget::refreshSystemMediaControls() {
+ 	auto video = SystemMediaControlsVideoSink::VideoState{
+ 		.title = title,
+ 		.artist = channel ? filename : _fromName,
++		.volumeCategory = _stories
++			? Tele::PlaybackCategory::Video
++			: Tele::PlaybackCategoryFor(_document),
+ 		.position = std::max(state.position, int64(0)),
+ 		.duration = std::max(state.length, int64(0)),
+ 		.playing = (!player.paused() && !player.finished()),
+diff --git a/Telegram/SourceFiles/media/view/media_view_overlay_widget.h b/Telegram/SourceFiles/media/view/media_view_overlay_widget.h
+index 27b5d051e4e4fc15af32c46a3cd9ac18ceb59317..4422d4ad2299584d0e6004e8394fd70be1ff8b80 100644
+--- a/Telegram/SourceFiles/media/view/media_view_overlay_widget.h
++++ b/Telegram/SourceFiles/media/view/media_view_overlay_widget.h
+@@ -691,7 +691,6 @@ private:
+ 	bool _streamingStartPaused = false;
+ 	bool _fullScreenVideo = false;
+ 	int _fullScreenZoomCache = 0;
+-	float64 _lastPositiveVolume = 1.;
+ 
+ 	std::unique_ptr<GroupThumbs> _groupThumbs;
+ 	QRect _groupThumbsRect;
+diff --git a/Telegram/SourceFiles/media/view/media_view_pip.cpp b/Telegram/SourceFiles/media/view/media_view_pip.cpp
+index 3c1ea236c218d6123616e29358768613fd367e80..8720824c7019659b376e48ae6d806e949abde52c 100644
+--- a/Telegram/SourceFiles/media/view/media_view_pip.cpp
++++ b/Telegram/SourceFiles/media/view/media_view_pip.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "media/view/media_view_pip.h"
++#include "tele/tele_volumes.h"
+ 
+ #include "media/streaming/media_streaming_player.h"
+ #include "media/streaming/media_streaming_document.h"
+@@ -936,14 +937,14 @@ Pip::Pip(
+ , _playbackProgress(std::make_unique<PlaybackProgress>())
+ , _dataMedia(_data->createMediaView())
+ , _rotation(data->owner().mediaRotation().get(data))
+-, _lastPositiveVolume((Core::App().settings().videoVolume() > 0.)
+-	? Core::App().settings().videoVolume()
+-	: Core::Settings::kDefaultVolume)
+ , _closeAndContinue(std::move(closeAndContinue))
+ , _destroy(std::move(destroy)) {
+ 	setupPanel();
+ 	setupButtons();
+ 	setupStreaming();
++	Tele::PlaybackVolumeChanges() | rpl::on_next([=] {
++		_panel.update();
++	}, _panel.rp()->lifetime());
+ 
+ 	_data->session().account().sessionChanges(
+ 	) | rpl::on_next([=] {
+@@ -1204,17 +1205,11 @@ void Pip::seekFinish(float64 value) {
+ }
+ 
+ void Pip::volumeChanged(float64 volume) {
+-	if (volume > 0.) {
+-		_lastPositiveVolume = volume;
+-	}
+-	Player::mixer()->setVideoVolume(volume);
+-	Core::App().settings().setVideoVolume(volume);
+-	Core::App().saveSettingsDelayed();
++	Tele::SetPlaybackVolume(Tele::PlaybackCategoryFor(_data), volume);
+ }
+ 
+ void Pip::volumeToggled() {
+-	const auto volume = Core::App().settings().videoVolume();
+-	volumeChanged(volume ? 0. : _lastPositiveVolume);
++	Tele::TogglePlaybackVolume(Tele::PlaybackCategoryFor(_data));
+ 	_panel.update();
+ }
+ 
+@@ -1487,7 +1482,7 @@ void Pip::paintButtons(not_null<Renderer*> renderer, float64 shown) const {
+ 		_showPause ? st::pipPauseIconOver : st::pipPlayIconOver);
+ 	drawOne(_close, st::pipCloseIcon, st::pipCloseIconOver);
+ 	drawOne(_enlarge, st::pipEnlargeIcon, st::pipEnlargeIconOver);
+-	const auto volume = Core::App().settings().videoVolume();
++	const auto volume = Tele::PlaybackVolume(Tele::PlaybackCategoryFor(_data));
+ 	if (volume <= 0.) {
+ 		drawOne(
+ 			_volumeToggle,
+@@ -1620,7 +1615,7 @@ void Pip::paintVolumeControllerContent(
+ 	p.setOpacity(shown);
+ 
+ 	const auto radius = _volumeController.icon.height() / 2;
+-	const auto volume = Core::App().settings().videoVolume();
++	const auto volume = Tele::PlaybackVolume(Tele::PlaybackCategoryFor(_data));
+ 	const auto active = activeValue(_volumeController);
+ 	const auto height = anim::interpolate(
+ 		st::pipPlaybackWidth,
+diff --git a/Telegram/SourceFiles/media/view/media_view_pip.h b/Telegram/SourceFiles/media/view/media_view_pip.h
+index 7febf63ab65d2a995e9aae190396858b2d958398..83c318b44dbad02102c80f722ecaf75bc3ac66ff 100644
+--- a/Telegram/SourceFiles/media/view/media_view_pip.h
++++ b/Telegram/SourceFiles/media/view/media_view_pip.h
+@@ -295,7 +295,6 @@ private:
+ 	QString _timeAlready, _timeLeft;
+ 	int _timeLeftWidth = 0;
+ 	int _rotation = 0;
+-	float64 _lastPositiveVolume = 1.;
+ 	crl::time _seekPositionMs = -1;
+ 	crl::time _lastDurationMs = 0;
+ 	OverState _over = OverState::None;
+diff --git a/Telegram/SourceFiles/media/view/media_view_playback_controls.cpp b/Telegram/SourceFiles/media/view/media_view_playback_controls.cpp
+index f5c3a6dc770ac893dd2fca2b12af961211444575..8b0007803694156a1aa5d10df76deccee91c7f80 100644
+--- a/Telegram/SourceFiles/media/view/media_view_playback_controls.cpp
++++ b/Telegram/SourceFiles/media/view/media_view_playback_controls.cpp
+@@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "lang/lang_keys.h"
+ #include "styles/style_media_view.h"
+ #include "tele/tele_viewer_loop.h"
++#include "tele/tele_volumes.h"
+ 
+ namespace Media {
+ namespace View {
+@@ -103,6 +104,9 @@ PlaybackControls::PlaybackControls(
+ 		_delegate->playbackControlsVolumeChangeFinished();
+ 	});
+ 	updateVolumeToggleIcon();
++	Tele::PlaybackVolumeChanges() | rpl::on_next([=] {
++		updateVolumeToggleIcon();
++	}, lifetime());
+ 	_volumeToggle->setClickedCallback([=] {
+ 		_delegate->playbackControlsVolumeToggled();
+ 		_volumeController->setValue(_delegate->playbackControlsCurrentVolume());
+@@ -250,6 +254,7 @@ void PlaybackControls::updatePlaybackSpeed(float64 speed) {
+ }
+ 
+ void PlaybackControls::updatePlayback(const Player::TrackState &state) {
++	updateVolumeToggleIcon();
+ 	updatePlayPauseResumeState(state);
+ 	_playbackProgress->updateState(state, countDownloadedTillPercent(state));
+ 	updateTimeTexts(state);
+@@ -258,6 +263,9 @@ void PlaybackControls::updatePlayback(const Player::TrackState &state) {
+ 
+ void PlaybackControls::updateVolumeToggleIcon() {
+ 	const auto volume = _delegate->playbackControlsCurrentVolume();
++	if (!_volumeController->isChanging()) {
++		_volumeController->setValue(volume);
++	}
+ 	_volumeToggle->setIconOverride([&] {
+ 		return (volume <= 0.)
+ 			? nullptr
+diff --git a/Telegram/SourceFiles/media/view/media_view_video_stream.cpp b/Telegram/SourceFiles/media/view/media_view_video_stream.cpp
+index 96815f3a05c61d5cbd1d613b320aafba4f0c30fd..71d78b7cb2db24cc7826688365e94a06a74b5ff1 100644
+--- a/Telegram/SourceFiles/media/view/media_view_video_stream.cpp
++++ b/Telegram/SourceFiles/media/view/media_view_video_stream.cpp
+@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
+ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "media/view/media_view_video_stream.h"
++#include "tele/tele_volumes.h"
+ 
+ #include "data/data_message_reactions.h"
+ #include "calls/group/calls_group_call.h"
+@@ -370,7 +371,10 @@ void VideoStream::setupVideo() {
+ 		}
+ 	}, _loading->lifetime());
+ 
+-	setVolume(Core::App().settings().videoVolume());
++	Tele::PlaybackVolumeValue(Tele::PlaybackCategory::Video
++	) | rpl::on_next([=](double volume) {
++		setVolume(volume);
++	}, _viewport->lifetime());
+ }
+ 
+ void VideoStream::setupMessages() {
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index e735b842ace29a8c9fc6cabab005d16e58a23b8e..022bf029315f30a26b0aefb2288179245b82b7a8 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -65,6 +65,7 @@
+ #include "tele/tele_title_box.h"
+ #include "tele/tele_updater.h"
+ #include "tele/tele_username_aliases.h"
++#include "tele/tele_volumes.h"
+ #include "ui/boxes/confirm_box.h"
+ #include "ui/boxes/single_choice_box.h"
+ #include "ui/controls/sub_tabs.h"
+@@ -78,6 +79,7 @@
+ #include "ui/vertical_list.h"
+ #include "ui/widgets/buttons.h"
+ #include "ui/widgets/checkbox.h"
++#include "ui/widgets/continuous_sliders.h"
+ #include "ui/widgets/fields/input_field.h"
+ #include "ui/widgets/labels.h"
+ #include "ui/search_field_controller.h"
+@@ -2700,6 +2702,65 @@ void AddAppIcons(SectionBuilder &builder) {
+ 	}
+ }
+ 
++void PlaybackVolumesBox(not_null<Ui::GenericBox*> box) {
++	box->setTitle(rpl::single(::Tele::Tr(u"Volumes"_q)));
++	using Category = ::Tele::PlaybackCategory;
++	for (const auto &[category, name] : std::array{
++			std::pair{ Category::Music, u"Music"_q },
++			std::pair{ Category::Video, u"Videos"_q },
++			std::pair{ Category::Voice, u"Voice messages"_q },
++			std::pair{ Category::Round, u"Round videos"_q } }) {
++		const auto title = ::Tele::Tr(name);
++		box->addRow(object_ptr<Ui::FlatLabel>(box, rpl::single(title), st::boxLabel));
++		auto control = MakeSliderWithLabel(
++			box,
++			st::settingsScale,
++			st::settingsScaleLabel,
++			st::normalFont->spacew * 2,
++			st::settingsScaleLabel.style.font->width("100%"),
++			true);
++		const auto slider = control.slider;
++		const auto label = control.label;
++		slider->setAccessibleName(title);
++		slider->setAlwaysDisplayMarker(true);
++		slider->setAdjustCallback([](float64 value) {
++			return base::SafeRound(value * 100.) / 100.;
++		});
++		const auto changed = [=](float64 value) {
++			::Tele::SetPlaybackVolume(category, value);
++		};
++		slider->setChangeProgressCallback(changed);
++		slider->setChangeFinishedCallback(changed);
++		::Tele::PlaybackVolumeValue(category
++		) | rpl::on_next([=](float64 value) {
++			slider->setValue(value);
++			label->setText(QString::number(int(base::SafeRound(value * 100.))) + '%');
++		}, slider->lifetime());
++		box->addRow(std::move(control.widget));
++		box->addSkip(st::boxLittleSkip);
++	}
++	box->addButton(tr::lng_close(), [=] { box->closeBox(); });
++}
++
++void AddPlaybackVolumes(SectionBuilder &builder) {
++	const auto controller = builder.controller();
++	const auto id = u"tele-volumes"_q;
++	const auto button = AddButton(builder, {
++		.id = id,
++		.title = rpl::single(::Tele::Tr(u"Volumes"_q)),
++		.st = &st::settingsButtonNoIcon,
++		.onClick = [=] {
++			controller->show(Box(PlaybackVolumesBox));
++		},
++		.keywords = {
++			u"volume"_q, u"music"_q, u"video"_q, u"voice"_q, u"round"_q,
++		},
++	});
++	if (button) {
++		SetupLink(button, id);
++	}
++}
++
+ void FillInterface(SectionBuilder &builder) {
+ 	AddSkip(builder);
+ 	AddGroupTitle(builder, u"Side menu"_q);
+@@ -2771,6 +2832,9 @@ void FillInterface(SectionBuilder &builder) {
+ 		::Tele::kOptionViewerMouseBack,
+ 		{ u"mouse 4"_q, u"side button"_q, u"photo"_q, u"video"_q });
+ 	AddGroupDivider(builder);
++	AddGroupTitle(builder, u"Playback"_q);
++	AddPlaybackVolumes(builder);
++	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Chat list"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionHideAllChats);
+ 	AddOptionToggle(builder, ::Tele::kOptionHideCommunities);
+@@ -3187,6 +3251,7 @@ void FillMessages(SectionBuilder &builder) {
+ 		builder,
+ 		::Tele::kOptionKeepIndentation,
+ 		{ u"newline"_q, u"spaces"_q, u"tabs"_q });
++	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Spoilers"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionRevealSpoilers);
+ 	AddGroupDivider(builder);
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index cc390cda21b7080ae9daa2bfbc5cc469c9fb8874..27a96e190c083ae1c8dbca785918375335f7292f 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -21,6 +21,7 @@
+ #include "tele/tele_reaction_order.h"
+ #include "tele/tele_title_template.h"
+ #include "tele/tele_username_aliases.h"
++#include "tele/tele_volumes.h"
+ 
+ #include <QtCore/QJsonArray>
+ #include <QtCore/QJsonDocument>
+@@ -36,6 +37,7 @@ constexpr auto kMaxSize = 64 * 1024 * 1024;
+ enum class Kind : uchar {
+ 	Toggle,
+ 	Choice,
++	Integer,
+ 	Title,
+ 	WindowTitle,
+ 	MenuLayouts,
+@@ -59,6 +61,8 @@ struct Spec {
+ 	QString (*normalize)(const QString &value) = nullptr;
+ 	QString (*get)() = nullptr;
+ 	void (*set)(const QString &value) = nullptr;
++	int minimum = 0;
++	int maximum = 0;
+ };
+ 
+ [[nodiscard]] Spec Toggle(const char *id) {
+@@ -73,6 +77,15 @@ struct Spec {
+ 	return { .id = id, .kind = Kind::Choice, .choices = std::move(choices) };
+ }
+ 
++[[nodiscard]] Spec Integer(const char *id, int minimum, int maximum) {
++	return {
++		.id = id,
++		.kind = Kind::Integer,
++		.minimum = minimum,
++		.maximum = maximum,
++	};
++}
++
+ [[nodiscard]] Spec People(
+ 		const char *id,
+ 		Kind kind,
+@@ -292,6 +305,8 @@ struct Spec {
+ 		Toggle(kOptionPunctualScheduled),
+ 		Toggle(kOptionHdPhotos),
+ 		Toggle(kOptionPadPhotos),
++		Integer(kOptionVoiceVolume, -1, 10000),
++		Integer(kOptionRoundVolume, -1, 10000),
+ 		Toggle(kOptionPhotoQuality),
+ 		Toggle(kOptionThinBrush),
+ 		Toggle(kOptionGifVideo),
+@@ -388,6 +403,10 @@ struct Spec {
+ 		Device(kOptionAppIcon, Kind::AppIcon),
+ 		Device(kOptionTrayIcon, Kind::TrayIcon),
+ 		Internal(kOptionChangelogShown),
++		Internal(kOptionRememberedMusicVolume),
++		Internal(kOptionRememberedVideoVolume),
++		Internal(kOptionRememberedVoiceVolume),
++		Internal(kOptionRememberedRoundVolume),
+ 		Internal(kOptionChangelogAccounts),
+ 		Internal(kOptionKnownSettings),
+ 		Internal(kOptionUncountedAccounts),
+@@ -438,13 +457,18 @@ struct Spec {
+ }
+ 
+ [[nodiscard]] QString CurrentText(const Spec &spec) {
++	if (spec.kind == Kind::Integer) {
++		return QString::number(base::options::lookup<int>(spec.id).value());
++	}
+ 	return spec.get
+ 		? spec.get()
+ 		: base::options::lookup<QString>(spec.id).value();
+ }
+ 
+ void SetText(const Spec &spec, const QString &value) {
+-	if (spec.set) {
++	if (spec.kind == Kind::Integer) {
++		base::options::lookup<int>(spec.id).set(value.toInt());
++	} else if (spec.set) {
+ 		spec.set(value);
+ 	} else {
+ 		base::options::lookup<QString>(spec.id).set(value);
+@@ -716,6 +740,15 @@ void Parser::parseText(const Spec &spec, const QString &value) {
+ 		add(spec, { .group = spec.group, .text = std::move(text) });
+ 	};
+ 	switch (spec.kind) {
++	case Kind::Integer: {
++		auto ok = false;
++		const auto number = value.toInt(&ok);
++		if (ok && number >= spec.minimum && number <= spec.maximum) {
++			text(QString::number(number));
++		} else {
++			skip(spec, Tr(u"Unknown value \"%1\"."_q).arg(value));
++		}
++	} return;
+ 	case Kind::Choice:
+ 		if (spec.choices.contains(value)) {
+ 			text(value);
+diff --git a/Telegram/SourceFiles/tele/tele_volumes.cpp b/Telegram/SourceFiles/tele/tele_volumes.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..07388a13dd7d8ca0d9e2122dcdc0a7e756921cba
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_volumes.cpp
+@@ -0,0 +1,208 @@
++#include "tele/tele_volumes.h"
++
++#include "base/options.h"
++#include "core/application.h"
++#include "core/core_settings.h"
++#include "data/data_audio_msg_id.h"
++#include "data/data_document.h"
++
++#include <atomic>
++#include <array>
++
++namespace Tele {
++namespace {
++
++constexpr auto kScale = 10000;
++
++base::options::option<int> VoiceVolume({
++	.id = kOptionVoiceVolume,
++	.name = "Voice messages",
++	.defaultValue = -1,
++});
++base::options::option<int> RoundVolume({
++	.id = kOptionRoundVolume,
++	.name = "Round videos",
++	.defaultValue = -1,
++});
++base::options::option<int> RememberedVideoVolume({
++	.id = kOptionRememberedVideoVolume,
++	.defaultValue = -1,
++});
++base::options::option<int> RememberedMusicVolume({
++	.id = kOptionRememberedMusicVolume,
++	.defaultValue = -1,
++});
++base::options::option<int> RememberedVoiceVolume({
++	.id = kOptionRememberedVoiceVolume,
++	.defaultValue = -1,
++});
++base::options::option<int> RememberedRoundVolume({
++	.id = kOptionRememberedRoundVolume,
++	.defaultValue = -1,
++});
++
++struct VolumeState {
++	std::array<std::atomic<int>, 4> cached{};
++	rpl::event_stream<> changes;
++	rpl::lifetime lifetime;
++	bool initialized = false;
++	bool migrating = false;
++};
++
++VolumeState &State() {
++	static auto result = VolumeState();
++	return result;
++}
++
++int Encode(double volume) {
++	return int(base::SafeRound(std::clamp(volume, 0., 1.) * kScale));
++}
++
++double Decode(int volume) {
++	return std::clamp(volume, 0, kScale) / double(kScale);
++}
++
++void Migrate() {
++	auto &state = State();
++	if (state.migrating) {
++		return;
++	}
++	state.migrating = true;
++	const auto &settings = Core::App().settings();
++	const auto song = Encode(settings.songVolume());
++	const auto rememberedSong = Encode(settings.rememberedSongVolume());
++	const auto migrate = [](auto &option, int fallback) {
++		if (option.value() < 0) {
++			option.set(fallback);
++		}
++	};
++	migrate(VoiceVolume, song);
++	migrate(RoundVolume, song);
++	migrate(RememberedVideoVolume, settings.videoVolume() > 0.
++		? Encode(settings.videoVolume())
++		: Encode(Core::Settings::kDefaultVolume));
++	migrate(RememberedMusicVolume, song > 0 ? song : rememberedSong);
++	migrate(RememberedVoiceVolume, VoiceVolume.value() > 0
++		? VoiceVolume.value() : rememberedSong);
++	migrate(RememberedRoundVolume, RoundVolume.value() > 0
++		? RoundVolume.value() : rememberedSong);
++	state.migrating = false;
++}
++
++void RefreshCache() {
++	auto &settings = Core::App().settings();
++	const auto values = std::array{
++		Encode(settings.songVolume()),
++		Encode(settings.videoVolume()),
++		std::clamp(VoiceVolume.value(), 0, kScale),
++		std::clamp(RoundVolume.value(), 0, kScale),
++	};
++	const auto memories = std::array{
++		&RememberedMusicVolume,
++		&RememberedVideoVolume,
++		&RememberedVoiceVolume,
++		&RememberedRoundVolume,
++	};
++	for (auto i = 0; i != values.size(); ++i) {
++		State().cached[i].store(values[i], std::memory_order_relaxed);
++		if (values[i] > 0 && memories[i]->value() != values[i]) {
++			memories[i]->set(values[i]);
++		}
++	}
++	if (values[0] > 0) {
++		settings.setRememberedSongVolume(Decode(values[0]));
++	}
++}
++
++double Remembered(PlaybackCategory category) {
++	const auto value = [&] {
++		switch (category) {
++		case PlaybackCategory::Music:
++			return Decode(RememberedMusicVolume.value());
++		case PlaybackCategory::Video: return Decode(RememberedVideoVolume.value());
++		case PlaybackCategory::Voice: return Decode(RememberedVoiceVolume.value());
++		case PlaybackCategory::Round: return Decode(RememberedRoundVolume.value());
++		}
++		Unexpected("Playback category.");
++	}();
++	return (value > 0.) ? value : Core::Settings::kDefaultVolume;
++}
++} // namespace
++
++PlaybackCategory PlaybackCategoryFor(const DocumentData *document) {
++	return document && document->isVideoMessage() ? PlaybackCategory::Round
++		: document && document->isVoiceMessage() ? PlaybackCategory::Voice
++		: document && document->isAudioFile() ? PlaybackCategory::Music
++		: PlaybackCategory::Video;
++}
++
++PlaybackCategory PlaybackCategoryFor(const AudioMsgId &audio) {
++	if (audio.audio()) {
++		return PlaybackCategoryFor(audio.audio());
++	}
++	return (audio.type() == AudioMsgId::Type::Song) ? PlaybackCategory::Music
++		: (audio.type() == AudioMsgId::Type::Voice) ? PlaybackCategory::Voice
++		: PlaybackCategory::Video;
++}
++
++void InitializePlaybackVolumes() {
++	auto &state = State();
++	if (state.initialized) {
++		return;
++	}
++	state.initialized = true;
++	Migrate();
++	RefreshCache();
++	rpl::merge(
++		Core::App().settings().songVolumeChanges() | rpl::to_empty,
++		Core::App().settings().videoVolumeChanges() | rpl::to_empty,
++		VoiceVolume.changes(),
++		RoundVolume.changes()
++	) | rpl::on_next([] {
++		if (State().migrating) {
++			return;
++		}
++		Migrate();
++		RefreshCache();
++		State().changes.fire({});
++	}, state.lifetime);
++}
++
++double AudioPlaybackVolume(PlaybackCategory category) {
++	return Decode(State().cached[int(category)].load(std::memory_order_relaxed));
++}
++
++double PlaybackVolume(PlaybackCategory category) {
++	InitializePlaybackVolumes();
++	return AudioPlaybackVolume(category);
++}
++
++void SetPlaybackVolume(PlaybackCategory category, double volume) {
++	InitializePlaybackVolumes();
++	volume = Decode(Encode(volume));
++	auto &settings = Core::App().settings();
++	switch (category) {
++	case PlaybackCategory::Music: settings.setSongVolume(volume); break;
++	case PlaybackCategory::Video: settings.setVideoVolume(volume); break;
++	case PlaybackCategory::Voice: VoiceVolume.set(Encode(volume)); break;
++	case PlaybackCategory::Round: RoundVolume.set(Encode(volume)); break;
++	}
++	Core::App().saveSettingsDelayed();
++}
++
++void TogglePlaybackVolume(PlaybackCategory category) {
++	SetPlaybackVolume(category, PlaybackVolume(category) > 0. ? 0. : Remembered(category));
++}
++
++rpl::producer<> PlaybackVolumeChanges() {
++	InitializePlaybackVolumes();
++	return State().changes.events();
++}
++
++rpl::producer<double> PlaybackVolumeValue(PlaybackCategory category) {
++	return rpl::single(PlaybackVolume(category)) | rpl::then(
++		PlaybackVolumeChanges() | rpl::map([=] { return PlaybackVolume(category); })
++	) | rpl::distinct_until_changed();
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_volumes.h b/Telegram/SourceFiles/tele/tele_volumes.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..f1fa0be8679bddcffa5b799c2292e47690f367cd
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_volumes.h
+@@ -0,0 +1,39 @@
++#pragma once
++
++#include <rpl/rpl.h>
++
++class AudioMsgId;
++class DocumentData;
++
++namespace Tele {
++
++enum class PlaybackCategory {
++	Music,
++	Video,
++	Voice,
++	Round,
++};
++
++inline constexpr auto kOptionVoiceVolume = "tele-voice-volume";
++inline constexpr auto kOptionRememberedMusicVolume = "tele-remembered-music-volume";
++inline constexpr auto kOptionRoundVolume = "tele-round-volume";
++inline constexpr auto kOptionRememberedVideoVolume = "tele-remembered-video-volume";
++inline constexpr auto kOptionRememberedVoiceVolume = "tele-remembered-voice-volume";
++inline constexpr auto kOptionRememberedRoundVolume = "tele-remembered-round-volume";
++
++// Document identity takes precedence over the playback channel (round videos use Voice).
++[[nodiscard]] PlaybackCategory PlaybackCategoryFor(const DocumentData *document);
++[[nodiscard]] PlaybackCategory PlaybackCategoryFor(const AudioMsgId &audio);
++
++// Main thread, after application settings have been read.
++void InitializePlaybackVolumes();
++[[nodiscard]] double PlaybackVolume(PlaybackCategory category);
++void SetPlaybackVolume(PlaybackCategory category, double volume);
++void TogglePlaybackVolume(PlaybackCategory category);
++[[nodiscard]] rpl::producer<> PlaybackVolumeChanges();
++[[nodiscard]] rpl::producer<double> PlaybackVolumeValue(PlaybackCategory category);
++
++// Audio threads: lock-free cache, initialized before playback starts.
++[[nodiscard]] double AudioPlaybackVolume(PlaybackCategory category);
++
++} // namespace Tele

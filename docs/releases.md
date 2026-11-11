@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 383 patches, newest release first.
+all 384 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -47,6 +47,7 @@ all 383 patches, newest release first.
 | [372](../patches/tdesktop/0372-fix-disabled-composer-resize-handles-stay-hidden.patch) | the message field's resize handle stays hidden when resizing is off, including after opening topics or replies | with 158 |
 | [373](../patches/tdesktop/0373-feat-pad-extreme-image-shapes-for-photo-sending.patch) | narrow and wide images get just enough black padding to send as photos, without stretching or cropping. the preview shows the padding; the original file stays untouched and sending as a file stays unpadded | tele → sending, off |
 | [374](../patches/tdesktop/0374-feat-add-optional-composer-editing-helpers.patch) | three independent composer helpers: wrap selected text in quotes, brackets, bold markers or backticks; auto-close brackets and end-of-line triple-backtick blocks; keep indentation on newlines. doubled angle brackets produce matching «guillemets». untouched automatic pairs delete together, each operation undoes in one step, and sending shortcuts stay unchanged. works in chats, topics, replies and captions | tele → messages, off |
+| [375](../patches/tdesktop/0375-feat-separate-music-video-voice-and-round-video-volu.patch) | music, videos, voice messages and round videos have separate saved volumes and mute levels. interface → playback → volumes has four sliders; the player, viewer, picture-in-picture and system controls change only their current media's volume | tele → interface |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 
