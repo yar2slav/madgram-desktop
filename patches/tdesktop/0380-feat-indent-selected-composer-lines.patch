@@ -1,0 +1,286 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:15:14 +0300
+Subject: [PATCH] feat: indent selected composer lines
+
+---
+ Telegram/Resources/langs/mad_ru.json          |  5 +
+ .../SourceFiles/settings/settings_tele.cpp    | 20 ++++
+ .../tele/tele_composer_editing.cpp            | 94 ++++++++++++++++++-
+ Telegram/SourceFiles/tele/tele_options.cpp    | 37 ++++++++
+ Telegram/SourceFiles/tele/tele_options.h      |  6 ++
+ .../SourceFiles/tele/tele_settings_io.cpp     |  2 +
+ 6 files changed, 163 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 76653c1b385da2bc8a0b8b34019e94cae7fd670f..6c210b952d824f914f2c62c0c7a9d10573a4ee6d 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -879,6 +879,11 @@
+   "Wrap selected text": "Оборачивать выделенный текст",
+   "Auto-close brackets and code blocks": "Автоматически закрывать скобки и блоки кода",
+   "Keep indentation": "Сохранять отступ",
++  "Indent selected lines with Tab": "Сдвигать выделенные строки клавишей Tab",
++  "Indentation": "Отступ",
++  "2 spaces": "2 пробела",
++  "4 spaces": "4 пробела",
++  "Tab": "Табуляция",
+   "Message field height": "Высота поля ввода",
+   "Message field menu": "Меню поля ввода",
+   "Message menu": "Меню сообщений",
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 022bf029315f30a26b0aefb2288179245b82b7a8..655090368acf6b016f60bc68be805b9607312c2f 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3251,6 +3251,26 @@ void FillMessages(SectionBuilder &builder) {
+ 		builder,
+ 		::Tele::kOptionKeepIndentation,
+ 		{ u"newline"_q, u"spaces"_q, u"tabs"_q });
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionIndentSelectedLines,
++		{ u"selection"_q, u"tab"_q, u"spaces"_q },
++		{},
++		[&] {
++			AddButtonChoice(
++				builder,
++				::Tele::kOptionComposerIndentation,
++				::Tele::ComposerIndentation,
++				::Tele::SetComposerIndentation,
++				::Tele::ComposerIndentationValue,
++				{
++					{ u"2"_q, u"2 spaces"_q },
++					{ u"4"_q, u"4 spaces"_q },
++					{ u"tab"_q, u"Tab"_q },
++				},
++				{ u"tab"_q, u"spaces"_q },
++				::Tele::kOptionIndentSelectedLines);
++		});
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Spoilers"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionRevealSpoilers);
+diff --git a/Telegram/SourceFiles/tele/tele_composer_editing.cpp b/Telegram/SourceFiles/tele/tele_composer_editing.cpp
+index a61d7c48019f0c33c77eb80ab570bf40cb93d00a..c4c374ece8ee3014fbfbb234c7172fbdd9b06367 100644
+--- a/Telegram/SourceFiles/tele/tele_composer_editing.cpp
++++ b/Telegram/SourceFiles/tele/tele_composer_editing.cpp
+@@ -49,6 +49,7 @@ private:
+ 
+ 	bool eventFilter(QObject *object, QEvent *event) override;
+ 	bool keyPress(not_null<QKeyEvent*> e);
++	bool indentSelectedLines(bool backward);
+ 	void wrap(QChar opening, QChar closing);
+ 	void insertPair(QChar opening, QChar closing);
+ 	void convertAngles(Pair pair);
+@@ -131,6 +132,19 @@ bool ComposerEditing::eventFilter(QObject *object, QEvent *event) {
+ }
+ 
+ bool ComposerEditing::keyPress(not_null<QKeyEvent*> e) {
++	const auto modifiers = e->modifiers();
++	if (!_preedit
++		&& !_edit->isReadOnly()
++		&& (e->key() == Qt::Key_Tab || e->key() == Qt::Key_Backtab)
++		&& !(modifiers & ~Qt::ShiftModifier)
++		&& IndentSelectedLines()
++		&& _field->textCursor().hasSelection()
++		&& indentSelectedLines(
++			e->key() == Qt::Key_Backtab
++				|| modifiers.testFlag(Qt::ShiftModifier))) {
++		e->accept();
++		return true;
++	}
+ 	const auto wrapEnabled = WrapSelectedText();
+ 	const auto pairsEnabled = AutoCloseBrackets();
+ 	const auto indentEnabled = KeepIndentation();
+@@ -149,7 +163,6 @@ bool ComposerEditing::keyPress(not_null<QKeyEvent*> e) {
+ 	}
+ 	const auto cursor = _field->textCursor();
+ 	const auto position = cursor.position();
+-	const auto modifiers = e->modifiers();
+ 	const auto altGr = modifiers.testFlag(Qt::ControlModifier)
+ 		&& modifiers.testFlag(Qt::AltModifier)
+ 		&& !modifiers.testFlag(Qt::MetaModifier);
+@@ -266,6 +279,85 @@ bool ComposerEditing::keyPress(not_null<QKeyEvent*> e) {
+ 	return false;
+ }
+ 
++bool ComposerEditing::indentSelectedLines(bool backward) {
++	auto cursor = _field->textCursor();
++	const auto from = cursor.selectionStart();
++	const auto till = cursor.selectionEnd();
++	const auto reverse = cursor.position() < cursor.anchor();
++	auto firstBreak = from;
++	while (firstBreak < till
++		&& !IsNewline(_document->characterAt(firstBreak))) {
++		++firstBreak;
++	}
++	if (firstBreak == till) {
++		return false;
++	}
++	auto start = from;
++	while (start > 0 && !IsNewline(_document->characterAt(start - 1))) {
++		--start;
++	}
++	auto starts = std::vector<int>{ start };
++	for (auto i = firstBreak; i + 1 < till; ++i) {
++		if (IsNewline(_document->characterAt(i))) {
++			starts.push_back(i + 1);
++		}
++	}
++	const auto mode = ComposerIndentation();
++	const auto width = (mode == u"2"_q) ? 2 : 4;
++	const auto prefix = backward
++		? QString()
++		: (mode == u"tab"_q)
++		? QString(QChar('\t'))
++		: QString(width, QChar(' '));
++	auto mappedFrom = from;
++	auto mappedTill = till;
++	_pairs.clear();
++	_handling = true;
++	cursor.beginEditBlock();
++	// Work backwards so stored line starts and selection endpoints stay in
++	// the original document's coordinates throughout the operation.
++	for (auto i = int(starts.size()); i > 0; --i) {
++		const auto at = starts[i - 1];
++		cursor.setPosition(at);
++		if (backward) {
++			auto removed = 0;
++			if (_document->characterAt(at) == QChar('\t')) {
++				removed = 1;
++			} else {
++				while (removed < width
++					&& _document->characterAt(at + removed) == QChar(' ')) {
++					++removed;
++				}
++			}
++			if (!removed) {
++				continue;
++			}
++			cursor.setPosition(at + removed, QTextCursor::KeepAnchor);
++			cursor.removeSelectedText();
++			mappedFrom -= std::min(removed, std::max(from - at, 0));
++			mappedTill -= std::min(removed, std::max(till - at, 0));
++		} else {
++			// A fresh format prevents links or custom emoji at the line's
++			// beginning from turning the indentation into tagged content.
++			cursor.insertText(prefix, QTextCharFormat());
++			if (from >= at) {
++				mappedFrom += prefix.size();
++			}
++			if (till >= at) {
++				mappedTill += prefix.size();
++			}
++		}
++	}
++	cursor.endEditBlock();
++	cursor.setPosition(reverse ? mappedTill : mappedFrom);
++	cursor.setPosition(
++		reverse ? mappedFrom : mappedTill,
++		QTextCursor::KeepAnchor);
++	_field->setTextCursor(cursor);
++	_handling = false;
++	return true;
++}
++
+ void ComposerEditing::wrap(QChar opening, QChar closing) {
+ 	_pairs.clear();
+ 	_handling = true;
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index d17c3142a5411e0a4263b6766863077cf253c07c..5b899dfddc475db65047fd58e3a2646876ca704b 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -192,6 +192,8 @@ const char kOptionLiveMarkdown[] = "tele-live-markdown";
+ const char kOptionWrapSelectedText[] = "tele-wrap-selected-text";
+ const char kOptionAutoCloseBrackets[] = "tele-auto-close-brackets";
+ const char kOptionKeepIndentation[] = "tele-keep-indentation";
++const char kOptionIndentSelectedLines[] = "tele-indent-selected-lines";
++const char kOptionComposerIndentation[] = "tele-composer-indentation";
+ const char kOptionHideGiftButton[] = "tele-hide-gift-button";
+ const char kOptionHideBirthdays[] = "tele-hide-birthdays";
+ const char kOptionSilentByDefault[] = "tele-silent-by-default";
+@@ -1407,6 +1409,17 @@ base::options::toggle KeepIndentationOption({
+ 	.name = "Keep indentation",
+ });
+ 
++base::options::toggle IndentSelectedLinesOption({
++	.id = kOptionIndentSelectedLines,
++	.name = "Indent selected lines with Tab",
++});
++
++base::options::option<QString> ComposerIndentationOption({
++	.id = kOptionComposerIndentation,
++	.name = "Indentation",
++	.defaultValue = u"4"_q,
++});
++
+ base::options::toggle HideGiftButtonOption({
+ 	.id = kOptionHideGiftButton,
+ 	.name = "Hide the gift button in the message field",
+@@ -3432,6 +3445,30 @@ bool KeepIndentation() {
+ 	return KeepIndentationOption.value();
+ }
+ 
++bool IndentSelectedLines() {
++	return IndentSelectedLinesOption.value();
++}
++
++QString ComposerIndentation() {
++	const auto value = ComposerIndentationOption.value();
++	return (value == u"2"_q || value == u"tab"_q) ? value : u"4"_q;
++}
++
++void SetComposerIndentation(const QString &value) {
++	ComposerIndentationOption.set(
++		(value == u"2"_q || value == u"tab"_q) ? value : u"4"_q);
++}
++
++rpl::producer<QString> ComposerIndentationValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		ComposerIndentationOption.changes()
++	) | rpl::map([] {
++		return ComposerIndentation();
++	});
++}
++
+ bool HideGiftButton() {
+ 	return HideGiftButtonOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index d83d925005f0f8ffdf466a2b22967fe826f51f79..9caff0dcc72a68a35bb526c240d9f506511f00ba 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -187,6 +187,8 @@ extern const char kOptionLiveMarkdown[];
+ extern const char kOptionWrapSelectedText[];
+ extern const char kOptionAutoCloseBrackets[];
+ extern const char kOptionKeepIndentation[];
++extern const char kOptionIndentSelectedLines[];
++extern const char kOptionComposerIndentation[];
+ extern const char kOptionHideGiftButton[];
+ extern const char kOptionHideBirthdays[];
+ extern const char kOptionSilentByDefault[];
+@@ -556,6 +558,10 @@ void ClearMessageMenuLegacy();
+ [[nodiscard]] bool WrapSelectedText();
+ [[nodiscard]] bool AutoCloseBrackets();
+ [[nodiscard]] bool KeepIndentation();
++[[nodiscard]] bool IndentSelectedLines();
++[[nodiscard]] QString ComposerIndentation();
++void SetComposerIndentation(const QString &value);
++[[nodiscard]] rpl::producer<QString> ComposerIndentationValue();
+ [[nodiscard]] bool HideGiftButton();
+ [[nodiscard]] rpl::producer<> HideGiftButtonChanges();
+ [[nodiscard]] bool HideBirthdays();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index 27a96e190c083ae1c8dbca785918375335f7292f..602a37a5366b56adf4140bf4d8f06a141eb4da54 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -279,6 +279,8 @@ struct Spec {
+ 		Toggle(kOptionWrapSelectedText),
+ 		Toggle(kOptionAutoCloseBrackets),
+ 		Toggle(kOptionKeepIndentation),
++		Toggle(kOptionIndentSelectedLines),
++		Choice(kOptionComposerIndentation, { u"2"_q, u"4"_q, u"tab"_q }),
+ 		Toggle(kOptionHideGiftButton),
+ 		Toggle(kOptionHideBirthdays),
+ 		Toggle(kOptionSilentByDefault),

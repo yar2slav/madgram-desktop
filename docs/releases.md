@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 388 patches, newest release first.
+all 389 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -52,6 +52,7 @@ all 388 patches, newest release first.
 | [377](../patches/tdesktop/0377-feat-stop-selected-bots-without-deleting-their-chats.patch) | stop selected bots without deleting their chats, with a confirmation showing how many. people, groups and already stopped bots are skipped; narrow chat columns keep the action in an overflow menu | with 164 |
 | [378](../patches/tdesktop/0378-fix-keep-pending-sends-stable-on-confirmation.patch) | pending messages keep their place as more messages are sent and confirmed, including in topics, replies, Saved Messages and channel DMs. genuinely late sends still follow Telegram's server order, with text sending animations on or off | always on |
 | [379](../patches/tdesktop/0379-feat-remember-message-read-times-as-activity.patch) | opening read info also remembers the DM and group read timestamps Telegram exposes. cached results count too, older receipts never replace newer activity, and no background lookups are added | with 324 |
+| [380](../patches/tdesktop/0380-feat-indent-selected-composer-lines.patch) | Tab indents selected lines and Shift+Tab removes one level, using 2 spaces, 4 spaces or tabs. formatting, custom emoji and selection direction stay intact, and each operation undoes in one step. ordinary Tab completion and focus navigation stay unchanged; works in chats, topics, replies and captions | tele → messages, off |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 
