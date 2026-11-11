@@ -1,0 +1,787 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nitreojs <hello@starkow.dev>
+Date: Wed, 11 Nov 2026 21:05:25 +0300
+Subject: [PATCH] feat: add optional composer editing helpers
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |   4 +
+ .../SourceFiles/boxes/edit_caption_box.cpp    |   2 +
+ .../SourceFiles/boxes/music_attach_box.cpp    |   2 +
+ Telegram/SourceFiles/boxes/send_files_box.cpp |   2 +
+ .../boxes/send_gif_with_caption_box.cpp       |   2 +
+ .../chat_helpers/message_field.cpp            |   2 +
+ .../SourceFiles/settings/settings_tele.cpp    |  13 +
+ .../tele/tele_composer_editing.cpp            | 496 ++++++++++++++++++
+ .../SourceFiles/tele/tele_composer_editing.h  |  11 +
+ Telegram/SourceFiles/tele/tele_options.cpp    |  30 ++
+ Telegram/SourceFiles/tele/tele_options.h      |   6 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |   3 +
+ 13 files changed, 575 insertions(+)
+ create mode 100644 Telegram/SourceFiles/tele/tele_composer_editing.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_composer_editing.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 07e8f392abb650a52a05b2b3f4646c6061921001..28fae0435e9b0737f1202f87f286ff7a99bc1734 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3070,6 +3070,8 @@ PRIVATE
+     tele/tele_name_badges.h
+     tele/tele_options.cpp
+     tele/tele_options.h
++    tele/tele_composer_editing.cpp
++    tele/tele_composer_editing.h
+     tele/tele_photo_padding.cpp
+     tele/tele_photo_padding.h
+     tele/tele_past_limit.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index fadaa3430e7faad49a683e4755079f295ab3058c..a37f2f0ac76e6b7ade9728b0476db1854c7d76f7 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -867,6 +867,10 @@
+   "Message author": "Автор сообщения",
+   "Message bookmarks": "Закладки сообщений",
+   "Message field": "Поле ввода сообщения",
++  "Composer": "Поле ввода",
++  "Wrap selected text": "Оборачивать выделенный текст",
++  "Auto-close brackets and code blocks": "Автоматически закрывать скобки и блоки кода",
++  "Keep indentation": "Сохранять отступ",
+   "Message field height": "Высота поля ввода",
+   "Message field menu": "Меню поля ввода",
+   "Message menu": "Меню сообщений",
+diff --git a/Telegram/SourceFiles/boxes/edit_caption_box.cpp b/Telegram/SourceFiles/boxes/edit_caption_box.cpp
+index 81a649ba1af2732354c8b6cef728f820c20e1ed1..20f7af13a88f6585ec799c1832eec80c62eb2bea 100644
+--- a/Telegram/SourceFiles/boxes/edit_caption_box.cpp
++++ b/Telegram/SourceFiles/boxes/edit_caption_box.cpp
+@@ -21,6 +21,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "chat_helpers/tabbed_selector.h"
+ #include "core/application.h"
+ #include "core/core_settings.h"
++#include "tele/tele_composer_editing.h"
+ #include "tele/tele_link_rewrites.h"
+ #include "tele/tele_send_files.h"
+ #include "ui/chat/attach/attach_send_files_way.h"
+@@ -578,6 +579,7 @@ void EditCaptionBox::rebuildPreview() {
+ }
+ 
+ void EditCaptionBox::setupField() {
++	Tele::SetupComposerEditing(_field.get());
+ 	const auto peer = _historyItem->history()->peer;
+ 	const auto allow = [=](not_null<DocumentData*> emoji) {
+ 		return Data::AllowEmojiWithoutPremium(peer, emoji);
+diff --git a/Telegram/SourceFiles/boxes/music_attach_box.cpp b/Telegram/SourceFiles/boxes/music_attach_box.cpp
+index ff99054afbc38d3fcfd79c3494a573722c7fd9f8..ea86056622306677da6fa723c9313506eb0ac928 100644
+--- a/Telegram/SourceFiles/boxes/music_attach_box.cpp
++++ b/Telegram/SourceFiles/boxes/music_attach_box.cpp
+@@ -51,6 +51,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "overview/overview_layout.h"
+ #include "storage/localimageloader.h"
+ #include "storage/storage_media_prepare.h"
++#include "tele/tele_composer_editing.h"
+ #include "ui/chat/attach/attach_prepare.h"
+ #include "ui/layers/generic_box.h"
+ #include "ui/widgets/fields/input_field.h"
+@@ -1552,6 +1553,7 @@ void MusicAttachBox(
+ 		st::shareComment,
+ 		Ui::InputField::Mode::MultiLine,
+ 		tr::lng_photo_caption());
++	Tele::SetupComposerEditing(caption);
+ 	if (show && show->valid()) {
+ 		InitMessageFieldHandlers({
+ 			.session = &controller->session(),
+diff --git a/Telegram/SourceFiles/boxes/send_files_box.cpp b/Telegram/SourceFiles/boxes/send_files_box.cpp
+index f74d5b39b1f8c8f2397660c998f5b668c5b37646..cb3d3cc3fcebb4c60c6c35ef59bbfd07403de338 100644
+--- a/Telegram/SourceFiles/boxes/send_files_box.cpp
++++ b/Telegram/SourceFiles/boxes/send_files_box.cpp
+@@ -34,6 +34,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "core/mime_type.h"
+ #include "core/shortcuts.h"
+ #include "core/ui_integration.h"
++#include "tele/tele_composer_editing.h"
+ #include "tele/tele_gif_video.h"
+ #include "tele/tele_live_markdown.h"
+ #include "tele/tele_audio_voice.h"
+@@ -2309,6 +2310,7 @@ void SendFilesBox::updateSendWayControls() {
+ }
+ 
+ void SendFilesBox::setupCaption() {
++	Tele::SetupComposerEditing(_caption.data());
+ 	const auto allow = [=](not_null<DocumentData*> emoji) {
+ 		return Data::AllowEmojiWithoutPremium(_toPeer, emoji);
+ 	};
+diff --git a/Telegram/SourceFiles/boxes/send_gif_with_caption_box.cpp b/Telegram/SourceFiles/boxes/send_gif_with_caption_box.cpp
+index 2171b564bf7581a32a247977ef236d5a155bffef..d029d78e7c20f10d1db9f88f58d65fdff1664054 100644
+--- a/Telegram/SourceFiles/boxes/send_gif_with_caption_box.cpp
++++ b/Telegram/SourceFiles/boxes/send_gif_with_caption_box.cpp
+@@ -41,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "menu/menu_send.h"
+ #include "storage/localimageloader.h"
+ #include "storage/storage_media_prepare.h"
++#include "tele/tele_composer_editing.h"
+ #include "tele/tele_gif_video.h"
+ #include "tele/tele_sticker_captions.h"
+ #include "ui/chat/attach/attach_controls.h"
+@@ -74,6 +75,7 @@ void SetupCaptionFieldInBox(
+ 		PeerData *panelPeer,
+ 		Fn<bool(not_null<DocumentData*>)> allowWithoutPremium,
+ 		PremiumFeature premiumFeature) {
++	Tele::SetupComposerEditing(field);
+ 	using Limit = HistoryView::Controls::CharactersLimitLabel;
+ 	struct State final {
+ 		base::unique_qptr<ChatHelpers::TabbedPanel> emojiPanel;
+diff --git a/Telegram/SourceFiles/chat_helpers/message_field.cpp b/Telegram/SourceFiles/chat_helpers/message_field.cpp
+index 3d84e49aed3d177a9265c2dc7e8e4646a088d069..7647ec43adeb8dd53aa0ca94d45f9fbc968c4484 100644
+--- a/Telegram/SourceFiles/chat_helpers/message_field.cpp
++++ b/Telegram/SourceFiles/chat_helpers/message_field.cpp
+@@ -48,6 +48,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "main/main_session.h"
+ #include "settings/settings_common.h"
+ #include "settings/sections/settings_premium.h"
++#include "tele/tele_composer_editing.h"
+ #include "tele/tele_link_rewrites.h"
+ #include "tele/tele_live_markdown.h"
+ #include "tele/tele_username_aliases.h"
+@@ -731,6 +732,7 @@ std::shared_ptr<Ui::ChatStyle> InitMessageField(
+ 		.allowPremiumEmoji = std::move(allowPremiumEmoji),
+ 	});
+ 	InitMessageFieldGeometry(field);
++	Tele::SetupComposerEditing(field);
+ 	return style;
+ }
+ 
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 58db909687c519984f33a7b3e6878383f3554291..e735b842ace29a8c9fc6cabab005d16e58a23b8e 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3174,6 +3174,19 @@ void FillMessages(SectionBuilder &builder) {
+ 		::Tele::kOptionCodeLineNumbers,
+ 		{ u"pre"_q, u"monospace"_q });
+ 	AddGroupDivider(builder);
++	AddGroupTitle(builder, u"Composer"_q);
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionWrapSelectedText,
++		{ u"selection"_q, u"quotes"_q, u"markdown"_q });
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionAutoCloseBrackets,
++		{ u"pairs"_q, u"parentheses"_q, u"backticks"_q });
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionKeepIndentation,
++		{ u"newline"_q, u"spaces"_q, u"tabs"_q });
+ 	AddGroupTitle(builder, u"Spoilers"_q);
+ 	AddOptionToggle(builder, ::Tele::kOptionRevealSpoilers);
+ 	AddGroupDivider(builder);
+diff --git a/Telegram/SourceFiles/tele/tele_composer_editing.cpp b/Telegram/SourceFiles/tele/tele_composer_editing.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..a61d7c48019f0c33c77eb80ab570bf40cb93d00a
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_composer_editing.cpp
+@@ -0,0 +1,496 @@
++#include "tele/tele_composer_editing.h"
++
++#include "base/options.h"
++#include "tele/tele_options.h"
++#include "ui/widgets/fields/input_field.h"
++
++#include <QtCore/QCoreApplication>
++#include <QtCore/QPointer>
++#include <QtGui/QInputMethodEvent>
++#include <QtGui/QKeyEvent>
++#include <QtGui/QTextDocument>
++#include <QtWidgets/QTextEdit>
++
++namespace Tele {
++namespace {
++
++[[nodiscard]] bool IsNewline(QChar ch) {
++	return ch == QChar('\n')
++		|| ch == QChar::LineSeparator
++		|| ch == QChar::ParagraphSeparator;
++}
++
++[[nodiscard]] bool IsIndent(QChar ch) {
++	return ch == QChar(' ') || ch == QChar('\t');
++}
++
++[[nodiscard]] QChar Closer(QChar ch) {
++	switch (ch.unicode()) {
++	case '(': return QChar(')');
++	case '[': return QChar(']');
++	case '{': return QChar('}');
++	case '<': return QChar('>');
++	}
++	return QChar();
++}
++
++class ComposerEditing final : public QObject {
++public:
++	explicit ComposerEditing(not_null<Ui::InputField*> field);
++
++private:
++	struct Pair {
++		int open = 0;
++		int close = 0;
++		QChar opening;
++		QChar closing;
++		bool untouched = true;
++	};
++
++	bool eventFilter(QObject *object, QEvent *event) override;
++	bool keyPress(not_null<QKeyEvent*> e);
++	void wrap(QChar opening, QChar closing);
++	void insertPair(QChar opening, QChar closing);
++	void convertAngles(Pair pair);
++	bool completeFence();
++	bool angleBoundary(int position) const;
++	bool forwardKey(not_null<QKeyEvent*> e, bool indent = false);
++	void contentsChange(int position, int removed, int added);
++	void validatePairs();
++
++	const not_null<Ui::InputField*> _field;
++	const not_null<QTextEdit*> _edit;
++	const not_null<QTextDocument*> _document;
++	std::vector<Pair> _pairs;
++	bool _handling = false;
++	bool _preedit = false;
++	bool _submitted = false;
++	rpl::lifetime _lifetime;
++};
++
++ComposerEditing::ComposerEditing(not_null<Ui::InputField*> field)
++: QObject(field)
++, _field(field)
++, _edit(field->rawTextEdit())
++, _document(field->document()) {
++	_edit->installEventFilter(this);
++	_edit->viewport()->installEventFilter(this);
++	connect(_edit, &QTextEdit::cursorPositionChanged, this, [=] {
++		if (!_handling) {
++			_pairs.clear();
++		}
++	});
++	connect(_edit, &QTextEdit::selectionChanged, this, [=] {
++		if (!_handling) {
++			_pairs.clear();
++		}
++	});
++	connect(_document, &QTextDocument::contentsChange, this, [=](
++			int position,
++			int removed,
++			int added) {
++		contentsChange(position, removed, added);
++	});
++	base::options::details::Lookup(kOptionAutoCloseBrackets).changes(
++	) | rpl::on_next([=] {
++		_pairs.clear();
++	}, _lifetime);
++	_field->submits() | rpl::on_next([=] {
++		_submitted = true;
++	}, _lifetime);
++}
++
++bool ComposerEditing::eventFilter(QObject *object, QEvent *event) {
++	if (_handling) {
++		return false;
++	}
++	switch (event->type()) {
++	case QEvent::InputMethod:
++		_preedit = !static_cast<QInputMethodEvent*>(event)
++			->preeditString().isEmpty();
++		_pairs.clear();
++		break;
++	case QEvent::FocusOut:
++		_preedit = false;
++		_pairs.clear();
++		break;
++	case QEvent::MouseButtonPress:
++	case QEvent::MouseButtonDblClick:
++	case QEvent::ContextMenu:
++		_pairs.clear();
++		break;
++	case QEvent::KeyPress:
++		if (object == _edit) {
++			return keyPress(static_cast<QKeyEvent*>(event));
++		}
++		break;
++	default:
++		break;
++	}
++	return false;
++}
++
++bool ComposerEditing::keyPress(not_null<QKeyEvent*> e) {
++	const auto wrapEnabled = WrapSelectedText();
++	const auto pairsEnabled = AutoCloseBrackets();
++	const auto indentEnabled = KeepIndentation();
++	if (!pairsEnabled) {
++		_pairs.clear();
++	}
++	if (_preedit || (!wrapEnabled && !pairsEnabled && !indentEnabled)) {
++		return false;
++	}
++	if (e->key() == Qt::Key_Shift
++		|| e->key() == Qt::Key_Control
++		|| e->key() == Qt::Key_Alt
++		|| e->key() == Qt::Key_Meta
++		|| e->key() == Qt::Key_AltGr) {
++		return false;
++	}
++	const auto cursor = _field->textCursor();
++	const auto position = cursor.position();
++	const auto modifiers = e->modifiers();
++	const auto altGr = modifiers.testFlag(Qt::ControlModifier)
++		&& modifiers.testFlag(Qt::AltModifier)
++		&& !modifiers.testFlag(Qt::MetaModifier);
++	const auto plain = altGr || !(modifiers
++		& ~(Qt::ShiftModifier | Qt::KeypadModifier | Qt::GroupSwitchModifier));
++	const auto text = e->text();
++	const auto ch = (plain && text.size() == 1) ? text.front() : QChar();
++	const auto closer = Closer(ch);
++
++	if (wrapEnabled && cursor.hasSelection()
++		&& (!closer.isNull() || ch == QChar('"')
++			|| ch == QChar('`') || ch == QChar('*'))) {
++		if (pairsEnabled && ch == QChar('<') && !_pairs.empty()) {
++			const auto pair = _pairs.back();
++			if (pair.opening == QChar('<') && pair.closing == QChar('>')
++				&& cursor.selectionStart() == pair.open + 1
++				&& cursor.selectionEnd() == pair.close) {
++				convertAngles(pair);
++				e->accept();
++				return true;
++			}
++		}
++		const auto from = cursor.selectionStart();
++		const auto till = cursor.selectionEnd();
++		wrap(ch, closer.isNull() ? ch : closer);
++		if (pairsEnabled && ch == QChar('<')) {
++			_pairs.push_back({
++				from,
++				till + 1,
++				ch,
++				closer,
++				false,
++			});
++		}
++		e->accept();
++		return true;
++	}
++	if (pairsEnabled && !cursor.hasSelection()) {
++		validatePairs();
++		for (auto i = int(_pairs.size()); i > 0; --i) {
++			const auto pair = _pairs[i - 1];
++			if (position != pair.close) {
++				continue;
++			}
++			if (ch == QChar('<') && pair.opening == QChar('<')
++				&& pair.untouched && pair.close == pair.open + 1) {
++				convertAngles(pair);
++				e->accept();
++				return true;
++			} else if (ch == QChar('>') && pair.closing == QChar(0xBB)
++				&& position > pair.open + 1
++				&& _document->characterAt(position - 1) == QChar('>')) {
++				_pairs.erase(_pairs.begin() + i - 1);
++				_handling = true;
++				auto edit = cursor;
++				edit.beginEditBlock();
++				edit.setPosition(position - 1);
++				edit.setPosition(position, QTextCursor::KeepAnchor);
++				edit.removeSelectedText();
++				edit.setPosition(position);
++				edit.endEditBlock();
++				_field->setTextCursor(edit);
++				_handling = false;
++				e->accept();
++				return true;
++			}
++			if (ch == pair.closing) {
++				_pairs.erase(_pairs.begin() + i - 1);
++				_handling = true;
++				_field->setCursorPosition(position + 1);
++				_handling = false;
++				e->accept();
++				return true;
++			} else if (e->key() == Qt::Key_Backspace
++				&& modifiers == Qt::NoModifier
++				&& pair.untouched && pair.close == pair.open + 1) {
++				_handling = true;
++				auto edit = cursor;
++				edit.beginEditBlock();
++				edit.setPosition(pair.open);
++				edit.setPosition(pair.close + 1, QTextCursor::KeepAnchor);
++				edit.removeSelectedText();
++				edit.endEditBlock();
++				_field->setTextCursor(edit);
++				_handling = false;
++				e->accept();
++				return true;
++			}
++		}
++		if (!closer.isNull()
++			&& (ch != QChar('<') || angleBoundary(position))) {
++			insertPair(ch, closer);
++			e->accept();
++			return true;
++		}
++		if (ch == QChar('`') && completeFence()) {
++			e->accept();
++			return true;
++		}
++	}
++
++	const auto enter = e->key() == Qt::Key_Return
++		|| e->key() == Qt::Key_Enter;
++	if (indentEnabled && enter && !cursor.hasSelection()) {
++		return forwardKey(e, true);
++	}
++	if (!_pairs.empty() && !cursor.hasSelection()
++		&& ((!ch.isNull() && ch.isPrint())
++			|| (e->key() == Qt::Key_Backspace && modifiers == Qt::NoModifier))) {
++		return forwardKey(e);
++	}
++	// Navigation, paste, shortcuts and undo/redo use the unmodified field path.
++	_pairs.clear();
++	return false;
++}
++
++void ComposerEditing::wrap(QChar opening, QChar closing) {
++	_pairs.clear();
++	_handling = true;
++	auto cursor = _field->textCursor();
++	const auto from = cursor.selectionStart();
++	const auto till = cursor.selectionEnd();
++	const auto reverse = cursor.position() < cursor.anchor();
++	cursor.beginEditBlock();
++	cursor.setPosition(till);
++	cursor.insertText(QString(closing), QTextCharFormat());
++	cursor.setPosition(from);
++	cursor.insertText(QString(opening), QTextCharFormat());
++	cursor.endEditBlock();
++	// Insert at the edges, never serialize the selection: object formats,
++	// links and custom emoji remain exactly where the user put them.
++	cursor.setPosition(reverse ? till + 1 : from + 1);
++	cursor.setPosition(reverse ? from + 1 : till + 1, QTextCursor::KeepAnchor);
++	_field->setTextCursor(cursor);
++	_handling = false;
++}
++
++void ComposerEditing::insertPair(QChar opening, QChar closing) {
++	_handling = true;
++	auto cursor = _field->textCursor();
++	const auto position = cursor.position();
++	cursor.beginEditBlock();
++	cursor.insertText(QString(opening) + closing, QTextCharFormat());
++	cursor.endEditBlock();
++	_pairs.push_back({ position, position + 1, opening, closing });
++	cursor.setPosition(position + 1);
++	_field->setTextCursor(cursor);
++	_handling = false;
++}
++
++void ComposerEditing::convertAngles(Pair pair) {
++	_handling = true;
++	auto cursor = _field->textCursor();
++	const auto anchor = cursor.anchor();
++	const auto position = cursor.position();
++	cursor.beginEditBlock();
++	cursor.setPosition(pair.close);
++	cursor.setPosition(pair.close + 1, QTextCursor::KeepAnchor);
++	cursor.insertText(QString(QChar(0xBB)), QTextCharFormat());
++	cursor.setPosition(pair.open);
++	cursor.setPosition(pair.open + 1, QTextCursor::KeepAnchor);
++	cursor.insertText(QString(QChar(0xAB)), QTextCharFormat());
++	cursor.endEditBlock();
++	_pairs.push_back({
++		pair.open,
++		pair.close,
++		QChar(0xAB),
++		QChar(0xBB),
++		pair.untouched,
++	});
++	cursor.setPosition(anchor);
++	cursor.setPosition(position, QTextCursor::KeepAnchor);
++	_field->setTextCursor(cursor);
++	_handling = false;
++}
++
++bool ComposerEditing::angleBoundary(int position) const {
++	const auto next = _document->characterAt(position);
++	if (!next.isSpace() && !IsNewline(next) && !next.isNull()
++		&& next != QChar(')') && next != QChar(']') && next != QChar('}')) {
++		return false;
++	}
++	auto previous = position - 1;
++	while (previous >= 0 && IsIndent(_document->characterAt(previous))) {
++		--previous;
++	}
++	if (previous < 0 || IsNewline(_document->characterAt(previous))) {
++		return true;
++	}
++	const auto ch = _document->characterAt(previous);
++	return ch == QChar('(') || ch == QChar('[') || ch == QChar('{')
++		|| ch == QChar('=') || ch == QChar(':') || ch == QChar(',');
++}
++
++bool ComposerEditing::completeFence() {
++	auto cursor = _field->textCursor();
++	const auto position = cursor.position();
++	if (position < 2
++		|| _document->characterAt(position - 1) != QChar('`')
++		|| _document->characterAt(position - 2) != QChar('`')
++		|| (position > 2 && _document->characterAt(position - 3) == QChar('`'))
++		|| (position > 2 && _document->characterAt(position - 3) == QChar('\\'))
++		|| !IsNewline(_document->characterAt(position))
++		|| _field->isMarkdownTagActive(Ui::InputField::kTagPre)
++		|| _field->isMarkdownTagActive(Ui::InputField::kTagCode)) {
++		return false;
++	}
++	// A third backtick inside an existing fence is its closer, not an opener.
++	auto inside = false;
++	for (auto i = 0; i < position - 2; ++i) {
++		if (_document->characterAt(i) != QChar('`')
++			|| _document->characterAt(i + 1) != QChar('`')
++			|| _document->characterAt(i + 2) != QChar('`')
++			|| (i && _document->characterAt(i - 1) == QChar('\\'))
++			|| !_field->getTextWithTagsPart(i, i + 3).tags.empty()) {
++			continue;
++		}
++		inside = !inside;
++		while (i + 1 < position - 2
++			&& _document->characterAt(i + 1) == QChar('`')) {
++			++i;
++		}
++	}
++	if (inside) {
++		return false;
++	}
++	_pairs.clear();
++	_handling = true;
++	cursor.beginEditBlock();
++	cursor.insertText(u"`\n\n```"_q, QTextCharFormat());
++	cursor.endEditBlock();
++	cursor.setPosition(position + 2);
++	_field->setTextCursor(cursor);
++	_handling = false;
++	return true;
++}
++
++bool ComposerEditing::forwardKey(not_null<QKeyEvent*> e, bool indent) {
++	const auto cursor = _field->textCursor();
++	const auto position = cursor.position();
++	const auto count = _document->characterCount();
++	auto from = position;
++	while (indent && from > 0 && !IsNewline(_document->characterAt(from - 1))) {
++		--from;
++	}
++	auto leading = from;
++	while (indent && leading < position && IsIndent(_document->characterAt(leading))) {
++		++leading;
++	}
++	const auto indentation = (indent && leading > from)
++		? [&] {
++			auto part = cursor;
++			part.setPosition(from);
++			part.setPosition(leading, QTextCursor::KeepAnchor);
++			return part.selectedText();
++		}()
++		: QString();
++	auto emptyLine = (leading == position);
++	for (auto i = position; indent && emptyLine; ++i) {
++		const auto ch = _document->characterAt(i);
++		if (IsNewline(ch) || ch.isNull()) {
++			break;
++		} else if (!IsIndent(ch)) {
++			emptyLine = false;
++		}
++	}
++	const auto guard = QPointer<ComposerEditing>(this);
++	_submitted = false;
++	_handling = true;
++	QCoreApplication::sendEvent(_edit, e);
++	if (!guard) {
++		return true;
++	}
++	// Let InputField choose whether Enter sends, exits a quote, or inserts a
++	// newline. Only extend a verified ordinary newline; never replace submit.
++	if (indent && !_submitted && !indentation.isEmpty()
++		&& _document->characterCount() == count + 1
++		&& _field->textCursor().position() == position + 1
++		&& IsNewline(_document->characterAt(position))) {
++		auto edit = _field->textCursor();
++		edit.joinPreviousEditBlock();
++		if (emptyLine) {
++			edit.setPosition(from);
++			edit.setPosition(position, QTextCursor::KeepAnchor);
++			edit.removeSelectedText();
++			edit.setPosition(from + 1);
++		} else {
++			edit.insertText(indentation);
++		}
++		edit.endEditBlock();
++		_field->setTextCursor(edit);
++	}
++	validatePairs();
++	_handling = false;
++	return true;
++}
++
++void ComposerEditing::contentsChange(int position, int removed, int added) {
++	if (_pairs.empty()) {
++		return;
++	} else if (!_handling) {
++		_pairs.clear();
++		return;
++	}
++	const auto end = position + removed;
++	std::erase_if(_pairs, [&](Pair &pair) {
++		if ((removed && position <= pair.open && pair.open < end)
++			|| (removed && position <= pair.close && pair.close < end)) {
++			return true;
++		}
++		if (position > pair.open && position <= pair.close) {
++			pair.untouched = false;
++		}
++		if (pair.open >= end) {
++			pair.open += added - removed;
++		}
++		if (pair.close >= end) {
++			pair.close += added - removed;
++		}
++		return false;
++	});
++}
++
++void ComposerEditing::validatePairs() {
++	const auto cursor = _field->textCursor();
++	std::erase_if(_pairs, [&](const Pair &pair) {
++		return cursor.hasSelection()
++			|| cursor.position() <= pair.open || cursor.position() > pair.close
++			|| _document->characterAt(pair.open) != pair.opening
++			|| _document->characterAt(pair.close) != pair.closing;
++	});
++}
++
++} // namespace
++
++void SetupComposerEditing(not_null<Ui::InputField*> field) {
++	// GIF/sticker caption boxes also use InitMessageField.
++	if (!field->property("teleComposerEditing").toBool()) {
++		field->setProperty("teleComposerEditing", true);
++		new ComposerEditing(field);
++	}
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_composer_editing.h b/Telegram/SourceFiles/tele/tele_composer_editing.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..c71b03400857168ec0de7081ce8ec15faac6b894
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_composer_editing.h
+@@ -0,0 +1,11 @@
++#pragma once
++
++namespace Ui {
++class InputField;
++} // namespace Ui
++
++namespace Tele {
++
++void SetupComposerEditing(not_null<Ui::InputField*> field);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 368460df234a3f59ad1b8d1b8af2bf0e7a24ea7f..d17c3142a5411e0a4263b6766863077cf253c07c 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -189,6 +189,9 @@ const char kOptionTrustedAppLinks[] = "tele-trusted-app-links";
+ const char kOptionWebAppsNoFullscreen[] = "tele-webapps-no-fullscreen";
+ const char kOptionNoRichPastePrompt[] = "tele-no-rich-paste-prompt";
+ const char kOptionLiveMarkdown[] = "tele-live-markdown";
++const char kOptionWrapSelectedText[] = "tele-wrap-selected-text";
++const char kOptionAutoCloseBrackets[] = "tele-auto-close-brackets";
++const char kOptionKeepIndentation[] = "tele-keep-indentation";
+ const char kOptionHideGiftButton[] = "tele-hide-gift-button";
+ const char kOptionHideBirthdays[] = "tele-hide-birthdays";
+ const char kOptionSilentByDefault[] = "tele-silent-by-default";
+@@ -1389,6 +1392,21 @@ base::options::toggle LiveMarkdownOption({
+ 		"with > are sent as quotes, with >! as expandable quotes.",
+ });
+ 
++base::options::toggle WrapSelectedTextOption({
++	.id = kOptionWrapSelectedText,
++	.name = "Wrap selected text",
++});
++
++base::options::toggle AutoCloseBracketsOption({
++	.id = kOptionAutoCloseBrackets,
++	.name = "Auto-close brackets and code blocks",
++});
++
++base::options::toggle KeepIndentationOption({
++	.id = kOptionKeepIndentation,
++	.name = "Keep indentation",
++});
++
+ base::options::toggle HideGiftButtonOption({
+ 	.id = kOptionHideGiftButton,
+ 	.name = "Hide the gift button in the message field",
+@@ -3402,6 +3420,18 @@ rpl::producer<bool> LiveMarkdownValue() {
+ 	});
+ }
+ 
++bool WrapSelectedText() {
++	return WrapSelectedTextOption.value();
++}
++
++bool AutoCloseBrackets() {
++	return AutoCloseBracketsOption.value();
++}
++
++bool KeepIndentation() {
++	return KeepIndentationOption.value();
++}
++
+ bool HideGiftButton() {
+ 	return HideGiftButtonOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 2b12a6f1556528834f1d58fa382ef3d12bf3e4af..d83d925005f0f8ffdf466a2b22967fe826f51f79 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -184,6 +184,9 @@ extern const char kOptionTrustedAppLinks[];
+ extern const char kOptionWebAppsNoFullscreen[];
+ extern const char kOptionNoRichPastePrompt[];
+ extern const char kOptionLiveMarkdown[];
++extern const char kOptionWrapSelectedText[];
++extern const char kOptionAutoCloseBrackets[];
++extern const char kOptionKeepIndentation[];
+ extern const char kOptionHideGiftButton[];
+ extern const char kOptionHideBirthdays[];
+ extern const char kOptionSilentByDefault[];
+@@ -550,6 +553,9 @@ void ClearMessageMenuLegacy();
+ [[nodiscard]] bool WebAppsNoFullscreen();
+ [[nodiscard]] bool NoRichPastePrompt();
+ [[nodiscard]] rpl::producer<bool> LiveMarkdownValue();
++[[nodiscard]] bool WrapSelectedText();
++[[nodiscard]] bool AutoCloseBrackets();
++[[nodiscard]] bool KeepIndentation();
+ [[nodiscard]] bool HideGiftButton();
+ [[nodiscard]] rpl::producer<> HideGiftButtonChanges();
+ [[nodiscard]] bool HideBirthdays();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index efc816e6b6693d8314d47cba5ea17e8d649ee81d..cc390cda21b7080ae9daa2bfbc5cc469c9fb8874 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -263,6 +263,9 @@ struct Spec {
+ 		Toggle(kOptionInlineWithoutVia),
+ 		Toggle(kOptionNoRichPastePrompt),
+ 		Toggle(kOptionLiveMarkdown),
++		Toggle(kOptionWrapSelectedText),
++		Toggle(kOptionAutoCloseBrackets),
++		Toggle(kOptionKeepIndentation),
+ 		Toggle(kOptionHideGiftButton),
+ 		Toggle(kOptionHideBirthdays),
+ 		Toggle(kOptionSilentByDefault),
