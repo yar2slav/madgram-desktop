@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 377 patches, newest release first.
+all 378 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -41,6 +41,7 @@ all 377 patches, newest release first.
 | [366](../patches/tdesktop/0366-feat-show-when-members-joined-a-group.patch) | the menu of a member in a group's members list shows when they joined. telegram only says who invited you | settings → mad → profiles and ids, off |
 | [367](../patches/tdesktop/0367-fix-go-offline-right-after-marking-messages-as-read-.patch) | ghost mode sets you offline again right after mark as read up to here or reading a chat when you reply, instead of leaving you online for five minutes | with 32 |
 | [368](../patches/tdesktop/0368-feat-show-if-a-contact-is-mutual-in-their-profile.patch) | profiles of your contacts say whether the contact is mutual, that is whether they added you back | settings → mad → profiles and ids, off |
+| [369](../patches/tdesktop/0369-feat-show-message-details-in-the-message-menu.patch) | the message menu has details: the exact date with seconds, the original date of a forward, views, forwards, and the file's name, size, resolution, duration, bitrate, type and data center. click a line to copy it | settings → mad → menus, off |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 

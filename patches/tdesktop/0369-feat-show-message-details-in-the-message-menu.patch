@@ -1,0 +1,425 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Wed, 11 Nov 2026 20:47:04 +0300
+Subject: [PATCH] feat: show message details in the message menu
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |  14 ++
+ .../SourceFiles/settings/settings_tele.cpp    |   4 +
+ .../SourceFiles/tele/tele_menu_registry.cpp   |  10 +-
+ .../SourceFiles/tele/tele_message_details.cpp | 190 ++++++++++++++++++
+ .../SourceFiles/tele/tele_message_details.h   |  20 ++
+ .../SourceFiles/tele/tele_message_menu.cpp    |   2 +
+ Telegram/SourceFiles/tele/tele_options.cpp    |  11 +
+ Telegram/SourceFiles/tele/tele_options.h      |   2 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |   1 +
+ 10 files changed, 253 insertions(+), 3 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_message_details.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_message_details.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 24bf79cc3d872d959e6824cae15aed01d3307bd8..04fc4a530ad09a8e83321cb570f2c00f5802066b 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -3012,6 +3012,8 @@ PRIVATE
+     tele/tele_menu_layout.h
+     tele/tele_menu_registry.cpp
+     tele/tele_menu_registry.h
++    tele/tele_message_details.cpp
++    tele/tele_message_details.h
+     tele/tele_message_menu.cpp
+     tele/tele_message_menu.h
+     tele/tele_mtp_console.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 40b66a9d9acc63fb9a85d0998841a9035d0b1440..27c10d07b0c869c0a16e8f3bcf44d9617a425bdf 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -132,6 +132,20 @@
+   "Account": "Аккаунт",
+   "Account created": "Аккаунт создан",
+   "Show account age": "Показывать возраст аккаунта",
++  "Details": "Подробности",
++  "Date": "Дата",
++  "Original date": "Дата оригинала",
++  "Views": "Просмотры",
++  "Forwards": "Репосты",
++  "File name": "Имя файла",
++  "Size": "Размер",
++  "Resolution": "Разрешение",
++  "Duration": "Длительность",
++  "Bitrate": "Битрейт",
++  "%1 kbps": "%1 кбит/с",
++  "Type": "Тип",
++  "Show details in the message menu": "Показывать подробности в меню сообщения",
++  "Exact dates, views, forwards and file info. Click a line to copy it.": "Точные даты, просмотры, репосты и данные файла. Нажми на строку, чтобы скопировать.",
+   "Contact": "Контакт",
+   "Mutual": "Взаимный",
+   "Not mutual": "Не взаимный",
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 05ead2dfa6c4bf7e9b704d0afa1a470abc732172..4b2fc0ae1d41659443ae8d18ab06d32cb8ffa20b 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3440,6 +3440,10 @@ void FillMenus(SectionBuilder &builder) {
+ 		::Tele::kOptionRemoveMyMessages,
+ 		{ u"delete"_q, u"clear"_q });
+ 	AddOptionToggle(builder, ::Tele::kOptionMessageIdMenu);
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionMessageDetails,
++		{ u"info"_q, u"views"_q, u"file"_q, u"size"_q, u"bitrate"_q });
+ 	AddOptionToggle(builder, ::Tele::kOptionViewAsTl);
+ 	AddOptionToggle(builder, ::Tele::kOptionCopyEmojiId);
+ 	AddOptionToggle(
+diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+index a6c3d7bafb438e656210adc2896ffe17701694e4..7962ba3c77ec78d2fdced07176ce49d28fd2361b 100644
+--- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
++++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+@@ -704,6 +704,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		{ .key = u"shot"_q, .phrases = {
+ 			P([](int) { return Tr(u"Shot"_q); }, st::menuIconPhoto),
+ 		}, .contexts = kMessage | kSelection, .gate = kOptionShot },
++		{ .key = u"details"_q, .phrases = {
++			P([](int) { return Tr(u"Details"_q); }, st::menuIconInfo),
++		}, .contexts = kMessage, .gate = kOptionMessageDetails,
++			.flags = MenuItemFlag::Submenu },
+ 		{ .key = u"html_send_tgw"_q, .phrases = {
+ 			P([](int) { return Tr(u"Send as .tgw to…"_q); },
+ 				st::menuIconForward),
+@@ -818,7 +822,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"edit_history,shot,mark_viewed,html_send_tgw,html_script_log,|,"
+ 		"select,select_up_to,clear_selection,|,"
+ 		"delete,report,block_user,restrict,|,"
+-		"[Tools#tools:view_as_tl,mtp_inspector],|,"
++		"details,[Tools#tools:view_as_tl,mtp_inspector],|,"
+ 		"info.packs,info.restriction,info.read,info.forwarded,info.edited,"
+ 		"info.author,info.id"_q;
+ 	result.upstream = u""
+@@ -840,7 +844,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"select_up_to,clear_selection,reschedule,|,"
+ 		"info.packs,info.restriction,info.read,info.forwarded,info.edited,"
+ 		"info.author,shot,send_as_gif,html_send_tgw,html_script_log,|,"
+-		"view_as_tl,mtp_inspector,copy_emoji_id,copy_id,|,"
++		"details,view_as_tl,mtp_inspector,copy_emoji_id,copy_id,|,"
+ 		"info.id"_q;
+ 	result.minimal = u""
+ 		"reactions,"
+@@ -869,7 +873,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"html_send_tgw,html_script_log,|,"
+ 		"select,select_up_to,clear_selection,|,"
+ 		"delete,report,block_user,restrict,|,"
+-		"view_as_tl,mtp_inspector,|,"
++		"details,view_as_tl,mtp_inspector,|,"
+ 		"info.packs,info.restriction,info.read,info.forwarded,info.edited,"
+ 		"info.author,info.id"_q;
+ 	return result;
+diff --git a/Telegram/SourceFiles/tele/tele_message_details.cpp b/Telegram/SourceFiles/tele/tele_message_details.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..e414c6e38a9eec9204367d2861ed672851209bc8
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_message_details.cpp
+@@ -0,0 +1,190 @@
++#include "tele/tele_message_details.h"
++
++#include "base/unixtime.h"
++#include "data/data_document.h"
++#include "data/data_media_types.h"
++#include "data/data_photo.h"
++#include "history/history_item.h"
++#include "history/history_item_components.h"
++#include "lang/lang_keys.h"
++#include "main/session/session_show.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_notices.h"
++#include "tele/tele_options.h"
++#include "ui/image/image_location.h"
++#include "ui/text/format_values.h"
++#include "ui/widgets/popup_menu.h"
++#include "styles/style_menu_icons.h"
++
++#include <QtCore/QLocale>
++#include <QtGui/QClipboard>
++#include <QtGui/QGuiApplication>
++
++namespace Tele {
++namespace {
++
++constexpr auto kShownLength = 48;
++
++struct Line {
++	QString label;
++	QString value;
++};
++
++[[nodiscard]] QString ExactDate(TimeId date) {
++	const auto parsed = base::unixtime::parse(date);
++	return QLocale().toString(parsed.date(), QLocale::ShortFormat)
++		+ u" "_q
++		+ parsed.time().toString(u"HH:mm:ss"_q);
++}
++
++[[nodiscard]] QString Resolution(int width, int height) {
++	return QString::number(width)
++		+ QChar(0x00D7)
++		+ QString::number(height);
++}
++
++[[nodiscard]] int PhotoDc(not_null<PhotoData*> photo) {
++	for (const auto size : {
++		Data::PhotoSize::Large,
++		Data::PhotoSize::Thumbnail,
++		Data::PhotoSize::Small,
++	}) {
++		const auto &data = photo->location(size).file().data;
++		if (const auto file = std::get_if<StorageFileLocation>(&data)) {
++			if (const auto dc = file->dcId()) {
++				return dc;
++			}
++		}
++	}
++	return 0;
++}
++
++void AddDocumentLines(
++		std::vector<Line> &lines,
++		not_null<DocumentData*> document) {
++	if (const auto name = document->filename(); !name.isEmpty()) {
++		lines.push_back({ Tr(u"File name"_q), name });
++	}
++	const auto size = document->size;
++	if (size > 0) {
++		lines.push_back({ Tr(u"Size"_q), Ui::FormatSizeText(size) });
++	}
++	const auto dimensions = document->dimensions;
++	if (dimensions.width() > 0 && dimensions.height() > 0) {
++		lines.push_back({
++			Tr(u"Resolution"_q),
++			Resolution(dimensions.width(), dimensions.height()),
++		});
++	}
++	const auto seconds = document->duration() / 1000;
++	if (seconds > 0) {
++		lines.push_back({
++			Tr(u"Duration"_q),
++			Ui::FormatDurationText(seconds),
++		});
++		if (size > 0) {
++			lines.push_back({
++				Tr(u"Bitrate"_q),
++				Tr(u"%1 kbps"_q).arg(size * 8 / seconds / 1000),
++			});
++		}
++	}
++	if (const auto mime = document->mimeString(); !mime.isEmpty()) {
++		lines.push_back({ Tr(u"Type"_q), mime });
++	}
++	if (const auto dc = document->videoPreloadLocation().dcId()) {
++		lines.push_back({ Tr(u"DC"_q), QString::number(dc) });
++	}
++}
++
++void AddPhotoLines(std::vector<Line> &lines, not_null<PhotoData*> photo) {
++	const auto size = photo->imageByteSize(Data::PhotoSize::Large);
++	if (size > 0) {
++		lines.push_back({ Tr(u"Size"_q), Ui::FormatSizeText(size) });
++	}
++	if (photo->width() > 0 && photo->height() > 0) {
++		lines.push_back({
++			Tr(u"Resolution"_q),
++			Resolution(photo->width(), photo->height()),
++		});
++	}
++	if (const auto dc = PhotoDc(photo)) {
++		lines.push_back({ Tr(u"DC"_q), QString::number(dc) });
++	}
++}
++
++[[nodiscard]] std::vector<Line> CollectLines(not_null<HistoryItem*> item) {
++	auto result = std::vector<Line>();
++	result.push_back({ Tr(u"Date"_q), ExactDate(item->date()) });
++	if (const auto forwarded = item->Get<HistoryMessageForwarded>()) {
++		if (forwarded->originalDate) {
++			result.push_back({
++				Tr(u"Original date"_q),
++				ExactDate(forwarded->originalDate),
++			});
++		}
++	}
++	if (const auto views = item->Get<HistoryMessageViews>()) {
++		if (views->views.count > 0) {
++			result.push_back({
++				Tr(u"Views"_q),
++				QString::number(views->views.count),
++			});
++		}
++		if (views->forwardsCount > 0) {
++			result.push_back({
++				Tr(u"Forwards"_q),
++				QString::number(views->forwardsCount),
++			});
++		}
++	}
++	if (const auto media = item->media()) {
++		if (const auto document = media->document()) {
++			AddDocumentLines(result, document);
++		} else if (const auto photo = media->photo()) {
++			AddPhotoLines(result, photo);
++		}
++	}
++	return result;
++}
++
++[[nodiscard]] QString Shown(const QString &value) {
++	return (value.size() > kShownLength)
++		? (value.left(kShownLength - 1) + QChar(0x2026))
++		: value;
++}
++
++void CopyValue(
++		const std::shared_ptr<Main::SessionShow> &show,
++		const QString &value) {
++	QGuiApplication::clipboard()->setText(value);
++	ShowCopiedToast(show, tr::lng_text_copied(tr::now), { value });
++}
++
++} // namespace
++
++void AddMessageDetailsAction(
++		not_null<Ui::PopupMenu*> menu,
++		std::shared_ptr<Main::SessionShow> show,
++		not_null<HistoryItem*> item) {
++	if (!MessageDetailsMenu()
++		|| item->isService()
++		|| !IsServerMsgId(item->id)) {
++		return;
++	}
++	auto submenu = std::make_unique<Ui::PopupMenu>(
++		menu.get(),
++		menu->st());
++	for (const auto &line : CollectLines(item)) {
++		const auto value = line.value;
++		submenu->addAction(
++			line.label + u": "_q + Shown(value),
++			[=] { CopyValue(show, value); });
++	}
++	menu->addAction(
++		Tr(u"Details"_q),
++		std::move(submenu),
++		&st::menuIconInfo);
++}
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_message_details.h b/Telegram/SourceFiles/tele/tele_message_details.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..fcd44c38e1967f66edc1a97269fed291fad1ffcb
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_message_details.h
+@@ -0,0 +1,20 @@
++#pragma once
++
++class HistoryItem;
++
++namespace Main {
++class SessionShow;
++} // namespace Main
++
++namespace Ui {
++class PopupMenu;
++} // namespace Ui
++
++namespace Tele {
++
++void AddMessageDetailsAction(
++	not_null<Ui::PopupMenu*> menu,
++	std::shared_ptr<Main::SessionShow> show,
++	not_null<HistoryItem*> item);
++
++} // namespace Tele
+diff --git a/Telegram/SourceFiles/tele/tele_message_menu.cpp b/Telegram/SourceFiles/tele/tele_message_menu.cpp
+index 2a3acc5b3b5382a5809d5651dea1ec2cb9b57640..fecded66875cebe0a0d51f6759caeeeefb20e299 100644
+--- a/Telegram/SourceFiles/tele/tele_message_menu.cpp
++++ b/Telegram/SourceFiles/tele/tele_message_menu.cpp
+@@ -14,6 +14,7 @@
+ #include "main/session/session_show.h"
+ #include "tele/tele_lowercase.h"
+ #include "tele/tele_menu_apply.h"
++#include "tele/tele_message_details.h"
+ #include "tele/tele_mtp_inspector.h"
+ #include "tele/tele_html_card.h"
+ #include "tele/tele_notices.h"
+@@ -158,6 +159,7 @@ void AppendTools(
+ 			menu->addAction(MakeIdAction(menu, show, id)),
+ 			u"info.id"_q);
+ 	}
++	AddMessageDetailsAction(menu, show, item);
+ }
+ 
+ [[nodiscard]] int MessageContext(HistoryItem *item) {
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 93a9d9d667d1351aa4a22a4a21309131ef002cd0..afda6201ec01534c7abdb828d879df156039541d 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -116,6 +116,7 @@ const char kOptionMutualContact[] = "tele-mutual-contact";
+ const char kOptionMergeIdDc[] = "tele-merge-id-dc";
+ const char kOptionMediaUploadDate[] = "tele-media-upload-date";
+ const char kOptionMessageIdMenu[] = "tele-message-id-menu";
++const char kOptionMessageDetails[] = "tele-message-details";
+ const char kOptionHideIgnored[] = "tele-hide-ignored";
+ const char kOptionMuteIgnored[] = "tele-mute-ignored";
+ const char kOptionIgnoreInMenu[] = "tele-ignore-in-menu";
+@@ -941,6 +942,12 @@ base::options::toggle MessageIdMenuOption({
+ 	.description = "Click it to copy.",
+ });
+ 
++base::options::toggle MessageDetailsOption({
++	.id = kOptionMessageDetails,
++	.name = "Show details in the message menu",
++	.description = "Exact dates, views, forwards and file info. Click a line to copy it.",
++});
++
+ base::options::toggle HideIgnoredOption({
+ 	.id = kOptionHideIgnored,
+ 	.name = "Hide ignored messages completely",
+@@ -2789,6 +2796,10 @@ bool MessageIdMenu() {
+ 	return MessageIdMenuOption.value();
+ }
+ 
++bool MessageDetailsMenu() {
++	return MessageDetailsOption.value();
++}
++
+ bool HideIgnored() {
+ 	return HideIgnoredOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 4c9423dbc65334555b40c569dcbda3ba508910a6..762260aad275711d051777092c279f366ee18bf9 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -111,6 +111,7 @@ extern const char kOptionMutualContact[];
+ extern const char kOptionMergeIdDc[];
+ extern const char kOptionMediaUploadDate[];
+ extern const char kOptionMessageIdMenu[];
++extern const char kOptionMessageDetails[];
+ extern const char kOptionHideIgnored[];
+ extern const char kOptionMuteIgnored[];
+ extern const char kOptionIgnoreInMenu[];
+@@ -432,6 +433,7 @@ void SetMoneyHideBalances(bool hidden);
+ [[nodiscard]] rpl::producer<bool> MutualContactValue();
+ [[nodiscard]] rpl::producer<bool> MergeIdDcValue();
+ [[nodiscard]] bool MessageIdMenu();
++[[nodiscard]] bool MessageDetailsMenu();
+ [[nodiscard]] bool HideIgnored();
+ [[nodiscard]] rpl::producer<bool> HideIgnoredValue();
+ [[nodiscard]] bool MuteIgnored();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index 5682ba4c4ec2bc3af1f0c54ffdf0421694442b2f..57f27081ead77df21ee521256be8c7b1b0c3c09c 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -201,6 +201,7 @@ struct Spec {
+ 		Toggle(kOptionMergeIdDc),
+ 		Toggle(kOptionMediaUploadDate),
+ 		Toggle(kOptionMessageIdMenu),
++		Toggle(kOptionMessageDetails),
+ 		Toggle(kOptionHideIgnored),
+ 		Toggle(kOptionMuteIgnored),
+ 		Toggle(kOptionIgnoreInMenu),
