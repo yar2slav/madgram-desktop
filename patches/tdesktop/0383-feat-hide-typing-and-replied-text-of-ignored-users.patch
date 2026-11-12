@@ -1,0 +1,149 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 16:49:54 +0200
+Subject: [PATCH] feat: hide typing and replied text of ignored users
+
+---
+ Telegram/Resources/langs/mad_ru.json          |  1 +
+ Telegram/SourceFiles/api/api_updates.cpp      |  3 +++
+ .../history/view/history_view_reply.cpp       | 12 +++++++++---
+ Telegram/SourceFiles/tele/tele_ignored.cpp    | 19 +++++++++++++++----
+ 4 files changed, 28 insertions(+), 7 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 492537c60a1b3640fd828d4acd65f279db8c2fef..00ae363a0d7981092a817712e9d8fea4beafeafd 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -1383,6 +1383,7 @@
+   "For me": "Для меня",
+   "Hide messages from this user": "Скрыть сообщения пользователя",
+   "Show messages from this user": "Показать сообщения пользователя",
++  "Hidden message": "скрытое сообщение",
+   "Shot": "Снимок",
+   "Shot copied to clipboard.": "Снимок скопирован в буфер обмена.",
+   "Shot in the message menu": "Снимок в меню сообщения",
+diff --git a/Telegram/SourceFiles/api/api_updates.cpp b/Telegram/SourceFiles/api/api_updates.cpp
+index e1160430ffe4367b155daaaf469ee66be55cbd3c..cdc19b07cf757663cf4e04f3d7bc70d75a4c47ac 100644
+--- a/Telegram/SourceFiles/api/api_updates.cpp
++++ b/Telegram/SourceFiles/api/api_updates.cpp
+@@ -81,6 +81,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/scripting/tele_script_messages.h"
+ #include "tele/secret/secret_chats.h"
+ #include "tele/tele_ghost.h"
++#include "tele/tele_ignored.h"
+ #include "tele/tele_send_order.h"
+ 
+ namespace Api {
+@@ -1133,6 +1134,8 @@ void Updates::handleSendActionUpdate(
+ 	}
+ 	if (!from || !from->isUser() || from->isSelf()) {
+ 		return;
++	} else if (from != peer && Tele::IsIgnored(from)) {
++		return;
+ 	} else if (action.type() == mtpc_sendMessageEmojiInteraction) {
+ 		handleEmojiInteraction(peer, action.c_sendMessageEmojiInteraction());
+ 		return;
+diff --git a/Telegram/SourceFiles/history/view/history_view_reply.cpp b/Telegram/SourceFiles/history/view/history_view_reply.cpp
+index 730fbc18a99d1837a17603cfb6e8dd5428a10768..0b4139661775de513315dc25c0d956e20a200784 100644
+--- a/Telegram/SourceFiles/history/view/history_view_reply.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_reply.cpp
+@@ -37,6 +37,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "ui/power_saving.h"
+ #include "window/window_session_controller.h"
+ #include "tele/tele_bubble_badges.h"
++#include "tele/tele_ignored.h"
++#include "tele/tele_lowercase.h"
+ #include "tele/tele_mad_badges.h"
+ #include "tele/tele_shot_sharp.h"
+ #include "tele/tele_spoilers.h"
+@@ -389,6 +391,7 @@ void Reply::update(
+ 		: nullptr;
+ 	const auto story = data->resolvedStory.get();
+ 	const auto externalMedia = fields.externalMedia.get();
++	const auto ignored = ::Tele::IgnoredItem(message);
+ 	if (!_externalSender) {
+ 		if (const auto id = fields.externalSenderId) {
+ 			_externalSender = view->history()->owner().peer(id);
+@@ -410,17 +413,18 @@ void Reply::update(
+ 		: (messagePoll && fields.pollOption.isEmpty())
+ 		? &messagePoll->attachedMedia
+ 		: nullptr;
+-	const auto hasPreview = (story && story->hasReplyPreview())
++	const auto hasPreview = !ignored && ((story && story->hasReplyPreview())
+ 		|| (message
+ 			&& message->media()
+ 			&& message->media()->hasReplyPreview())
+ 		|| (externalMedia && externalMedia->hasReplyPreview())
+ 		|| (pollMediaPtr
+-			&& (pollMediaPtr->photo || pollMediaPtr->document));
++			&& (pollMediaPtr->photo || pollMediaPtr->document)));
+ 	_hasPreview = hasPreview ? 1 : 0;
+ 	_displaying = data->displaying() ? 1 : 0;
+ 	_multiline = data->multiline() ? 1 : 0;
+ 	const auto hasQuoteIcon = _displaying
++		&& !ignored
+ 		&& fields.manualQuote
+ 		&& !quote.empty();
+ 	_hasQuoteIcon = hasQuoteIcon ? 1 : 0;
+@@ -432,6 +436,8 @@ void Reply::update(
+ 	}));
+ 	const auto text = (!_displaying && data->unavailable())
+ 		? TextWithEntities()
++		: ignored
++		? Ui::Text::Italic(::Tele::Tr(u"Hidden message"_q))
+ 		: task
+ 		? Ui::Text::Colorized(task->completionDate
+ 			? helper.image({
+@@ -483,7 +489,7 @@ void Reply::update(
+ 
+ 	if (_displaying) {
+ 		setLinkFrom(view, data);
+-		const auto media = message ? message->media() : nullptr;
++		const auto media = (message && !ignored) ? message->media() : nullptr;
+ 		if (!media
+ 			|| !media->hasReplyPreview()
+ 			|| !media->hasSpoilerForPreview()) {
+diff --git a/Telegram/SourceFiles/tele/tele_ignored.cpp b/Telegram/SourceFiles/tele/tele_ignored.cpp
+index aea4c18b4ca8e3e630240922361907e6ba5506fc..c1a1eecc653821bf733ed4c5514515448c207128 100644
+--- a/Telegram/SourceFiles/tele/tele_ignored.cpp
++++ b/Telegram/SourceFiles/tele/tele_ignored.cpp
+@@ -9,6 +9,7 @@
+ #include "data/data_user.h"
+ #include "history/history.h"
+ #include "history/history_item.h"
++#include "history/history_item_components.h"
+ #include "history/view/history_view_element.h"
+ #include "main/main_session.h"
+ #include "tele/tele_hidden_words.h"
+@@ -96,6 +97,16 @@ struct State {
+ 	return list.join(QChar(','));
+ }
+ 
++[[nodiscard]] bool Affected(
++		not_null<HistoryItem*> item,
++		const base::flat_set<Key> &changed,
++		bool words) {
++	const auto from = item->from();
++	return (from->isUser() && (changed.contains(PeerKey(from))
++			|| changed.contains(PeerKey(from) | kHiddenBit)))
++		|| (words && HiddenByWords(item));
++}
++
+ void Refresh(
+ 		const State &state,
+ 		const base::flat_set<Key> &changed,
+@@ -106,10 +117,10 @@ void Refresh(
+ 	auto items = base::flat_set<not_null<HistoryItem*>>();
+ 	for (const auto &view : state.views) {
+ 		const auto item = view->data();
+-		const auto from = item->from();
+-		if ((from->isUser() && (changed.contains(PeerKey(from))
+-				|| changed.contains(PeerKey(from) | kHiddenBit)))
+-			|| (words && HiddenByWords(item))) {
++		const auto reply = item->Get<HistoryMessageReply>();
++		const auto to = reply ? reply->resolvedMessage.get() : nullptr;
++		if (Affected(item, changed, words)
++			|| (to && Affected(to, changed, words))) {
+ 			items.emplace(item);
+ 		}
+ 	}

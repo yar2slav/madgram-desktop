@@ -245,6 +245,7 @@ settings → tele → privacy.
 | [228](../patches/tdesktop/0228-fix-invisible-stories-follow-ghost-settings-and-surv.patch) | watching stories invisibly follows per-chat ghost settings, keeps who you watched across restarts, and asks before a live story, which shows you to its author | with 4 |
 | [292](../patches/tdesktop/0292-fix-closing-the-rich-editor-keeps-drafts-on-this-dev.patch) | closing the rich message editor saves its draft on this device and closes, when drafts stay on this device and in secret chats, instead of trying the cloud | with 93 |
 | [367](../patches/tdesktop/0367-fix-go-offline-right-after-marking-messages-as-read-.patch) | ghost mode sets you offline again right after mark as read up to here or reading a chat when you reply, instead of leaving you online for five minutes | with 32 |
+| [383](../patches/tdesktop/0383-feat-hide-typing-and-replied-text-of-ignored-users.patch) | ignored users no longer show as typing, and replies to their messages say hidden message instead of quoting them | with 16 |
 
 ## profiles and ids
 
