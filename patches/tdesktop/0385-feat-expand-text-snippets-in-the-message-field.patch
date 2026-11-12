@@ -1,0 +1,458 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Thu, 12 Nov 2026 20:16:00 +0300
+Subject: [PATCH] feat: expand text snippets in the message field
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |   6 +-
+ .../chat_helpers/message_field.cpp            |   2 +
+ .../SourceFiles/settings/settings_tele.cpp    |  27 +++
+ Telegram/SourceFiles/tele/tele_options.cpp    |  24 ++
+ Telegram/SourceFiles/tele/tele_options.h      |   4 +
+ .../SourceFiles/tele/tele_settings_io.cpp     |   2 +
+ Telegram/SourceFiles/tele/tele_snippets.cpp   | 221 ++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_snippets.h     |  15 ++
+ 9 files changed, 302 insertions(+), 1 deletion(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_snippets.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_snippets.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index c9a4eb5e0dc7febc7752201605bfb2e5db786104..d21fb733ca384442d085af33e9979e12858c18df 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2660,6 +2660,8 @@ PRIVATE
+     tele/tele_mad_badges.h
+     tele/tele_mad_badge_card.cpp
+     tele/tele_mad_badge_card.h
++    tele/tele_snippets.cpp
++    tele/tele_snippets.h
+     tele/tele_reminders.cpp
+     tele/tele_reminders.h
+     settings/settings_tele.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 85746e107a7f7c0403ab829189380dcf714315e5..785fdeb8ae58e737645c105bd7590e2e72cf3687 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2139,5 +2139,9 @@
+   "Reminder set for %1": "Напомню %1",
+   "The message comes back in Saved Messages at this time, with a notification on all your devices.": "Сообщение вернётся в Избранное в это время, с уведомлением на всех устройствах.",
+   "Remind me in the message menu": "Пункт «Напомнить» в меню сообщения",
+-  "Forwards the message to Saved Messages at the chosen time, so it comes back with a notification on every device.": "Пересылает сообщение в Избранное в выбранное время, и оно приходит с уведомлением на все устройства."
++  "Forwards the message to Saved Messages at the chosen time, so it comes back with a notification on every device.": "Пересылает сообщение в Избранное в выбранное время, и оно приходит с уведомлением на все устройства.",
++  "Snippets": "Сниппеты",
++  "Shortcut = text": "Сокращение = текст",
++  "One per line, like ;addr = Red Square 1. Type the shortcut and a space to get the text, write %1 for a new line.": "По одному в строке, например ;адрес = Красная площадь, 1. Напиши сокращение и пробел, и оно заменится текстом. Перенос строки: %1.",
++  "Line %1 needs to look like shortcut = text.": "Строка %1 должна выглядеть так: сокращение = текст."
+ }
+diff --git a/Telegram/SourceFiles/chat_helpers/message_field.cpp b/Telegram/SourceFiles/chat_helpers/message_field.cpp
+index 7647ec43adeb8dd53aa0ca94d45f9fbc968c4484..a13ca673217fb4d1cec0d92a008cfeb012cf8845 100644
+--- a/Telegram/SourceFiles/chat_helpers/message_field.cpp
++++ b/Telegram/SourceFiles/chat_helpers/message_field.cpp
+@@ -49,6 +49,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "settings/settings_common.h"
+ #include "settings/sections/settings_premium.h"
+ #include "tele/tele_composer_editing.h"
++#include "tele/tele_snippets.h"
+ #include "tele/tele_link_rewrites.h"
+ #include "tele/tele_live_markdown.h"
+ #include "tele/tele_username_aliases.h"
+@@ -733,6 +734,7 @@ std::shared_ptr<Ui::ChatStyle> InitMessageField(
+ 	});
+ 	InitMessageFieldGeometry(field);
+ 	Tele::SetupComposerEditing(field);
++	Tele::SetupSnippets(field);
+ 	return style;
+ }
+ 
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 8ac878c646b2fd75757248a607a39e315e2b72a5..80655c855b9b6101c1338be889f1768174a95413 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -40,6 +40,7 @@
+ #include "tele/tele_gift_grid.h"
+ #include "tele/tele_gift_studio.h"
+ #include "tele/tele_hidden_words.h"
++#include "tele/tele_snippets.h"
+ #include "tele/tele_ignored.h"
+ #include "tele/tele_invisible.h"
+ #include "tele/tele_kept_store.h"
+@@ -1720,6 +1721,31 @@ void AddHiddenWords(SectionBuilder &builder) {
+ 	}
+ }
+ 
++void AddSnippets(SectionBuilder &builder) {
++	const auto controller = builder.controller();
++	const auto button = AddButton(builder, {
++		.id = u"tele-snippets"_q,
++		.title = rpl::single(::Tele::Tr(u"Snippets"_q)),
++		.st = &st::settingsButtonNoIcon,
++		.label = ::Tele::SnippetsCountValue(
++		) | rpl::map([](int count) {
++			return count ? QString::number(count) : QString();
++		}),
++		.onClick = [=] {
++			controller->show(Box(::Tele::SnippetsBox));
++		},
++		.keywords = {
++			u"templates"_q,
++			u"shortcuts"_q,
++			u"text replacement"_q,
++			u"expand"_q,
++		},
++	});
++	if (button) {
++		SetupLink(button, u"tele-snippets"_q);
++	}
++}
++
+ void ShowOnlineNotifyBox(not_null<Window::SessionController*> window) {
+ 	const auto session = &window->session();
+ 	auto selected = std::vector<not_null<PeerData*>>();
+@@ -3427,6 +3453,7 @@ void FillSending(SectionBuilder &builder) {
+ 		builder,
+ 		::Tele::kOptionChainMentions,
+ 		{ u"mention"_q, u"tag"_q, u"username"_q, u"tab"_q });
++	AddSnippets(builder);
+ 	AddGroupDivider(builder);
+ 	AddGroupTitle(builder, u"Confirmations"_q);
+ 	AddOptionToggle(
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index b7571121b636e96b1cd8c874374746ca943490ec..5c7ee3b6d291c6b0ede167f93f9482e568c685f2 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -124,6 +124,7 @@ const char kOptionMuteIgnored[] = "tele-mute-ignored";
+ const char kOptionIgnoreInMenu[] = "tele-ignore-in-menu";
+ const char kOptionIgnoredUsers[] = "tele-ignored-users";
+ const char kOptionHiddenWords[] = "tele-hidden-words";
++const char kOptionSnippets[] = "tele-snippets";
+ const char kOptionMessageSeconds[] = "tele-message-seconds";
+ const char kOptionLastSeenSeconds[] = "tele-last-seen-seconds";
+ const char kOptionEditHistory[] = "tele-edit-history";
+@@ -996,6 +997,11 @@ base::options::option<QString> HiddenWordsOption({
+ 	.name = "Hidden words",
+ });
+ 
++base::options::option<QString> SnippetsOption({
++	.id = kOptionSnippets,
++	.name = "Snippets",
++});
++
+ base::options::toggle MessageSecondsOption({
+ 	.id = kOptionMessageSeconds,
+ 	.name = "Show seconds in message times",
+@@ -2919,6 +2925,24 @@ rpl::producer<QString> HiddenWordsValue() {
+ 	});
+ }
+ 
++QString SnippetsText() {
++	return SnippetsOption.value();
++}
++
++void SetSnippetsText(const QString &value) {
++	SnippetsOption.set(value);
++}
++
++rpl::producer<QString> SnippetsTextValue() {
++	return rpl::single(
++		rpl::empty
++	) | rpl::then(
++		SnippetsOption.changes()
++	) | rpl::map([] {
++		return SnippetsOption.value();
++	});
++}
++
+ bool MessageSeconds() {
+ 	return MessageSecondsOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 088315213df70f62da0fe40b9cde3ab30c91c136..01c6cf263452a293ad93c4deb5a606c7642c5511 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -119,6 +119,7 @@ extern const char kOptionMuteIgnored[];
+ extern const char kOptionIgnoreInMenu[];
+ extern const char kOptionIgnoredUsers[];
+ extern const char kOptionHiddenWords[];
++extern const char kOptionSnippets[];
+ extern const char kOptionMessageSeconds[];
+ extern const char kOptionLastSeenSeconds[];
+ extern const char kOptionEditHistory[];
+@@ -454,6 +455,9 @@ void SetIgnoredList(const QString &value);
+ [[nodiscard]] QString HiddenWords();
+ void SetHiddenWords(const QString &value);
+ [[nodiscard]] rpl::producer<QString> HiddenWordsValue();
++[[nodiscard]] QString SnippetsText();
++void SetSnippetsText(const QString &value);
++[[nodiscard]] rpl::producer<QString> SnippetsTextValue();
+ [[nodiscard]] bool MessageSeconds();
+ [[nodiscard]] rpl::producer<bool> MessageSecondsValue();
+ [[nodiscard]] bool LastSeenSeconds();
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index d9429741dd6ada36f57530f025d240fa7fdb4148..c49f7b4bcc92091d05d8027bbb30c2db033cf08c 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -10,6 +10,7 @@
+ #include "tele/tele_chat_backgrounds.h"
+ #include "tele/tele_ghost.h"
+ #include "tele/tele_hidden_words.h"
++#include "tele/tele_snippets.h"
+ #include "tele/tele_ignored.h"
+ #include "tele/tele_invisible.h"
+ #include "tele/tele_link_rewrites.h"
+@@ -400,6 +401,7 @@ struct Spec {
+ 		People(kOptionGhostChats, Kind::List, NormalizeGhostChats),
+ 		People(kOptionIgnoredUsers, Kind::List, NormalizeIgnoredUsers),
+ 		People(kOptionHiddenWords, Kind::Lines, NormalizeHiddenWords),
++		People(kOptionSnippets, Kind::Lines, NormalizeSnippets),
+ 		People(kOptionUsernameAliases, Kind::List, NormalizeUsernameAliases),
+ 		People(kOptionLocalNames, Kind::List, NormalizeLocalNames),
+ 		People(kOptionChatBackgrounds, Kind::Backgrounds),
+diff --git a/Telegram/SourceFiles/tele/tele_snippets.cpp b/Telegram/SourceFiles/tele/tele_snippets.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..c157ddb747a4b8da464e7f49430fa57afa9e3258
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_snippets.cpp
+@@ -0,0 +1,221 @@
++#include "tele/tele_snippets.h"
++
++#include "lang/lang_keys.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "ui/layers/generic_box.h"
++#include "ui/vertical_list.h"
++#include "ui/widgets/fields/input_field.h"
++#include "ui/widgets/labels.h"
++#include "ui/wrap/slide_wrap.h"
++#include "styles/style_boxes.h"
++#include "styles/style_layers.h"
++
++#include <QtCore/QTimer>
++#include <QtGui/QTextDocument>
++#include <QtWidgets/QTextEdit>
++
++namespace Tele {
++namespace {
++
++constexpr auto kMaxShortcut = 32;
++
++struct Snippet {
++	QString shortcut;
++	QString text;
++};
++
++[[nodiscard]] QStringList Lines(const QString &value) {
++	auto result = QStringList();
++	for (const auto &line : value.split('\n')) {
++		const auto trimmed = line.trimmed();
++		if (!trimmed.isEmpty()) {
++			result.push_back(trimmed);
++		}
++	}
++	return result;
++}
++
++[[nodiscard]] std::optional<Snippet> Parse(const QString &line) {
++	const auto separator = line.indexOf('=');
++	if (separator <= 0) {
++		return std::nullopt;
++	}
++	const auto shortcut = line.left(separator).trimmed();
++	auto text = line.mid(separator + 1).trimmed();
++	if (shortcut.isEmpty()
++		|| shortcut.size() > kMaxShortcut
++		|| text.isEmpty()) {
++		return std::nullopt;
++	}
++	for (const auto ch : shortcut) {
++		if (ch.isSpace()) {
++			return std::nullopt;
++		}
++	}
++	text.replace(u"\\n"_q, u"\n"_q);
++	return Snippet{ shortcut, text };
++}
++
++[[nodiscard]] int FirstErrorLine(const QString &value) {
++	auto index = 0;
++	for (const auto &line : value.split('\n')) {
++		++index;
++		const auto trimmed = line.trimmed();
++		if (!trimmed.isEmpty() && !Parse(trimmed)) {
++			return index;
++		}
++	}
++	return 0;
++}
++
++[[nodiscard]] const std::vector<Snippet> &Parsed() {
++	static auto source = QString();
++	static auto parsed = std::vector<Snippet>();
++	const auto current = SnippetsText();
++	if (current != source) {
++		source = current;
++		parsed.clear();
++		for (const auto &line : Lines(current)) {
++			if (const auto snippet = Parse(line)) {
++				parsed.push_back(*snippet);
++			}
++		}
++	}
++	return parsed;
++}
++
++[[nodiscard]] QString Lookup(const QString &shortcut) {
++	for (const auto &snippet : Parsed()) {
++		if (snippet.shortcut == shortcut) {
++			return snippet.text;
++		}
++	}
++	return QString();
++}
++
++[[nodiscard]] bool Boundary(QChar ch) {
++	return ch.isSpace() || (ch == QChar::ObjectReplacementCharacter);
++}
++
++void Expand(not_null<Ui::InputField*> field, int space) {
++	const auto document = field->rawTextEdit()->document();
++	if (document->characterAt(space) != QChar(' ')) {
++		return;
++	}
++	auto start = space;
++	while (start > 0 && !Boundary(document->characterAt(start - 1))) {
++		if (space - start >= kMaxShortcut) {
++			return;
++		}
++		--start;
++	}
++	if (start == space) {
++		return;
++	}
++	auto shortcut = QString();
++	shortcut.reserve(space - start);
++	for (auto i = start; i != space; ++i) {
++		shortcut.append(document->characterAt(i));
++	}
++	const auto text = Lookup(shortcut);
++	if (!text.isEmpty()) {
++		field->commitInstantReplacement(start, space, text, QString());
++	}
++}
++
++}
++
++void SetupSnippets(not_null<Ui::InputField*> field) {
++	if (field->property("teleSnippets").toBool()) {
++		return;
++	}
++	field->setProperty("teleSnippets", true);
++	const auto document = field->rawTextEdit()->document();
++	QObject::connect(
++		document,
++		&QTextDocument::contentsChange,
++		field.get(),
++		[=](int position, int removed, int added) {
++			if (removed
++				|| added != 1
++				|| SnippetsText().isEmpty()
++				|| document->characterAt(position) != QChar(' ')) {
++				return;
++			}
++			QTimer::singleShot(0, field.get(), [=] {
++				Expand(field, position);
++			});
++		});
++}
++
++QString NormalizeSnippets(const QString &value) {
++	return Lines(value).join('\n');
++}
++
++rpl::producer<int> SnippetsCountValue() {
++	return SnippetsTextValue() | rpl::map([](const QString &value) {
++		return int(Lines(value).size());
++	});
++}
++
++void SnippetsBox(not_null<Ui::GenericBox*> box) {
++	box->setWidth(st::boxWideWidth);
++	box->setTitle(rpl::single(Tr(u"Snippets"_q)));
++
++	const auto field = box->addRow(object_ptr<Ui::InputField>(
++		box,
++		st::newGroupDescription,
++		Ui::InputField::Mode::MultiLine,
++		rpl::single(Tr(u"Shortcut = text"_q)),
++		SnippetsText()));
++	const auto error = box->addRow(
++		object_ptr<Ui::SlideWrap<Ui::FlatLabel>>(
++			box,
++			object_ptr<Ui::FlatLabel>(
++				box,
++				QString(),
++				st::boxAttentionDividerLabel)));
++	Ui::AddSkip(box->verticalLayout());
++	box->addRow(object_ptr<Ui::FlatLabel>(
++		box,
++		Tr(u"One per line, like ;addr = Red Square 1. Type the shortcut and a space to get the text, write %1 for a new line."_q).arg(u"\\n"_q),
++		st::boxDividerLabel));
++
++	const auto refresh = [=] {
++		const auto line = FirstErrorLine(field->getLastText());
++		error->entity()->setText(line
++			? Tr(u"Line %1 needs to look like shortcut = text."_q).arg(line)
++			: QString());
++		error->toggle(line != 0, anim::type::instant);
++		if (line) {
++			field->showErrorNoFocus();
++		} else {
++			field->hideError();
++		}
++	};
++	field->changes() | rpl::on_next(refresh, field->lifetime());
++	refresh();
++
++	const auto save = [=] {
++		const auto value = field->getLastText();
++		if (FirstErrorLine(value)) {
++			field->showError();
++			return;
++		}
++		const auto normalized = NormalizeSnippets(value);
++		if (normalized != NormalizeSnippets(SnippetsText())) {
++			SetSnippetsText(normalized);
++		}
++		box->closeBox();
++	};
++	box->setFocusCallback([=] {
++		field->setFocusFast();
++	});
++	box->addButton(tr::lng_settings_save(), save);
++	box->addButton(tr::lng_cancel(), [=] {
++		box->closeBox();
++	});
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_snippets.h b/Telegram/SourceFiles/tele/tele_snippets.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..34e995920033e748aff269d5c47959bf8f73a6fe
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_snippets.h
+@@ -0,0 +1,15 @@
++#pragma once
++
++namespace Ui {
++class GenericBox;
++class InputField;
++}
++
++namespace Tele {
++
++void SetupSnippets(not_null<Ui::InputField*> field);
++void SnippetsBox(not_null<Ui::GenericBox*> box);
++[[nodiscard]] rpl::producer<int> SnippetsCountValue();
++[[nodiscard]] QString NormalizeSnippets(const QString &value);
++
++}
