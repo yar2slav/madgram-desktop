@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 395 patches, newest release first.
+all 396 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -61,6 +61,7 @@ all 395 patches, newest release first.
 | [386](../patches/tdesktop/0386-feat-color-names-from-the-mad-badges-registry.patch) | names that b.mad.tg gives a color are drawn in it, or in a gradient of up to four colors, in messages, the chat list and the chat header. the profile uses the first color | with 337 |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
+| [1010](../patches/Telegram/ThirdParty/widget-sandbox/packages/ios/Sources/CQuickJS/quickjs/0001-fix-refuse-await-using-outside-async-functions.patch) | closes the quickjs hole that let a bot's message widget run any program on your pc: the engine gets telegram's own `await using` fix from widget-sandbox 0.6.4, which telegram desktop 7.4.2 ships without | always on |
 
 ### [tele 23](https://github.com/nitreojs/tele/releases/tag/v7.3.3-tele.23)
 
