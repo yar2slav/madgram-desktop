@@ -1,0 +1,452 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Thu, 12 Nov 2026 20:18:54 +0300
+Subject: [PATCH] feat: color names from the mad badges registry
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ .../SourceFiles/dialogs/ui/dialogs_layout.cpp | 10 ++++
+ .../history/view/history_view_message.cpp     |  9 +++
+ .../view/history_view_top_bar_widget.cpp      |  9 +++
+ .../info/profile/info_profile_top_bar.cpp     |  5 +-
+ Telegram/SourceFiles/tele/tele_mad_badges.cpp | 28 ++++++++-
+ Telegram/SourceFiles/tele/tele_mad_badges.h   |  1 +
+ Telegram/SourceFiles/tele/tele_mad_names.cpp  | 46 +++++++++++++++
+ Telegram/SourceFiles/tele/tele_mad_names.h    | 22 +++++++
+ .../SourceFiles/tele/tele_mad_registry.cpp    | 58 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_mad_registry.h | 11 ++++
+ .../tele/tests/mad_registry_tests.cpp         | 16 +++++
+ 12 files changed, 214 insertions(+), 3 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_names.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_names.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index d21fb733ca384442d085af33e9979e12858c18df..46ba5bb6b4615d3ea5fbed9151d2a1e21178d628 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2660,6 +2660,8 @@ PRIVATE
+     tele/tele_mad_badges.h
+     tele/tele_mad_badge_card.cpp
+     tele/tele_mad_badge_card.h
++    tele/tele_mad_names.cpp
++    tele/tele_mad_names.h
+     tele/tele_snippets.cpp
+     tele/tele_snippets.h
+     tele/tele_reminders.cpp
+diff --git a/Telegram/SourceFiles/dialogs/ui/dialogs_layout.cpp b/Telegram/SourceFiles/dialogs/ui/dialogs_layout.cpp
+index 2ed8b562658709d628e9e32cfe765322e2bcaf96..a0a1b955dff59461b047e457be241be55bd18508 100644
+--- a/Telegram/SourceFiles/dialogs/ui/dialogs_layout.cpp
++++ b/Telegram/SourceFiles/dialogs/ui/dialogs_layout.cpp
+@@ -40,6 +40,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/secret/secret_chats.h"
+ #include "tele/tele_corner_buttons.h"
+ #include "tele/tele_docked_media.h"
++#include "tele/tele_mad_names.h"
+ #include "tele/tele_failed_sends.h"
+ #include "tele/tele_hidden_words.h"
+ #include "tele/tele_ignored.h"
+@@ -1034,6 +1035,15 @@ void PaintRow(
+ 			: context.selected
+ 			? st::dialogsNameFgOver
+ 			: st::dialogsNameFg);
++		::Tele::ApplyMadNameColor(
++			p,
++			from,
++			QRect(
++				rectForName.topLeft(),
++				QSize(
++					std::min(rowName.maxWidth(), rectForName.width()),
++					rectForName.height())),
++			context.active);
+ 		rowName.draw(p, {
+ 			.position = rectForName.topLeft(),
+ 			.availableWidth = rectForName.width(),
+diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
+index df89fb275e412442754257467b10ba86f750c779..1abc5e692b3bb6b6b5bb51d73cf2ddd9298691b0 100644
+--- a/Telegram/SourceFiles/history/view/history_view_message.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
+@@ -70,6 +70,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/tele_bot_edited.h"
+ #include "tele/tele_bubble_badges.h"
+ #include "tele/tele_mad_badges.h"
++#include "tele/tele_mad_names.h"
+ #include "tele/tele_code_lines.h"
+ #include "tele/tele_deleted.h"
+ #include "tele/tele_deleted_reply.h"
+@@ -2799,6 +2800,14 @@ void Message::paintFromName(
+ 		nameFg,
+ 		context.now);
+ 	prepareCustomEmojiPaint(p, context, *nameText);
++	Tele::ApplyMadNameColor(
++		p,
++		from,
++		QRect(
++			availableLeft,
++			trect.top(),
++			nameWidth,
++			st::msgNameFont->height));
+ 	nameText->draw(p, {
+ 		.position = { availableLeft, trect.top() },
+ 		.availableWidth = nameAvailableWidth,
+diff --git a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
+index 480ef92540957239d8ef31332a1ee9ae608afebc..e95ec8c29031bf488236b3c54d7d5c4514513cfe 100644
+--- a/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp
+@@ -71,6 +71,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include "tele/scripting/tele_script_buttons.h"
+ #include "tele/tele_calls.h"
+ #include "tele/tele_invisible.h"
++#include "tele/tele_mad_names.h"
+ #include "tele/tele_observed_activity.h"
+ #include "tele/tele_onlines.h"
+ #include "tele/tele_peek.h"
+@@ -732,6 +733,14 @@ void TopBarWidget::paintTopBar(Painter &p) {
+ 		namewidth -= badgeWidth;
+ 
+ 		p.setPen(st::dialogsNameFg);
++		::Tele::ApplyMadNameColor(
++			p,
++			namePeer,
++			QRect(
++				nameleft,
++				nametop,
++				std::min(_title.maxWidth(), namewidth),
++				st::msgNameStyle.font->height));
+ 		_title.draw(p, {
+ 			.position = { nameleft, nametop },
+ 			.availableWidth = namewidth,
+diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
+index 937cfb585886dee2633591c9e53b67a089193723..b90210de7591ca65ad35541d5ddbbb7fe04332f5 100644
+--- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
++++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
+@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "info/profile/info_profile_top_bar.h"
+ #include "tele/tele_mad_badges.h"
++#include "tele/tele_mad_names.h"
+ 
+ #include "api/api_peer_colors.h"
+ #include "api/api_peer_photo.h"
+@@ -701,11 +702,11 @@ void TopBar::adjustColors(const std::optional<QColor> &edgeColor) {
+ 	const auto shouldOverrideTitle = shouldOverride(_title->st().textFg);
+ 	const auto shouldOverrideStatus = shouldOverrideTitle
+ 		|| shouldOverride(_status->st().textFg);
+-	_title->setTextColorOverride(collectible
++	_title->setTextColorOverride(::Tele::MadTitleColor(_peer, collectible
+ 		? collectible->textColor
+ 		: shouldOverrideTitle
+ 		? std::optional<QColor>(st::groupCallMembersFg->c)
+-		: std::nullopt);
++		: std::nullopt));
+ 	_tabSubtitleOverride = collectible
+ 		? collectible->textColor
+ 		: shouldOverrideStatus
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.cpp b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+index 67f59671677520748a210cb49172928997a69dfa..d38030f86b74b8431305d662fdda7d5d9a2a6a62 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+@@ -88,6 +88,8 @@ public:
+ 	[[nodiscard]] std::optional<MadBadge> badge(const QString &id) const;
+ 	[[nodiscard]] std::optional<MadAssignment> assignment(
+ 		const QString &target) const;
++	[[nodiscard]] std::vector<QColor> nameColors(
++		not_null<PeerData*> peer) const;
+ 	void fetch(Fn<void(QString)> done = nullptr);
+ 	void clear();
+ 	rpl::event_stream<> changes;
+@@ -195,6 +197,19 @@ std::optional<MadAssignment> RegistryStore::assignment(
+ 		: std::optional(*i);
+ }
+ 
++std::vector<QColor> RegistryStore::nameColors(
++		not_null<PeerData*> peer) const {
++	if (_registry.names.isEmpty()
++		|| !MadBadgesEnabled()
++		|| peer->session().isTestMode()) {
++		return {};
++	}
++	return FindMadName(
++		_registry,
++		Target(peer),
++		QDateTime::currentSecsSinceEpoch());
++}
++
+ void RegistryStore::request(const QUrl &url, const QByteArray &etag,
+ 		Fn<void(int, QByteArray, QByteArray, QByteArray)> done) {
+ 	if (!enabled()) {
+@@ -246,7 +261,8 @@ void RegistryStore::fetch(Fn<void(QString)> done) {
+ 				if (auto registry = Decode(bytes);
+ 					registry && registry->revision >= _registry.revision) {
+ 					const auto changed = registry->badges != _registry.badges
+-						|| registry->assignments != _registry.assignments;
++						|| registry->assignments != _registry.assignments
++						|| registry->names != _registry.names;
+ 					_registry = std::move(*registry);
+ 					_etag = etag.size() <= 256 ? etag : QByteArray();
+ 					WriteFile(CacheDirectory() + u"registry.json"_q, bytes);
+@@ -288,6 +304,10 @@ void RegistryStore::notify() {
+ 		_targets.insert(i.key());
+ 		targets.insert(i.key());
+ 	}
++	for (auto i = _registry.names.cbegin(); i != _registry.names.cend(); ++i) {
++		_targets.insert(i.key());
++		targets.insert(i.key());
++	}
+ 	++version;
+ 	changes.fire({});
+ 	if (!Core::IsAppLaunched()) {
+@@ -547,6 +567,12 @@ QImage MadBadgeImage(const MadBadge &badge, int size) {
+ 	return Store ? Store->image(badge, size) : QImage();
+ }
+ 
++std::vector<QColor> MadNameColors(PeerData *peer) {
++	return (Store && peer)
++		? Store->nameColors(peer)
++		: std::vector<QColor>();
++}
++
+ Ui::RpWidget *CreateMadBadgeWidget(not_null<QWidget*> parent,
+ 		not_null<PeerData*> peer, int size) {
+ 	const auto button = Ui::CreateChild<Ui::AbstractButton>(parent.get());
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.h b/Telegram/SourceFiles/tele/tele_mad_badges.h
+index 7548c970d3c17589048056cf566824eccf25c0b4..518bcc234627864433c4894f8ca4ae02dfc22161 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.h
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.h
+@@ -36,6 +36,7 @@ void ClearMadBadges();
+ 	const Ui::Text::String &text, QPoint point, int width, int lines = 1);
+ void ShowMadBadge(const MadBadge &badge, not_null<PeerData*> peer);
+ [[nodiscard]] QImage MadBadgeImage(const MadBadge &badge, int size);
++[[nodiscard]] std::vector<QColor> MadNameColors(PeerData *peer);
+ [[nodiscard]] Ui::RpWidget *CreateMadBadgeWidget(
+ 	not_null<QWidget*> parent,
+ 	not_null<PeerData*> peer,
+diff --git a/Telegram/SourceFiles/tele/tele_mad_names.cpp b/Telegram/SourceFiles/tele/tele_mad_names.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..df89af4e6abe79270075c653788055808ffd9889
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_names.cpp
+@@ -0,0 +1,46 @@
++#include "tele/tele_mad_names.h"
++
++#include "tele/tele_mad_badges.h"
++
++#include <QtGui/QPainter>
++
++namespace Tele {
++
++void ApplyMadNameColor(
++		QPainter &p,
++		PeerData *peer,
++		QRect rect,
++		bool skip) {
++	if (skip || !peer || rect.width() <= 0) {
++		return;
++	}
++	const auto colors = MadNameColors(peer);
++	if (colors.empty()) {
++		return;
++	} else if (colors.size() == 1) {
++		p.setPen(colors.front());
++		return;
++	}
++	auto gradient = QLinearGradient(
++		QPointF(rect.left(), 0.),
++		QPointF(rect.left() + rect.width(), 0.));
++	const auto last = int(colors.size()) - 1;
++	for (auto i = 0; i <= last; ++i) {
++		gradient.setColorAt(float64(i) / last, colors[i]);
++	}
++	p.setPen(QPen(QBrush(gradient), 1.));
++}
++
++std::optional<QColor> MadTitleColor(
++		PeerData *peer,
++		std::optional<QColor> upstream) {
++	if (upstream || !peer) {
++		return upstream;
++	}
++	const auto colors = MadNameColors(peer);
++	return colors.empty()
++		? upstream
++		: std::optional<QColor>(colors.front());
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_names.h b/Telegram/SourceFiles/tele/tele_mad_names.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..1774da52c12f019d549ff3dcb3d621b8e34059b3
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_names.h
+@@ -0,0 +1,22 @@
++#pragma once
++
++#include <QtCore/QRect>
++#include <QtGui/QColor>
++
++#include <optional>
++
++class PeerData;
++class QPainter;
++
++namespace Tele {
++
++void ApplyMadNameColor(
++	QPainter &p,
++	PeerData *peer,
++	QRect rect,
++	bool skip = false);
++[[nodiscard]] std::optional<QColor> MadTitleColor(
++	PeerData *peer,
++	std::optional<QColor> upstream);
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_registry.cpp b/Telegram/SourceFiles/tele/tele_mad_registry.cpp
+index ba9e5b9a517bde705e6f7d2d61e1dfad0423feaa..28b76df2fff20b4e19935833f51cbe2ed7cbf75d 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_registry.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_registry.cpp
+@@ -15,6 +15,25 @@ namespace {
+ 
+ constexpr auto kMaxBytes = 2 * 1024 * 1024;
+ 
++[[nodiscard]] std::optional<QColor> ParseColor(const QString &text) {
++	if (text.size() != 7 || text[0] != QChar('#')) {
++		return std::nullopt;
++	}
++	auto value = 0;
++	for (auto i = 1; i != 7; ++i) {
++		const auto ch = text[i].unicode();
++		const auto digit = (ch >= '0' && ch <= '9') ? (ch - '0')
++			: (ch >= 'a' && ch <= 'f') ? (ch - 'a' + 10)
++			: (ch >= 'A' && ch <= 'F') ? (ch - 'A' + 10)
++			: -1;
++		if (digit < 0) {
++			return std::nullopt;
++		}
++		value = value * 16 + digit;
++	}
++	return QColor((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);
++}
++
+ [[nodiscard]] bool ValidHash(const QString &value) {
+ 	if (value.size() != 64) {
+ 		return false;
+@@ -69,6 +88,13 @@ std::optional<MadBadge> FindMadBadge(const MadRegistry &registry, const QString
+ 	return badge == registry.badges.cend() ? std::nullopt : std::optional(*badge);
+ }
+ 
++std::vector<QColor> FindMadName(const MadRegistry &registry, const QString &target, qint64 now) {
++	const auto i = registry.names.constFind(target);
++	return (i == registry.names.cend() || (i->expiresAt && i->expiresAt <= now))
++		? std::vector<QColor>()
++		: i->colors;
++}
++
+ bool MadAssetUrlAllowed(const QUrl &url) {
+ 	const auto query = QUrlQuery(url).queryItems();
+ 	const auto versioned = query.size() == 1
+@@ -180,6 +206,38 @@ std::optional<MadRegistry> DecodeMadRegistry(
+ 		}
+ 		result.assignments.insert(key, { badgeId, expiry });
+ 	}
++	const auto names = data["names"];
++	if (!names.isUndefined()) {
++		if (!names.isArray() || names.toArray().size() > 100000) {
++			return std::nullopt;
++		}
++		for (const auto &value : names.toArray()) {
++			if (!value.isObject()) {
++				return std::nullopt;
++			}
++			const auto item = value.toObject();
++			const auto type = item["peerType"].toString();
++			const auto id = Integer(item["peerId"]);
++			const auto key = type + ':' + QString::number(id);
++			const auto expires = item["expiresAt"];
++			const auto expiry = expires.isNull() || expires.isUndefined() ? 0 : Integer(expires);
++			const auto colors = item["colors"].toArray();
++			if ((type != QStringLiteral("user") && type != QStringLiteral("legacyGroup")
++				&& type != QStringLiteral("channel")) || id <= 0 || expiry < 0
++				|| colors.isEmpty() || colors.size() > 4 || result.names.contains(key)) {
++				return std::nullopt;
++			}
++			auto name = MadName{ .expiresAt = expiry };
++			for (const auto &color : colors) {
++				const auto parsed = ParseColor(color.toString());
++				if (!parsed) {
++					return std::nullopt;
++				}
++				name.colors.push_back(*parsed);
++			}
++			result.names.insert(key, std::move(name));
++		}
++	}
+ 	return result;
+ }
+ 
+diff --git a/Telegram/SourceFiles/tele/tele_mad_registry.h b/Telegram/SourceFiles/tele/tele_mad_registry.h
+index 236e5aa9370a4613545a4328d6281045b9ac7407..b5f1069805f804a3b2bec3ef4eae0f8e50cfd16a 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_registry.h
++++ b/Telegram/SourceFiles/tele/tele_mad_registry.h
+@@ -4,8 +4,10 @@
+ #include <QtCore/QMap>
+ #include <QtCore/QString>
+ #include <QtCore/QUrl>
++#include <QtGui/QColor>
+ #include <QtGui/QImage>
+ #include <optional>
++#include <vector>
+ 
+ namespace Tele {
+ 
+@@ -28,15 +30,24 @@ struct MadAssignment {
+ 	friend bool operator==(const MadAssignment &, const MadAssignment &) = default;
+ };
+ 
++struct MadName {
++	std::vector<QColor> colors;
++	qint64 expiresAt = 0;
++	friend bool operator==(const MadName &, const MadName &) = default;
++};
++
+ struct MadRegistry {
+ 	qint64 revision = 0;
+ 	qint64 generatedAt = 0;
+ 	QMap<QString, MadBadge> badges;
+ 	QMap<QString, MadAssignment> assignments;
++	QMap<QString, MadName> names;
+ };
+ 
+ [[nodiscard]] std::optional<MadBadge> FindMadBadge(
+ 	const MadRegistry &registry, const QString &target, qint64 now);
++[[nodiscard]] std::vector<QColor> FindMadName(
++	const MadRegistry &registry, const QString &target, qint64 now);
+ [[nodiscard]] bool MadAssetUrlAllowed(const QUrl &url);
+ [[nodiscard]] std::optional<MadRegistry> DecodeMadRegistry(
+ 	const QByteArray &envelope,
+diff --git a/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp b/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp
+index 0b6edf4c4a0fe8451b9a530705cbdd32a00feef6..a293646ac906fcd67fd8e01b0eda4332fc146868 100644
+--- a/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp
++++ b/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp
+@@ -104,6 +104,22 @@ int main(int argc, char **argv) {
+ 	Require(!decode(sign(Encode(changed))), "unknown badge assignment");
+ 	changed["assignments"] = QJsonArray();
+ 	Require(decode(sign(Encode(changed)))->assignments.isEmpty(), "revoked registry accepted");
++	changed = payload;
++	changed["names"] = QJsonArray{
++		QJsonObject{ { "peerType", "user" }, { "peerId", large }, { "colors", QJsonArray{ "#ff6ac1", "#7A5CFF" } } },
++		QJsonObject{ { "peerType", "channel" }, { "peerId", 5 }, { "colors", QJsonArray{ "#00ff00" } }, { "expiresAt", 1700000010 } },
++	};
++	const auto named = decode(sign(Encode(changed)));
++	Require(named.has_value(), "names accepted");
++	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).size() == 2, "gradient name");
++	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).back() == QColor(0x7a, 0x5c, 0xff), "name color parsed");
++	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000009).size() == 1, "name before expiry");
++	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000010).empty(), "name at expiry");
++	Require(Tele::FindMadName(*parsed, QStringLiteral("user:9007199254740993"), 1700000000).empty(), "no names");
++	changed["names"] = QJsonArray{ QJsonObject{ { "peerType", "user" }, { "peerId", 1 }, { "colors", QJsonArray{ "red" } } } };
++	Require(!decode(sign(Encode(changed))), "invalid name color");
++	changed["names"] = QJsonArray{ QJsonObject{ { "peerType", "user" }, { "peerId", 1 }, { "colors", QJsonArray() } } };
++	Require(!decode(sign(Encode(changed))), "empty name colors");
+ 	auto picture = QImage(64, 64, QImage::Format_ARGB32);
+ 	picture.fill(Qt::red);
+ 	auto imageBytes = QByteArray();

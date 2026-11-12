@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 394 patches, newest release first.
+all 395 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -58,6 +58,7 @@ all 394 patches, newest release first.
 | [383](../patches/tdesktop/0383-feat-hide-typing-replied-text-and-userpics-of-ignore.patch) | ignored users no longer show as typing, their userpics are gone from groups and comments, and replies to their messages say hidden message instead of quoting them | with 16 |
 | [384](../patches/tdesktop/0384-feat-remind-about-messages-in-saved-messages.patch) | right-click a message and choose remind me: at the chosen time mad forwards it to Saved Messages as a scheduled message, so it comes back with a notification on every device, even when mad is closed | settings → mad → menus, off |
 | [385](../patches/tdesktop/0385-feat-expand-text-snippets-in-the-message-field.patch) | your own shortcuts in the message field: type a shortcut and a space and it turns into the saved text. the list is in the sending settings, one shortcut = text per line | settings → mad → sending |
+| [386](../patches/tdesktop/0386-feat-color-names-from-the-mad-badges-registry.patch) | names that b.mad.tg gives a color are drawn in it, or in a gradient of up to four colors, in messages, the chat list and the chat header. the profile uses the first color | with 337 |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 
