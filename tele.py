@@ -268,6 +268,22 @@ def apply_pending(tdesktop, state):
     save_state(tdesktop, state)
 
 
+def ensure_commit(repo, commit):
+    if run_git(repo, 'cat-file', '-e', commit + '^{commit}').returncode != 0:
+        shallow = git(repo, 'rev-parse', '--is-shallow-repository') == 'true'
+        git(repo, 'fetch', '--quiet', '--no-tags', *(['--depth', '1'] if shallow else []),
+            'origin', commit)
+
+
+def pinned_commit(tdesktop, tag_commit, group, submodules):
+    repo, commit, prefix = tdesktop, tag_commit, ''
+    for parent in sorted((p for p in submodules if group.startswith(p + '/')), key=len):
+        commit = git(repo, 'rev-parse', f'{commit}:{parent[len(prefix):]}')
+        repo, prefix = tdesktop / parent, parent + '/'
+        ensure_commit(repo, commit)
+    return git(repo, 'rev-parse', f'{commit}:{group[len(prefix):]}')
+
+
 def prime_patch_blobs(tdesktop):
     # a 3-way fallback needs each patch's preimage blob; for files an earlier tele patch already
     # touched, that blob only exists after replaying the queue on UPSTREAM, which a fresh clone lacks.
@@ -282,16 +298,14 @@ def prime_patch_blobs(tdesktop):
         git(tdesktop, 'fetch', '--quiet', '--no-tags', *(['--depth', '1'] if shallow else []),
             UPSTREAM_URL, f'+{ref}:{ref}')
     tag_commit = git(tdesktop, 'rev-parse', ref + '^{commit}')
+    submodules = submodule_paths(tdesktop)
     for group, patches in groups.items():
         if group == ROOT_GROUP:
             repo, base = tdesktop, tag_commit
         else:
             repo = tdesktop / group
-            base = git(tdesktop, 'rev-parse', f'{tag_commit}:{group}')
-            if run_git(repo, 'cat-file', '-e', base + '^{commit}').returncode != 0:
-                shallow = git(repo, 'rev-parse', '--is-shallow-repository') == 'true'
-                git(repo, 'fetch', '--quiet', '--no-tags', *(['--depth', '1'] if shallow else []),
-                    'origin', base)
+            base = pinned_commit(tdesktop, tag_commit, group, submodules)
+            ensure_commit(repo, base)
         if git(repo, 'rev-parse', 'HEAD') == base:
             continue
         print(f'replaying the {group} patches on {upstream} to get their base files', flush=True)
