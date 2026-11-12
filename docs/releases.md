@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 392 patches, newest release first.
+all 393 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -56,6 +56,7 @@ all 392 patches, newest release first.
 | [381](../patches/tdesktop/0381-fix-stop-crashing-at-launch-after-a-freeze-or-crash.patch) | mad starts after a freeze or crash instead of crashing at every launch. the report window shown before the interface loads is in english | always on |
 | [382](../patches/tdesktop/0382-feat-show-mad-badges-as-collectible-cards.patch) | clicking a mad badge opens it as a collectible card: an iridescent frame, a glare and a tilt that follow the cursor, a glow in the badge’s own color, who holds it and how long it lasts | with 337 |
 | [383](../patches/tdesktop/0383-feat-hide-typing-replied-text-and-userpics-of-ignore.patch) | ignored users no longer show as typing, their userpics are gone from groups and comments, and replies to their messages say hidden message instead of quoting them | with 16 |
+| [384](../patches/tdesktop/0384-feat-remind-about-messages-in-saved-messages.patch) | right-click a message and choose remind me: at the chosen time mad forwards it to Saved Messages as a scheduled message, so it comes back with a notification on every device, even when mad is closed | settings → mad → menus, off |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 

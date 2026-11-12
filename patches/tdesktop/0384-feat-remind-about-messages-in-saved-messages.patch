@@ -1,0 +1,309 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Thu, 12 Nov 2026 20:15:44 +0300
+Subject: [PATCH] feat: remind about messages in saved messages
+
+---
+ Telegram/CMakeLists.txt                       |  2 +
+ Telegram/Resources/langs/mad_ru.json          |  8 +-
+ .../SourceFiles/settings/settings_tele.cpp    |  4 +
+ .../SourceFiles/tele/tele_menu_registry.cpp   | 10 ++-
+ .../SourceFiles/tele/tele_message_menu.cpp    |  2 +
+ Telegram/SourceFiles/tele/tele_options.cpp    | 11 +++
+ Telegram/SourceFiles/tele/tele_options.h      |  2 +
+ Telegram/SourceFiles/tele/tele_reminders.cpp  | 82 +++++++++++++++++++
+ Telegram/SourceFiles/tele/tele_reminders.h    | 20 +++++
+ .../SourceFiles/tele/tele_settings_io.cpp     |  1 +
+ 10 files changed, 138 insertions(+), 4 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_reminders.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_reminders.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 6acd4f49de62457ba3227dc9ea9fecefd51f1ee7..c9a4eb5e0dc7febc7752201605bfb2e5db786104 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2660,6 +2660,8 @@ PRIVATE
+     tele/tele_mad_badges.h
+     tele/tele_mad_badge_card.cpp
+     tele/tele_mad_badge_card.h
++    tele/tele_reminders.cpp
++    tele/tele_reminders.h
+     settings/settings_tele.cpp
+     settings/settings_tele.h
+     tele/scripting/tele_script_app.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 00ae363a0d7981092a817712e9d8fea4beafeafd..85746e107a7f7c0403ab829189380dcf714315e5 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2133,5 +2133,11 @@
+   "Very slow": "Очень медленно",
+   "Badge": "Бейдж",
+   "Holder: %1": "Владелец: %1",
+-  "Until %1": "До %1"
++  "Until %1": "До %1",
++  "Remind me": "Напомнить",
++  "Remind": "Напомнить",
++  "Reminder set for %1": "Напомню %1",
++  "The message comes back in Saved Messages at this time, with a notification on all your devices.": "Сообщение вернётся в Избранное в это время, с уведомлением на всех устройствах.",
++  "Remind me in the message menu": "Пункт «Напомнить» в меню сообщения",
++  "Forwards the message to Saved Messages at the chosen time, so it comes back with a notification on every device.": "Пересылает сообщение в Избранное в выбранное время, и оно приходит с уведомлением на все устройства."
+ }
+diff --git a/Telegram/SourceFiles/settings/settings_tele.cpp b/Telegram/SourceFiles/settings/settings_tele.cpp
+index 655090368acf6b016f60bc68be805b9607312c2f..8ac878c646b2fd75757248a607a39e315e2b72a5 100644
+--- a/Telegram/SourceFiles/settings/settings_tele.cpp
++++ b/Telegram/SourceFiles/settings/settings_tele.cpp
+@@ -3547,6 +3547,10 @@ void FillMenus(SectionBuilder &builder) {
+ 		builder,
+ 		::Tele::kOptionMessageDetails,
+ 		{ u"info"_q, u"views"_q, u"file"_q, u"size"_q, u"bitrate"_q });
++	AddOptionToggle(
++		builder,
++		::Tele::kOptionMessageReminders,
++		{ u"remind"_q, u"reminder"_q, u"later"_q, u"saved"_q });
+ 	AddOptionToggle(builder, ::Tele::kOptionViewAsTl);
+ 	AddOptionToggle(builder, ::Tele::kOptionCopyEmojiId);
+ 	AddOptionToggle(
+diff --git a/Telegram/SourceFiles/tele/tele_menu_registry.cpp b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+index 7962ba3c77ec78d2fdced07176ce49d28fd2361b..4e94fb8918f1a61c6a8556ab65f62057aac274d3 100644
+--- a/Telegram/SourceFiles/tele/tele_menu_registry.cpp
++++ b/Telegram/SourceFiles/tele/tele_menu_registry.cpp
+@@ -708,6 +708,10 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 			P([](int) { return Tr(u"Details"_q); }, st::menuIconInfo),
+ 		}, .contexts = kMessage, .gate = kOptionMessageDetails,
+ 			.flags = MenuItemFlag::Submenu },
++		{ .key = u"remind"_q, .phrases = {
++			P([](int) { return Tr(u"Remind me"_q); },
++				st::menuIconSchedule),
++		}, .contexts = kMessage, .gate = kOptionMessageReminders },
+ 		{ .key = u"html_send_tgw"_q, .phrases = {
+ 			P([](int) { return Tr(u"Send as .tgw to…"_q); },
+ 				st::menuIconForward),
+@@ -818,7 +822,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"copy_button_data,copy_filename,copy_file_path,copy_phone],"
+ 		"translate_selected,"
+ 		"translate,open_uncleaned,open_username,alias_open,alias_delete,|,"
+-		"[Bookmark#bookmark:bookmark,rename_bookmark],mark_read,"
++		"[Bookmark#bookmark:bookmark,rename_bookmark],remind,mark_read,"
+ 		"edit_history,shot,mark_viewed,html_send_tgw,html_script_log,|,"
+ 		"select,select_up_to,clear_selection,|,"
+ 		"delete,report,block_user,restrict,|,"
+@@ -844,7 +848,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"select_up_to,clear_selection,reschedule,|,"
+ 		"info.packs,info.restriction,info.read,info.forwarded,info.edited,"
+ 		"info.author,shot,send_as_gif,html_send_tgw,html_script_log,|,"
+-		"details,view_as_tl,mtp_inspector,copy_emoji_id,copy_id,|,"
++		"remind,details,view_as_tl,mtp_inspector,copy_emoji_id,copy_id,|,"
+ 		"info.id"_q;
+ 	result.minimal = u""
+ 		"reactions,"
+@@ -869,7 +873,7 @@ constexpr auto kFieldText = uint32(1 << 0);
+ 		"copy_button_data,copy_filename,copy_file_path,copy_phone,"
+ 		"translate_selected,"
+ 		"translate,open_uncleaned,open_username,alias_open,alias_delete,|,"
+-		"bookmark,rename_bookmark,mark_read,edit_history,shot,mark_viewed,"
++		"bookmark,rename_bookmark,remind,mark_read,edit_history,shot,mark_viewed,"
+ 		"html_send_tgw,html_script_log,|,"
+ 		"select,select_up_to,clear_selection,|,"
+ 		"delete,report,block_user,restrict,|,"
+diff --git a/Telegram/SourceFiles/tele/tele_message_menu.cpp b/Telegram/SourceFiles/tele/tele_message_menu.cpp
+index fecded66875cebe0a0d51f6759caeeeefb20e299..45985b6f6a12fb5ba62b043b2c72c5188d8bd237 100644
+--- a/Telegram/SourceFiles/tele/tele_message_menu.cpp
++++ b/Telegram/SourceFiles/tele/tele_message_menu.cpp
+@@ -15,6 +15,7 @@
+ #include "tele/tele_lowercase.h"
+ #include "tele/tele_menu_apply.h"
+ #include "tele/tele_message_details.h"
++#include "tele/tele_reminders.h"
+ #include "tele/tele_mtp_inspector.h"
+ #include "tele/tele_html_card.h"
+ #include "tele/tele_notices.h"
+@@ -159,6 +160,7 @@ void AppendTools(
+ 			menu->addAction(MakeIdAction(menu, show, id)),
+ 			u"info.id"_q);
+ 	}
++	AddRemindAction(menu, show, item);
+ 	AddMessageDetailsAction(menu, show, item);
+ }
+ 
+diff --git a/Telegram/SourceFiles/tele/tele_options.cpp b/Telegram/SourceFiles/tele/tele_options.cpp
+index 5b899dfddc475db65047fd58e3a2646876ca704b..b7571121b636e96b1cd8c874374746ca943490ec 100644
+--- a/Telegram/SourceFiles/tele/tele_options.cpp
++++ b/Telegram/SourceFiles/tele/tele_options.cpp
+@@ -118,6 +118,7 @@ const char kOptionMergeIdDc[] = "tele-merge-id-dc";
+ const char kOptionMediaUploadDate[] = "tele-media-upload-date";
+ const char kOptionMessageIdMenu[] = "tele-message-id-menu";
+ const char kOptionMessageDetails[] = "tele-message-details";
++const char kOptionMessageReminders[] = "tele-message-reminders";
+ const char kOptionHideIgnored[] = "tele-hide-ignored";
+ const char kOptionMuteIgnored[] = "tele-mute-ignored";
+ const char kOptionIgnoreInMenu[] = "tele-ignore-in-menu";
+@@ -961,6 +962,12 @@ base::options::toggle MessageDetailsOption({
+ 	.description = "Exact dates, views, forwards and file info. Click a line to copy it.",
+ });
+ 
++base::options::toggle MessageRemindersOption({
++	.id = kOptionMessageReminders,
++	.name = "Remind me in the message menu",
++	.description = "Forwards the message to Saved Messages at the chosen time, so it comes back with a notification on every device.",
++});
++
+ base::options::toggle HideIgnoredOption({
+ 	.id = kOptionHideIgnored,
+ 	.name = "Hide ignored messages completely",
+@@ -2854,6 +2861,10 @@ bool MessageDetailsMenu() {
+ 	return MessageDetailsOption.value();
+ }
+ 
++bool MessageReminders() {
++	return MessageRemindersOption.value();
++}
++
+ bool HideIgnored() {
+ 	return HideIgnoredOption.value();
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_options.h b/Telegram/SourceFiles/tele/tele_options.h
+index 9caff0dcc72a68a35bb526c240d9f506511f00ba..088315213df70f62da0fe40b9cde3ab30c91c136 100644
+--- a/Telegram/SourceFiles/tele/tele_options.h
++++ b/Telegram/SourceFiles/tele/tele_options.h
+@@ -113,6 +113,7 @@ extern const char kOptionMergeIdDc[];
+ extern const char kOptionMediaUploadDate[];
+ extern const char kOptionMessageIdMenu[];
+ extern const char kOptionMessageDetails[];
++extern const char kOptionMessageReminders[];
+ extern const char kOptionHideIgnored[];
+ extern const char kOptionMuteIgnored[];
+ extern const char kOptionIgnoreInMenu[];
+@@ -443,6 +444,7 @@ void SetMoneyHideBalances(bool hidden);
+ [[nodiscard]] rpl::producer<bool> MergeIdDcValue();
+ [[nodiscard]] bool MessageIdMenu();
+ [[nodiscard]] bool MessageDetailsMenu();
++[[nodiscard]] bool MessageReminders();
+ [[nodiscard]] bool HideIgnored();
+ [[nodiscard]] rpl::producer<bool> HideIgnoredValue();
+ [[nodiscard]] bool MuteIgnored();
+diff --git a/Telegram/SourceFiles/tele/tele_reminders.cpp b/Telegram/SourceFiles/tele/tele_reminders.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..80d1c36355e0dcd63eba84dcdb3412ac181b96cc
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_reminders.cpp
+@@ -0,0 +1,82 @@
++#include "tele/tele_reminders.h"
++
++#include "api/api_common.h"
++#include "apiwrap.h"
++#include "base/unixtime.h"
++#include "data/data_session.h"
++#include "data/data_types.h"
++#include "history/history.h"
++#include "history/history_item.h"
++#include "lang/lang_keys.h"
++#include "main/main_session.h"
++#include "main/session/session_show.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_options.h"
++#include "ui/boxes/choose_date_time.h"
++#include "ui/layers/generic_box.h"
++#include "ui/widgets/popup_menu.h"
++#include "styles/style_menu_icons.h"
++
++namespace Tele {
++namespace {
++
++constexpr auto kMinDelay = TimeId(60);
++constexpr auto kDefaultDelay = TimeId(3600);
++constexpr auto kMaxDelay = TimeId(365 * 24 * 3600 - 60);
++
++void Remind(
++		std::shared_ptr<Main::SessionShow> show,
++		not_null<HistoryItem*> item,
++		TimeId when) {
++	const auto session = &item->history()->session();
++	auto action = Api::SendAction(session->data().history(session->user()));
++	action.options.scheduled = when;
++	session->api().forwardMessages(
++		Data::ResolvedForwardDraft{ .items = { item } },
++		action,
++		[=] {
++			show->showToast(Tr(u"Reminder set for %1"_q).arg(
++				langDateTime(base::unixtime::parse(when))));
++		});
++}
++
++void ReminderBox(
++		not_null<Ui::GenericBox*> box,
++		std::shared_ptr<Main::SessionShow> show,
++		FullMsgId id) {
++	const auto session = &show->session();
++	Ui::ChooseDateTimeBox(box, {
++		.title = rpl::single(Tr(u"Remind me"_q)),
++		.submit = rpl::single(Tr(u"Remind"_q)),
++		.done = [=](TimeId when) {
++			if (const auto item = session->data().message(id)) {
++				Remind(show, item, when);
++			}
++			box->closeBox();
++		},
++		.min = [] { return base::unixtime::now() + kMinDelay; },
++		.time = base::unixtime::now() + kDefaultDelay,
++		.max = [] { return base::unixtime::now() + kMaxDelay; },
++		.description = rpl::single(Tr(u"The message comes back in Saved Messages at this time, with a notification on all your devices."_q)),
++	});
++}
++
++}
++
++void AddRemindAction(
++		not_null<Ui::PopupMenu*> menu,
++		std::shared_ptr<Main::SessionShow> show,
++		not_null<HistoryItem*> item) {
++	if (!MessageReminders()
++		|| item->isService()
++		|| !IsServerMsgId(item->id)
++		|| !item->allowsForward()) {
++		return;
++	}
++	const auto id = item->fullId();
++	menu->addAction(Tr(u"Remind me"_q), [=] {
++		show->showBox(Box(ReminderBox, show, id));
++	}, &st::menuIconSchedule);
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_reminders.h b/Telegram/SourceFiles/tele/tele_reminders.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..9c624543f6c043c191d895245eedcd405dfb3d91
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_reminders.h
+@@ -0,0 +1,20 @@
++#pragma once
++
++class HistoryItem;
++
++namespace Main {
++class SessionShow;
++}
++
++namespace Ui {
++class PopupMenu;
++}
++
++namespace Tele {
++
++void AddRemindAction(
++	not_null<Ui::PopupMenu*> menu,
++	std::shared_ptr<Main::SessionShow> show,
++	not_null<HistoryItem*> item);
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_settings_io.cpp b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+index 602a37a5366b56adf4140bf4d8f06a141eb4da54..d9429741dd6ada36f57530f025d240fa7fdb4148 100644
+--- a/Telegram/SourceFiles/tele/tele_settings_io.cpp
++++ b/Telegram/SourceFiles/tele/tele_settings_io.cpp
+@@ -216,6 +216,7 @@ struct Spec {
+ 		Toggle(kOptionMediaUploadDate),
+ 		Toggle(kOptionMessageIdMenu),
+ 		Toggle(kOptionMessageDetails),
++		Toggle(kOptionMessageReminders),
+ 		Toggle(kOptionHideIgnored),
+ 		Toggle(kOptionMuteIgnored),
+ 		Toggle(kOptionIgnoreInMenu),
