@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Thu, 12 Nov 2026 04:51:57 +0300
+Subject: [PATCH] fix: stop crashing at launch after a freeze or crash
+
+---
+ Telegram/SourceFiles/tele/tele_translations.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Telegram/SourceFiles/tele/tele_translations.cpp b/Telegram/SourceFiles/tele/tele_translations.cpp
+index 88e76037d358053599ba78cc840f69dca1d80fd5..ee1388fbf110fc0ad5e8a0c0ad2446a655e642e0 100644
+--- a/Telegram/SourceFiles/tele/tele_translations.cpp
++++ b/Telegram/SourceFiles/tele/tele_translations.cpp
+@@ -1,5 +1,6 @@
+ #include "tele/tele_lowercase.h"
+ 
++#include "core/application.h"
+ #include "lang/lang_instance.h"
+ #include "tele/tele_options.h"
+ #include <QtCore/QHash>
+@@ -14,6 +15,9 @@ namespace Tele {
+ namespace {
+ 
+ [[nodiscard]] bool Russian() {
++	if (!Core::IsAppLaunched()) {
++		return false;
++	}
+ 	const auto &language = Lang::GetInstance();
+ 	thread_local auto id = QString();
+ 	thread_local auto base = QString();
