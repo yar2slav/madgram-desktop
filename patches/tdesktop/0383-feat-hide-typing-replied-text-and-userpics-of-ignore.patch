@@ -1,14 +1,17 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: yar2slav <191513735+yar2slav@users.noreply.github.com>
 Date: Thu, 12 Nov 2026 16:49:54 +0200
-Subject: [PATCH] feat: hide typing and replied text of ignored users
+Subject: [PATCH] feat: hide typing, replied text and userpics of ignored users
 
 ---
  Telegram/Resources/langs/mad_ru.json          |  1 +
- Telegram/SourceFiles/api/api_updates.cpp      |  3 +++
- .../history/view/history_view_reply.cpp       | 12 +++++++++---
- Telegram/SourceFiles/tele/tele_ignored.cpp    | 19 +++++++++++++++----
- 4 files changed, 28 insertions(+), 7 deletions(-)
+ Telegram/SourceFiles/api/api_updates.cpp      |  3 ++
+ .../history/history_inner_widget.cpp          |  7 +++--
+ .../history/view/history_view_list_widget.cpp |  7 +++--
+ .../history/view/history_view_reply.cpp       | 12 ++++++--
+ Telegram/SourceFiles/tele/tele_ignored.cpp    | 28 ++++++++++++++++---
+ Telegram/SourceFiles/tele/tele_ignored.h      |  1 +
+ 7 files changed, 48 insertions(+), 11 deletions(-)
 
 diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
 index 492537c60a1b3640fd828d4acd65f279db8c2fef..00ae363a0d7981092a817712e9d8fea4beafeafd 100644
@@ -43,6 +46,56 @@ index e1160430ffe4367b155daaaf469ee66be55cbd3c..cdc19b07cf757663cf4e04f3d7bc70d7
  	} else if (action.type() == mtpc_sendMessageEmojiInteraction) {
  		handleEmojiInteraction(peer, action.c_sendMessageEmojiInteraction());
  		return;
+diff --git a/Telegram/SourceFiles/history/history_inner_widget.cpp b/Telegram/SourceFiles/history/history_inner_widget.cpp
+index 11cd5f86f945ccce50a40dd35cae8dc63eacc1a6..d9d1ed29ad031c4f6706ebdee827c460c806b347 100644
+--- a/Telegram/SourceFiles/history/history_inner_widget.cpp
++++ b/Telegram/SourceFiles/history/history_inner_widget.cpp
+@@ -1902,7 +1902,8 @@ void HistoryInner::paintChatOverlay(
+ 		}
+ 
+ 		// paint the userpic if it intersects the painted rect
+-		if (userpicTop + st::msgPhotoSize > clip.top()) {
++		if (userpicTop + st::msgPhotoSize > clip.top()
++			&& !Tele::IgnoredUserpic(view)) {
+ 			const auto item = view->data();
+ 			const auto fade = Tele::IgnoredFade(p, view);
+ 			const auto shift = context.gestureHorizontal.visualTranslationFor(
+@@ -5950,7 +5951,9 @@ void HistoryInner::mouseActionUpdate() {
+ 						}
+ 
+ 						// stop enumeration if we've found a userpic under the cursor
+-						if (point.y() >= userpicTop && point.y() < userpicTop + st::msgPhotoSize) {
++						if (point.y() >= userpicTop
++							&& point.y() < userpicTop + st::msgPhotoSize
++							&& !Tele::IgnoredUserpic(view)) {
+ 							dragState = TextState(nullptr, view->fromPhotoLink());
+ 							dragState.cursor = CursorState::FromPhoto;
+ 							dragStateUserpic = true;
+diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
+index 993df7d07432b27d0a158c58479422776b424e44..8cb0046ea4566daaf9f6a1fbe64fd7a5479e8821 100644
+--- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
+@@ -3715,7 +3715,8 @@ void ListWidget::paintUserpics(
+ 		}
+ 
+ 		// paint the userpic if it intersects the painted rect
+-		if (userpicTop + st::msgPhotoSize > clip.top()) {
++		if (userpicTop + st::msgPhotoSize > clip.top()
++			&& !Tele::IgnoredUserpic(view)) {
+ 			const auto item = view->data();
+ 			const auto fade = Tele::IgnoredFade(p, view);
+ 			const auto shift = context.gestureHorizontal.visualTranslationFor(
+@@ -5855,7 +5856,9 @@ void ListWidget::mouseActionUpdate() {
+ 						}
+ 
+ 						// stop enumeration if we've found a userpic under the cursor
+-						if (point.y() >= userpicTop && point.y() < userpicTop + st::msgPhotoSize) {
++						if (point.y() >= userpicTop
++							&& point.y() < userpicTop + st::msgPhotoSize
++							&& !Tele::IgnoredUserpic(view)) {
+ 							dragState = TextState(nullptr, view->fromPhotoLink());
+ 							dragState.cursor = CursorState::FromPhoto;
+ 							dragStateUserpic = true;
 diff --git a/Telegram/SourceFiles/history/view/history_view_reply.cpp b/Telegram/SourceFiles/history/view/history_view_reply.cpp
 index 730fbc18a99d1837a17603cfb6e8dd5428a10768..0b4139661775de513315dc25c0d956e20a200784 100644
 --- a/Telegram/SourceFiles/history/view/history_view_reply.cpp
@@ -104,7 +157,7 @@ index 730fbc18a99d1837a17603cfb6e8dd5428a10768..0b4139661775de513315dc25c0d956e2
  			|| !media->hasReplyPreview()
  			|| !media->hasSpoilerForPreview()) {
 diff --git a/Telegram/SourceFiles/tele/tele_ignored.cpp b/Telegram/SourceFiles/tele/tele_ignored.cpp
-index aea4c18b4ca8e3e630240922361907e6ba5506fc..c1a1eecc653821bf733ed4c5514515448c207128 100644
+index aea4c18b4ca8e3e630240922361907e6ba5506fc..e0955e6ded4258252aac22e96e58a29cb1180fdd 100644
 --- a/Telegram/SourceFiles/tele/tele_ignored.cpp
 +++ b/Telegram/SourceFiles/tele/tele_ignored.cpp
 @@ -9,6 +9,7 @@
@@ -147,3 +200,31 @@ index aea4c18b4ca8e3e630240922361907e6ba5506fc..c1a1eecc653821bf733ed4c551451544
  			items.emplace(item);
  		}
  	}
+@@ -294,6 +305,15 @@ bool IgnoredHidden(not_null<const HistoryView::Element*> view) {
+ 		|| (HideIgnored() && IgnoredItem(view->data())));
+ }
+ 
++bool IgnoredUserpic(not_null<const HistoryView::Element*> view) {
++	const auto item = view->data();
++	if (!Applies(view->context()) || item->isService()) {
++		return false;
++	}
++	const auto from = item->from();
++	return (item->history()->peer != from) && IsIgnored(from);
++}
++
+ bool IgnoredItem(const HistoryItem *item) {
+ 	if (!item || item->isService() || item->isSponsored()) {
+ 		return false;
+diff --git a/Telegram/SourceFiles/tele/tele_ignored.h b/Telegram/SourceFiles/tele/tele_ignored.h
+index e3987c887103875ca126ea66381b98f66a921114..04501b9066909f5de0d085b4cd853f0d6b3d1c57 100644
+--- a/Telegram/SourceFiles/tele/tele_ignored.h
++++ b/Telegram/SourceFiles/tele/tele_ignored.h
+@@ -46,6 +46,7 @@ void RegisterView(not_null<HistoryView::Element*> view);
+ void UnregisterView(not_null<HistoryView::Element*> view);
+ void EnumerateViews(Fn<void(not_null<HistoryView::Element*>)> callback);
+ [[nodiscard]] bool IgnoredHidden(not_null<const HistoryView::Element*> view);
++[[nodiscard]] bool IgnoredUserpic(not_null<const HistoryView::Element*> view);
+ [[nodiscard]] bool IgnoredItem(const HistoryItem *item);
+ [[nodiscard]] bool MutedIgnored(not_null<const HistoryItem*> item);
+ [[nodiscard]] HistoryItem *ShownChatListMessage(
