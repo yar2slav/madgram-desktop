@@ -7,8 +7,8 @@ on:
         description: publish the release and its signed update feed after successful checks
         type: boolean
         default: true
-      tag:
-        description: release tag, empty for automatic version
+      build:
+        description: mad build number, empty for automatic
         type: string
         default: ''
       macos:
@@ -67,18 +67,18 @@ jobs:
         env:
           TDESKTOP_API_ID: ${{ secrets.TDESKTOP_API_ID }}
           TDESKTOP_API_HASH: ${{ secrets.TDESKTOP_API_HASH }}
-          REQUESTED_TAG: ${{ inputs.tag }}
+          REQUESTED_BUILD: ${{ inputs.build }}
         run: |
           if ($env:TDESKTOP_API_ID -notmatch '^[1-9][0-9]*$' -or $env:TDESKTOP_API_HASH -notmatch '^[a-fA-F0-9]{32}$') {
             throw 'set repository secrets TDESKTOP_API_ID and TDESKTOP_API_HASH'
           }
           $upstream = (Get-Content mad/UPSTREAM -Raw).Trim()
           if ($upstream -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') { throw 'invalid upstream tag' }
-          $tag = if ($env:REQUESTED_TAG) { $env:REQUESTED_TAG } else { "$upstream-mad.$env:GITHUB_RUN_NUMBER" }
-          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+-mad\.([1-9][0-9]*)$') { throw 'tag must look like v7.3.3-mad.1' }
+          $build = if ($env:REQUESTED_BUILD) { $env:REQUESTED_BUILD -replace '\s', '' } else { $env:GITHUB_RUN_NUMBER }
+          if ($build -notmatch '^[1-9][0-9]*$') { throw 'build must be a positive number, like 16' }
           "UPSTREAM_TAG=$upstream" >> $env:GITHUB_ENV
-          "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
-          "MAD_BUILD=$($Matches[1])" >> $env:GITHUB_ENV
+          "RELEASE_TAG=$upstream-mad.$build" >> $env:GITHUB_ENV
+          "MAD_BUILD=$build" >> $env:GITHUB_ENV
           "TBUILD=$env:GITHUB_WORKSPACE" >> $env:GITHUB_ENV
           New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\link" | Out-Null
           "TEMP=$env:RUNNER_TEMP\link" >> $env:GITHUB_ENV
@@ -412,7 +412,7 @@ jobs:
       LIBS_KEY: ${{ needs.macos-libs.outputs.key }}
       ARCH: ${{ matrix.arch }}
       GH_TOKEN: ${{ github.token }}
-      REQUESTED_TAG: ${{ inputs.tag }}
+      REQUESTED_BUILD: ${{ inputs.build }}
     steps:
       - name: checkout mad
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -426,12 +426,13 @@ jobs:
       - name: clone and apply the exact patch queue
         run: |
           upstream=$(tr -d '[:space:]' < mad/UPSTREAM)
-          tag=${REQUESTED_TAG:-$upstream-mad.$GITHUB_RUN_NUMBER}
-          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-mad\.([1-9][0-9]*)$ ]]; then
-            echo "::error::tag must look like v7.3.3-mad.1"
+          build=${REQUESTED_BUILD:-$GITHUB_RUN_NUMBER}
+          build=${build//[[:space:]]/}
+          if ! [[ "$build" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::build must be a positive number, like 16"
             exit 1
           fi
-          echo "MAD_BUILD=${BASH_REMATCH[1]}" >> "$GITHUB_ENV"
+          echo "MAD_BUILD=$build" >> "$GITHUB_ENV"
           git -c advice.detachedHead=false clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
             --branch "$upstream" https://github.com/telegramdesktop/tdesktop.git tdesktop
           git config --global user.name mad-ci
@@ -505,7 +506,7 @@ jobs:
     permissions:
       contents: read
     env:
-      REQUESTED_TAG: ${{ inputs.tag }}
+      REQUESTED_BUILD: ${{ inputs.build }}
     steps:
       - name: checkout mad
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -518,7 +519,8 @@ jobs:
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
           upstream=$(tr -d '[:space:]' < mad/UPSTREAM)
-          echo "RELEASE_TAG=${REQUESTED_TAG:-$upstream-mad.$GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+          build=${REQUESTED_BUILD:-$GITHUB_RUN_NUMBER}
+          echo "RELEASE_TAG=$upstream-mad.${build//[[:space:]]/}" >> "$GITHUB_ENV"
 
       - name: download the builds
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
@@ -651,7 +653,7 @@ jobs:
         working-directory: dist
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "::error::release $TAG already exists, choose a new tag"
+            echo "::error::release $TAG already exists, choose a new build number"
             exit 1
           fi
           files=(mad.exe "mad-$TAG-win64.zip" mad-update-win64.json mad-changelog.json SHA256SUMS source-manifest.json)
@@ -662,7 +664,7 @@ jobs:
             sed -i '/macos/d' release-notes.md
           fi
           gh release create "$TAG" "${files[@]}" \
-            --target "$GITHUB_SHA" --title "mad $TAG" --notes-file release-notes.md --latest
+            --target "$GITHUB_SHA" --title "mad $COUNTER · ${TAG%-mad.*}" --notes-file release-notes.md --latest
 
       - name: announce in the channel
         continue-on-error: true
