@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 390 patches, newest release first.
+all 391 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -54,6 +54,7 @@ all 390 patches, newest release first.
 | [379](../patches/tdesktop/0379-feat-remember-message-read-times-as-activity.patch) | opening read info also remembers the DM and group read timestamps Telegram exposes. cached results count too, older receipts never replace newer activity, and no background lookups are added | with 324 |
 | [380](../patches/tdesktop/0380-feat-indent-selected-composer-lines.patch) | Tab indents selected lines and Shift+Tab removes one level, using 2 spaces, 4 spaces or tabs. formatting, custom emoji and selection direction stay intact, and each operation undoes in one step. ordinary Tab completion and focus navigation stay unchanged; works in chats, topics, replies and captions | tele → messages, off |
 | [381](../patches/tdesktop/0381-fix-stop-crashing-at-launch-after-a-freeze-or-crash.patch) | mad starts after a freeze or crash instead of crashing at every launch. the report window shown before the interface loads is in english | always on |
+| [382](../patches/tdesktop/0382-feat-show-mad-badges-as-collectible-cards.patch) | clicking a mad badge opens it as a collectible card: an iridescent frame, a glare and a tilt that follow the cursor, a glow in the badge’s own color, who holds it and how long it lasts | with 337 |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 

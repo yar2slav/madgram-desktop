@@ -1,0 +1,806 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "hello, i am forgotten" <me@thisisforgotten.com>
+Date: Thu, 12 Nov 2026 07:41:53 +0300
+Subject: [PATCH] feat: show mad badges as collectible cards
+
+---
+ Telegram/CMakeLists.txt                       |   2 +
+ Telegram/Resources/langs/mad_ru.json          |   5 +-
+ .../SourceFiles/tele/tele_mad_badge_card.cpp  | 550 ++++++++++++++++++
+ .../SourceFiles/tele/tele_mad_badge_card.h    |  20 +
+ Telegram/SourceFiles/tele/tele_mad_badges.cpp |  84 ++-
+ Telegram/SourceFiles/tele/tele_mad_badges.h   |   3 +-
+ Telegram/SourceFiles/ui/unread_badge.cpp      |   2 +-
+ 7 files changed, 647 insertions(+), 19 deletions(-)
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+ create mode 100644 Telegram/SourceFiles/tele/tele_mad_badge_card.h
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 24a3b4f4583a29e845fd30f58c89485c97aa00f5..6acd4f49de62457ba3227dc9ea9fecefd51f1ee7 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2658,6 +2658,8 @@ PRIVATE
+     tele/tele_mad_registry.h
+     tele/tele_mad_badges.cpp
+     tele/tele_mad_badges.h
++    tele/tele_mad_badge_card.cpp
++    tele/tele_mad_badge_card.h
+     settings/settings_tele.cpp
+     settings/settings_tele.h
+     tele/scripting/tele_script_app.cpp
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 6c210b952d824f914f2c62c0c7a9d10573a4ee6d..492537c60a1b3640fd828d4acd65f279db8c2fef 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2129,5 +2129,8 @@
+   "Fast": "Быстро",
+   "Normal": "Обычно",
+   "Slow": "Медленно",
+-  "Very slow": "Очень медленно"
++  "Very slow": "Очень медленно",
++  "Badge": "Бейдж",
++  "Holder: %1": "Владелец: %1",
++  "Until %1": "До %1"
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..21e68ac33741306be9095421e4c3e81c811f17f5
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+@@ -0,0 +1,550 @@
++#include "tele/tele_mad_badge_card.h"
++
++#include "base/unixtime.h"
++#include "core/application.h"
++#include "data/data_session.h"
++#include "data/stickers/data_custom_emoji.h"
++#include "lang/lang_keys.h"
++#include "main/main_session.h"
++#include "mainwindow.h"
++#include "tele/tele_lowercase.h"
++#include "tele/tele_mad_badges.h"
++#include "ui/effects/animations.h"
++#include "ui/rp_widget.h"
++#include "ui/text/text.h"
++#include "ui/text/text_custom_emoji.h"
++#include "ui/ui_utility.h"
++#include "ui/widgets/buttons.h"
++#include "window/window_controller.h"
++#include "styles/style_basic.h"
++#include "styles/style_layers.h"
++#include "styles/style_settings.h"
++#include "styles/style_widgets.h"
++
++#include <QtCore/QPointer>
++#include <QtCore/QUrl>
++#include <QtGui/QDesktopServices>
++#include <QtGui/QKeyEvent>
++#include <QtGui/QMouseEvent>
++#include <QtGui/QPainter>
++
++#include <algorithm>
++#include <cmath>
++
++namespace Tele {
++namespace {
++
++constexpr auto kCardWidth = 300;
++constexpr auto kRadius = 24;
++constexpr auto kIcon = 150;
++constexpr auto kArt = 190;
++constexpr auto kPadding = 22;
++constexpr auto kTitleLines = 3;
++constexpr auto kDescriptionLines = 8;
++constexpr auto kButtonsSkip = 22;
++constexpr auto kMaxTilt = 9.;
++constexpr auto kTiltSmoothing = 90.;
++constexpr auto kShowDuration = crl::time(240);
++constexpr auto kHideDuration = crl::time(160);
++
++[[nodiscard]] int Scaled(int value) {
++	return style::ConvertScale(value, style::Scale());
++}
++
++[[nodiscard]] style::font SmallFont(const style::font &base) {
++	return style::font(Scaled(11), base->flags(), base->family());
++}
++
++[[nodiscard]] QColor Accent(const QImage &image) {
++	const auto fallback = QColor(0x9b, 0x6d, 0xff);
++	if (image.isNull()) {
++		return fallback;
++	}
++	const auto sample = image.scaled(
++		16,
++		16,
++		Qt::IgnoreAspectRatio,
++		Qt::SmoothTransformation).convertToFormat(QImage::Format_ARGB32);
++	auto red = 0.f;
++	auto green = 0.f;
++	auto blue = 0.f;
++	auto total = 0.f;
++	for (auto y = 0; y != sample.height(); ++y) {
++		for (auto x = 0; x != sample.width(); ++x) {
++			const auto color = QColor::fromRgba(sample.pixel(x, y));
++			const auto alpha = color.alphaF();
++			if (alpha < 0.5f) {
++				continue;
++			}
++			const auto weight = alpha * (0.15f + color.hsvSaturationF());
++			red += color.redF() * weight;
++			green += color.greenF() * weight;
++			blue += color.blueF() * weight;
++			total += weight;
++		}
++	}
++	if (total <= 0.f) {
++		return fallback;
++	}
++	const auto mixed = QColor::fromRgbF(
++		red / total,
++		green / total,
++		blue / total);
++	const auto hue = mixed.hsvHueF();
++	if (hue < 0.f) {
++		return fallback;
++	}
++	return QColor::fromHsvF(
++		hue,
++		std::max(mixed.hsvSaturationF(), 0.45f),
++		std::max(mixed.valueF(), 0.85f));
++}
++
++[[nodiscard]] QColor WithAlpha(QColor color, float alpha) {
++	color.setAlphaF(alpha);
++	return color;
++}
++
++class Card final : public Ui::RpWidget {
++public:
++	Card(
++		not_null<Ui::RpWidget*> parent,
++		not_null<Window::Controller*> window,
++		MadBadgeCardData &&data);
++
++	void showAnimated();
++	void hideAnimated();
++
++protected:
++	void paintEvent(QPaintEvent *e) override;
++	void mouseMoveEvent(QMouseEvent *e) override;
++	void mousePressEvent(QMouseEvent *e) override;
++	void keyPressEvent(QKeyEvent *e) override;
++	void leaveEventHook(QEvent *e) override;
++
++private:
++	void refreshArt();
++	void layoutCard();
++	void updateButtons();
++	void showButtons(bool shown);
++	void paintCard(QPainter &p);
++	void setTiltTarget(QPointF target);
++	bool tiltStep(crl::time now);
++	[[nodiscard]] QRect cardGeometry() const;
++	[[nodiscard]] QString footerRight() const;
++
++	const not_null<Window::Controller*> _window;
++	MadBadgeCardData _data;
++	QImage _image;
++	QColor _accent;
++	std::unique_ptr<Ui::Text::CustomEmoji> _emoji;
++	Ui::Text::String _title;
++	Ui::Text::String _description;
++	style::font _labelFont;
++	style::font _footerFont;
++	int _cardHeight = 0;
++	int _titleHeight = 0;
++	int _descriptionHeight = 0;
++	QImage _frame;
++	Ui::RoundButton *_close = nullptr;
++	Ui::RoundButton *_open = nullptr;
++	Ui::Animations::Simple _shown;
++	Ui::Animations::Basic _tiltAnimation;
++	QPointF _tilt;
++	QPointF _tiltTarget;
++	crl::time _tiltTime = 0;
++	bool _hiding = false;
++
++};
++
++Card::Card(
++	not_null<Ui::RpWidget*> parent,
++	not_null<Window::Controller*> window,
++	MadBadgeCardData &&data)
++: RpWidget(parent.get())
++, _window(window)
++, _data(std::move(data))
++, _accent(Accent(QImage()))
++, _labelFont(SmallFont(st::semiboldFont))
++, _footerFont(SmallFont(st::normalFont))
++, _tiltAnimation([=](crl::time now) { return tiltStep(now); }) {
++	setMouseTracking(true);
++	setFocusPolicy(Qt::StrongFocus);
++
++	_title.setText(st::sessionBigName.style, _data.badge.title);
++	_description.setText(st::defaultTextStyle, _data.badge.description);
++
++	_close = Ui::CreateChild<Ui::RoundButton>(
++		this,
++		rpl::single(Tr(u"Close"_q)),
++		st::defaultLightButton);
++	_close->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
++	_close->setClickedCallback([=] { hideAnimated(); });
++
++	const auto url = QUrl(_data.badge.link);
++	if (url.isValid()
++		&& (url.scheme() == u"https"_q || url.scheme() == u"tg"_q)) {
++		_open = Ui::CreateChild<Ui::RoundButton>(
++			this,
++			rpl::single(Tr(u"Open link"_q)),
++			st::defaultActiveButton);
++		_open->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
++		_open->setClickedCallback([=] {
++			QDesktopServices::openUrl(url);
++			hideAnimated();
++		});
++	}
++	showButtons(false);
++
++	if (const auto session = _data.session) {
++		session->lifetime().add(crl::guard(this, [=] {
++			_emoji = nullptr;
++			_data.session = nullptr;
++			deleteLater();
++		}));
++	}
++
++	MadBadgesChanges() | rpl::on_next([=] {
++		refreshArt();
++		update();
++	}, lifetime());
++	refreshArt();
++	layoutCard();
++
++	parent->sizeValue() | rpl::on_next([=](QSize size) {
++		setGeometry(QRect(QPoint(), size));
++		updateButtons();
++	}, lifetime());
++}
++
++void Card::refreshArt() {
++	if (_data.badge.documentId && _data.session) {
++		if (!_emoji) {
++			_emoji = _data.session->data().customEmojiManager().create(
++				Data::SerializeCustomEmojiId(DocumentId(_data.badge.documentId)),
++				[=] { update(); },
++				Data::CustomEmojiSizeTag::Isolated,
++				Scaled(kIcon));
++		}
++		return;
++	}
++	if (_image.isNull()) {
++		_image = MadBadgeImage(_data.badge, 128);
++		if (!_image.isNull()) {
++			_accent = Accent(_image);
++		}
++	}
++}
++
++void Card::layoutCard() {
++	const auto inner = Scaled(kCardWidth) - 2 * Scaled(kPadding);
++	_titleHeight = std::min(
++		_title.countHeight(inner),
++		kTitleLines * st::sessionBigName.style.font->height);
++	_descriptionHeight = _description.isEmpty()
++		? 0
++		: std::min(
++			_description.countHeight(inner),
++			kDescriptionLines * st::defaultTextStyle.font->height);
++	_cardHeight = Scaled(18)
++		+ _labelFont->height
++		+ Scaled(kArt)
++		+ _titleHeight
++		+ (_descriptionHeight ? (Scaled(6) + _descriptionHeight) : 0)
++		+ Scaled(14)
++		+ _footerFont->height
++		+ Scaled(20);
++}
++
++QRect Card::cardGeometry() const {
++	const auto cardWidth = Scaled(kCardWidth);
++	const auto buttons = _close->height() + Scaled(kButtonsSkip);
++	const auto top = std::max(
++		(height() - _cardHeight - buttons) / 2,
++		Scaled(16));
++	return QRect((width() - cardWidth) / 2, top, cardWidth, _cardHeight);
++}
++
++void Card::updateButtons() {
++	const auto card = cardGeometry();
++	const auto skip = Scaled(10);
++	const auto total = _close->width()
++		+ (_open ? (skip + _open->width()) : 0);
++	const auto left = (width() - total) / 2;
++	const auto top = card.y() + card.height() + Scaled(kButtonsSkip);
++	_close->moveToLeft(left, top);
++	if (_open) {
++		_open->moveToLeft(left + _close->width() + skip, top);
++	}
++}
++
++void Card::showButtons(bool shown) {
++	_close->setVisible(shown);
++	if (_open) {
++		_open->setVisible(shown);
++	}
++}
++
++void Card::showAnimated() {
++	show();
++	raise();
++	setFocus();
++	_shown.start([=] {
++		update();
++		if (!_shown.animating() && !_hiding) {
++			showButtons(true);
++		}
++	}, 0., 1., kShowDuration, anim::easeOutCubic);
++}
++
++void Card::hideAnimated() {
++	if (_hiding) {
++		return;
++	}
++	_hiding = true;
++	showButtons(false);
++	_shown.start([=] {
++		update();
++		if (!_shown.animating()) {
++			_window->widget()->setInnerFocus();
++			deleteLater();
++		}
++	}, _shown.value(1.), 0., kHideDuration, anim::linear);
++}
++
++QString Card::footerRight() const {
++	return _data.expiresAt
++		? Tr(u"Until %1"_q).arg(langDayOfMonthFull(
++			base::unixtime::parse(TimeId(_data.expiresAt)).date()))
++		: Tr(u"Forever"_q);
++}
++
++void Card::paintCard(QPainter &p) {
++	p.setRenderHint(QPainter::Antialiasing);
++	p.setRenderHint(QPainter::SmoothPixmapTransform);
++
++	const auto cardWidth = Scaled(kCardWidth);
++	const auto outer = QRectF(0., 0., cardWidth, _cardHeight);
++	const auto radius = Scaled(kRadius) * 1.;
++	const auto stroke = std::max(style::Scale() * 1.5 / 100., 1.);
++
++	auto border = QConicalGradient(outer.center(), 210. - _tilt.x() * 60.);
++	border.setColorAt(0., QColor(0xff, 0x9f, 0xd6));
++	border.setColorAt(0.2, QColor(0xb6, 0x9c, 0xff));
++	border.setColorAt(0.4, QColor(0x7f, 0xe0, 0xff));
++	border.setColorAt(0.6, QColor(0xb4, 0xff, 0xb0));
++	border.setColorAt(0.8, QColor(0xff, 0xe0, 0x8a));
++	border.setColorAt(1., QColor(0xff, 0x9f, 0xd6));
++	p.setPen(Qt::NoPen);
++	p.setBrush(border);
++	p.drawRoundedRect(outer, radius, radius);
++
++	const auto inner = outer.marginsRemoved({ stroke, stroke, stroke, stroke });
++	const auto innerRadius = radius - stroke;
++	p.setBrush(QColor(0x14, 0x12, 0x18));
++	p.drawRoundedRect(inner, innerRadius, innerRadius);
++
++	const auto padding = Scaled(kPadding);
++	const auto labelTop = Scaled(18);
++	const auto artTop = labelTop + _labelFont->height;
++	const auto artCenter = QPointF(
++		cardWidth / 2.,
++		artTop + Scaled(kArt) / 2.);
++	auto glow = QRadialGradient(artCenter, cardWidth * 0.62);
++	glow.setColorAt(0., WithAlpha(_accent, 0.42f));
++	glow.setColorAt(1., WithAlpha(_accent, 0.f));
++	p.setBrush(glow);
++	p.drawRoundedRect(inner, innerRadius, innerRadius);
++
++	const auto textWidth = cardWidth - 2 * padding;
++	auto label = _labelFont->f;
++	label.setLetterSpacing(QFont::AbsoluteSpacing, Scaled(10) / 12.);
++	p.setFont(label);
++	p.setPen(QColor(0xcf, 0xc6, 0xf2));
++	const auto labelRect = QRect(
++		padding,
++		labelTop,
++		textWidth,
++		_labelFont->height);
++	p.drawText(labelRect, Qt::AlignLeft | Qt::AlignVCenter, Tr(u"Badge"_q));
++	p.drawText(labelRect, Qt::AlignRight | Qt::AlignVCenter, u"b.mad.tg"_q);
++
++	const auto icon = Scaled(kIcon);
++	const auto iconLeft = (cardWidth - icon) / 2;
++	const auto iconTop = artTop + (Scaled(kArt) - icon) / 2;
++	if (_emoji) {
++		_emoji->paint(p, {
++			.textColor = QColor(0xff, 0xff, 0xff),
++			.now = crl::now(),
++			.position = QPoint(iconLeft, iconTop),
++		});
++	} else if (!_image.isNull()) {
++		p.drawImage(QRect(iconLeft, iconTop, icon, icon), _image);
++	}
++
++	auto top = artTop + Scaled(kArt);
++	p.setPen(QColor(0xff, 0xff, 0xff));
++	_title.draw(p, {
++		.position = QPoint(padding, top),
++		.availableWidth = textWidth,
++		.elisionLines = kTitleLines,
++	});
++	top += _titleHeight;
++	if (_descriptionHeight) {
++		top += Scaled(6);
++		p.setPen(QColor(0xb9, 0xb3, 0xcf));
++		_description.draw(p, {
++			.position = QPoint(padding, top),
++			.availableWidth = textWidth,
++			.elisionLines = kDescriptionLines,
++		});
++		top += _descriptionHeight;
++	}
++	top += Scaled(14);
++
++	const auto right = footerRight();
++	const auto rightWidth = _footerFont->width(right);
++	const auto left = _data.holder.isEmpty()
++		? QString()
++		: _footerFont->elided(
++			Tr(u"Holder: %1"_q).arg(_data.holder),
++			std::max(textWidth - rightWidth - Scaled(12), 0));
++	const auto footerRect = QRect(padding, top, textWidth, _footerFont->height);
++	p.setFont(_footerFont->f);
++	p.setPen(QColor(0xa5, 0x9f, 0xbf));
++	p.drawText(footerRect, Qt::AlignLeft | Qt::AlignVCenter, left);
++	p.drawText(footerRect, Qt::AlignRight | Qt::AlignVCenter, right);
++
++	p.setCompositionMode(QPainter::CompositionMode_SourceAtop);
++	const auto sheenCenter = cardWidth * (0.5 + 0.45 * _tilt.x());
++	auto sheen = QLinearGradient(
++		QPointF(
++			sheenCenter - cardWidth * 0.35,
++			_cardHeight * (0.2 + 0.3 * _tilt.y())),
++		QPointF(
++			sheenCenter + cardWidth * 0.35,
++			_cardHeight * (0.5 + 0.3 * _tilt.y())));
++	sheen.setColorAt(0., QColor(0xff, 0xff, 0xff, 0));
++	sheen.setColorAt(0.5, QColor(0xff, 0xff, 0xff, 38));
++	sheen.setColorAt(1., QColor(0xff, 0xff, 0xff, 0));
++	p.fillRect(outer, sheen);
++}
++
++void Card::paintEvent(QPaintEvent *e) {
++	auto p = QPainter(this);
++	const auto shown = _shown.value(_hiding ? 0. : 1.);
++	p.setOpacity(shown);
++	p.fillRect(e->rect(), st::layerBg->b);
++	if (shown <= 0.) {
++		return;
++	}
++	const auto card = cardGeometry();
++	const auto ratio = style::DevicePixelRatio();
++	const auto size = card.size() * ratio;
++	if (_frame.size() != size) {
++		_frame = QImage(size, QImage::Format_ARGB32_Premultiplied);
++		_frame.setDevicePixelRatio(ratio);
++	}
++	_frame.fill(Qt::transparent);
++	{
++		auto q = QPainter(&_frame);
++		paintCard(q);
++	}
++
++	const auto center = QPointF(
++		card.x() + card.width() / 2.,
++		card.y() + card.height() / 2.);
++	p.setRenderHint(QPainter::Antialiasing);
++	p.setRenderHint(QPainter::SmoothPixmapTransform);
++	auto glow = QRadialGradient(center, card.width() * 1.);
++	glow.setColorAt(0., WithAlpha(_accent, 0.22f));
++	glow.setColorAt(1., WithAlpha(_accent, 0.f));
++	p.setPen(Qt::NoPen);
++	p.setBrush(glow);
++	p.drawEllipse(center, card.width() * 1., card.width() * 1.);
++
++	const auto scale = 0.9 + 0.1 * shown;
++	auto transform = QTransform();
++	transform.translate(center.x(), center.y());
++	transform.rotate(_tilt.x() * kMaxTilt, Qt::YAxis);
++	transform.rotate(-_tilt.y() * kMaxTilt, Qt::XAxis);
++	transform.scale(scale, scale);
++	transform.translate(-card.width() / 2., -card.height() / 2.);
++	p.setTransform(transform);
++	p.drawImage(QRectF(0., 0., card.width(), card.height()), _frame);
++}
++
++void Card::mouseMoveEvent(QMouseEvent *e) {
++	const auto card = cardGeometry();
++	const auto halfWidth = card.width() / 2.;
++	const auto halfHeight = card.height() / 2.;
++	const auto x = (e->pos().x() - (card.x() + halfWidth)) / halfWidth;
++	const auto y = (e->pos().y() - (card.y() + halfHeight)) / halfHeight;
++	setTiltTarget({ std::clamp(x, -1., 1.), std::clamp(y, -1., 1.) });
++}
++
++void Card::mousePressEvent(QMouseEvent *e) {
++	if (!cardGeometry().contains(e->pos())) {
++		hideAnimated();
++	}
++}
++
++void Card::keyPressEvent(QKeyEvent *e) {
++	if (e->key() == Qt::Key_Escape) {
++		hideAnimated();
++	} else {
++		RpWidget::keyPressEvent(e);
++	}
++}
++
++void Card::leaveEventHook(QEvent *e) {
++	setTiltTarget(QPointF());
++}
++
++void Card::setTiltTarget(QPointF target) {
++	_tiltTarget = target;
++	if (!_tiltAnimation.animating()) {
++		_tiltTime = crl::now();
++		_tiltAnimation.start();
++	}
++}
++
++bool Card::tiltStep(crl::time now) {
++	const auto passed = std::max(now - _tiltTime, crl::time(1));
++	_tiltTime = now;
++	const auto factor = 1. - std::exp(-passed / kTiltSmoothing);
++	_tilt += (_tiltTarget - _tilt) * factor;
++	const auto delta = _tiltTarget - _tilt;
++	const auto done = (std::abs(delta.x()) < 0.002)
++		&& (std::abs(delta.y()) < 0.002);
++	if (done) {
++		_tilt = _tiltTarget;
++	}
++	update();
++	return !done;
++}
++
++QPointer<Card> Current;
++
++}
++
++void ShowMadBadgeCard(MadBadgeCardData data) {
++	const auto window = Core::App().activeWindow()
++		? Core::App().activeWindow()
++		: Core::App().activePrimaryWindow();
++	if (!window) {
++		return;
++	}
++	const auto body = window->widget()->bodyWidget();
++	if (!body) {
++		return;
++	}
++	if (const auto previous = Current.data()) {
++		previous->deleteLater();
++	}
++	const auto card = Ui::CreateChild<Card>(body, window, std::move(data));
++	Current = card;
++	card->showAnimated();
++}
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badge_card.h b/Telegram/SourceFiles/tele/tele_mad_badge_card.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..539b0ed227ab59a61919e8df60ecfcc0f68736f3
+--- /dev/null
++++ b/Telegram/SourceFiles/tele/tele_mad_badge_card.h
+@@ -0,0 +1,20 @@
++#pragma once
++
++#include "tele/tele_mad_registry.h"
++
++namespace Main {
++class Session;
++}
++
++namespace Tele {
++
++struct MadBadgeCardData {
++	MadBadge badge;
++	QString holder;
++	qint64 expiresAt = 0;
++	Main::Session *session = nullptr;
++};
++
++void ShowMadBadgeCard(MadBadgeCardData data);
++
++}
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.cpp b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+index f877cf8e358090a73a5781d696455624e18865fd..67f59671677520748a210cb49172928997a69dfa 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+@@ -4,6 +4,7 @@
+ #include "boxes/abstract_box.h"
+ #include "base/timer.h"
+ #include "core/application.h"
++#include "core/click_handler_types.h"
+ #include "data/data_changes.h"
+ #include "data/data_peer.h"
+ #include "data/data_session.h"
+@@ -14,6 +15,7 @@
+ #include "settings.h"
+ #include "tele/tele_launch_flags.h"
+ #include "tele/tele_lowercase.h"
++#include "tele/tele_mad_badge_card.h"
+ #include "tele/tele_options.h"
+ #include "ui/boxes/confirm_box.h"
+ #include "ui/abstract_button.h"
+@@ -22,6 +24,8 @@
+ #include "ui/text/text.h"
+ #include "ui/ui_utility.h"
+ #include "ui/widgets/labels.h"
++#include "window/window_controller.h"
++#include "window/window_session_controller.h"
+ #include "styles/style_layers.h"
+ #include "styles/style_boxes.h"
+ #include "styles/style_basic.h"
+@@ -82,6 +86,8 @@ public:
+ 	[[nodiscard]] QImage image(const MadBadge &badge, int size);
+ 	[[nodiscard]] bool assigned(const QString &target, const QString &id) const;
+ 	[[nodiscard]] std::optional<MadBadge> badge(const QString &id) const;
++	[[nodiscard]] std::optional<MadAssignment> assignment(
++		const QString &target) const;
+ 	void fetch(Fn<void(QString)> done = nullptr);
+ 	void clear();
+ 	rpl::event_stream<> changes;
+@@ -181,6 +187,14 @@ std::optional<MadBadge> RegistryStore::badge(const QString &id) const {
+ 	return i == _registry.badges.cend() ? std::nullopt : std::optional(*i);
+ }
+ 
++std::optional<MadAssignment> RegistryStore::assignment(
++		const QString &target) const {
++	const auto i = _registry.assignments.constFind(target);
++	return (i == _registry.assignments.cend())
++		? std::nullopt
++		: std::optional(*i);
++}
++
+ void RegistryStore::request(const QUrl &url, const QByteArray &etag,
+ 		Fn<void(int, QByteArray, QByteArray, QByteArray)> done) {
+ 	if (!enabled()) {
+@@ -429,6 +443,47 @@ private:
+ 
+ };
+ 
++[[nodiscard]] PeerId TargetPeer(const QString &target) {
++	const auto parts = target.split(':');
++	const auto id = parts.back().toULongLong();
++	return (parts.front() == u"user"_q)
++		? peerFromUser(UserId(id))
++		: (parts.front() == u"legacyGroup"_q)
++		? peerFromChat(ChatId(id))
++		: peerFromChannel(ChannelId(id));
++}
++
++[[nodiscard]] Main::Session *SessionFrom(const ClickContext &context) {
++	const auto my = context.other.value<ClickHandlerContext>();
++	if (const auto controller = my.sessionWindow.get()) {
++		return &controller->session();
++	}
++	const auto window = Core::App().activeWindow();
++	const auto active = window ? window->sessionController() : nullptr;
++	return active ? &active->session() : nullptr;
++}
++
++void ShowBadge(
++		const MadBadge &badge,
++		const QString &target,
++		Main::Session *session) {
++	auto holder = QString();
++	if (session) {
++		if (const auto peer = session->data().peerLoaded(TargetPeer(target))) {
++			holder = peer->name();
++		}
++	}
++	const auto assignment = Store
++		? Store->assignment(target)
++		: std::optional<MadAssignment>();
++	ShowMadBadgeCard({
++		.badge = badge,
++		.holder = holder,
++		.expiresAt = assignment ? assignment->expiresAt : 0,
++		.session = session,
++	});
++}
++
+ }
+ 
+ QString MadBadgeData(not_null<PeerData*> peer, const QString &id) {
+@@ -484,18 +539,12 @@ std::unique_ptr<Ui::Text::CustomEmoji> MakeMadBadgeObject(
+ 		value.mid(slash + 1).toString(), session, std::move(repaint), size);
+ }
+ 
+-void ShowMadBadge(const MadBadge &badge) {
+-	Ui::show(Box([badge](not_null<Ui::GenericBox*> box) {
+-		box->setTitle(rpl::single(badge.title));
+-		box->addRow(object_ptr<Ui::FlatLabel>(box, badge.description, st::boxLabel));
+-		const auto url = QUrl(badge.link);
+-		if (url.isValid() && (url.scheme() == u"https"_q || url.scheme() == u"tg"_q)) {
+-			box->addButton(rpl::single(Tr(u"Open link"_q)), [=] {
+-				QDesktopServices::openUrl(url);
+-			});
+-		}
+-		box->addButton(rpl::single(Tr(u"Close"_q)), [=] { box->closeBox(); });
+-	}));
++void ShowMadBadge(const MadBadge &badge, not_null<PeerData*> peer) {
++	ShowBadge(badge, Target(peer), &peer->session());
++}
++
++QImage MadBadgeImage(const MadBadge &badge, int size) {
++	return Store ? Store->image(badge, size) : QImage();
+ }
+ 
+ Ui::RpWidget *CreateMadBadgeWidget(not_null<QWidget*> parent,
+@@ -525,7 +574,7 @@ Ui::RpWidget *CreateMadBadgeWidget(not_null<QWidget*> parent,
+ 		}
+ 	}, button->lifetime());
+ 	button->setClickedCallback([=] {
+-		if (const auto badge = MadBadgeForPeer(peer)) ShowMadBadge(*badge);
++		if (const auto badge = MadBadgeForPeer(peer)) ShowMadBadge(*badge, peer);
+ 	});
+ 	MadBadgesChanges() | rpl::on_next(refresh, button->lifetime());
+ 	refresh();
+@@ -549,11 +598,14 @@ std::shared_ptr<ClickHandler> MadBadgeLink(const EntityLinkData &data) {
+ 	if (slash <= 0) return nullptr;
+ 	const auto target = value.left(slash);
+ 	const auto id = value.mid(slash + 1);
+-	return std::make_shared<BadgeClickHandler>([=] {
++	return std::make_shared<BadgeClickHandler>(Fn<void(ClickContext)>([=](
++			ClickContext context) {
+ 		if (Store && MadBadgesEnabled() && Store->assigned(target, id)) {
+-			if (const auto badge = Store->badge(id)) ShowMadBadge(*badge);
++			if (const auto badge = Store->badge(id)) {
++				ShowBadge(*badge, target, SessionFrom(context));
++			}
+ 		}
+-	});
++	}));
+ }
+ 
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.h b/Telegram/SourceFiles/tele/tele_mad_badges.h
+index 419d4cddedd83a5a43cb7c5db65439a2067a012f..7548c970d3c17589048056cf566824eccf25c0b4 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.h
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.h
+@@ -34,7 +34,8 @@ void ClearMadBadges();
+ [[nodiscard]] std::shared_ptr<ClickHandler> MadBadgeLink(const EntityLinkData &data);
+ [[nodiscard]] std::shared_ptr<ClickHandler> MadBadgeTextLink(
+ 	const Ui::Text::String &text, QPoint point, int width, int lines = 1);
+-void ShowMadBadge(const MadBadge &badge);
++void ShowMadBadge(const MadBadge &badge, not_null<PeerData*> peer);
++[[nodiscard]] QImage MadBadgeImage(const MadBadge &badge, int size);
+ [[nodiscard]] Ui::RpWidget *CreateMadBadgeWidget(
+ 	not_null<QWidget*> parent,
+ 	not_null<PeerData*> peer,
+diff --git a/Telegram/SourceFiles/ui/unread_badge.cpp b/Telegram/SourceFiles/ui/unread_badge.cpp
+index f81d8b4482a0672e12651a368a29a52d0277c3a0..72ad10a4305b6157d1590e3d3225e0f949173cfd 100644
+--- a/Telegram/SourceFiles/ui/unread_badge.cpp
++++ b/Telegram/SourceFiles/ui/unread_badge.cpp
+@@ -295,7 +295,7 @@ QRect PeerBadge::madBadgeRect() const {
+ void PeerBadge::showMadBadge() const {
+ 	if (_madPeer) {
+ 		if (const auto badge = Tele::MadBadgeForPeer(_madPeer)) {
+-			Tele::ShowMadBadge(*badge);
++			Tele::ShowMadBadge(*badge, _madPeer);
+ 		}
+ 	}
+ }
