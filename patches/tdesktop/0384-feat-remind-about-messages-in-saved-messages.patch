@@ -183,7 +183,7 @@ index 9caff0dcc72a68a35bb526c240d9f506511f00ba..088315213df70f62da0fe40b9cde3ab3
  [[nodiscard]] bool MuteIgnored();
 diff --git a/Telegram/SourceFiles/tele/tele_reminders.cpp b/Telegram/SourceFiles/tele/tele_reminders.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..80d1c36355e0dcd63eba84dcdb3412ac181b96cc
+index 0000000000000000000000000000000000000000..0b6857b0050efe1395b8b5de040de7606855599f
 --- /dev/null
 +++ b/Telegram/SourceFiles/tele/tele_reminders.cpp
 @@ -0,0 +1,82 @@
@@ -218,7 +218,7 @@ index 0000000000000000000000000000000000000000..80d1c36355e0dcd63eba84dcdb3412ac
 +		not_null<HistoryItem*> item,
 +		TimeId when) {
 +	const auto session = &item->history()->session();
-+	auto action = Api::SendAction(session->data().history(session->user()));
++	auto action = Api::SendAction(session->data().history(session->userPeerId()));
 +	action.options.scheduled = when;
 +	session->api().forwardMessages(
 +		Data::ResolvedForwardDraft{ .items = { item } },
