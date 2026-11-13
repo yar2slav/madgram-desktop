@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 22:06:08 +0200
+Subject: [PATCH] fix: comments full of hidden messages stop jumping between
+ two places
+
+---
+ .../history/view/history_view_list_widget.cpp | 26 ++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
+index 8cb0046ea4566daaf9f6a1fbe64fd7a5479e8821..86c3b6aaf15727a7fea336ec9a3612449db232cf 100644
+--- a/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_list_widget.cpp
+@@ -130,6 +130,7 @@ constexpr auto kPreloadIfLessThanScreens = 2;
+ constexpr auto kPreloadedScreensCountFull
+ 	= kPreloadedScreensCount + 1 + kPreloadedScreensCount;
+ constexpr auto kClearUserpicsAfter = 50;
++constexpr auto kMaxIdsLimitWithHidden = 10000;
+ constexpr auto kScrollDateHideOnDayCrossingTimeout = crl::time(3000);
+ constexpr auto kSendingLandingArmTimeout = crl::time(1000);
+ constexpr auto kSendingLandingSettleTimeout = crl::time(600);
+@@ -2610,6 +2611,22 @@ void ListWidget::checkMoveToOtherViewer() {
+ 		- kPreloadIfLessThanScreens;
+ 	auto minUniversalIdDelta = (minScreenDelta * visibleHeight)
+ 		/ _itemAverageHeight;
++	const auto shownBetween = [&](int from, int till) {
++		if (from > till) {
++			std::swap(from, till);
++		}
++		auto result = 0;
++		for (auto i = from; i != till; ++i) {
++			if (!_items[i]->isHidden()) {
++				++result;
++			}
++		}
++		return result;
++	};
++	const auto mostlyHidden = [&] {
++		const auto count = int(_items.size());
++		return shownBetween(0, count) * 2 < count;
++	};
+ 	const auto preloadAroundMessage = [&](int index) {
+ 		Expects(index >= 0 && index < _items.size());
+ 
+@@ -2621,7 +2638,7 @@ void ListWidget::checkMoveToOtherViewer() {
+ 		}
+ 		if (!preloadRequired) {
+ 			Assert(_aroundIndex >= 0);
+-			auto delta = std::abs(index - _aroundIndex);
++			auto delta = shownBetween(index, _aroundIndex);
+ 			preloadRequired = (delta >= minUniversalIdDelta);
+ 		}
+ 		if (preloadRequired) {
+@@ -2629,6 +2646,13 @@ void ListWidget::checkMoveToOtherViewer() {
+ 			_aroundPosition = itemPosition;
+ 			_aroundIndex = index;
+ 			refreshViewer();
++		} else if (_itemsHeight < preloadedHeight
++			&& _idsLimit < kMaxIdsLimitWithHidden
++			&& mostlyHidden()) {
++			_idsLimit = std::min(
++				std::max(_idsLimit, preloadIdsLimit) * 2,
++				kMaxIdsLimitWithHidden);
++			refreshViewer();
+ 		}
+ 	};
+ 

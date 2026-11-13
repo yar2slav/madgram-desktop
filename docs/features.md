@@ -247,6 +247,7 @@ settings → tele → privacy.
 | [367](../patches/tdesktop/0367-fix-go-offline-right-after-marking-messages-as-read-.patch) | ghost mode sets you offline again right after mark as read up to here or reading a chat when you reply, instead of leaving you online for five minutes | with 32 |
 | [383](../patches/tdesktop/0383-feat-hide-typing-replied-text-and-userpics-of-ignore.patch) | ignored users no longer show as typing, their userpics are gone from groups and comments, and replies to their messages say hidden message instead of quoting them | with 16 |
 | [391](../patches/tdesktop/0391-fix-chats-with-many-hidden-messages-stay-smooth.patch) | a chat full of messages from ignored or hidden users no longer lags or flickers while they spam: each hidden message no longer re-checks every hidden neighbour | with 16 |
+| [392](../patches/tdesktop/0392-fix-comments-full-of-hidden-messages-stop-jumping-be.patch) | comments where most messages come from ignored or hidden users no longer jump between two places and flicker: hidden messages no longer count as distance when the list decides to load around another message | with 16 |
 
 ## profiles and ids
 
