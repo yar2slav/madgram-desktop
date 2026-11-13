@@ -246,6 +246,7 @@ settings → tele → privacy.
 | [292](../patches/tdesktop/0292-fix-closing-the-rich-editor-keeps-drafts-on-this-dev.patch) | closing the rich message editor saves its draft on this device and closes, when drafts stay on this device and in secret chats, instead of trying the cloud | with 93 |
 | [367](../patches/tdesktop/0367-fix-go-offline-right-after-marking-messages-as-read-.patch) | ghost mode sets you offline again right after mark as read up to here or reading a chat when you reply, instead of leaving you online for five minutes | with 32 |
 | [383](../patches/tdesktop/0383-feat-hide-typing-replied-text-and-userpics-of-ignore.patch) | ignored users no longer show as typing, their userpics are gone from groups and comments, and replies to their messages say hidden message instead of quoting them | with 16 |
+| [391](../patches/tdesktop/0391-fix-chats-with-many-hidden-messages-stay-smooth.patch) | a chat full of messages from ignored or hidden users no longer lags or flickers while they spam: each hidden message no longer re-checks every hidden neighbour | with 16 |
 
 ## profiles and ids
 

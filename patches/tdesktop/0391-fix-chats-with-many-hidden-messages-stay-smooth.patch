@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 22:02:22 +0200
+Subject: [PATCH] fix: chats with many hidden messages stay smooth
+
+---
+ .../history/view/history_view_element.cpp            | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
+index 16e2ab0c98dbbcd4c3f3df667967f96d6a6481de..de0f79f825b2fd272a2502ac2afe4c363a4445ba 100644
+--- a/Telegram/SourceFiles/history/view/history_view_element.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
+@@ -2434,6 +2434,11 @@ void Element::previousInBlocksChanged() {
+ 
+ void Element::nextInBlocksRemoved() {
+ 	setAttachToNext(false);
++	if (isHidden()) {
++		if (const auto previous = previousDisplayedInBlocks()) {
++			previous->setAttachToNext(false);
++		}
++	}
+ }
+ 
+ bool Element::markSponsoredViewed(int shownFromTop) const {
+@@ -3225,7 +3230,12 @@ void Element::attachToBlock(not_null<HistoryBlock*> block, int index) {
+ 	_block = block;
+ 	_indexInBlock = index;
+ 	_data->setMainView(this);
+-	previousInBlocksChanged();
++	if (isHidden()) {
++		recountThreadBarInBlocks();
++		recountDisplayDateInBlocks();
++	} else {
++		previousInBlocksChanged();
++	}
+ }
+ 
+ void Element::removeFromBlock(Data::ViewRemovalReason reason) {
