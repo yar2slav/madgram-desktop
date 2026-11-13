@@ -1,0 +1,77 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 02:51:50 +0200
+Subject: [PATCH] feat: badge cards glow in the colors of their custom emoji
+
+---
+ .../SourceFiles/tele/tele_mad_badge_card.cpp  | 29 +++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+index faa203b386483a70e2ba1f4d9896b34fa3851047..ed5d56af8a8dc7b5192d64c11b96380817c99e6f 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+@@ -87,8 +87,8 @@ constexpr auto kHideDuration = crl::time(160);
+ 		green / total,
+ 		blue / total);
+ 	const auto hue = mixed.hsvHueF();
+-	if (hue < 0.f) {
+-		return fallback;
++	if (hue < 0.f || mixed.hsvSaturationF() < 0.12f) {
++		return QColor(0xcf, 0xcf, 0xd8);
+ 	}
+ 	return QColor::fromHsvF(
+ 		hue,
+@@ -120,6 +120,7 @@ protected:
+ 
+ private:
+ 	void refreshArt();
++	void refreshEmojiAccent();
+ 	void layoutCard();
+ 	void updateButtons();
+ 	void showButtons(bool shown);
+@@ -133,6 +134,7 @@ private:
+ 	QImage _image;
+ 	QColor _accent;
+ 	std::unique_ptr<Ui::Text::CustomEmoji> _emoji;
++	bool _emojiAccent = false;
+ 	Ui::Text::String _title;
+ 	Ui::Text::String _description;
+ 	int _cardHeight = 0;
+@@ -227,6 +229,28 @@ void Card::refreshArt() {
+ 	}
+ }
+ 
++void Card::refreshEmojiAccent() {
++	if (_emojiAccent || !_emoji || !_emoji->ready()) {
++		return;
++	}
++	_emojiAccent = true;
++	const auto size = Scaled(kIcon);
++	auto frame = QImage(
++		QSize(size, size) * style::DevicePixelRatio(),
++		QImage::Format_ARGB32_Premultiplied);
++	frame.setDevicePixelRatio(style::DevicePixelRatio());
++	frame.fill(Qt::transparent);
++	{
++		auto q = QPainter(&frame);
++		_emoji->paint(q, {
++			.textColor = QColor(0xff, 0xff, 0xff),
++			.now = crl::now(),
++			.paused = true,
++		});
++	}
++	_accent = Accent(frame);
++}
++
+ void Card::layoutCard() {
+ 	const auto inner = Scaled(kCardWidth) - 2 * Scaled(kPadding);
+ 	const auto lines = [&](const Ui::Text::String &text, int line, int max) {
+@@ -395,6 +419,7 @@ void Card::paintCard(QPainter &p) {
+ }
+ 
+ void Card::paintEvent(QPaintEvent *e) {
++	refreshEmojiAccent();
+ 	auto p = QPainter(this);
+ 	const auto shown = _shown.value(_hiding ? 0. : 1.);
+ 	p.setOpacity(shown);
