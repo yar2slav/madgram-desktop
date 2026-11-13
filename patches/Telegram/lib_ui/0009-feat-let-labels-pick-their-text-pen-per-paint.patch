@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 22:00:17 +0200
+Subject: [PATCH] feat: let labels pick their text pen per paint
+
+---
+ ui/widgets/labels.cpp | 12 ++++++++++++
+ ui/widgets/labels.h   |  2 ++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/ui/widgets/labels.cpp b/ui/widgets/labels.cpp
+index 000ec99845343f0ae3dc559bd274fb1a37c1f19b..04bfaf297535a4b5e6e5e320f9db26c28dc7c3d6 100644
+--- a/ui/widgets/labels.cpp
++++ b/ui/widgets/labels.cpp
+@@ -1081,6 +1081,11 @@ void FlatLabel::setTextColorOverride(std::optional<QColor> color) {
+ 	update();
+ }
+ 
++void FlatLabel::setTextPenCallback(Fn<void(QPainter&, QRect)> callback) {
++	_textPenCallback = std::move(callback);
++	update();
++}
++
+ void FlatLabel::paintEvent(QPaintEvent *e) {
+ 	if (_opacity == 0.) {
+ 		return;
+@@ -1124,6 +1129,13 @@ void FlatLabel::paintEvent(QPaintEvent *e) {
+ 	const auto paused = _animationsPausedCallback
+ 		? _animationsPausedCallback()
+ 		: WhichAnimationsPaused::None;
++	if (_textPenCallback) {
++		_textPenCallback(p, QRect(
++			textLeft,
++			_st.margin.top(),
++			std::min(textWidth, _text.maxWidth()),
++			lineHeight));
++	}
+ 	_text.draw(p, {
+ 		.position = { textLeft, _st.margin.top() },
+ 		.availableWidth = textWidth,
+diff --git a/ui/widgets/labels.h b/ui/widgets/labels.h
+index cb1513cdf5eaa9b71ef3b2765c4401442cfd9478..598fa1e28943e7f5ff55af434b73ee8452eddc69 100644
+--- a/ui/widgets/labels.h
++++ b/ui/widgets/labels.h
+@@ -138,6 +138,7 @@ public:
+ 
+ 	void setOpacity(float64 o);
+ 	void setTextColorOverride(std::optional<QColor> color);
++	void setTextPenCallback(Fn<void(QPainter&, QRect)> callback);
+ 
+ 	void setText(const QString &text);
+ 	void setMarkedText(
+@@ -258,6 +259,7 @@ private:
+ 	const style::FlatLabel &_st;
+ 	const style::PopupMenu &_stMenu;
+ 	std::optional<QColor> _textColorOverride;
++	Fn<void(QPainter&, QRect)> _textPenCallback;
+ 	float64 _opacity = 1.;
+ 
+ 	int _textWidth = 0;

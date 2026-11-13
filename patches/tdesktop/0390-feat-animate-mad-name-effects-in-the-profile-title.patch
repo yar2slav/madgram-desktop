@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 22:00:35 +0200
+Subject: [PATCH] feat: animate mad name effects in the profile title
+
+---
+ .../SourceFiles/info/profile/info_profile_top_bar.cpp | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
+index b90210de7591ca65ad35541d5ddbbb7fe04332f5..a6e7dce7563808090aeb9717a05a4c66a71b81ae 100644
+--- a/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
++++ b/Telegram/SourceFiles/info/profile/info_profile_top_bar.cpp
+@@ -702,11 +702,18 @@ void TopBar::adjustColors(const std::optional<QColor> &edgeColor) {
+ 	const auto shouldOverrideTitle = shouldOverride(_title->st().textFg);
+ 	const auto shouldOverrideStatus = shouldOverrideTitle
+ 		|| shouldOverride(_status->st().textFg);
+-	_title->setTextColorOverride(::Tele::MadTitleColor(_peer, collectible
++	const auto titleColor = collectible
+ 		? collectible->textColor
+ 		: shouldOverrideTitle
+ 		? std::optional<QColor>(st::groupCallMembersFg->c)
+-		: std::nullopt));
++		: std::nullopt;
++	_title->setTextColorOverride(::Tele::MadTitleColor(_peer, titleColor));
++	const auto peer = _peer.get();
++	_title->setTextPenCallback(titleColor
++		? Fn<void(QPainter&, QRect)>()
++		: Fn<void(QPainter&, QRect)>([=](QPainter &p, QRect rect) {
++			::Tele::ApplyMadNameColor(p, peer, rect);
++		}));
+ 	_tabSubtitleOverride = collectible
+ 		? collectible->textColor
+ 		: shouldOverrideStatus

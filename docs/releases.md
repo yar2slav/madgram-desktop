@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 399 patches, newest release first.
+all 401 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -62,9 +62,11 @@ all 399 patches, newest release first.
 | [387](../patches/tdesktop/0387-fix-badge-cards-show-only-the-art-title-and-descript.patch) | a badge card shows only its art, title and description, centered; a long title or description ends with an ellipsis instead of running into the text below | with 382 |
 | [388](../patches/tdesktop/0388-feat-animated-name-effects-from-the-mad-badges-regis.patch) | a colored name can move: its colors flow along it, a rainbow runs through it, a glare sweeps over it or it pulses, as b.mad.tg sets for that name. it stays still with animations off or in power saving | with 386 |
 | [389](../patches/tdesktop/0389-feat-badge-cards-glow-in-the-colors-of-their-custom-.patch) | a badge card made from a custom emoji glows in the emoji's own colors instead of always purple, and black, white or gray art glows a soft gray | with 382 |
+| [390](../patches/tdesktop/0390-feat-animate-mad-name-effects-in-the-profile-title.patch) | the name at the top of a profile flows, shimmers, pulses or runs a rainbow like it does in chats, instead of sitting still in its first color | with 388 |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 | [1010](../patches/Telegram/ThirdParty/widget-sandbox/packages/ios/Sources/CQuickJS/quickjs/0001-fix-refuse-await-using-outside-async-functions.patch) | closes the quickjs hole that let a bot's message widget run any program on your pc: the engine gets telegram's own `await using` fix from widget-sandbox 0.6.4, which telegram desktop 7.4.2 ships without | always on |
+| [1011](../patches/Telegram/lib_ui/0009-feat-let-labels-pick-their-text-pen-per-paint.patch) | the part of animated profile names that lives in the ui library | with 390 |
 
 ### [tele 23](https://github.com/nitreojs/tele/releases/tag/v7.3.3-tele.23)
 
