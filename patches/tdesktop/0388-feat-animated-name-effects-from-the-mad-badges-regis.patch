@@ -1,0 +1,371 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 02:38:24 +0200
+Subject: [PATCH] feat: animated name effects from the mad badges registry
+
+---
+ Telegram/SourceFiles/tele/tele_mad_badges.cpp |  12 +-
+ Telegram/SourceFiles/tele/tele_mad_badges.h   |   2 +-
+ Telegram/SourceFiles/tele/tele_mad_names.cpp  | 162 ++++++++++++++++--
+ .../SourceFiles/tele/tele_mad_registry.cpp    |  19 +-
+ Telegram/SourceFiles/tele/tele_mad_registry.h |  11 +-
+ .../tele/tests/mad_registry_tests.cpp         |  16 +-
+ 6 files changed, 191 insertions(+), 31 deletions(-)
+
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.cpp b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+index d38030f86b74b8431305d662fdda7d5d9a2a6a62..a21abb813ab7ab7dc5a88a67ddd387ee2214037a 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.cpp
+@@ -88,8 +88,7 @@ public:
+ 	[[nodiscard]] std::optional<MadBadge> badge(const QString &id) const;
+ 	[[nodiscard]] std::optional<MadAssignment> assignment(
+ 		const QString &target) const;
+-	[[nodiscard]] std::vector<QColor> nameColors(
+-		not_null<PeerData*> peer) const;
++	[[nodiscard]] MadName name(not_null<PeerData*> peer) const;
+ 	void fetch(Fn<void(QString)> done = nullptr);
+ 	void clear();
+ 	rpl::event_stream<> changes;
+@@ -197,8 +196,7 @@ std::optional<MadAssignment> RegistryStore::assignment(
+ 		: std::optional(*i);
+ }
+ 
+-std::vector<QColor> RegistryStore::nameColors(
+-		not_null<PeerData*> peer) const {
++MadName RegistryStore::name(not_null<PeerData*> peer) const {
+ 	if (_registry.names.isEmpty()
+ 		|| !MadBadgesEnabled()
+ 		|| peer->session().isTestMode()) {
+@@ -567,10 +565,8 @@ QImage MadBadgeImage(const MadBadge &badge, int size) {
+ 	return Store ? Store->image(badge, size) : QImage();
+ }
+ 
+-std::vector<QColor> MadNameColors(PeerData *peer) {
+-	return (Store && peer)
+-		? Store->nameColors(peer)
+-		: std::vector<QColor>();
++MadName MadNameStyle(PeerData *peer) {
++	return (Store && peer) ? Store->name(peer) : MadName();
+ }
+ 
+ Ui::RpWidget *CreateMadBadgeWidget(not_null<QWidget*> parent,
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badges.h b/Telegram/SourceFiles/tele/tele_mad_badges.h
+index 518bcc234627864433c4894f8ca4ae02dfc22161..e3534d3cd1e3417679e1c6420eb6e578d3a404ab 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badges.h
++++ b/Telegram/SourceFiles/tele/tele_mad_badges.h
+@@ -36,7 +36,7 @@ void ClearMadBadges();
+ 	const Ui::Text::String &text, QPoint point, int width, int lines = 1);
+ void ShowMadBadge(const MadBadge &badge, not_null<PeerData*> peer);
+ [[nodiscard]] QImage MadBadgeImage(const MadBadge &badge, int size);
+-[[nodiscard]] std::vector<QColor> MadNameColors(PeerData *peer);
++[[nodiscard]] MadName MadNameStyle(PeerData *peer);
+ [[nodiscard]] Ui::RpWidget *CreateMadBadgeWidget(
+ 	not_null<QWidget*> parent,
+ 	not_null<PeerData*> peer,
+diff --git a/Telegram/SourceFiles/tele/tele_mad_names.cpp b/Telegram/SourceFiles/tele/tele_mad_names.cpp
+index df89af4e6abe79270075c653788055808ffd9889..bb052df3d6008dc7bb67e654378eabdd0a94cc33 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_names.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_names.cpp
+@@ -1,10 +1,146 @@
+ #include "tele/tele_mad_names.h"
+ 
++#include "base/timer.h"
+ #include "tele/tele_mad_badges.h"
++#include "ui/effects/animation_value.h"
++#include "ui/power_saving.h"
+ 
++#include <QtCore/QPointer>
+ #include <QtGui/QPainter>
++#include <QtWidgets/QWidget>
++
++#include <cmath>
++#include <numbers>
+ 
+ namespace Tele {
++namespace {
++
++constexpr auto kStops = 24;
++constexpr auto kFrame = crl::time(33);
++constexpr auto kFlowPeriod = crl::time(2600);
++constexpr auto kRainbowPeriod = crl::time(3200);
++constexpr auto kShimmerPeriod = crl::time(2400);
++constexpr auto kPulsePeriod = crl::time(2400);
++
++struct Target {
++	QPointer<QWidget> widget;
++	QRect rect;
++};
++
++std::vector<Target> Targets;
++
++[[nodiscard]] float64 Phase(crl::time period) {
++	return float64(crl::now() % period) / period;
++}
++
++[[nodiscard]] float64 Fraction(float64 value) {
++	return value - std::floor(value);
++}
++
++[[nodiscard]] QColor Mix(const QColor &a, const QColor &b, float64 ratio) {
++	const auto r = std::clamp(ratio, 0., 1.);
++	return QColor::fromRgbF(
++		a.redF() + (b.redF() - a.redF()) * r,
++		a.greenF() + (b.greenF() - a.greenF()) * r,
++		a.blueF() + (b.blueF() - a.blueF()) * r,
++		a.alphaF() + (b.alphaF() - a.alphaF()) * r);
++}
++
++[[nodiscard]] QColor Along(const std::vector<QColor> &colors, float64 x) {
++	if (colors.size() == 1) {
++		return colors.front();
++	}
++	const auto last = int(colors.size()) - 1;
++	const auto position = std::clamp(x, 0., 1.) * last;
++	const auto index = std::min(int(position), last - 1);
++	return Mix(colors[index], colors[index + 1], position - index);
++}
++
++[[nodiscard]] QColor Loop(const std::vector<QColor> &colors, float64 x) {
++	if (colors.size() == 1) {
++		return colors.front();
++	}
++	const auto count = int(colors.size());
++	const auto position = Fraction(x) * count;
++	const auto index = std::min(int(position), count - 1);
++	return Mix(colors[index], colors[(index + 1) % count], position - index);
++}
++
++[[nodiscard]] QColor Rainbow(float64 x) {
++	return QColor::fromHsvF(Fraction(x), 0.72, 0.96);
++}
++
++[[nodiscard]] QColor Lighter(const QColor &color, float64 amount) {
++	return Mix(color, QColor(255, 255, 255, color.alpha()), amount);
++}
++
++[[nodiscard]] QColor ColorAt(const MadName &name, float64 x) {
++	switch (name.effect) {
++	case MadNameEffect::Flow:
++		return Loop(name.colors, x - Phase(kFlowPeriod));
++	case MadNameEffect::Rainbow:
++		return Rainbow(x * 0.75 - Phase(kRainbowPeriod));
++	case MadNameEffect::Shimmer: {
++		const auto center = -0.35 + 1.7 * Phase(kShimmerPeriod);
++		const auto distance = std::abs(x - center) / 0.22;
++		const auto glow = std::max(1. - distance, 0.);
++		return Lighter(Along(name.colors, x), 0.7 * glow * glow);
++	}
++	case MadNameEffect::Pulse: {
++		const auto phase = Phase(kPulsePeriod);
++		if (name.colors.size() > 1) {
++			return Loop(name.colors, phase + x * 0.15);
++		}
++		const auto wave = 0.5 - 0.5 * std::cos(phase * 2. * std::numbers::pi);
++		return Lighter(name.colors.front(), 0.38 * wave);
++	}
++	case MadNameEffect::Static:
++		break;
++	}
++	return Along(name.colors, x);
++}
++
++void Tick() {
++	for (const auto &target : base::take(Targets)) {
++		if (const auto widget = target.widget.data()) {
++			widget->update(target.rect);
++		}
++	}
++}
++
++[[nodiscard]] base::Timer &Ticker() {
++	static const auto timer = new base::Timer(Tick);
++	return *timer;
++}
++
++void Schedule(QPainter &p, QRect rect) {
++	const auto widget = dynamic_cast<QWidget*>(p.device());
++	if (!widget) {
++		return;
++	}
++	const auto mapped = p.transform().mapRect(rect).marginsAdded(
++		{ 2, 2, 2, 2 });
++	const auto i = ranges::find(Targets, widget, [](const Target &target) {
++		return target.widget.data();
++	});
++	if (i != end(Targets)) {
++		i->rect = i->rect.united(mapped);
++	} else {
++		Targets.push_back({ widget, mapped });
++	}
++	auto &ticker = Ticker();
++	if (!ticker.isActive()) {
++		ticker.callOnce(kFrame);
++	}
++}
++
++[[nodiscard]] bool Animated(const MadName &name) {
++	return (name.effect != MadNameEffect::Static)
++		&& !anim::Disabled()
++		&& !PowerSaving::On(PowerSaving::kChatEffects);
++}
++
++} // namespace
+ 
+ void ApplyMadNameColor(
+ 		QPainter &p,
+@@ -14,21 +150,27 @@ void ApplyMadNameColor(
+ 	if (skip || !peer || rect.width() <= 0) {
+ 		return;
+ 	}
+-	const auto colors = MadNameColors(peer);
+-	if (colors.empty()) {
++	auto name = MadNameStyle(peer);
++	if (name.colors.empty()) {
+ 		return;
+-	} else if (colors.size() == 1) {
+-		p.setPen(colors.front());
++	} else if (!Animated(name)) {
++		name.effect = MadNameEffect::Static;
++	}
++	if (name.effect == MadNameEffect::Static && name.colors.size() == 1) {
++		p.setPen(name.colors.front());
+ 		return;
+ 	}
+ 	auto gradient = QLinearGradient(
+ 		QPointF(rect.left(), 0.),
+ 		QPointF(rect.left() + rect.width(), 0.));
+-	const auto last = int(colors.size()) - 1;
+-	for (auto i = 0; i <= last; ++i) {
+-		gradient.setColorAt(float64(i) / last, colors[i]);
++	for (auto i = 0; i <= kStops; ++i) {
++		const auto x = float64(i) / kStops;
++		gradient.setColorAt(x, ColorAt(name, x));
+ 	}
+ 	p.setPen(QPen(QBrush(gradient), 1.));
++	if (name.effect != MadNameEffect::Static) {
++		Schedule(p, rect);
++	}
+ }
+ 
+ std::optional<QColor> MadTitleColor(
+@@ -37,10 +179,10 @@ std::optional<QColor> MadTitleColor(
+ 	if (upstream || !peer) {
+ 		return upstream;
+ 	}
+-	const auto colors = MadNameColors(peer);
+-	return colors.empty()
++	const auto name = MadNameStyle(peer);
++	return name.colors.empty()
+ 		? upstream
+-		: std::optional<QColor>(colors.front());
++		: std::optional<QColor>(name.colors.front());
+ }
+ 
+ }
+diff --git a/Telegram/SourceFiles/tele/tele_mad_registry.cpp b/Telegram/SourceFiles/tele/tele_mad_registry.cpp
+index 28b76df2fff20b4e19935833f51cbe2ed7cbf75d..345dd6ba1f3e3283d936661a343f568f331bc9ad 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_registry.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_registry.cpp
+@@ -34,6 +34,14 @@ constexpr auto kMaxBytes = 2 * 1024 * 1024;
+ 	return QColor((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);
+ }
+ 
++[[nodiscard]] MadNameEffect ParseEffect(const QString &text) {
++	return (text == QStringLiteral("flow")) ? MadNameEffect::Flow
++		: (text == QStringLiteral("rainbow")) ? MadNameEffect::Rainbow
++		: (text == QStringLiteral("shimmer")) ? MadNameEffect::Shimmer
++		: (text == QStringLiteral("pulse")) ? MadNameEffect::Pulse
++		: MadNameEffect::Static;
++}
++
+ [[nodiscard]] bool ValidHash(const QString &value) {
+ 	if (value.size() != 64) {
+ 		return false;
+@@ -88,11 +96,11 @@ std::optional<MadBadge> FindMadBadge(const MadRegistry &registry, const QString
+ 	return badge == registry.badges.cend() ? std::nullopt : std::optional(*badge);
+ }
+ 
+-std::vector<QColor> FindMadName(const MadRegistry &registry, const QString &target, qint64 now) {
++MadName FindMadName(const MadRegistry &registry, const QString &target, qint64 now) {
+ 	const auto i = registry.names.constFind(target);
+ 	return (i == registry.names.cend() || (i->expiresAt && i->expiresAt <= now))
+-		? std::vector<QColor>()
+-		: i->colors;
++		? MadName()
++		: *i;
+ }
+ 
+ bool MadAssetUrlAllowed(const QUrl &url) {
+@@ -227,7 +235,10 @@ std::optional<MadRegistry> DecodeMadRegistry(
+ 				|| colors.isEmpty() || colors.size() > 4 || result.names.contains(key)) {
+ 				return std::nullopt;
+ 			}
+-			auto name = MadName{ .expiresAt = expiry };
++			auto name = MadName{
++				.effect = ParseEffect(item["effect"].toString()),
++				.expiresAt = expiry,
++			};
+ 			for (const auto &color : colors) {
+ 				const auto parsed = ParseColor(color.toString());
+ 				if (!parsed) {
+diff --git a/Telegram/SourceFiles/tele/tele_mad_registry.h b/Telegram/SourceFiles/tele/tele_mad_registry.h
+index b5f1069805f804a3b2bec3ef4eae0f8e50cfd16a..fc803fb6bb1e448a6850e2dda4b9b0838471b55a 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_registry.h
++++ b/Telegram/SourceFiles/tele/tele_mad_registry.h
+@@ -30,8 +30,17 @@ struct MadAssignment {
+ 	friend bool operator==(const MadAssignment &, const MadAssignment &) = default;
+ };
+ 
++enum class MadNameEffect {
++	Static,
++	Flow,
++	Rainbow,
++	Shimmer,
++	Pulse,
++};
++
+ struct MadName {
+ 	std::vector<QColor> colors;
++	MadNameEffect effect = MadNameEffect::Static;
+ 	qint64 expiresAt = 0;
+ 	friend bool operator==(const MadName &, const MadName &) = default;
+ };
+@@ -46,7 +55,7 @@ struct MadRegistry {
+ 
+ [[nodiscard]] std::optional<MadBadge> FindMadBadge(
+ 	const MadRegistry &registry, const QString &target, qint64 now);
+-[[nodiscard]] std::vector<QColor> FindMadName(
++[[nodiscard]] MadName FindMadName(
+ 	const MadRegistry &registry, const QString &target, qint64 now);
+ [[nodiscard]] bool MadAssetUrlAllowed(const QUrl &url);
+ [[nodiscard]] std::optional<MadRegistry> DecodeMadRegistry(
+diff --git a/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp b/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp
+index a293646ac906fcd67fd8e01b0eda4332fc146868..081cdf2fa42b2caeb87d98093260e9c1270bf042 100644
+--- a/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp
++++ b/Telegram/SourceFiles/tele/tests/mad_registry_tests.cpp
+@@ -106,16 +106,18 @@ int main(int argc, char **argv) {
+ 	Require(decode(sign(Encode(changed)))->assignments.isEmpty(), "revoked registry accepted");
+ 	changed = payload;
+ 	changed["names"] = QJsonArray{
+-		QJsonObject{ { "peerType", "user" }, { "peerId", large }, { "colors", QJsonArray{ "#ff6ac1", "#7A5CFF" } } },
+-		QJsonObject{ { "peerType", "channel" }, { "peerId", 5 }, { "colors", QJsonArray{ "#00ff00" } }, { "expiresAt", 1700000010 } },
++		QJsonObject{ { "peerType", "user" }, { "peerId", large }, { "colors", QJsonArray{ "#ff6ac1", "#7A5CFF" } }, { "effect", "rainbow" } },
++		QJsonObject{ { "peerType", "channel" }, { "peerId", 5 }, { "colors", QJsonArray{ "#00ff00" } }, { "expiresAt", 1700000010 }, { "effect", "sparkle" } },
+ 	};
+ 	const auto named = decode(sign(Encode(changed)));
+ 	Require(named.has_value(), "names accepted");
+-	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).size() == 2, "gradient name");
+-	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).back() == QColor(0x7a, 0x5c, 0xff), "name color parsed");
+-	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000009).size() == 1, "name before expiry");
+-	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000010).empty(), "name at expiry");
+-	Require(Tele::FindMadName(*parsed, QStringLiteral("user:9007199254740993"), 1700000000).empty(), "no names");
++	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).colors.size() == 2, "gradient name");
++	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).colors.back() == QColor(0x7a, 0x5c, 0xff), "name color parsed");
++	Require(Tele::FindMadName(*named, QStringLiteral("user:9007199254740993"), 1700000000).effect == Tele::MadNameEffect::Rainbow, "name effect parsed");
++	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000009).colors.size() == 1, "name before expiry");
++	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000009).effect == Tele::MadNameEffect::Static, "unknown effect stays static");
++	Require(Tele::FindMadName(*named, QStringLiteral("channel:5"), 1700000010).colors.empty(), "name at expiry");
++	Require(Tele::FindMadName(*parsed, QStringLiteral("user:9007199254740993"), 1700000000).colors.empty(), "no names");
+ 	changed["names"] = QJsonArray{ QJsonObject{ { "peerType", "user" }, { "peerId", 1 }, { "colors", QJsonArray{ "red" } } } };
+ 	Require(!decode(sign(Encode(changed))), "invalid name color");
+ 	changed["names"] = QJsonArray{ QJsonObject{ { "peerType", "user" }, { "peerId", 1 }, { "colors", QJsonArray() } } };
