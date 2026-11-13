@@ -1,0 +1,95 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 22:20:24 +0200
+Subject: [PATCH] fix: a hidden message leaves no empty space behind
+
+---
+ .../history/view/history_view_element.cpp     | 25 +++++++++++++++++++
+ .../history/view/history_view_element.h       |  2 ++
+ .../history/view/history_view_message.cpp     |  1 +
+ .../view/history_view_service_message.cpp     |  1 +
+ 4 files changed, 29 insertions(+)
+
+diff --git a/Telegram/SourceFiles/history/view/history_view_element.cpp b/Telegram/SourceFiles/history/view/history_view_element.cpp
+index de0f79f825b2fd272a2502ac2afe4c363a4445ba..b04a62bb745089e3fb0f98a3fc08cee8da6170c8 100644
+--- a/Telegram/SourceFiles/history/view/history_view_element.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_element.cpp
+@@ -2776,9 +2776,34 @@ QSize Element::countCurrentSize(int newWidth) {
+ 	if (_flags & Flag::NeedsResize) {
+ 		initDimensions();
+ 	}
++	if (isHidden()) {
++		_flags |= Flag::LaidOutHidden;
++	} else {
++		_flags &= ~Flag::LaidOutHidden;
++	}
+ 	return performCountCurrentSize(newWidth);
+ }
+ 
++void Element::refreshIfHiddenChanged() const {
++	if ((_flags & Flag::NeedsResize)
++		|| (isHidden() == ((_flags & Flag::LaidOutHidden) != 0))) {
++		return;
++	}
++	static auto Pending = base::flat_set<FullMsgId>();
++	const auto item = data();
++	const auto id = item->fullId();
++	if (!Pending.emplace(id).second) {
++		return;
++	}
++	const auto session = &item->history()->session();
++	crl::on_main(session, [=] {
++		Pending.remove(id);
++		if (const auto item = session->data().message(id)) {
++			session->data().requestItemViewRefresh(item);
++		}
++	});
++}
++
+ bool Element::countIsTopicRootReply() const {
+ 	const auto item = data();
+ 	if (!item->history()->isForum()) {
+diff --git a/Telegram/SourceFiles/history/view/history_view_element.h b/Telegram/SourceFiles/history/view/history_view_element.h
+index 483fabeebc80638a6955da3ca387c2ad315ca5e6..f69e1c0338575f9e8f36ba7ad1457db6aa89d90f 100644
+--- a/Telegram/SourceFiles/history/view/history_view_element.h
++++ b/Telegram/SourceFiles/history/view/history_view_element.h
+@@ -453,6 +453,7 @@ public:
+ 		MediaOverriden           = 0x0800,
+ 		HeavyCustomEmoji         = 0x1000,
+ 		SummaryShown             = 0x2000,
++		LaidOutHidden            = 0x4000,
+ 	};
+ 	using Flags = base::flags<Flag>;
+ 	friend inline constexpr auto is_flag_type(Flag) { return true; }
+@@ -517,6 +518,7 @@ public:
+ 
+ 	[[nodiscard]] bool isHiddenByGroup() const;
+ 	[[nodiscard]] virtual bool isHidden() const;
++	void refreshIfHiddenChanged() const;
+ 
+ 	[[nodiscard]] bool isIsolatedEmoji() const {
+ 		return (_flags & Flag::SpecialOnlyEmoji)
+diff --git a/Telegram/SourceFiles/history/view/history_view_message.cpp b/Telegram/SourceFiles/history/view/history_view_message.cpp
+index 1abc5e692b3bb6b6b5bb51d73cf2ddd9298691b0..59f085aa88f90813374e2f9ebb8973d174a04bba 100644
+--- a/Telegram/SourceFiles/history/view/history_view_message.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_message.cpp
+@@ -1903,6 +1903,7 @@ int Message::marginBottom() const {
+ }
+ 
+ void Message::draw(Painter &p, const PaintContext &context) const {
++	refreshIfHiddenChanged();
+ 	auto g = countGeometry();
+ 	if (g.width() < 1) {
+ 		return;
+diff --git a/Telegram/SourceFiles/history/view/history_view_service_message.cpp b/Telegram/SourceFiles/history/view/history_view_service_message.cpp
+index 8c8a8fe0d03e3c1e6f732cb18c63020fef0adb5f..fae430b1c47418fbfd964b821c2f11451e61fac3 100644
+--- a/Telegram/SourceFiles/history/view/history_view_service_message.cpp
++++ b/Telegram/SourceFiles/history/view/history_view_service_message.cpp
+@@ -616,6 +616,7 @@ int Service::marginBottom() const {
+ }
+ 
+ void Service::draw(Painter &p, const PaintContext &context) const {
++	refreshIfHiddenChanged();
+ 	auto g = countGeometry();
+ 	if (g.width() < 1) {
+ 		return;
