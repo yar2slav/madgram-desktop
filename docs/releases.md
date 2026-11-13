@@ -2,7 +2,7 @@
 
 every tele patch, grouped by the release that brought it, newest first. [features](features.md) has the same rows grouped by settings page. release notes and the in-app what's new are made from these rows, so their format is strict: see [the patch row](development.md#the-patch-row).
 
-all 396 patches, newest release first.
+all 397 patches, newest release first.
 
 ### [mad dev](mad.md)
 
@@ -59,6 +59,7 @@ all 396 patches, newest release first.
 | [384](../patches/tdesktop/0384-feat-remind-about-messages-in-saved-messages.patch) | right-click a message and choose remind me: at the chosen time mad forwards it to Saved Messages as a scheduled message, so it comes back with a notification on every device, even when mad is closed | settings → mad → menus, off |
 | [385](../patches/tdesktop/0385-feat-expand-text-snippets-in-the-message-field.patch) | your own shortcuts in the message field: type a shortcut and a space and it turns into the saved text. the list is in the sending settings, one shortcut = text per line | settings → mad → sending |
 | [386](../patches/tdesktop/0386-feat-color-names-from-the-mad-badges-registry.patch) | names that b.mad.tg gives a color are drawn in it, or in a gradient of up to four colors, in messages, the chat list and the chat header. the profile uses the first color | with 337 |
+| [387](../patches/tdesktop/0387-fix-badge-cards-show-only-the-art-title-and-descript.patch) | a badge card shows only its art, title and description, centered; a long title or description ends with an ellipsis instead of running into the text below | with 382 |
 | [1008](../patches/Telegram/lib_ui/0008-feat-recognize-mad-links-in-message-text.patch) | recognizes mad:// links in message text | with 350 |
 | [1009](../patches/Telegram/lib_rpl/0001-fix-topic-tabs-no-longer-crash-after-you-move-them.patch) | topic and direct message tabs no longer crash after you move them to the top, bottom or side and then scroll them. the cause was in the library that passes events around, so anything else that lost updates the same way is fixed too | always on |
 | [1010](../patches/Telegram/ThirdParty/widget-sandbox/packages/ios/Sources/CQuickJS/quickjs/0001-fix-refuse-await-using-outside-async-functions.patch) | closes the quickjs hole that let a bot's message widget run any program on your pc: the engine gets telegram's own `await using` fix from widget-sandbox 0.6.4, which telegram desktop 7.4.2 ships without | always on |

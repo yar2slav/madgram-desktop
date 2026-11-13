@@ -1,0 +1,225 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 02:29:36 +0200
+Subject: [PATCH] fix: badge cards show only the art, title and description
+
+---
+ Telegram/Resources/langs/mad_ru.json          |   3 -
+ .../SourceFiles/tele/tele_mad_badge_card.cpp  | 110 ++++++------------
+ 2 files changed, 37 insertions(+), 76 deletions(-)
+
+diff --git a/Telegram/Resources/langs/mad_ru.json b/Telegram/Resources/langs/mad_ru.json
+index 785fdeb8ae58e737645c105bd7590e2e72cf3687..b9254be514facf3269f554dd04093782b1eff93c 100644
+--- a/Telegram/Resources/langs/mad_ru.json
++++ b/Telegram/Resources/langs/mad_ru.json
+@@ -2131,9 +2131,6 @@
+   "Normal": "Обычно",
+   "Slow": "Медленно",
+   "Very slow": "Очень медленно",
+-  "Badge": "Бейдж",
+-  "Holder: %1": "Владелец: %1",
+-  "Until %1": "До %1",
+   "Remind me": "Напомнить",
+   "Remind": "Напомнить",
+   "Reminder set for %1": "Напомню %1",
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+index 21e68ac33741306be9095421e4c3e81c811f17f5..faa203b386483a70e2ba1f4d9896b34fa3851047 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+@@ -1,10 +1,8 @@
+ #include "tele/tele_mad_badge_card.h"
+ 
+-#include "base/unixtime.h"
+ #include "core/application.h"
+ #include "data/data_session.h"
+ #include "data/stickers/data_custom_emoji.h"
+-#include "lang/lang_keys.h"
+ #include "main/main_session.h"
+ #include "mainwindow.h"
+ #include "tele/tele_lowercase.h"
+@@ -39,6 +37,8 @@ constexpr auto kRadius = 24;
+ constexpr auto kIcon = 150;
+ constexpr auto kArt = 190;
+ constexpr auto kPadding = 22;
++constexpr auto kTop = 22;
++constexpr auto kBottom = 26;
+ constexpr auto kTitleLines = 3;
+ constexpr auto kDescriptionLines = 8;
+ constexpr auto kButtonsSkip = 22;
+@@ -51,10 +51,6 @@ constexpr auto kHideDuration = crl::time(160);
+ 	return style::ConvertScale(value, style::Scale());
+ }
+ 
+-[[nodiscard]] style::font SmallFont(const style::font &base) {
+-	return style::font(Scaled(11), base->flags(), base->family());
+-}
+-
+ [[nodiscard]] QColor Accent(const QImage &image) {
+ 	const auto fallback = QColor(0x9b, 0x6d, 0xff);
+ 	if (image.isNull()) {
+@@ -131,7 +127,6 @@ private:
+ 	void setTiltTarget(QPointF target);
+ 	bool tiltStep(crl::time now);
+ 	[[nodiscard]] QRect cardGeometry() const;
+-	[[nodiscard]] QString footerRight() const;
+ 
+ 	const not_null<Window::Controller*> _window;
+ 	MadBadgeCardData _data;
+@@ -140,11 +135,9 @@ private:
+ 	std::unique_ptr<Ui::Text::CustomEmoji> _emoji;
+ 	Ui::Text::String _title;
+ 	Ui::Text::String _description;
+-	style::font _labelFont;
+-	style::font _footerFont;
+ 	int _cardHeight = 0;
+-	int _titleHeight = 0;
+-	int _descriptionHeight = 0;
++	int _titleLines = 0;
++	int _descriptionLines = 0;
+ 	QImage _frame;
+ 	Ui::RoundButton *_close = nullptr;
+ 	Ui::RoundButton *_open = nullptr;
+@@ -165,8 +158,6 @@ Card::Card(
+ , _window(window)
+ , _data(std::move(data))
+ , _accent(Accent(QImage()))
+-, _labelFont(SmallFont(st::semiboldFont))
+-, _footerFont(SmallFont(st::normalFont))
+ , _tiltAnimation([=](crl::time now) { return tiltStep(now); }) {
+ 	setMouseTracking(true);
+ 	setFocusPolicy(Qt::StrongFocus);
+@@ -238,22 +229,25 @@ void Card::refreshArt() {
+ 
+ void Card::layoutCard() {
+ 	const auto inner = Scaled(kCardWidth) - 2 * Scaled(kPadding);
+-	_titleHeight = std::min(
+-		_title.countHeight(inner),
+-		kTitleLines * st::sessionBigName.style.font->height);
+-	_descriptionHeight = _description.isEmpty()
+-		? 0
+-		: std::min(
+-			_description.countHeight(inner),
+-			kDescriptionLines * st::defaultTextStyle.font->height);
+-	_cardHeight = Scaled(18)
+-		+ _labelFont->height
++	const auto lines = [&](const Ui::Text::String &text, int line, int max) {
++		return text.isEmpty()
++			? 0
++			: std::clamp(
++				(text.countHeight(inner) + line - 1) / line,
++				1,
++				max);
++	};
++	const auto titleLine = st::sessionBigName.style.font->height;
++	const auto descriptionLine = st::defaultTextStyle.font->height;
++	_titleLines = lines(_title, titleLine, kTitleLines);
++	_descriptionLines = lines(_description, descriptionLine, kDescriptionLines);
++	_cardHeight = Scaled(kTop)
+ 		+ Scaled(kArt)
+-		+ _titleHeight
+-		+ (_descriptionHeight ? (Scaled(6) + _descriptionHeight) : 0)
+-		+ Scaled(14)
+-		+ _footerFont->height
+-		+ Scaled(20);
++		+ _titleLines * titleLine
++		+ (_descriptionLines
++			? (Scaled(8) + _descriptionLines * descriptionLine)
++			: 0)
++		+ Scaled(kBottom);
+ }
+ 
+ QRect Card::cardGeometry() const {
+@@ -312,13 +306,6 @@ void Card::hideAnimated() {
+ 	}, _shown.value(1.), 0., kHideDuration, anim::linear);
+ }
+ 
+-QString Card::footerRight() const {
+-	return _data.expiresAt
+-		? Tr(u"Until %1"_q).arg(langDayOfMonthFull(
+-			base::unixtime::parse(TimeId(_data.expiresAt)).date()))
+-		: Tr(u"Forever"_q);
+-}
+-
+ void Card::paintCard(QPainter &p) {
+ 	p.setRenderHint(QPainter::Antialiasing);
+ 	p.setRenderHint(QPainter::SmoothPixmapTransform);
+@@ -345,8 +332,7 @@ void Card::paintCard(QPainter &p) {
+ 	p.drawRoundedRect(inner, innerRadius, innerRadius);
+ 
+ 	const auto padding = Scaled(kPadding);
+-	const auto labelTop = Scaled(18);
+-	const auto artTop = labelTop + _labelFont->height;
++	const auto artTop = Scaled(kTop);
+ 	const auto artCenter = QPointF(
+ 		cardWidth / 2.,
+ 		artTop + Scaled(kArt) / 2.);
+@@ -357,17 +343,6 @@ void Card::paintCard(QPainter &p) {
+ 	p.drawRoundedRect(inner, innerRadius, innerRadius);
+ 
+ 	const auto textWidth = cardWidth - 2 * padding;
+-	auto label = _labelFont->f;
+-	label.setLetterSpacing(QFont::AbsoluteSpacing, Scaled(10) / 12.);
+-	p.setFont(label);
+-	p.setPen(QColor(0xcf, 0xc6, 0xf2));
+-	const auto labelRect = QRect(
+-		padding,
+-		labelTop,
+-		textWidth,
+-		_labelFont->height);
+-	p.drawText(labelRect, Qt::AlignLeft | Qt::AlignVCenter, Tr(u"Badge"_q));
+-	p.drawText(labelRect, Qt::AlignRight | Qt::AlignVCenter, u"b.mad.tg"_q);
+ 
+ 	const auto icon = Scaled(kIcon);
+ 	const auto iconLeft = (cardWidth - icon) / 2;
+@@ -383,37 +358,26 @@ void Card::paintCard(QPainter &p) {
+ 	}
+ 
+ 	auto top = artTop + Scaled(kArt);
+-	p.setPen(QColor(0xff, 0xff, 0xff));
+-	_title.draw(p, {
+-		.position = QPoint(padding, top),
+-		.availableWidth = textWidth,
+-		.elisionLines = kTitleLines,
+-	});
+-	top += _titleHeight;
+-	if (_descriptionHeight) {
+-		top += Scaled(6);
++	if (_titleLines) {
++		p.setPen(QColor(0xff, 0xff, 0xff));
++		_title.draw(p, {
++			.position = QPoint(padding, top),
++			.availableWidth = textWidth,
++			.align = style::al_top,
++			.elisionLines = _titleLines,
++		});
++		top += _titleLines * st::sessionBigName.style.font->height;
++	}
++	if (_descriptionLines) {
++		top += Scaled(8);
+ 		p.setPen(QColor(0xb9, 0xb3, 0xcf));
+ 		_description.draw(p, {
+ 			.position = QPoint(padding, top),
+ 			.availableWidth = textWidth,
+-			.elisionLines = kDescriptionLines,
++			.align = style::al_top,
++			.elisionLines = _descriptionLines,
+ 		});
+-		top += _descriptionHeight;
+ 	}
+-	top += Scaled(14);
+-
+-	const auto right = footerRight();
+-	const auto rightWidth = _footerFont->width(right);
+-	const auto left = _data.holder.isEmpty()
+-		? QString()
+-		: _footerFont->elided(
+-			Tr(u"Holder: %1"_q).arg(_data.holder),
+-			std::max(textWidth - rightWidth - Scaled(12), 0));
+-	const auto footerRect = QRect(padding, top, textWidth, _footerFont->height);
+-	p.setFont(_footerFont->f);
+-	p.setPen(QColor(0xa5, 0x9f, 0xbf));
+-	p.drawText(footerRect, Qt::AlignLeft | Qt::AlignVCenter, left);
+-	p.drawText(footerRect, Qt::AlignRight | Qt::AlignVCenter, right);
+ 
+ 	p.setCompositionMode(QPainter::CompositionMode_SourceAtop);
+ 	const auto sheenCenter = cardWidth * (0.5 + 0.45 * _tilt.x());
