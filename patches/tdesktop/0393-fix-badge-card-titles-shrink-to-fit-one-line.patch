@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: yar2slav <191513735+yar2slav@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 22:10:04 +0200
+Subject: [PATCH] fix: badge card titles shrink to fit one line
+
+---
+ .../SourceFiles/tele/tele_mad_badge_card.cpp  | 25 ++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+index ed5d56af8a8dc7b5192d64c11b96380817c99e6f..ae6ef061f34291dc717b20f2dd0a15e11f705c93 100644
+--- a/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
++++ b/Telegram/SourceFiles/tele/tele_mad_badge_card.cpp
+@@ -40,6 +40,9 @@ constexpr auto kPadding = 22;
+ constexpr auto kTop = 22;
+ constexpr auto kBottom = 26;
+ constexpr auto kTitleLines = 3;
++constexpr auto kTitleMaxSize = 20;
++constexpr auto kTitleMinSize = 13;
++constexpr auto kTitleFitRatio = 0.9;
+ constexpr auto kDescriptionLines = 8;
+ constexpr auto kButtonsSkip = 22;
+ constexpr auto kMaxTilt = 9.;
+@@ -135,6 +138,9 @@ private:
+ 	QColor _accent;
+ 	std::unique_ptr<Ui::Text::CustomEmoji> _emoji;
+ 	bool _emojiAccent = false;
++	void fitTitle(int width);
++
++	std::unique_ptr<style::TextStyle> _titleStyle;
+ 	Ui::Text::String _title;
+ 	Ui::Text::String _description;
+ 	int _cardHeight = 0;
+@@ -164,7 +170,7 @@ Card::Card(
+ 	setMouseTracking(true);
+ 	setFocusPolicy(Qt::StrongFocus);
+ 
+-	_title.setText(st::sessionBigName.style, _data.badge.title);
++	fitTitle(Scaled(kCardWidth) - 2 * Scaled(kPadding));
+ 	_description.setText(st::defaultTextStyle, _data.badge.description);
+ 
+ 	_close = Ui::CreateChild<Ui::RoundButton>(
+@@ -251,6 +257,19 @@ void Card::refreshEmojiAccent() {
+ 	_accent = Accent(frame);
+ }
+ 
++void Card::fitTitle(int width) {
++	const auto &base = st::sessionBigName.style.font;
++	for (auto size = kTitleMaxSize; size >= kTitleMinSize; --size) {
++		_titleStyle = std::make_unique<style::TextStyle>(style::TextStyle{
++			.font = style::font(Scaled(size), base->flags(), base->family()),
++		});
++		_title.setText(*_titleStyle, _data.badge.title);
++		if (_title.maxWidth() <= width * kTitleFitRatio) {
++			return;
++		}
++	}
++}
++
+ void Card::layoutCard() {
+ 	const auto inner = Scaled(kCardWidth) - 2 * Scaled(kPadding);
+ 	const auto lines = [&](const Ui::Text::String &text, int line, int max) {
+@@ -261,7 +280,7 @@ void Card::layoutCard() {
+ 				1,
+ 				max);
+ 	};
+-	const auto titleLine = st::sessionBigName.style.font->height;
++	const auto titleLine = _titleStyle->font->height;
+ 	const auto descriptionLine = st::defaultTextStyle.font->height;
+ 	_titleLines = lines(_title, titleLine, kTitleLines);
+ 	_descriptionLines = lines(_description, descriptionLine, kDescriptionLines);
+@@ -390,7 +409,7 @@ void Card::paintCard(QPainter &p) {
+ 			.align = style::al_top,
+ 			.elisionLines = _titleLines,
+ 		});
+-		top += _titleLines * st::sessionBigName.style.font->height;
++		top += _titleLines * _titleStyle->font->height;
+ 	}
+ 	if (_descriptionLines) {
+ 		top += Scaled(8);
